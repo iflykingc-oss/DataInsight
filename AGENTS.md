@@ -1,65 +1,136 @@
-# 项目上下文
+# DataInsight - 智能表格数据处理与可视化工具
 
-### 版本技术栈
+## 项目概述
+
+轻量化智能表格数据处理与可视化工具，依托自动数据分析能力，支持多端上传表格文件，自动生成标准化报表 + 交互式仪表盘，满足个人/企业数据统计、业务复盘、数据可视化展示需求。
+
+## 技术栈
 
 - **Framework**: Next.js 16 (App Router)
 - **Core**: React 19
 - **Language**: TypeScript 5
 - **UI 组件**: shadcn/ui (基于 Radix UI)
 - **Styling**: Tailwind CSS 4
+- **数据可视化**: Recharts
+- **文件解析**: xlsx (Excel), papaparse (CSV)
+- **AI 集成**: coze-coding-dev-sdk (LLM)
 
-## 目录结构
+## 核心功能
+
+### 1. 多端表格上传能力
+- Web 端网页上传
+- 支持文件格式：Excel（.xlsx/.xls）、CSV
+- 支持单文件/批量文件上传
+- 自动校验文件格式、数据完整性
+
+### 2. 自动数据处理与分析能力
+- 自动数据清洗：去重、空值处理
+- 自动数据分析：基础统计（求和/均值/计数/占比）、趋势分析
+- 自动字段识别：智能识别表格表头、数据维度、指标字段
+
+### 3. 交互式仪表盘视图能力
+- 自动生成可视化仪表盘（柱状图、折线图、饼图、面积图、雷达图）
+- 维度筛选、图表类型切换
+- 支持仪表盘自定义配置
+
+### 4. 智能报表生成能力
+- 一键生成标准化统计报表
+- 支持报表模板选择
+- 报表预览与打印
+
+### 5. AI 智能分析
+- 基于 LLM 的自然语言数据问答
+- 自动生成数据洞察和建议
+- 流式响应输出
+
+### 6. 飞书多维表格集成（Beta）
+- 飞书应用配置入口
+- 多维表格数据导入
+- API 调用示例
+
+## 项目结构
 
 ```
-├── public/                 # 静态资源
-├── scripts/                # 构建与启动脚本
-│   ├── build.sh            # 构建脚本
-│   ├── dev.sh              # 开发环境启动脚本
-│   ├── prepare.sh          # 预处理脚本
-│   └── start.sh            # 生产环境启动脚本
-├── src/
-│   ├── app/                # 页面路由与布局
-│   ├── components/ui/      # Shadcn UI 组件库
-│   ├── hooks/              # 自定义 Hooks
-│   ├── lib/                # 工具库
-│   │   └── utils.ts        # 通用工具函数 (cn)
-│   └── server.ts           # 自定义服务端入口
-├── next.config.ts          # Next.js 配置
-├── package.json            # 项目依赖管理
-└── tsconfig.json           # TypeScript 配置
+src/
+├── app/
+│   ├── api/
+│   │   ├── upload/          # 文件上传 API
+│   │   ├── analyze/         # 数据分析 API
+│   │   └── llm-insight/     # LLM 智能洞察 API
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx             # 主页面
+├── components/
+│   ├── ui/                  # shadcn/ui 组件库
+│   ├── file-uploader.tsx    # 文件上传组件
+│   ├── data-table.tsx       # 数据表格组件
+│   ├── data-insights.tsx    # 数据分析展示组件
+│   ├── dashboard.tsx        # 交互式仪表盘
+│   ├── llm-assistant.tsx    # AI 助手组件
+│   ├── feishu-integration.tsx  # 飞书集成组件
+│   └── report-generator.tsx # 报表生成组件
+└── lib/
+    ├── utils.ts             # 通用工具函数
+    └── data-processor.ts    # 数据处理工具
 ```
 
-- 项目文件（如 app 目录、pages 目录、components 等）默认初始化到 `src/` 目录下。
+## 开发命令
 
-## 包管理规范
+- **开发环境**: `pnpm dev` (端口 5000)
+- **构建**: `pnpm build`
+- **类型检查**: `pnpm ts-check`
+- **代码检查**: `pnpm lint`
 
-**仅允许使用 pnpm** 作为包管理器，**严禁使用 npm 或 yarn**。
-**常用命令**：
-- 安装依赖：`pnpm add <package>`
-- 安装开发依赖：`pnpm add -D <package>`
-- 安装所有依赖：`pnpm install`
-- 移除依赖：`pnpm remove <package>`
+## API 接口
 
-## 开发规范
+### POST /api/upload
+上传并解析 Excel/CSV 文件
 
-### 编码规范
+**请求**: FormData，包含 files 字段
 
-- 默认按 TypeScript `strict` 心智写代码；优先复用当前作用域已声明的变量、函数、类型和导入，禁止引用未声明标识符或拼错变量名。
-- 禁止隐式 `any` 和 `as any`；函数参数、返回值、解构项、事件对象、`catch` 错误在使用前应有明确类型或先完成类型收窄，并清理未使用的变量和导入。
+**响应**:
+```json
+{
+  "success": true,
+  "data": [{
+    "headers": ["字段1", "字段2"],
+    "rows": [{ "字段1": "值1", "字段2": 100 }],
+    "fileName": "data.xlsx",
+    "rowCount": 100,
+    "columnCount": 2
+  }]
+}
+```
 
-### next.config 配置规范
+### POST /api/analyze
+分析已解析的数据
 
-- 配置的路径不要写死绝对路径，必须使用 path.resolve(__dirname, ...)、import.meta.dirname 或 process.cwd() 动态拼接。
+**请求**:
+```json
+{
+  "data": { /* ParsedData */ }
+}
+```
 
-### Hydration 问题防范
+**响应**:
+```json
+{
+  "success": true,
+  "analysis": {
+    "fieldStats": [...],
+    "summary": { "totalRows": 100, "totalColumns": 5, ... },
+    "insights": ["洞察1", "洞察2"],
+    "anomalies": [...]
+  }
+}
+```
 
-1. 严禁在 JSX 渲染逻辑中直接使用 typeof window、Date.now()、Math.random() 等动态数据。**必须使用 'use client' 并配合 useEffect + useState 确保动态内容仅在客户端挂载后渲染**；同时严禁非法 HTML 嵌套（如 <p> 嵌套 <div>）。
-2. **禁止使用 head 标签**，优先使用 metadata，详见文档：https://nextjs.org/docs/app/api-reference/functions/generate-metadata
-   1. 三方 CSS、字体等资源可在 `globals.css` 中顶部通过 `@import` 引入或使用 next/font
-   2. preload, preconnect, dns-prefetch 通过 ReactDOM 的 preload、preconnect、dns-prefetch 方法引入
-   3. json-ld 可阅读 https://nextjs.org/docs/app/guides/json-ld
+### POST /api/llm-insight
+获取 AI 智能洞察（SSE 流式响应）
 
-## UI 设计与组件规范 (UI & Styling Standards)
+## 注意事项
 
-- 模板默认预装核心组件库 `shadcn/ui`，位于`src/components/ui/`目录下
-- Next.js 项目**必须默认**采用 shadcn/ui 组件、风格和规范，**除非用户指定用其他的组件和规范。**
+1. **文件大小限制**: 默认 50MB
+2. **支持的格式**: .xlsx, .xls, .csv
+3. **数据类型推断**: 自动识别数值、文本、日期字段
+4. **AI 分析**: 使用 doubao-seed-2-0-lite 模型，流式输出
