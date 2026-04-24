@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { FileUploader } from '@/components/file-uploader';
+import { FileUploader, UploadFile } from '@/components/file-uploader';
 import { DataTable } from '@/components/data-table';
 import { DataInsights } from '@/components/data-insights';
 import { Dashboard } from '@/components/dashboard';
@@ -18,6 +18,7 @@ import { AdvancedCharts } from '@/components/advanced-charts';
 import { DashboardDesigner } from '@/components/dashboard-designer';
 import { EnhancedLLMAssistant } from '@/components/enhanced-llm-assistant';
 import { ShareManager } from '@/components/share-manager';
+import { GlobalAIAssistant } from '@/components/global-ai-assistant';
 import {
   FileSpreadsheet,
   BarChart3,
@@ -36,27 +37,27 @@ import {
   Zap,
   Settings
 } from 'lucide-react';
-import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
+import type { ParsedData, DataAnalysis, FieldStat } from '@/lib/data-processor';
 
 type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share';
 
 export default function HomePage() {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<UploadFile[]>([]);
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   
-  const handleFileUpload = async (uploadedFiles: File[]) => {
+  const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
     setFiles(uploadedFiles);
     setIsLoading(true);
     setError(null);
     
     try {
       const formData = new FormData();
-      uploadedFiles.forEach(file => {
-        formData.append('files', file);
+      uploadedFiles.forEach(uploadFile => {
+        formData.append('files', uploadFile.file);
       });
       
       const response = await fetch('/api/upload', {
@@ -313,7 +314,7 @@ export default function HomePage() {
           
           <TabsContent value="insights" className="mt-6">
             {analysis ? (
-              <DataInsights analysis={analysis} />
+              <DataInsights data={parsedData} analysis={analysis} />
             ) : (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -463,6 +464,12 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-8">
         {renderContent()}
       </main>
+      
+      {/* Global AI Assistant */}
+      <GlobalAIAssistant 
+        hasData={!!parsedData} 
+        rowCount={parsedData?.rowCount}
+      />
       
       {/* Footer */}
       <footer className="bg-white border-t mt-auto">

@@ -27,6 +27,7 @@ export interface FieldStat {
   nullCount: number;
   uniqueCount: number;
   sampleValues: CellValue[];
+  // 数值统计（可选，数值类型字段有）
   numericStats?: {
     min: number;
     max: number;
@@ -34,6 +35,12 @@ export interface FieldStat {
     median: number;
     sum: number;
   };
+  // 直接访问（兼容）
+  min?: number;
+  max?: number;
+  mean?: number;
+  sum?: number;
+  topValues?: Array<{ value: string; count: number; percentage: number }>;
 }
 
 export interface Summary {
@@ -187,7 +194,14 @@ function analyzeFields(data: ParsedData): FieldStat[] {
       nullCount: values.length - nonNullValues.length,
       uniqueCount: uniqueValues.size,
       sampleValues: nonNullValues.slice(0, 5),
-      numericStats
+      numericStats,
+      // 兼容：直接访问
+      ...(numericStats ? {
+        min: numericStats.min,
+        max: numericStats.max,
+        mean: numericStats.mean,
+        sum: numericStats.sum
+      } : {})
     };
   });
 }

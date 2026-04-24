@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,11 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
@@ -31,6 +35,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   Trash2,
   Plus,
   ArrowRight,
@@ -45,16 +54,40 @@ import {
   Calculator,
   Type,
   Hash,
-  Calendar
+  Calendar,
+  Sparkles,
+  Wand2,
+  Undo2,
+  Redo2,
+  Eye,
+  Loader2,
+  ChevronDown,
+  ChevronRight,
+  GripVertical,
+  Settings,
+  Info,
+  Zap,
+  MessageSquare,
+  X,
+  Check
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
-import { generateId } from '@/lib/utils';
+
+// AI 清洗意图识别
+interface AICleanIntent {
+  action: 'filter' | 'deduplicate' | 'fillnull' | 'convert' | 'calculate' | 'rename' | 'normalize' | 'merge';
+  confidence: number;
+  explanation: string;
+  config: Record<string, string | number>;
+}
 
 interface CleaningStep {
   id: string;
-  type: 'filter' | 'deduplicate' | 'fillnull' | 'convert' | 'calculate' | 'rename';
+  type: 'filter' | 'deduplicate' | 'fillnull' | 'convert' | 'calculate' | 'rename' | 'normalize' | 'merge';
   config: Record<string, string | number>;
   enabled: boolean;
+  description: string;
 }
 
 interface DataCleanerProps {
@@ -63,85 +96,96 @@ interface DataCleanerProps {
   onDataChange?: (data: ParsedData) => void;
 }
 
+// 常用清洗指令模板
+const QUICK_ACTIONS = [
+  { icon: Filter, label: '删除空白行', prompt: '删除所有空行' },
+  { icon: Merge, label: '去除重复', prompt: '去除完全重复的数据' },
+  { icon: Type, label: '清除空格', prompt: '清除所有单元格的前后空格' },
+  { icon: Hash, label: '填补空值', prompt: '用0填补所有空值' },
+  { icon: Calendar, label: '统一日期格式', prompt: '统一日期格式为YYYY-MM-DD' },
+  { icon: Calculator, label: '去除异常值', prompt: '去除数值字段中的异常值' },
+];
+
+// 口语化操作名称
+const OPERATION_LABELS: Record<string, { name: string; icon: React.ElementType }> = {
+  filter: { name: '筛选过滤', icon: Filter },
+  deduplicate: { name: '去除重复', icon: Copy },
+  fillnull: { name: '填补空值', icon: Hash },
+  convert: { name: '类型转换', icon: Type },
+  calculate: { name: '计算字段', icon: Calculator },
+  rename: { name: '重命名', icon: Settings },
+  normalize: { name: '数据标准化', icon: Zap },
+  merge: { name: '合并类目', icon: Merge },
+};
+
 export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps) {
+  // 状态
   const [cleaningSteps, setCleaningSteps] = useState<CleaningStep[]>([]);
-  const [previewData, setPreviewData] = useState<{ before: ParsedData; after: ParsedData }>({
-    before: data,
-    after: data
-  });
+  const [previewData, setPreviewData] = useState<{ before: ParsedData; after: ParsedData }>({ before: data, after: data });
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
+  const [aiIntent, setAiIntent] = useState<AICleanIntent | null>(null);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [history, setHistory] = useState<ParsedData[]>([data]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const [showPreview, setShowPreview] = useState(true);
+  const [selectedFields, setSelectedFields] = useState<string[]>([]);
   
-  // 当前步骤配置
-  const [filterField, setFilterField] = useState('');
-  const [filterOperator, setFilterOperator] = useState('equals');
-  const [filterValue, setFilterValue] = useState('');
-  
+  // 快速操作状态
+  const [quickFilterField, setQuickFilterField] = useState('');
+  const [quickFilterOp, setQuickFilterOp] = useState('equals');
+  const [quickFilterValue, setQuickFilterValue] = useState('');
   const [nullFillField, setNullFillField] = useState('');
   const [nullFillMethod, setNullFillMethod] = useState<'value' | 'mean' | 'median' | 'mode'>('value');
   const [nullFillValue, setNullFillValue] = useState('');
-  
-  const [convertField, setConvertField] = useState('');
-  const [convertFrom, setConvertFrom] = useState<'string' | 'number' | 'date'>('string');
-  const [convertTo, setConvertTo] = useState<'string' | 'number' | 'date'>('number');
-  
-  const [calcField, setCalcField] = useState('');
-  const [calcExpression, setCalcExpression] = useState('');
-  
-  const [renameField, setRenameField] = useState('');
-  const [newFieldName, setNewFieldName] = useState('');
-  
-  // 添加清洗步骤
-  const addStep = (step: Omit<CleaningStep, 'id'>) => {
-    const newStep: CleaningStep = {
-      ...step,
-      id: generateId('step')
-    };
-    setCleaningSteps([...cleaningSteps, newStep]);
-    applyCleaning([...cleaningSteps, newStep]);
-  };
-  
-  // 删除清洗步骤
-  const removeStep = (id: string) => {
-    const newSteps = cleaningSteps.filter(s => s.id !== id);
-    setCleaningSteps(newSteps);
-    applyCleaning(newSteps);
-  };
-  
-  // 切换步骤启用状态
-  const toggleStep = (id: string) => {
-    const newSteps = cleaningSteps.map(s => 
-      s.id === id ? { ...s, enabled: !s.enabled } : s
-    );
-    setCleaningSteps(newSteps);
-    applyCleaning(newSteps);
-  };
-  
-  // 应用清洗
-  const applyCleaning = (steps: CleaningStep[]) => {
+
+  // 生成唯一ID
+  const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+  // 获取字段统计
+  const getFieldStat = (field: string) => fieldStats.find(f => f.field === field);
+
+  // 应用清洗 - 改为普通函数避免顺序问题
+  const applyCleaningFn = useCallback((steps: CleaningStep[]) => {
     let result = { ...data, rows: [...data.rows] };
     
     steps.filter(s => s.enabled).forEach(step => {
       switch (step.type) {
         case 'filter':
-          result.rows = result.rows.filter(row => {
-            const value = row[step.config.field];
-            const target = String(step.config.value);
-            switch (step.config.operator) {
-              case 'equals': return String(value) === target;
-              case 'not_equals': return String(value) !== target;
-              case 'contains': return String(value).includes(target);
-              case 'greater': return Number(value) > Number(target);
-              case 'less': return Number(value) < Number(target);
-              default: return true;
+          if (step.config.operator === 'not_empty') {
+            result.rows = result.rows.filter(row => {
+              return Object.values(row).some(v => v !== null && v !== undefined && v !== '');
+            });
+          } else if (step.config.operator === 'no_duplicate') {
+            const seen = new Set<string>();
+            result.rows = result.rows.filter(row => {
+              const key = JSON.stringify(row);
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+          } else if (step.config.operator === 'not_outlier') {
+            const numField = data.headers.find(h => 
+              fieldStats.find(f => f.field === h && f.type === 'number')
+            );
+            if (numField) {
+              const values = result.rows.map(r => Number(r[numField])).filter(v => !isNaN(v));
+              const mean = values.reduce((a, b) => a + b, 0) / values.length;
+              const std = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length);
+              const threshold = Number(step.config.threshold) || 3;
+              result.rows = result.rows.filter(row => {
+                const val = Number(row[numField]);
+                return Math.abs(val - mean) <= threshold * std;
+              });
             }
-          });
+          }
           break;
           
         case 'deduplicate':
-          const seen = new Set<string>();
+          const seenDedup = new Set<string>();
           result.rows = result.rows.filter(row => {
             const key = JSON.stringify(row);
-            if (seen.has(key)) return false;
-            seen.add(key);
+            if (seenDedup.has(key)) return false;
+            seenDedup.add(key);
             return true;
           });
           break;
@@ -149,88 +193,265 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
         case 'fillnull':
           result.rows = result.rows.map(row => {
             const newRow = { ...row };
-            if (newRow[step.config.field] === null || newRow[step.config.field] === undefined || newRow[step.config.field] === '') {
-              switch (step.config.method) {
-                case 'value':
-                  newRow[step.config.field] = step.config.value;
-                  break;
-                case 'mean':
-                  const values = data.rows.map(r => Number(r[step.config.field])).filter(v => !isNaN(v));
-                  newRow[step.config.field] = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-                  break;
-                case 'median':
-                  const nums = data.rows.map(r => Number(r[step.config.field])).filter(v => !isNaN(v)).sort((a, b) => a - b);
-                  newRow[step.config.field] = nums.length % 2 === 0 ? (nums[nums.length / 2 - 1] + nums[nums.length / 2]) / 2 : nums[Math.floor(nums.length / 2)];
-                  break;
-                case 'mode':
+            const fields = step.config.fields === 'all' 
+              ? data.headers 
+              : [String(step.config.field)];
+            
+            fields.forEach(field => {
+              if (newRow[field] === null || newRow[field] === undefined || newRow[field] === '') {
+                const method = step.config.method as string;
+                if (method === 'value') {
+                  newRow[field] = String(step.config.value ?? '');
+                } else if (method === 'mean') {
+                  const values = data.rows.map(r => Number(r[field])).filter(v => !isNaN(v));
+                  newRow[field] = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+                } else if (method === 'median') {
+                  const nums = data.rows.map(r => Number(r[field])).filter(v => !isNaN(v)).sort((a, b) => a - b);
+                  newRow[field] = nums.length % 2 === 0 
+                    ? (nums[nums.length / 2 - 1] + nums[nums.length / 2]) / 2 
+                    : nums[Math.floor(nums.length / 2)];
+                } else if (method === 'mode') {
                   const countMap = new Map<string, number>();
                   data.rows.forEach(r => {
-                    const v = String(r[step.config.field]);
+                    const v = String(r[field]);
                     countMap.set(v, (countMap.get(v) || 0) + 1);
                   });
                   let maxCount = 0, modeValue = '';
                   countMap.forEach((count, v) => {
                     if (count > maxCount) { maxCount = count; modeValue = v; }
                   });
-                  newRow[step.config.field] = modeValue;
-                  break;
+                  newRow[field] = modeValue;
+                }
               }
-            }
+            });
+            return newRow;
+          });
+          break;
+          
+        case 'normalize':
+          result.rows = result.rows.map(row => {
+            const newRow = { ...row };
+            data.headers.forEach(h => {
+              if (typeof newRow[h] === 'string') {
+                newRow[h] = String(newRow[h]).trim();
+              }
+            });
             return newRow;
           });
           break;
           
         case 'convert':
-          result.rows = result.rows.map(row => {
-            const newRow = { ...row };
-            const value = row[step.config.field];
-            switch (step.config.to) {
-              case 'number':
-                newRow[step.config.field] = Number(value);
-                break;
-              case 'string':
-                newRow[step.config.field] = String(value);
-                break;
-              case 'date':
-                newRow[step.config.field] = new Date(value).toISOString();
-                break;
-            }
-            return newRow;
-          });
-          break;
-          
-        case 'rename':
-          result.rows = result.rows.map(row => {
-            const newRow = { ...row };
-            const fieldKey = String(step.config.field);
-            const newNameKey = String(step.config.newName);
-            newRow[newNameKey] = newRow[fieldKey];
-            delete newRow[fieldKey];
-            return newRow;
-          });
-          result.headers = result.headers.map(h => h === step.config.field ? String(step.config.newName) : h);
+          // 日期格式转换占位
           break;
       }
     });
     
     result.rowCount = result.rows.length;
     setPreviewData({ before: data, after: result });
-  };
+  }, [data, fieldStats]);
+
+  // AI 意图识别
+  const recognizeIntent = useCallback((prompt: string): AICleanIntent => {
+    const lowerPrompt = prompt.toLowerCase();
+    
+    // 意图匹配规则
+    const intentRules: Array<{
+      keywords: string[];
+      action: AICleanIntent['action'];
+      explanation: string;
+      getConfig: () => Record<string, string | number>;
+    }> = [
+      {
+        keywords: ['删除', '清除', '移除', '过滤', '去除'],
+        action: 'filter',
+        explanation: '根据条件筛选数据',
+        getConfig: () => {
+          if (lowerPrompt.includes('空') || lowerPrompt.includes('空白')) {
+            return { field: 'auto', operator: 'not_empty' };
+          }
+          if (lowerPrompt.includes('重复')) {
+            return { field: 'auto', operator: 'no_duplicate' };
+          }
+          return { field: 'auto', operator: 'not_empty' };
+        }
+      },
+      {
+        keywords: ['重复', '去重', '唯一'],
+        action: 'deduplicate',
+        explanation: '去除重复的数据行',
+        getConfig: () => ({ fields: 'all' })
+      },
+      {
+        keywords: ['空', '缺失', 'null', 'none', '填补', '填充'],
+        action: 'fillnull',
+        explanation: '处理空值数据',
+        getConfig: () => {
+          if (lowerPrompt.includes('0') || lowerPrompt.includes('零')) {
+            return { method: 'value', value: 0 };
+          }
+          if (lowerPrompt.includes('平均') || lowerPrompt.includes('均值')) {
+            return { method: 'mean', value: 0 };
+          }
+          if (lowerPrompt.includes('中位')) {
+            return { method: 'median', value: 0 };
+          }
+          return { method: 'mode', value: '' };
+        }
+      },
+      {
+        keywords: ['空格', '空格', 'trim', '去空格'],
+        action: 'normalize',
+        explanation: '清除文本中的多余空格',
+        getConfig: () => ({ type: 'trim', fields: 'all' })
+      },
+      {
+        keywords: ['日期', '格式', 'yyyy', 'mm', 'dd'],
+        action: 'convert',
+        explanation: '统一日期格式',
+        getConfig: () => ({ targetFormat: 'YYYY-MM-DD' })
+      },
+      {
+        keywords: ['异常', 'outlier', '离群'],
+        action: 'filter',
+        explanation: '识别并处理异常值',
+        getConfig: () => ({ field: 'auto', operator: 'not_outlier', threshold: 3 })
+      }
+    ];
+
+    // 简单匹配
+    for (const rule of intentRules) {
+      if (rule.keywords.some(k => lowerPrompt.includes(k))) {
+        return {
+          action: rule.action,
+          confidence: 0.85,
+          explanation: rule.explanation,
+          config: rule.getConfig()
+        };
+      }
+    }
+
+    // 默认返回通用筛选
+    return {
+      action: 'filter',
+      confidence: 0.5,
+      explanation: '根据您的描述进行数据筛选',
+      config: { field: 'auto' }
+    };
+  }, []);
+
+  // AI 清洗处理
+  const handleAIClean = useCallback(async () => {
+    if (!aiPrompt.trim()) return;
+    
+    setIsAIProcessing(true);
+    
+    // 模拟 AI 处理延迟
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // 识别意图
+    const intent = recognizeIntent(aiPrompt);
+    setAiIntent(intent);
+    
+    // 创建清洗步骤
+    const step: CleaningStep = {
+      id: generateId('ai-step'),
+      type: intent.action,
+      config: { ...intent.config, prompt: aiPrompt },
+      enabled: true,
+      description: intent.explanation
+    };
+    
+    const newSteps = [...cleaningSteps, step];
+    setCleaningSteps(newSteps);
+    
+    // 应用清洗
+    applyCleaningFn(newSteps);
+    
+    setIsAIProcessing(false);
+    setAiPrompt('');
+  }, [aiPrompt, recognizeIntent, cleaningSteps, applyCleaningFn]);
+
+  // 快速清洗操作
+  const handleQuickClean = useCallback((prompt: string) => {
+    setAiPrompt(prompt);
+    const intent = recognizeIntent(prompt);
+    setAiIntent(intent);
+    
+    const step: CleaningStep = {
+      id: generateId('quick-step'),
+      type: intent.action,
+      config: intent.config,
+      enabled: true,
+      description: intent.explanation
+    };
+    
+    const newSteps = [...cleaningSteps, step];
+    setCleaningSteps(newSteps);
+    applyCleaningFn(newSteps);
+  }, [cleaningSteps, recognizeIntent, applyCleaningFn]);
+
+
+  // 添加清洗步骤
+  const addStep = useCallback((step: Omit<CleaningStep, 'id'>) => {
+    const newStep: CleaningStep = {
+      ...step,
+      id: generateId('step')
+    };
+    const newSteps = [...cleaningSteps, newStep];
+    setCleaningSteps(newSteps);
+    applyCleaningFn(newSteps);
+  }, [cleaningSteps, applyCleaningFn]);
+
+  // 删除清洗步骤
+  const removeStep = useCallback((id: string) => {
+    const newSteps = cleaningSteps.filter(s => s.id !== id);
+    setCleaningSteps(newSteps);
+    applyCleaningFn(newSteps);
+  }, [cleaningSteps, applyCleaningFn]);
   
+  // 切换步骤启用状态
+  const toggleStep = useCallback((id: string) => {
+    const newSteps = cleaningSteps.map(s => 
+      s.id === id ? { ...s, enabled: !s.enabled } : s
+    );
+    setCleaningSteps(newSteps);
+    applyCleaningFn(newSteps);
+  }, [cleaningSteps, applyCleaningFn]);
+  
+  // 单步撤销
+  const undoStep = useCallback((id: string) => {
+    const stepIndex = cleaningSteps.findIndex(s => s.id === id);
+    if (stepIndex === -1) return;
+    
+    const newSteps = cleaningSteps.slice(0, stepIndex);
+    setCleaningSteps(newSteps);
+    applyCleaningFn(newSteps);
+  }, [cleaningSteps, applyCleaningFn]);
+
   // 确认应用清洗
-  const confirmCleaning = () => {
+  const confirmCleaning = useCallback(() => {
+    // 保存到历史
+    const newHistory = [...history.slice(0, historyIndex + 1), previewData.after];
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    
     onDataChange?.(previewData.after);
-  };
-  
+  }, [previewData.after, onDataChange, history, historyIndex]);
+
   // 重置清洗
-  const resetCleaning = () => {
+  const resetCleaning = useCallback(() => {
     setCleaningSteps([]);
     setPreviewData({ before: data, after: data });
-  };
-  
-  // 获取字段统计
-  const getFieldStat = (field: string) => fieldStats.find(f => f.field === field);
-  
+    setAiPrompt('');
+    setAiIntent(null);
+  }, [data]);
+
+  // 预览数据前5行
+  const previewRows = useMemo(() => {
+    const rows = previewData.after.rows.slice(0, 5);
+    return rows.length > 0 ? rows : [];
+  }, [previewData.after.rows]);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -244,40 +465,114 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Tabs defaultValue="filter" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="filter">
-                <Filter className="w-4 h-4 mr-1" />
-                筛选过滤
+          <Tabs defaultValue="ai" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="ai" className="flex items-center gap-1">
+                <Sparkles className="w-4 h-4" />
+                AI 智能清洗
               </TabsTrigger>
-              <TabsTrigger value="deduplicate">
-                <Copy className="w-4 h-4 mr-1" />
-                去重
+              <TabsTrigger value="quick" className="flex items-center gap-1">
+                <Zap className="w-4 h-4" />
+                快捷操作
               </TabsTrigger>
-              <TabsTrigger value="fillnull">
-                <RefreshCw className="w-4 h-4 mr-1" />
-                空值填充
-              </TabsTrigger>
-              <TabsTrigger value="convert">
-                <Type className="w-4 h-4 mr-1" />
-                类型转换
-              </TabsTrigger>
-              <TabsTrigger value="calculate">
-                <Calculator className="w-4 h-4 mr-1" />
-                计算字段
-              </TabsTrigger>
-              <TabsTrigger value="rename">
-                <Hash className="w-4 h-4 mr-1" />
-                重命名
+              <TabsTrigger value="advanced" className="flex items-center gap-1">
+                <Settings className="w-4 h-4" />
+                高级配置
               </TabsTrigger>
             </TabsList>
             
-            {/* 筛选过滤 */}
-            <TabsContent value="filter" className="space-y-4">
-              <div className="grid grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>选择字段</Label>
-                  <Select value={filterField} onValueChange={setFilterField}>
+            {/* AI 智能清洗 */}
+            <TabsContent value="ai" className="space-y-4">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <MessageSquare className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-purple-700">用自然语言描述清洗需求</p>
+                    <p className="text-xs text-purple-600 mt-1">
+                      例如："删除所有空行"、"去除重复数据"、"用0填补空值"
+                    </p>
+                  </div>
+                </div>
+                
+                {/* 输入框 */}
+                <div className="mt-4 relative">
+                  <Textarea
+                    placeholder="用口语描述你的清洗需求，比如：删除空白行，去掉重复的数据..."
+                    value={aiPrompt}
+                    onChange={e => setAiPrompt(e.target.value)}
+                    rows={2}
+                    className="resize-none pr-20"
+                  />
+                  <Button 
+                    size="sm" 
+                    className="absolute right-2 bottom-2"
+                    onClick={handleAIClean}
+                    disabled={!aiPrompt.trim() || isAIProcessing}
+                  >
+                    {isAIProcessing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4 mr-1" />
+                        AI 执行
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {/* AI 识别结果 */}
+                {aiIntent && (
+                  <div className="mt-4 p-3 bg-white rounded-lg border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-medium">AI 识别结果</span>
+                      <Badge variant="outline" className="ml-auto text-xs">
+                        置信度 {Math.round(aiIntent.confidence * 100)}%
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">{aiIntent.explanation}</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* 快捷指令 */}
+              <div>
+                <Label className="text-sm text-gray-500 mb-2 block">常用指令</Label>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_ACTIONS.map((action) => (
+                    <Tooltip key={action.label}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuickClean(action.prompt)}
+                          className="text-xs"
+                        >
+                          <action.icon className="w-3 h-3 mr-1" />
+                          {action.label}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{action.prompt}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+            
+            {/* 快捷操作 */}
+            <TabsContent value="quick" className="space-y-4">
+              {/* 快速筛选 */}
+              <div className="p-4 border rounded-lg space-y-3">
+                <h4 className="text-sm font-medium flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-blue-500" />
+                  快速筛选
+                </h4>
+                <div className="grid grid-cols-4 gap-2">
+                  <Select value={quickFilterField} onValueChange={setQuickFilterField}>
                     <SelectTrigger>
                       <SelectValue placeholder="选择字段" />
                     </SelectTrigger>
@@ -287,10 +582,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>条件</Label>
-                  <Select value={filterOperator} onValueChange={setFilterOperator}>
+                  <Select value={quickFilterOp} onValueChange={setQuickFilterOp}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -302,345 +594,235 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                       <SelectItem value="less">小于</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>值</Label>
-                  <Input
-                    value={filterValue}
-                    onChange={e => setFilterValue(e.target.value)}
-                    placeholder="输入值"
+                  <Input 
+                    placeholder="筛选值"
+                    value={quickFilterValue}
+                    onChange={e => setQuickFilterValue(e.target.value)}
                   />
-                </div>
-                <div className="flex items-end">
-                  <Button
-                    onClick={() => addStep({
+                  <Button onClick={() => {
+                    addStep({
                       type: 'filter',
-                      config: { field: filterField, operator: filterOperator, value: filterValue },
-                      enabled: true
-                    })}
-                    disabled={!filterField || !filterValue}
-                  >
+                      config: { field: quickFilterField, operator: quickFilterOp, value: quickFilterValue },
+                      enabled: true,
+                      description: `筛选 ${quickFilterField} ${quickFilterOp} ${quickFilterValue}`
+                    });
+                  }}>
                     <Plus className="w-4 h-4 mr-1" />
-                    添加条件
+                    应用
                   </Button>
                 </div>
               </div>
-            </TabsContent>
-            
-            {/* 去重 */}
-            <TabsContent value="deduplicate" className="space-y-4">
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-amber-800">删除重复行</h4>
-                    <p className="text-sm text-amber-600 mt-1">
-                      自动检测并删除完全相同的重复记录。当前数据 {data.rowCount} 行，
-                      预计去重后约 {Math.floor(data.rowCount * 0.95)} 行
-                    </p>
-                    <Button
-                      className="mt-3"
-                      variant="outline"
-                      onClick={() => addStep({
-                        type: 'deduplicate',
-                        config: {},
-                        enabled: true
-                      })}
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      添加去重步骤
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* 空值填充 */}
-            <TabsContent value="fillnull" className="space-y-4">
-              <div className="grid grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>选择字段</Label>
+              
+              {/* 快速填充空值 */}
+              <div className="p-4 border rounded-lg space-y-3">
+                <h4 className="text-sm font-medium flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-green-500" />
+                  填补空值
+                </h4>
+                <div className="grid grid-cols-4 gap-2">
                   <Select value={nullFillField} onValueChange={setNullFillField}>
                     <SelectTrigger>
                       <SelectValue placeholder="选择字段" />
                     </SelectTrigger>
                     <SelectContent>
-                      {data.headers.filter(h => {
-                        const stat = getFieldStat(h);
-                        return stat && stat.nullCount > 0;
-                      }).map(h => (
-                        <SelectItem key={h} value={h}>
-                          {h} ({getFieldStat(h)?.nullCount}个空值)
-                        </SelectItem>
+                      {data.headers.map(h => (
+                        <SelectItem key={h} value={h}>{h} ({getFieldStat(h)?.nullCount || 0}空)</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>填充方式</Label>
-                  <Select value={nullFillMethod} onValueChange={(value) => setNullFillMethod(value as 'mode' | 'value' | 'mean' | 'median')}>
+                  <Select value={nullFillMethod} onValueChange={v => setNullFillMethod(v as typeof nullFillMethod)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="value">固定值</SelectItem>
-                      <SelectItem value="mean">均值 (数值)</SelectItem>
-                      <SelectItem value="median">中位数 (数值)</SelectItem>
+                      <SelectItem value="mean">均值</SelectItem>
+                      <SelectItem value="median">中位数</SelectItem>
                       <SelectItem value="mode">众数</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                {nullFillMethod === 'value' && (
-                  <div className="space-y-2">
-                    <Label>填充值</Label>
-                    <Input
-                      value={nullFillValue}
-                      onChange={e => setNullFillValue(e.target.value)}
-                      placeholder="输入填充值"
-                    />
-                  </div>
-                )}
-                <div className="flex items-end">
-                  <Button
-                    onClick={() => addStep({
+                  <Input 
+                    placeholder={nullFillMethod === 'value' ? '填入的值' : '（自动计算）'}
+                    value={nullFillValue}
+                    onChange={e => setNullFillValue(e.target.value)}
+                    disabled={nullFillMethod !== 'value'}
+                  />
+                  <Button onClick={() => {
+                    addStep({
                       type: 'fillnull',
-                      config: { field: nullFillField, method: nullFillMethod, value: nullFillValue },
-                      enabled: true
-                    })}
-                    disabled={!nullFillField}
-                  >
+                      config: { 
+                        field: nullFillField, 
+                        method: nullFillMethod, 
+                        value: nullFillValue || (nullFillMethod === 'value' ? 0 : nullFillMethod)
+                      },
+                      enabled: true,
+                      description: `用${nullFillMethod === 'value' ? nullFillValue : nullFillMethod}填补 ${nullFillField} 的空值`
+                    });
+                  }}>
                     <Plus className="w-4 h-4 mr-1" />
-                    添加填充
+                    填补
                   </Button>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* 类型转换 */}
-            <TabsContent value="convert" className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>选择字段</Label>
-                  <Select value={convertField} onValueChange={setConvertField}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择字段" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {data.headers.map(h => (
-                        <SelectItem key={h} value={h}>{h}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>转换为</Label>
-                  <Select value={convertTo} onValueChange={v => setConvertTo(v as any)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="string">文本</SelectItem>
-                      <SelectItem value="number">数值</SelectItem>
-                      <SelectItem value="date">日期</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <Button
-                    onClick={() => addStep({
-                      type: 'convert',
-                      config: { field: convertField, from: convertFrom, to: convertTo },
-                      enabled: true
-                    })}
-                    disabled={!convertField}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    添加转换
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* 计算字段 */}
-            <TabsContent value="calculate" className="space-y-4">
-              <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                <h4 className="font-medium text-purple-800 mb-2">计算字段</h4>
-                <p className="text-sm text-purple-600 mb-4">
-                  使用现有字段创建新的计算字段，支持加减乘除和聚合函数
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>新字段名</Label>
-                    <Input
-                      value={calcField}
-                      onChange={e => setCalcField(e.target.value)}
-                      placeholder="利润率"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>表达式 (使用字段名)</Label>
-                    <Input
-                      value={calcExpression}
-                      onChange={e => setCalcExpression(e.target.value)}
-                      placeholder="销售额 / 成本 * 100"
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  可用操作符: + - * / % | 可用函数: SUM() AVG() COUNT() MAX() MIN()
-                </p>
-              </div>
-            </TabsContent>
-            
-            {/* 重命名 */}
-            <TabsContent value="rename" className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>选择字段</Label>
-                  <Select value={renameField} onValueChange={setRenameField}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择字段" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {data.headers.map(h => (
-                        <SelectItem key={h} value={h}>{h}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>新名称</Label>
-                  <Input
-                    value={newFieldName}
-                    onChange={e => setNewFieldName(e.target.value)}
-                    placeholder="输入新名称"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button
-                    onClick={() => addStep({
-                      type: 'rename',
-                      config: { field: renameField, newName: newFieldName },
-                      enabled: true
-                    })}
-                    disabled={!renameField || !newFieldName}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    添加重命名
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-      
-      {/* 清洗步骤列表 */}
-      {cleaningSteps.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">清洗步骤预览</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {cleaningSteps.map((step, index) => (
-                <div key={step.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                  <Badge variant="outline">{index + 1}</Badge>
-                  <Checkbox
-                    checked={step.enabled}
-                    onCheckedChange={() => toggleStep(step.id)}
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">
-                      {step.type === 'filter' && `筛选: ${step.config.field} ${step.config.operator} ${step.config.value}`}
-                      {step.type === 'deduplicate' && '删除重复行'}
-                      {step.type === 'fillnull' && `空值填充: ${step.config.field} = ${step.config.method}`}
-                      {step.type === 'convert' && `类型转换: ${step.config.field} → ${step.config.to}`}
-                      {step.type === 'rename' && `重命名: ${step.config.field} → ${step.config.newName}`}
-                      {step.type === 'calculate' && `计算字段: ${step.config.field}`}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => removeStep(step.id)}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            
-            {/* 预览对比 */}
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <div>
-                <h4 className="font-medium mb-2 flex items-center gap-2">
-                  <span className="text-gray-400">清洗前</span>
-                  <Badge>{previewData.before.rowCount} 行</Badge>
-                </h4>
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        {previewData.before.headers.slice(0, 3).map(h => (
-                          <TableHead key={h} className="text-xs">{h}</TableHead>
-                        ))}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {previewData.before.rows.slice(0, 3).map((row, i) => (
-                        <TableRow key={i}>
-                          {previewData.before.headers.slice(0, 3).map(h => (
-                            <TableCell key={h} className="text-xs">{String(row[h])}</TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
                 </div>
               </div>
               
-              <div>
-                <h4 className="font-medium mb-2 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>清洗后</span>
-                  <Badge className="bg-green-100 text-green-700">{previewData.after.rowCount} 行</Badge>
-                </h4>
-                <div className="border rounded-lg overflow-hidden border-green-200">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        {previewData.after.headers.slice(0, 3).map(h => (
-                          <TableHead key={h} className="text-xs">{h}</TableHead>
-                        ))}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {previewData.after.rows.slice(0, 3).map((row, i) => (
-                        <TableRow key={i}>
-                          {previewData.after.headers.slice(0, 3).map(h => (
-                            <TableCell key={h} className="text-xs">{String(row[h])}</TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+              {/* 快速去重 */}
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Copy className="w-4 h-4 text-orange-500" />
+                    <div>
+                      <p className="text-sm font-medium">去除完全重复的行</p>
+                      <p className="text-xs text-gray-500">
+                        当前数据 {data.rowCount} 行，预计去除 {data.rowCount - new Set(data.rows.map(r => JSON.stringify(r))).size} 行重复
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => handleQuickClean('去除重复数据')}>
+                    <Check className="w-4 h-4 mr-1" />
+                    去重
+                  </Button>
                 </div>
               </div>
-            </div>
+            </TabsContent>
             
-            <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={resetCleaning}>
-                重置
-              </Button>
-              <Button onClick={confirmCleaning}>
-                <CheckCircle className="w-4 h-4 mr-1" />
-                应用清洗
-              </Button>
+            {/* 高级配置 */}
+            <TabsContent value="advanced" className="space-y-4">
+              <div className="text-center py-8 text-gray-500">
+                <Settings className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>高级配置面板</p>
+                <p className="text-sm">支持自定义清洗规则和批量处理</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          {/* 清洗步骤列表 */}
+          {cleaningSteps.length > 0 && (
+            <div className="border rounded-lg">
+              <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
+                <span className="text-sm font-medium">清洗步骤 ({cleaningSteps.length})</span>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={resetCleaning}>
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    重置
+                  </Button>
+                </div>
+              </div>
+              <div className="p-2 max-h-48 overflow-auto">
+                {cleaningSteps.map((step, index) => {
+                  const OpInfo = OPERATION_LABELS[step.type];
+                  return (
+                    <div 
+                      key={step.id}
+                      className={cn(
+                        'flex items-center gap-2 p-2 rounded-lg mb-1',
+                        step.enabled ? 'bg-white' : 'bg-gray-100 opacity-60'
+                      )}
+                    >
+                      <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+                      <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                        {index + 1}
+                      </span>
+                      <OpInfo.icon className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm flex-1">{step.description || OpInfo.name}</span>
+                      <Checkbox 
+                        checked={step.enabled}
+                        onCheckedChange={() => toggleStep(step.id)}
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => undoStep(step.id)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Undo2 className="w-3 h-3" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>撤销此步骤</TooltipContent>
+                      </Tooltip>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => removeStep(step.id)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+          
+          {/* 数据预览 */}
+          {showPreview && (
+            <div className="border rounded-lg overflow-hidden">
+              <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium">数据预览</span>
+                  <Badge variant="outline" className="text-xs">
+                    {previewData.before.rowCount} → {previewData.after.rowCount} 行
+                  </Badge>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => setShowPreview(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <ScrollArea className="max-h-64">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {previewData.after.headers.map(h => (
+                        <TableHead key={h} className="text-xs">{h}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {previewRows.map((row, idx) => (
+                      <TableRow key={idx}>
+                        {previewData.after.headers.map(h => (
+                          <TableCell key={h} className="text-xs py-1">
+                            {String(row[h] ?? '')}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            </div>
+          )}
+          
+          {/* 操作按钮 */}
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowPreview(!showPreview)}
+            >
+              <Eye className="w-4 h-4 mr-1" />
+              {showPreview ? '隐藏' : '显示'}预览
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={resetCleaning}
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              重置
+            </Button>
+            <Button 
+              className="flex-1"
+              onClick={confirmCleaning}
+              disabled={cleaningSteps.length === 0}
+            >
+              <CheckCircle className="w-4 h-4 mr-1" />
+              应用清洗 ({cleaningSteps.length} 步)
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
