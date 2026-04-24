@@ -35,12 +35,13 @@ import {
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 
+type ReportTemplate = 'summary' | 'business' | 'financial' | 'operation';
+type ExportFormat = 'pdf' | 'excel' | 'image';
+
 interface ReportData {
   title: string;
-  template: ReportTemplate;
-  data: ParsedData;
   analysis: DataAnalysis;
-  options: ReportExportOptions;
+  generatedAt: Date;
 }
 
 interface ReportSection {
@@ -48,14 +49,16 @@ interface ReportSection {
   content: string;
 }
 
+interface ReportExportOptions {
+  includeCharts: boolean;
+  includeRawData: boolean;
+}
+
 interface ReportGeneratorProps {
   data: ParsedData;
   analysis: DataAnalysis;
   onExport?: (format: string, options: ReportExportOptions) => void;
 }
-
-type ReportTemplate = 'summary' | 'business' | 'financial' | 'operation';
-type ExportFormat = 'pdf' | 'excel' | 'image';
 
 export function ReportGenerator({ data, analysis, onExport }: ReportGeneratorProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate>('summary');
@@ -108,6 +111,7 @@ export function ReportGenerator({ data, analysis, onExport }: ReportGeneratorPro
         template: selectedTemplate,
         data,
         analysis,
+        generatedAt: new Date(),
         options: {
           includeCharts,
           includeRawData

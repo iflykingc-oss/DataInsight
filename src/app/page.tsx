@@ -12,6 +12,12 @@ import { Dashboard } from '@/components/dashboard';
 import { LLMAssistant } from '@/components/llm-assistant';
 import { FeishuIntegration } from '@/components/feishu-integration';
 import { ReportGenerator } from '@/components/report-generator';
+import { DataSourceManager } from '@/components/data-source-manager';
+import { DataCleaner } from '@/components/data-cleaner';
+import { AdvancedCharts } from '@/components/advanced-charts';
+import { DashboardDesigner } from '@/components/dashboard-designer';
+import { EnhancedLLMAssistant } from '@/components/enhanced-llm-assistant';
+import { ShareManager } from '@/components/share-manager';
 import {
   FileSpreadsheet,
   BarChart3,
@@ -21,11 +27,18 @@ import {
   FileText,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Database,
+  Filter,
+  Sparkles,
+  LayoutGrid,
+  Share2,
+  Zap,
+  Settings
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 
-type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report';
+type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share';
 
 export default function HomePage() {
   const [files, setFiles] = useState<File[]>([]);
@@ -41,13 +54,11 @@ export default function HomePage() {
     setError(null);
     
     try {
-      // 创建 FormData
       const formData = new FormData();
       uploadedFiles.forEach(file => {
         formData.append('files', file);
       });
       
-      // 上传并解析文件
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData
@@ -60,11 +71,9 @@ export default function HomePage() {
       const result = await response.json();
       
       if (result.success && result.data.length > 0) {
-        // 合并多个文件的数据（如果需要）
         const firstData = result.data[0];
         setParsedData(firstData);
         
-        // 请求数据分析
         const analyzeResponse = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -94,7 +103,6 @@ export default function HomePage() {
       columnCount: data.headers.length
     });
     
-    // 分析导入的数据
     fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -107,6 +115,19 @@ export default function HomePage() {
           columnCount: data.headers.length
         }
       })
+    })
+      .then(res => res.json())
+      .then(result => setAnalysis(result.analysis))
+      .catch(console.error);
+  };
+  
+  const handleDataCleaned = (cleanedData: ParsedData) => {
+    setParsedData(cleanedData);
+    // 重新分析清洗后的数据
+    fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: cleanedData })
     })
       .then(res => res.json())
       .then(result => setAnalysis(result.analysis))
@@ -149,30 +170,30 @@ export default function HomePage() {
               智能表格数据处理与可视化
             </h1>
             <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-8">
-              轻量化数据分析工具，支持Excel/CSV上传，自动清洗分析，一键生成交互式报表与仪表盘
+              企业级数据分析平台，支持多数据源接入、智能清洗、拖拽式仪表盘、NL2SQL自然语言查询
             </p>
             
             {/* 功能特点 */}
             <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
               <div className="p-4 bg-white rounded-lg border shadow-sm">
-                <FileSpreadsheet className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                <h3 className="font-medium">多格式支持</h3>
-                <p className="text-sm text-gray-500">Excel、CSV、飞书表格</p>
+                <Database className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                <h3 className="font-medium">多数据源</h3>
+                <p className="text-sm text-gray-500">文件/API/数据库</p>
               </div>
               <div className="p-4 bg-white rounded-lg border shadow-sm">
-                <BarChart3 className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <h3 className="font-medium">智能分析</h3>
-                <p className="text-sm text-gray-500">自动数据清洗与统计</p>
+                <Filter className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+                <h3 className="font-medium">智能清洗</h3>
+                <p className="text-sm text-gray-500">可视化数据预处理</p>
               </div>
               <div className="p-4 bg-white rounded-lg border shadow-sm">
-                <Table2 className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                <h3 className="font-medium">交互仪表盘</h3>
-                <p className="text-sm text-gray-500">可视化图表组件</p>
+                <LayoutGrid className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                <h3 className="font-medium">拖拽仪表盘</h3>
+                <p className="text-sm text-gray-500">DIY可视化</p>
               </div>
               <div className="p-4 bg-white rounded-lg border shadow-sm">
-                <Brain className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                <h3 className="font-medium">AI 洞察</h3>
-                <p className="text-sm text-gray-500">智能数据解读</p>
+                <Zap className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                <h3 className="font-medium">NL2SQL</h3>
+                <p className="text-sm text-gray-500">自然语言分析</p>
               </div>
             </div>
           </div>
@@ -186,6 +207,9 @@ export default function HomePage() {
               <FileUploader onFileUpload={handleFileUpload} />
             </CardContent>
           </Card>
+          
+          {/* 数据源管理 */}
+          <DataSourceManager />
           
           {/* 飞书集成 */}
           <FeishuIntegration onImportData={handleFeishuImport} />
@@ -223,26 +247,46 @@ export default function HomePage() {
         
         {/* 视图切换 */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="table" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-10">
+            <TabsTrigger value="table" className="flex items-center gap-1">
               <Table2 className="w-4 h-4" />
-              <span className="hidden sm:inline">数据表</span>
+              <span className="hidden lg:inline">数据表</span>
             </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center gap-2">
+            <TabsTrigger value="clean" className="flex items-center gap-1">
+              <Filter className="w-4 h-4" />
+              <span className="hidden lg:inline">数据清洗</span>
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="flex items-center gap-1">
               <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">分析</span>
+              <span className="hidden lg:inline">分析</span>
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+            <TabsTrigger value="advanced" className="flex items-center gap-1">
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden lg:inline">高级图表</span>
+            </TabsTrigger>
+            <TabsTrigger value="dashboard" className="flex items-center gap-1">
               <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">仪表盘</span>
+              <span className="hidden lg:inline">仪表盘</span>
             </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-2">
+            <TabsTrigger value="designer" className="flex items-center gap-1">
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden lg:inline">设计器</span>
+            </TabsTrigger>
+            <TabsTrigger value="chat" className="flex items-center gap-1">
               <Brain className="w-4 h-4" />
-              <span className="hidden sm:inline">AI助手</span>
+              <span className="hidden lg:inline">AI助手</span>
             </TabsTrigger>
-            <TabsTrigger value="report" className="flex items-center gap-2">
+            <TabsTrigger value="report" className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">报表</span>
+              <span className="hidden lg:inline">报表</span>
+            </TabsTrigger>
+            <TabsTrigger value="share" className="flex items-center gap-1">
+              <Share2 className="w-4 h-4" />
+              <span className="hidden lg:inline">分享</span>
+            </TabsTrigger>
+            <TabsTrigger value="source" className="flex items-center gap-1">
+              <Database className="w-4 h-4" />
+              <span className="hidden lg:inline">数据源</span>
             </TabsTrigger>
           </TabsList>
           
@@ -257,6 +301,16 @@ export default function HomePage() {
             </Card>
           </TabsContent>
           
+          <TabsContent value="clean" className="mt-6">
+            {analysis && (
+              <DataCleaner
+                data={parsedData}
+                fieldStats={analysis.fieldStats}
+                onDataChange={handleDataCleaned}
+              />
+            )}
+          </TabsContent>
+          
           <TabsContent value="insights" className="mt-6">
             {analysis ? (
               <DataInsights analysis={analysis} />
@@ -267,49 +321,51 @@ export default function HomePage() {
             )}
           </TabsContent>
           
+          <TabsContent value="advanced" className="mt-6">
+            {analysis && (
+              <AdvancedCharts data={parsedData} fieldStats={analysis.fieldStats} />
+            )}
+          </TabsContent>
+          
           <TabsContent value="dashboard" className="mt-6">
-            {analysis ? (
+            {analysis && (
               <Dashboard data={parsedData} fieldStats={analysis.fieldStats} />
-            ) : (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="designer" className="mt-6">
+            {analysis && (
+              <DashboardDesigner data={parsedData} fieldStats={analysis.fieldStats} />
             )}
           </TabsContent>
           
           <TabsContent value="chat" className="mt-6">
             {analysis ? (
               <div className="grid lg:grid-cols-2 gap-6">
-                <LLMAssistant data={parsedData} analysis={analysis} />
+                <EnhancedLLMAssistant data={parsedData} analysis={analysis} />
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">快速操作</CardTitle>
+                    <CardTitle className="text-base">NL2SQL 功能说明</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => setViewMode('insights')}
-                    >
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      查看完整分析报告
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => setViewMode('dashboard')}
-                    >
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      进入可视化仪表盘
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start"
-                      onClick={() => setViewMode('report')}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      生成导出报表
-                    </Button>
+                  <CardContent className="space-y-4">
+                    <div className="p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-medium text-blue-800 mb-2">支持的分析意图</h4>
+                      <ul className="text-sm text-blue-600 space-y-1">
+                        <li>趋势分析 - &ldquo;分析销售趋势&rdquo;</li>
+                        <li>占比分析 - &ldquo;各品类占比&rdquo;</li>
+                        <li>异常检测 - &ldquo;找出异常值&rdquo;</li>
+                        <li>排序对比 - &ldquo;按销售额排序&rdquo;</li>
+                        <li>数据筛选 - &ldquo;查看华东地区&rdquo;</li>
+                      </ul>
+                    </div>
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <h4 className="font-medium text-green-800 mb-2">使用示例</h4>
+                      <div className="space-y-2 text-sm text-green-600">
+                        <p>&ldquo;哪些产品销量最高&rdquo;</p>
+                        <p>&ldquo;月度收入变化趋势&rdquo;</p>
+                        <p>&ldquo;用户年龄分布&rdquo;</p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -324,10 +380,7 @@ export default function HomePage() {
             {analysis ? (
               <div className="grid lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                  <ReportGenerator
-                    data={parsedData}
-                    analysis={analysis}
-                  />
+                  <ReportGenerator data={parsedData} analysis={analysis} />
                 </div>
                 <div>
                   <Card>
@@ -361,6 +414,14 @@ export default function HomePage() {
               </div>
             )}
           </TabsContent>
+          
+          <TabsContent value="share" className="mt-6">
+            <ShareManager dashboardName={parsedData.fileName} />
+          </TabsContent>
+          
+          <TabsContent value="source" className="mt-6">
+            <DataSourceManager onDataSourceChange={setParsedData} currentData={parsedData} />
+          </TabsContent>
         </Tabs>
       </div>
     );
@@ -377,17 +438,23 @@ export default function HomePage() {
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-lg">DataInsight</h1>
-                <p className="text-xs text-gray-500">智能数据处理平台</p>
+                <h1 className="font-bold text-lg">DataInsight Pro</h1>
+                <p className="text-xs text-gray-500">企业级智能数据分析平台</p>
               </div>
             </div>
             
-            {parsedData && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" />
-                数据已加载
-              </Badge>
-            )}
+            <div className="flex items-center gap-3">
+              {parsedData && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  数据已加载
+                </Badge>
+              )}
+              <Button variant="outline" size="sm">
+                <Settings className="w-4 h-4 mr-1" />
+                设置
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -401,7 +468,7 @@ export default function HomePage() {
       <footer className="bg-white border-t mt-auto">
         <div className="container mx-auto px-4 py-6">
           <p className="text-center text-sm text-gray-500">
-            DataInsight - 轻量化智能表格数据处理与可视化工具
+            DataInsight Pro - 企业级智能数据分析平台 | 支持 NL2SQL | 多数据源 | 拖拽式仪表盘
           </p>
         </div>
       </footer>
