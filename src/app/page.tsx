@@ -315,79 +315,120 @@ export default function HomePage() {
               </div>
             </header>
 
-            {/* 主内容区 */}
+            {/* 主内容区 - 根据 viewMode 渲染 */}
             <main className="flex-1 bg-[#f0f2f5] p-6">
-              {/* 欢迎卡片 */}
-              <div className="bg-white rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">欢迎使用 DataInsight</h2>
-                <p className="text-gray-500">上传您的数据文件，开始智能数据分析之旅</p>
-              </div>
+              {viewMode === 'source' && (
+                <DataSourceManager onDataSourceChange={setParsedData} currentData={parsedData ?? undefined} />
+              )}
 
-              {/* 数据导入区域 */}
-              <div className="grid lg:grid-cols-3 gap-6">
-                {/* 上传区域 */}
-                <div className="lg:col-span-2 bg-white rounded-lg p-6">
-                  <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
-                    <Upload className="w-5 h-5 mr-2 text-[#1890ff]" />
-                    数据导入
-                  </h3>
-                  <FileUploader onFileUpload={handleFileUpload} />
-                </div>
+              {viewMode === 'version' && (
+                <VersionHistory currentContent={undefined} />
+              )}
 
-                {/* AI配置 */}
-                <div className="bg-white rounded-lg p-6">
-                  <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
-                    <Bot className="w-5 h-5 mr-2 text-[#1890ff]" />
-                    AI模型配置
-                  </h3>
-                  <AIModelSettings />
-                </div>
-              </div>
+              {viewMode === 'template' && (
+                <TemplateManager />
+              )}
 
-              {/* 快捷入口 */}
-              <div className="grid md:grid-cols-4 gap-4 mt-6">
-                <div className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                    <Filter className="w-6 h-6 text-blue-600" />
+              {['clean', 'metric', 'nl2dash', 'export', 'insights', 'dashboard', 'aiChart', 'chat', 'report', 'share', 'advanced', 'designer', 'quality', 'alert'].includes(viewMode) && (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Upload className="w-10 h-10 text-gray-400" />
                   </div>
-                  <div>
-                    <h4 className="font-medium text-gray-800">数据清洗</h4>
-                    <p className="text-xs text-gray-500">智能数据预处理</p>
-                  </div>
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">请先加载数据</h3>
+                  <p className="text-sm text-gray-400 mb-6">此功能需要上传数据文件后才能使用</p>
+                  <Button onClick={() => setViewMode('table')}>
+                    去上传数据
+                  </Button>
                 </div>
-                <div className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                    <BarChart3 className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-800">数据分析</h4>
-                    <p className="text-xs text-gray-500">自动生成洞察报告</p>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
-                    <LayoutGrid className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-800">仪表盘</h4>
-                    <p className="text-xs text-gray-500">拖拽式可视化</p>
-                  </div>
-                </div>
-                <div className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
-                    <Wand2 className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-800">NL2SQL</h4>
-                    <p className="text-xs text-gray-500">自然语言查询</p>
-                  </div>
-                </div>
-              </div>
+              )}
 
-              {/* 底部说明 */}
-              <div className="mt-6 text-center text-sm text-gray-400">
-                DataInsight Pro v1.0 - 企业级智能数据分析平台
-              </div>
+              {viewMode === 'table' && (
+                <>
+                  {/* 欢迎卡片 */}
+                  <div className="bg-white rounded-lg p-6 mb-6">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-2">欢迎使用 DataInsight</h2>
+                    <p className="text-gray-500">上传您的数据文件，开始智能数据分析之旅</p>
+                  </div>
+
+                  {/* 数据导入区域 */}
+                  <div className="grid lg:grid-cols-3 gap-6">
+                    {/* 上传区域 */}
+                    <div className="lg:col-span-2 bg-white rounded-lg p-6">
+                      <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                        <Upload className="w-5 h-5 mr-2 text-[#1890ff]" />
+                        数据导入
+                      </h3>
+                      <FileUploader onFileUpload={handleFileUpload} />
+                    </div>
+
+                    {/* AI配置 */}
+                    <div className="bg-white rounded-lg p-6">
+                      <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                        <Bot className="w-5 h-5 mr-2 text-[#1890ff]" />
+                        AI模型配置
+                      </h3>
+                      <AIModelSettings />
+                    </div>
+                  </div>
+
+                  {/* 快捷入口 */}
+                  <div className="grid md:grid-cols-4 gap-4 mt-6">
+                    <div
+                      className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => setViewMode('clean')}
+                    >
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                        <Filter className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-800">数据清洗</h4>
+                        <p className="text-xs text-gray-500">智能数据预处理</p>
+                      </div>
+                    </div>
+                    <div
+                      className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => setViewMode('insights')}
+                    >
+                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                        <BarChart3 className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-800">数据分析</h4>
+                        <p className="text-xs text-gray-500">自动生成洞察报告</p>
+                      </div>
+                    </div>
+                    <div
+                      className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => setViewMode('dashboard')}
+                    >
+                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                        <LayoutGrid className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-800">仪表盘</h4>
+                        <p className="text-xs text-gray-500">拖拽式可视化</p>
+                      </div>
+                    </div>
+                    <div
+                      className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => setViewMode('chat')}
+                    >
+                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                        <Wand2 className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-800">NL2SQL</h4>
+                        <p className="text-xs text-gray-500">自然语言查询</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 底部说明 */}
+                  <div className="mt-6 text-center text-sm text-gray-400">
+                    DataInsight Pro v1.0 - 企业级智能数据分析平台
+                  </div>
+                </>
+              )}
             </main>
           </div>
         </div>
