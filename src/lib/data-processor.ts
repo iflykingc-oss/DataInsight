@@ -84,8 +84,11 @@ export interface DeepAnalysis {
   dataProfile: {
     dataType: string;          // 如 "销售数据"、"用户行为数据"
     suggestedIndustry: string; // 推测行业
+    subScenario?: string;      // 细分场景
     dataMaturity: 'raw' | 'cleaned' | 'structured' | 'analyzed';
     analysisPotential: 'high' | 'medium' | 'low';
+    periodFeature?: string;    // 数据周期特征
+    scaleFeature?: string;     // 数据规模特征
     summary: string;
   };
 }
@@ -389,8 +392,8 @@ function generateDeepAnalysis(
   const distributions = analyzeDistributions(data, fieldStats);
   const trends = analyzeTrends(data, fieldStats);
   const recommendedCharts = recommendCharts(data, fieldStats, summary);
-  const actionItems = generateActionItems(healthScore, keyFindings, fieldStats, summary);
   const dataProfile = generateDataProfile(data, fieldStats, summary);
+  const actionItems = generateActionItems(healthScore, keyFindings, fieldStats, summary, dataProfile);
 
   return {
     healthScore,
@@ -823,125 +826,287 @@ function generateActionItems(
   healthScore: DeepAnalysis['healthScore'],
   keyFindings: DeepAnalysis['keyFindings'],
   fieldStats: FieldStat[],
-  summary: Summary
+  summary: Summary,
+  dataProfile?: DeepAnalysis['dataProfile']
 ): DeepAnalysis['actionItems'] {
   const items: DeepAnalysis['actionItems'] = [];
-  
-  // 根据健康评分
-  if (healthScore.completeness < 80) {
+  const industry = dataProfile?.suggestedIndustry || '通用';
+  const allFields = fieldStats.map(f => f.field.toLowerCase());
+  const allText = allFields.join(' ');
+
+  // === 立即行动（本周可落地）===
+
+  // 1. 数据质量问题（如果有）
+  if (healthScore.completeness < 90) {
+    const worstField = fieldStats.filter(f => f.nullCount > 0).sort((a, b) => b.nullCount - a.nullCount)[0];
     items.push({
       priority: 'high',
-      action: '处理缺失数据',
-      detail: `数据完整性仅 ${healthScore.completeness}%，需优先处理空值`,
-      expectedBenefit: '提升分析准确性，避免统计偏差'
+      action: '修复关键字段缺失值',
+      detail: worstField
+        ? `"${worstField.field}"字段有${worstField.nullCount}个空值，建议本周内用${worstField.type === 'number' ? '中位数' : '众数'}填充或联系数据源补充`
+        : `数据完整性仅${healthScore.completeness}%，建议优先处理空值最多的字段`,
+      expectedBenefit: '提升分析可信度，避免因缺失值导致的统计偏差'
     });
   }
-  
-  if (healthScore.consistency < 80) {
-    items.push({
-      priority: 'high',
-      action: '修复数据异常',
-      detail: `数据一致性为 ${healthScore.consistency}%，存在异常数据需要修正`,
-      expectedBenefit: '保证分析结果的可靠性和可信度'
-    });
+
+  // 2. 根据行业场景的立即行动
+  if (/电商|零售|销售/.test(industry)) {
+    // 销售类数据：立即关注异常波动
+    const salesField = fieldStats.find(f => /sale|revenue|amount|销售额|金额|gmv/i.test(f.field) && f.type === 'number');
+    if (salesField && salesField.numericStats) {
+      items.push({
+        priority: 'high',
+        action: '监控核心销售指标波动',
+        detail: `"${salesField.field}"均值${salesField.numericStats.mean.toFixed(0)}，建议本周建立该指标的日报/周报监控机制，设置上下10%的预警阈值`,
+        expectedBenefit: '及时发现销售异常，快速响应市场变化'
+      });
+    }
+    // 如果有品类/商品字段，建议立即做TOP分析
+    const productField = fieldStats.find(f => /product|sku|品类|商品|item/i.test(f.field));
+    if (productField && salesField) {
+      items.push({
+        priority: 'high',
+        action: '输出TOP20商品/品类销售排行',
+        detail: `按"${productField.field}"分组汇总"${salesField.field}"，输出销售额TOP20和BOTTOM20，本周内完成`,
+        expectedBenefit: '快速识别明星商品和滞销品，指导本周备货和促销策略'
+      });
+    }
   }
-  
-  // 根据关键发现
-  const criticalFindings = keyFindings.filter(f => f.severity === 'critical');
-  criticalFindings.forEach(f => {
-    items.push({
-      priority: 'high',
-      action: f.suggestion.slice(0, 20),
-      detail: f.suggestion,
-      expectedBenefit: f.impact
-    });
-  });
-  
-  const warningFindings = keyFindings.filter(f => f.severity === 'warning');
-  warningFindings.forEach(f => {
-    items.push({
-      priority: 'medium',
-      action: f.suggestion.slice(0, 20),
-      detail: f.suggestion,
-      expectedBenefit: f.impact
-    });
-  });
-  
-  // 通用建议
+
+  if (/用户|运营|互联网/.test(industry)) {
+    const userField = fieldStats.find(f => /user|用户|member|会员/i.test(f.field));
+    if (userField) {
+      items.push({
+        priority: 'high',
+        action: '分析用户分层结构',
+        detail: `基于现有数据，按"${userField.field}"或其他维度做用户分层（如新客/老客/高价值/沉默），本周输出分层占比`,
+        expectedBenefit: '为精准运营提供用户画像基础'
+      });
+    }
+  }
+
+  if (/财务|成本/.test(industry)) {
+    const costField = fieldStats.find(f => /cost|expense|费用|成本/i.test(f.field) && f.type === 'number');
+    if (costField) {
+      items.push({
+        priority: 'high',
+        action: '识别TOP3成本项',
+        detail: `按维度分组汇总"${costField.field}"，找出占比最高的3个成本项，本周完成归因分析`,
+        expectedBenefit: '快速定位成本控制关键点'
+      });
+    }
+  }
+
+  // === 短期优化（本月内）===
+
+  // 数据对比分析
   if (summary.numericColumns >= 2) {
+    const metricFields = fieldStats.filter(f => f.type === 'number' && f.numericStats);
+    if (metricFields.length >= 2) {
+      items.push({
+        priority: 'medium',
+        action: '建立核心指标关联分析',
+        detail: `分析"${metricFields[0].field}"与"${metricFields[1].field}"的相关性，建立指标联动监控看板，本月完成`,
+        expectedBenefit: '发现指标间的驱动关系，优化资源配置'
+      });
+    }
+  }
+
+  // 如果有时间维度，建议做趋势预测
+  if (fieldStats.some(f => f.type === 'date')) {
     items.push({
       priority: 'medium',
-      action: '进行相关性分析',
-      detail: '数据中有多个数值字段，建议分析字段间的相关性，发现潜在关联',
-      expectedBenefit: '可能发现隐藏的业务规律和因果关系'
+      action: '建立趋势监控和简单预测',
+      detail: '基于时间序列数据，建立核心指标的周/月趋势图，并做简单环比/同比分析，本月完成',
+      expectedBenefit: '提前预判业务走势，为决策预留响应时间'
     });
   }
-  
-  if (summary.totalRows > 100) {
+
+  // 行业特定的短期建议
+  if (/电商|零售/.test(industry)) {
+    items.push({
+      priority: 'medium',
+      action: '建立商品ABC分类管理',
+      detail: '按销售额/销量对商品做ABC分类（20%商品贡献80%销售额），本月建立分类管理和差异化运营策略',
+      expectedBenefit: '优化库存结构，提升周转效率和利润率'
+    });
+  }
+
+  if (/库存|供应链/.test(industry)) {
+    items.push({
+      priority: 'medium',
+      action: '建立安全库存预警机制',
+      detail: '基于历史数据计算各SKU的安全库存水位，设置低于安全线的自动预警，本月上线',
+      expectedBenefit: '降低缺货风险，提升客户满意度'
+    });
+  }
+
+  // === 中期规划（本季度）===
+
+  if (summary.totalRows < 200) {
     items.push({
       priority: 'low',
-      action: '尝试AI深度洞察',
-      detail: '数据量充足，建议使用AI助手进行更深度的自然语言分析',
-      expectedBenefit: '获得更丰富的业务洞察和决策建议'
+      action: '扩大数据样本和维度',
+      detail: `当前仅${summary.totalRows}行数据，建议本季度将数据量扩展至500+行，并补充${industry === '电商/零售' ? '客户画像、渠道来源' : industry === '互联网/用户运营' ? '行为路径、设备信息' : '更多业务维度'}等字段`,
+      expectedBenefit: '支撑更复杂的分析模型（如预测、聚类），提升决策精度'
     });
   }
-  
+
+  // 通用中期建议
+  if (summary.numericColumns >= 3 && summary.totalRows >= 100) {
+    items.push({
+      priority: 'low',
+      action: '探索AI预测模型应用',
+      detail: `数据量(${summary.totalRows}行)和维度(${summary.numericColumns}个数值字段)已满足基础预测条件，本季度可尝试用AI做${industry === '电商/零售' ? '销售预测' : industry === '库存/供应链' ? '需求预测' : '趋势预测'}`,
+      expectedBenefit: '从描述性分析升级到预测性分析，实现数据驱动决策'
+    });
+  }
+
+  // 数据治理
+  items.push({
+    priority: 'low',
+    action: '建立数据质量监控体系',
+    detail: '建立日常数据质量检查清单（完整性、一致性、时效性），设置自动化监控规则，本季度落地',
+    expectedBenefit: '从源头保障数据质量，减少分析前的数据清洗工作量'
+  });
+
   return items;
 }
 
 function generateDataProfile(
-  data: ParsedData, 
-  fieldStats: FieldStat[], 
+  data: ParsedData,
+  fieldStats: FieldStat[],
   summary: Summary
 ): DeepAnalysis['dataProfile'] {
   const fieldNames = fieldStats.map(f => f.field.toLowerCase());
+  const fieldNamesOriginal = fieldStats.map(f => f.field);
   const numericFields = fieldStats.filter(f => f.type === 'number');
   const textFields = fieldStats.filter(f => f.type === 'string');
-  
-  // 推测数据类型
-  let dataType = '通用数据';
-  let suggestedIndustry = '通用';
-  
-  if (fieldNames.some(n => n.includes('销售') || n.includes('订单') || n.includes('金额') || n.includes('收入'))) {
+  const dateFields = fieldStats.filter(f => f.type === 'date');
+
+  // 综合中英文关键词进行行业识别
+  const allText = fieldNames.join(' ') + ' ' + fieldNamesOriginal.join(' ').toLowerCase();
+
+  // 推测数据类型 - 更细分的场景识别
+  let dataType = '通用业务数据';
+  let suggestedIndustry = '通用行业';
+  let subScenario = ''; // 细分场景
+
+  // 销售/电商场景
+  if (/sale|revenue|amount|price|order|customer|product|sku|gmv|transaction|qty|quantity|unit price|discount|销售额|销售|金额|价格|订单|客户|产品|数量|单价|折扣/.test(allText)) {
     dataType = '销售/交易数据';
     suggestedIndustry = '电商/零售';
-  } else if (fieldNames.some(n => n.includes('用户') || n.includes('注册') || n.includes('登录'))) {
-    dataType = '用户行为数据';
-    suggestedIndustry = '互联网/IT';
-  } else if (fieldNames.some(n => n.includes('库存') || n.includes('入库') || n.includes('出库'))) {
-    dataType = '库存管理数据';
-    suggestedIndustry = '制造/物流';
-  } else if (fieldNames.some(n => n.includes('学生') || n.includes('成绩') || n.includes('课程'))) {
-    dataType = '教育/成绩数据';
-    suggestedIndustry = '教育';
-  } else if (fieldNames.some(n => n.includes('员工') || n.includes('薪资') || n.includes('部门'))) {
+    if (/daily|日|date|日期|time|时间/.test(allText)) subScenario = '日销跟踪';
+    else if (/month|月|quarter|季度/.test(allText)) subScenario = '月度/季度汇总';
+    else if (/product|sku|品类|商品/.test(allText)) subScenario = '商品维度分析';
+    else if (/customer|客户|会员/.test(allText)) subScenario = '客户维度分析';
+    else if (/region|地区|门店|store/.test(allText)) subScenario = '区域/门店维度';
+    else subScenario = '交易流水';
+  }
+  // 用户运营场景
+  else if (/user|member|注册|登录|留存|活跃|转化|dau|mau|uv|pv|click|session|retention|conversion|用户|会员|活跃|访问/.test(allText)) {
+    dataType = '用户行为/运营数据';
+    suggestedIndustry = '互联网/用户运营';
+    if (/dau|mau|日活|月活|active/.test(allText)) subScenario = '活跃度分析';
+    else if (/retention|留存|churn|流失/.test(allText)) subScenario = '留存/流失分析';
+    else if (/conversion|转化|funnel|漏斗/.test(allText)) subScenario = '转化漏斗分析';
+    else subScenario = '用户行为分析';
+  }
+  // 库存/供应链场景
+  else if (/inventory|stock|warehouse|supply|purchase|入库|出库|库存|仓储|采购|供应链/.test(allText)) {
+    dataType = '库存/供应链数据';
+    suggestedIndustry = '制造/物流/供应链';
+    if (/turnover|周转|周转率/.test(allText)) subScenario = '库存周转分析';
+    else if (/purchase|采购|supplier|供应商/.test(allText)) subScenario = '采购管理';
+    else subScenario = '库存管理';
+  }
+  // 财务场景
+  else if (/cost|budget|expense|profit|income|asset|liability|revenue|财务|成本|预算|费用|利润|收入|资产|负债/.test(allText)) {
+    dataType = '财务/成本数据';
+    suggestedIndustry = '金融/财务';
+    if (/budget|预算|forecast|预测/.test(allText)) subScenario = '预算管理';
+    else if (/cost|成本|expense|费用/.test(allText)) subScenario = '成本分析';
+    else subScenario = '财务报表';
+  }
+  // 人力资源场景
+  else if (/employee|staff|salary|hr|hire|depart|position|绩效|考勤|员工|薪资|招聘|部门|岗位/.test(allText)) {
     dataType = '人力资源数据';
     suggestedIndustry = '人力资源';
-  } else if (fieldNames.some(n => n.includes('财务') || n.includes('利润') || n.includes('成本'))) {
-    dataType = '财务数据';
-    suggestedIndustry = '金融/财务';
+    if (/salary|薪资|compensation|薪酬/.test(allText)) subScenario = '薪酬分析';
+    else if (/performance|绩效|kpi|考核/.test(allText)) subScenario = '绩效管理';
+    else if (/attendance|考勤|leave|请假/.test(allText)) subScenario = '考勤管理';
+    else subScenario = '人员管理';
   }
-  
+  // 教育场景
+  else if (/student|score|grade|course|teacher|class|exam|学生|成绩|课程|教师|班级|考试/.test(allText)) {
+    dataType = '教育/教学数据';
+    suggestedIndustry = '教育';
+    if (/score|成绩|grade|分数/.test(allText)) subScenario = '成绩分析';
+    else if (/attendance|出勤|签到/.test(allText)) subScenario = '出勤管理';
+    else subScenario = '教学管理';
+  }
+  // 生产/制造场景
+  else if (/production|yield|defect|quality|产量|良品|不良|生产|质量/.test(allText)) {
+    dataType = '生产/质量数据';
+    suggestedIndustry = '制造';
+    subScenario = '生产质量分析';
+  }
+
   // 数据成熟度
   let dataMaturity: DeepAnalysis['dataProfile']['dataMaturity'] = 'raw';
   if (summary.nullValues === 0 && summary.duplicateRows === 0) {
     dataMaturity = summary.totalRows > 100 ? 'structured' : 'cleaned';
   }
-  
+
   // 分析潜力
-  const analysisPotential: DeepAnalysis['dataProfile']['analysisPotential'] = 
+  const analysisPotential: DeepAnalysis['dataProfile']['analysisPotential'] =
     numericFields.length >= 3 && summary.totalRows >= 50 ? 'high' :
     numericFields.length >= 1 && summary.totalRows >= 20 ? 'medium' : 'low';
-  
-  const summary2 = `共 ${summary.totalRows} 行 ${summary.totalColumns} 列${dataType !== '通用数据' ? `的${dataType}` : ''}，` +
-    `包含 ${numericFields.length} 个数值字段和 ${textFields.length} 个文本字段，` +
-    `${analysisPotential === 'high' ? '数据量充足、维度丰富，具有较高分析价值' : analysisPotential === 'medium' ? '可以进行基础的数据统计分析' : '建议补充更多数据后进行分析'}`;
-  
+
+  // 数据周期特征
+  let periodFeature = '';
+  if (dateFields.length > 0) {
+    const dateVals = data.rows.slice(0, Math.min(data.rows.length, 100))
+      .map(r => String(r[dateFields[0].field]))
+      .filter(d => d && d !== 'null');
+    if (dateVals.length >= 2) {
+      try {
+        const dates = dateVals.map(d => new Date(d)).filter(d => !isNaN(d.getTime())).sort((a, b) => a.getTime() - b.getTime());
+        if (dates.length >= 2) {
+          const spanDays = (dates[dates.length - 1].getTime() - dates[0].getTime()) / (1000 * 60 * 60 * 24);
+          if (spanDays < 7) periodFeature = '超短周期(<7天)';
+          else if (spanDays < 30) periodFeature = '短周期(<1月)';
+          else if (spanDays < 90) periodFeature = '中周期(1-3月)';
+          else if (spanDays < 365) periodFeature = '中长周期(3-12月)';
+          else periodFeature = '长周期(>1年)';
+        }
+      } catch { /* ignore */ }
+    }
+  }
+
+  // 数据规模特征
+  let scaleFeature = '';
+  if (summary.totalRows < 50) scaleFeature = '极小样本';
+  else if (summary.totalRows < 200) scaleFeature = '小样本';
+  else if (summary.totalRows < 1000) scaleFeature = '中等样本';
+  else scaleFeature = '大样本';
+
+  const summary2 = `${suggestedIndustry}领域${subScenario ? `的${subScenario}` : ''}数据，` +
+    `${scaleFeature}（${summary.totalRows}行x${summary.totalColumns}列），` +
+    `${periodFeature ? `覆盖${periodFeature}，` : ''}` +
+    `${analysisPotential === 'high' ? '数据维度丰富，适合深度业务分析' :
+      analysisPotential === 'medium' ? '可进行基础统计分析，建议补充更多维度' :
+      '样本量偏小，建议扩大数据后分析'}。` +
+    `包含${numericFields.length}个数值字段、${textFields.length}个文本字段${dateFields.length > 0 ? `、${dateFields.length}个日期字段` : ''}`;
+
   return {
     dataType,
     suggestedIndustry,
+    subScenario,
     dataMaturity,
     analysisPotential,
+    periodFeature,
+    scaleFeature,
     summary: summary2
   };
 }

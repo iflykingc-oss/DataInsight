@@ -96,26 +96,36 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">{deep.dataProfile.summary}</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <div className="bg-blue-50 rounded-lg p-3">
                 <p className="text-xs text-blue-600 mb-1">数据类型</p>
-                <p className="font-semibold text-blue-900">{deep.dataProfile.dataType}</p>
+                <p className="font-semibold text-blue-900 text-sm">{deep.dataProfile.dataType}</p>
               </div>
               <div className="bg-purple-50 rounded-lg p-3">
                 <p className="text-xs text-purple-600 mb-1">推测行业</p>
-                <p className="font-semibold text-purple-900">{deep.dataProfile.suggestedIndustry}</p>
+                <p className="font-semibold text-purple-900 text-sm">{deep.dataProfile.suggestedIndustry}</p>
               </div>
+              {deep.dataProfile.subScenario && (
+                <div className="bg-indigo-50 rounded-lg p-3">
+                  <p className="text-xs text-indigo-600 mb-1">细分场景</p>
+                  <p className="font-semibold text-indigo-900 text-sm">{deep.dataProfile.subScenario}</p>
+                </div>
+              )}
+              {deep.dataProfile.periodFeature && (
+                <div className="bg-cyan-50 rounded-lg p-3">
+                  <p className="text-xs text-cyan-600 mb-1">数据周期</p>
+                  <p className="font-semibold text-cyan-900 text-sm">{deep.dataProfile.periodFeature}</p>
+                </div>
+              )}
+              {deep.dataProfile.scaleFeature && (
+                <div className="bg-teal-50 rounded-lg p-3">
+                  <p className="text-xs text-teal-600 mb-1">数据规模</p>
+                  <p className="font-semibold text-teal-900 text-sm">{deep.dataProfile.scaleFeature}</p>
+                </div>
+              )}
               <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-green-600 mb-1">数据成熟度</p>
-                <p className="font-semibold text-green-900">
-                  {deep.dataProfile.dataMaturity === 'raw' ? '原始数据' :
-                   deep.dataProfile.dataMaturity === 'cleaned' ? '已清洗' :
-                   deep.dataProfile.dataMaturity === 'structured' ? '结构化' : '已分析'}
-                </p>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-3">
-                <p className="text-xs text-orange-600 mb-1">分析潜力</p>
-                <p className="font-semibold text-orange-900">
+                <p className="text-xs text-green-600 mb-1">分析潜力</p>
+                <p className="font-semibold text-green-900 text-sm">
                   {deep.dataProfile.analysisPotential === 'high' ? '高' :
                    deep.dataProfile.analysisPotential === 'medium' ? '中' : '低'}
                 </p>
@@ -405,7 +415,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         </Card>
       )}
 
-      {/* 6. 行动建议 */}
+      {/* 6. 行动建议 - 按时间维度分组 */}
       {deep.actionItems.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -413,32 +423,73 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
               <CheckCircle className="w-5 h-5 text-[#1890ff]" />
               行动建议
             </CardTitle>
-            <CardDescription>基于分析结果的可操作建议</CardDescription>
+            <CardDescription>按可落地时间分层的可执行方案</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {deep.actionItems.map((item, idx) => {
-                const priorityStyle = item.priority === 'high' ? 'border-l-4 border-l-red-400 bg-red-50/50' :
-                                      item.priority === 'medium' ? 'border-l-4 border-l-orange-400 bg-orange-50/50' : 
-                                      'border-l-4 border-l-blue-400 bg-blue-50/50';
-                const priorityLabel = item.priority === 'high' ? '高优' : item.priority === 'medium' ? '中优' : '低优';
-                
-                return (
-                  <div key={idx} className={`p-4 rounded-lg border ${priorityStyle}`}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className={`text-xs ${
-                        item.priority === 'high' ? 'text-red-600 border-red-300' :
-                        item.priority === 'medium' ? 'text-orange-600 border-orange-300' : 'text-blue-600 border-blue-300'
-                      }`}>
-                        {priorityLabel}
-                      </Badge>
-                      <span className="font-medium text-sm">{item.action}</span>
-                    </div>
-                    <p className="text-xs text-gray-600 ml-14">{item.detail}</p>
-                    <p className="text-xs text-green-600 ml-14 mt-1">预期收益: {item.expectedBenefit}</p>
+            <div className="space-y-4">
+              {/* 立即行动 */}
+              {deep.actionItems.filter(i => i.priority === 'high').length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-red-100 text-red-700 hover:bg-red-100">本周可落地</Badge>
+                    <span className="text-xs text-gray-500">低成本、零依赖、立刻执行</span>
                   </div>
-                );
-              })}
+                  <div className="space-y-2">
+                    {deep.actionItems.filter(i => i.priority === 'high').map((item, idx) => (
+                      <div key={`h-${idx}`} className="p-3 rounded-lg border-l-4 border-l-red-400 bg-red-50/30">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Zap className="w-3.5 h-3.5 text-red-500" />
+                          <span className="font-medium text-sm">{item.action}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 ml-5">{item.detail}</p>
+                        <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* 短期优化 */}
+              {deep.actionItems.filter(i => i.priority === 'medium').length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">本月内落地</Badge>
+                    <span className="text-xs text-gray-500">需要少量资源和协调</span>
+                  </div>
+                  <div className="space-y-2">
+                    {deep.actionItems.filter(i => i.priority === 'medium').map((item, idx) => (
+                      <div key={`m-${idx}`} className="p-3 rounded-lg border-l-4 border-l-orange-400 bg-orange-50/30">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Target className="w-3.5 h-3.5 text-orange-500" />
+                          <span className="font-medium text-sm">{item.action}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 ml-5">{item.detail}</p>
+                        <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* 中期规划 */}
+              {deep.actionItems.filter(i => i.priority === 'low').length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">本季度规划</Badge>
+                    <span className="text-xs text-gray-500">需要系统建设和资源投入</span>
+                  </div>
+                  <div className="space-y-2">
+                    {deep.actionItems.filter(i => i.priority === 'low').map((item, idx) => (
+                      <div key={`l-${idx}`} className="p-3 rounded-lg border-l-4 border-l-blue-400 bg-blue-50/30">
+                        <div className="flex items-center gap-2 mb-1">
+                          <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
+                          <span className="font-medium text-sm">{item.action}</span>
+                        </div>
+                        <p className="text-xs text-gray-600 ml-5">{item.detail}</p>
+                        <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
