@@ -56,7 +56,7 @@ import {
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis, FieldStat } from '@/lib/data-processor';
 
-type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share' | 'aiChart' | 'aiModel' | 'metric' | 'quality' | 'alert' | 'nl2dash' | 'version' | 'template' | 'export';
+type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share' | 'aiChart' | 'metric' | 'quality' | 'alert' | 'nl2dash' | 'version' | 'template' | 'export';
 
 export default function HomePage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
@@ -184,48 +184,64 @@ export default function HomePage() {
       return (
         <div className="space-y-8">
           {/* Hero Section */}
-          <div className="text-center py-12">
+          <div className="text-center py-8">
             <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               智能表格数据处理与可视化
             </h1>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-8">
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-6">
               企业级数据分析平台，支持多数据源接入、智能清洗、拖拽式仪表盘、NL2SQL自然语言查询
             </p>
-            
-            {/* 功能特点 */}
-            <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
-              <div className="p-4 bg-white rounded-lg border shadow-sm">
-                <Database className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                <h3 className="font-medium">多数据源</h3>
-                <p className="text-sm text-gray-500">文件/API/数据库</p>
-              </div>
-              <div className="p-4 bg-white rounded-lg border shadow-sm">
-                <Filter className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                <h3 className="font-medium">智能清洗</h3>
-                <p className="text-sm text-gray-500">可视化数据预处理</p>
-              </div>
-              <div className="p-4 bg-white rounded-lg border shadow-sm">
-                <LayoutGrid className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <h3 className="font-medium">拖拽仪表盘</h3>
-                <p className="text-sm text-gray-500">DIY可视化</p>
-              </div>
-              <div className="p-4 bg-white rounded-lg border shadow-sm">
-                <Zap className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                <h3 className="font-medium">NL2SQL</h3>
-                <p className="text-sm text-gray-500">自然语言分析</p>
-              </div>
-            </div>
           </div>
           
-          {/* 上传区域 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">上传数据文件</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FileUploader onFileUpload={handleFileUpload} />
-            </CardContent>
-          </Card>
+          {/* 核心功能区：AI配置 + 上传区域 */}
+          <div className="grid lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            {/* 左侧：AI模型配置 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-blue-500" />
+                  AI模型配置
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AIModelSettings />
+              </CardContent>
+            </Card>
+            
+            {/* 右侧：上传区域 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">上传数据文件</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FileUploader onFileUpload={handleFileUpload} />
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* 功能特点 */}
+          <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="p-4 bg-white rounded-lg border shadow-sm">
+              <Database className="w-8 h-8 text-green-500 mx-auto mb-2" />
+              <h3 className="font-medium">多数据源</h3>
+              <p className="text-sm text-gray-500">文件/API/数据库</p>
+            </div>
+            <div className="p-4 bg-white rounded-lg border shadow-sm">
+              <Filter className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+              <h3 className="font-medium">智能清洗</h3>
+              <p className="text-sm text-gray-500">可视化数据预处理</p>
+            </div>
+            <div className="p-4 bg-white rounded-lg border shadow-sm">
+              <LayoutGrid className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+              <h3 className="font-medium">拖拽仪表盘</h3>
+              <p className="text-sm text-gray-500">DIY可视化</p>
+            </div>
+            <div className="p-4 bg-white rounded-lg border shadow-sm">
+              <Zap className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+              <h3 className="font-medium">NL2SQL</h3>
+              <p className="text-sm text-gray-500">自然语言分析</p>
+            </div>
+          </div>
           
           {/* 数据源管理 */}
           <DataSourceManager />
@@ -266,7 +282,7 @@ export default function HomePage() {
         
         {/* 视图切换 */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="table" className="flex items-center gap-1">
               <Table2 className="w-4 h-4" />
               <span className="hidden lg:inline">数据表</span>
@@ -290,10 +306,6 @@ export default function HomePage() {
             <TabsTrigger value="chat" className="flex items-center gap-1 text-purple-600">
               <Brain className="w-4 h-4" />
               <span className="hidden lg:inline">AI助手</span>
-            </TabsTrigger>
-            <TabsTrigger value="aiModel" className="flex items-center gap-1 text-blue-600">
-              <Bot className="w-4 h-4" />
-              <span className="hidden lg:inline">AI配置</span>
             </TabsTrigger>
             <TabsTrigger value="report" className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
@@ -404,10 +416,6 @@ export default function HomePage() {
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
             )}
-          </TabsContent>
-          
-          <TabsContent value="aiModel" className="mt-6">
-            <AIModelSettings />
           </TabsContent>
           
           <TabsContent value="report" className="mt-6">
