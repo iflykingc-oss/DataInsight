@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +60,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
   const [reportAuthor, setReportAuthor] = useState('DataInsight');
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const deep = analysis.deepAnalysis;
 
@@ -323,6 +324,40 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
         return;
       }
 
+      if (format === 'image') {
+        // 使用 html2canvas 导出图片
+        try {
+          const html2canvas = (await import('html2canvas')).default;
+          if (reportRef.current) {
+            const canvas = await html2canvas(reportRef.current, {
+              scale: 2, // 高清导出
+              useCORS: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${reportTitle}.png`;
+                link.click();
+                URL.revokeObjectURL(url);
+              }
+            }, 'image/png');
+          }
+        } catch (error) {
+          console.error('图片导出失败:', error);
+        }
+        clearInterval(progressInterval);
+        setExportProgress(100);
+        setTimeout(() => {
+          setIsExporting(false);
+          setExportProgress(0);
+        }, 1000);
+        return;
+      }
+
       if (format === 'excel') {
         // 动态导入 xlsx 生成 Excel
         const XLSX = await import('xlsx');
@@ -451,7 +486,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="border rounded-lg p-6 bg-white space-y-6 print:shadow-none">
+          <div ref={reportRef} className="border rounded-lg p-6 bg-white space-y-6 print:shadow-none">
             {/* 报告头 */}
             <div className="border-b pb-4">
               <h1 className="text-2xl font-bold text-gray-900">{reportTitle}</h1>
