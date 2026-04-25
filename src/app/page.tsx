@@ -28,6 +28,9 @@ import { NL2Dashboard } from '@/components/nl2-dashboard';
 import { VersionHistory } from '@/components/version-history';
 import { TemplateManager } from '@/components/template-manager';
 import { ChartExporter } from '@/components/chart-exporter';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import {
   FileSpreadsheet,
   BarChart3,
@@ -53,7 +56,8 @@ import {
   Download,
   History,
   Bot,
-  Upload
+  Upload,
+  Trash2
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis, FieldStat } from '@/lib/data-processor';
 
@@ -62,6 +66,8 @@ type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source
 export default function HomePage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -718,7 +724,7 @@ export default function HomePage() {
                   数据已加载
                 </Badge>
               )}
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
                 <Settings className="w-4 h-4 mr-1" />
                 设置
               </Button>
@@ -726,6 +732,50 @@ export default function HomePage() {
           </div>
         </div>
       </header>
+
+      {/* 设置弹窗 */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>系统设置</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">深色模式</p>
+                <p className="text-sm text-gray-500">开启深色主题</p>
+              </div>
+              <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">数据缓存</p>
+                <p className="text-sm text-gray-500">本地存储分析数据</p>
+              </div>
+              <Switch defaultChecked />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">自动保存</p>
+                <p className="text-sm text-gray-500">每5分钟自动保存</p>
+              </div>
+              <Switch defaultChecked />
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <p className="font-medium text-sm">其他设置</p>
+              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => { alert('功能开发中'); setShowSettings(false); }}>
+                <Download className="w-4 h-4 mr-2" />
+                导出配置
+              </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => { if(confirm('确定清除所有缓存数据？')) { localStorage.clear(); alert('已清除'); setShowSettings(false); } }}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                清除缓存
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
