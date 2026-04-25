@@ -266,30 +266,34 @@ export default function HomePage() {
         
         {/* 视图切换 */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="table" className="flex items-center gap-1">
               <Table2 className="w-4 h-4" />
               <span className="hidden lg:inline">数据表</span>
             </TabsTrigger>
             <TabsTrigger value="clean" className="flex items-center gap-1">
               <Filter className="w-4 h-4" />
-              <span className="hidden lg:inline">数据清洗</span>
+              <span className="hidden lg:inline">清洗</span>
             </TabsTrigger>
             <TabsTrigger value="insights" className="flex items-center gap-1">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden lg:inline">分析</span>
             </TabsTrigger>
+            <TabsTrigger value="dashboard" className="flex items-center gap-1">
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden lg:inline">仪表盘</span>
+            </TabsTrigger>
             <TabsTrigger value="aiChart" className="flex items-center gap-1 text-purple-600">
               <Wand2 className="w-4 h-4" />
               <span className="hidden lg:inline">AI图表</span>
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-1">
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden lg:inline">仪表盘</span>
-            </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-1">
+            <TabsTrigger value="chat" className="flex items-center gap-1 text-purple-600">
               <Brain className="w-4 h-4" />
               <span className="hidden lg:inline">AI助手</span>
+            </TabsTrigger>
+            <TabsTrigger value="aiModel" className="flex items-center gap-1 text-blue-600">
+              <Bot className="w-4 h-4" />
+              <span className="hidden lg:inline">AI配置</span>
             </TabsTrigger>
             <TabsTrigger value="report" className="flex items-center gap-1">
               <FileText className="w-4 h-4" />
@@ -297,7 +301,7 @@ export default function HomePage() {
             </TabsTrigger>
             <TabsTrigger value="advanced-tools" className="flex items-center gap-1 text-orange-600">
               <Sparkles className="w-4 h-4" />
-              <span className="hidden lg:inline">更多工具</span>
+              <span className="hidden lg:inline">更多</span>
             </TabsTrigger>
           </TabsList>
           
@@ -402,6 +406,10 @@ export default function HomePage() {
             )}
           </TabsContent>
           
+          <TabsContent value="aiModel" className="mt-6">
+            <AIModelSettings />
+          </TabsContent>
+          
           <TabsContent value="report" className="mt-6">
             {analysis ? (
               <div className="grid lg:grid-cols-3 gap-6">
@@ -451,11 +459,11 @@ export default function HomePage() {
 
           {/* 更多工具 Tab */}
           <TabsContent value="advanced-tools" className="mt-6">
-            <Tabs defaultValue="ai-model" className="w-full">
+            <Tabs defaultValue="template" className="w-full">
               <TabsList className="grid w-full grid-cols-5 mb-4">
-                <TabsTrigger value="ai-model" className="flex items-center gap-1 text-xs">
-                  <Bot className="w-3 h-3" />
-                  AI模型
+                <TabsTrigger value="template" className="flex items-center gap-1 text-xs">
+                  <Bookmark className="w-3 h-3" />
+                  模板管理
                 </TabsTrigger>
                 <TabsTrigger value="metric" className="flex items-center gap-1 text-xs">
                   <Target className="w-3 h-3" />
@@ -475,8 +483,8 @@ export default function HomePage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="ai-model">
-                <AIModelSettings />
+              <TabsContent value="template">
+                <TemplateManager />
               </TabsContent>
 
               <TabsContent value="metric">
