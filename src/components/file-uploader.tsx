@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { Upload, X, FileSpreadsheet, AlertCircle, CheckCircle, Loader2, FileText, Shield, Sparkles, Trash2, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -103,12 +103,18 @@ export function FileUploader({
   enablePreCheck = true
 }: FileUploaderProps) {
   const [files, setFiles] = useState<UploadFile[]>([]);
+  const filesRef = useRef<UploadFile[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [showPreCheckDialog, setShowPreCheckDialog] = useState(false);
   const [selectedFileForCheck, setSelectedFileForCheck] = useState<UploadFile | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   const acceptedExtensions = ['xlsx', 'xls', 'csv', 'txt'];
+
+  // 同步 ref 和 state
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
 
   const generateId = () => `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -260,9 +266,9 @@ export function FileUploader({
       }
     }
 
-    const completedFiles = [...files, ...uploadFiles];
+    const completedFiles = [...filesRef.current, ...uploadFiles];
     onFileUpload(completedFiles);
-  }, [multiple, enablePreCheck, handlePreCheck, updateFileStatus, onFileUpload, files]);
+  }, [multiple, enablePreCheck, handlePreCheck, updateFileStatus, onFileUpload]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();

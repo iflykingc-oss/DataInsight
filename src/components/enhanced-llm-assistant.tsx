@@ -237,8 +237,14 @@ export function EnhancedLLMAssistant({
     await callLLMInsight(query);
   };
 
-  const handleRetry = (content: string) => {
-    callLLMInsight(content);
+  const handleRetry = (msgIndex: number) => {
+    // 找到当前assistant消息对应的user消息（前一条）
+    const userMsg = messages[msgIndex - 1];
+    if (userMsg && userMsg.role === 'user') {
+      // 移除当前的assistant消息和对应的user消息
+      setMessages(prev => prev.slice(0, msgIndex - 1));
+      callLLMInsight(userMsg.content);
+    }
   };
 
   const copyContent = (id: string, content: string) => {
@@ -325,7 +331,7 @@ export function EnhancedLLMAssistant({
             </div>
           )}
 
-          {messages.map((msg) => (
+          {messages.map((msg, idx) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[90%] rounded-lg px-4 py-3 ${
                 msg.role === 'user'
@@ -355,7 +361,7 @@ export function EnhancedLLMAssistant({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleRetry(msg.content)}
+                      onClick={() => handleRetry(idx)}
                       className="text-xs h-6 px-2"
                     >
                       <RotateCcw className="w-3 h-3 mr-1" />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,8 +9,7 @@ import { FileUploader, UploadFile } from '@/components/file-uploader';
 import { DataTable } from '@/components/data-table';
 import { DataInsights } from '@/components/data-insights';
 import { Dashboard } from '@/components/dashboard';
-import { LLMAssistant } from '@/components/llm-assistant';
-import { FeishuIntegration } from '@/components/feishu-integration';
+
 import { ReportGenerator } from '@/components/report-generator';
 import { DataSourceManager } from '@/components/data-source-manager';
 import { DataCleaner } from '@/components/data-cleaner';
@@ -45,8 +44,6 @@ import {
   Filter,
   Sparkles,
   LayoutGrid,
-  Share2,
-  Zap,
   Settings,
   Wand2,
   Target,
@@ -59,20 +56,31 @@ import {
   Upload,
   Trash2
 } from 'lucide-react';
-import type { ParsedData, DataAnalysis, FieldStat } from '@/lib/data-processor';
+import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 
 type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share' | 'aiChart' | 'metric' | 'quality' | 'alert' | 'nl2dash' | 'version' | 'template' | 'export';
 
 export default function HomePage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('datainsight-darkmode') === 'true';
+    }
+    return false;
+  });
   const [showSettings, setShowSettings] = useState(false);
   const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
-  const [linkedFilters, setLinkedFilters] = useState<{ field: string; values: string[] }[]>([]);
+
+  // 页面加载时应用保存的深色模式
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
   
   const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
     setFiles(uploadedFiles);
@@ -214,46 +222,73 @@ export default function HomePage() {
             {/* 菜单 */}
             <nav className="py-4">
               <div className="px-4 py-2 text-xs text-blue-200 uppercase tracking-wider">数据中心</div>
-              <a href="#" className="flex items-center px-4 py-3 bg-[#006bb3] border-l-4 border-white">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'table' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
+              >
                 <Database className="w-5 h-5 mr-3" />
                 <span>数据导入</span>
-              </a>
-              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+              </button>
+              <button
+                onClick={() => setViewMode('source')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'source' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
+              >
                 <FileText className="w-5 h-5 mr-3" />
                 <span>数据源管理</span>
-              </a>
-              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+              </button>
+              <button
+                onClick={() => setViewMode('clean')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'clean' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
+              >
                 <Link className="w-5 h-5 mr-3" />
-                <span>飞书集成</span>
-              </a>
-              
+                <span>数据清洗</span>
+              </button>
+
               <div className="px-4 py-2 text-xs text-blue-200 uppercase tracking-wider mt-4">配置中心</div>
-              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="w-full flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors text-left"
+              >
                 <Bot className="w-5 h-5 mr-3" />
                 <span>AI模型配置</span>
-              </a>
-              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+              </button>
+              <button
+                onClick={() => setViewMode('metric')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'metric' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
+              >
                 <Target className="w-5 h-5 mr-3" />
                 <span>指标语义层</span>
-              </a>
-              
+              </button>
+
               <div className="px-4 py-2 text-xs text-blue-200 uppercase tracking-wider mt-4">工具箱</div>
-              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+              <button
+                onClick={() => setViewMode('nl2dash')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'nl2dash' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
+              >
                 <Wand2 className="w-5 h-5 mr-3" />
                 <span>NL2Dashboard</span>
-              </a>
-              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+              </button>
+              <button
+                onClick={() => setViewMode('export')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'export' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
+              >
                 <Download className="w-5 h-5 mr-3" />
                 <span>图表导出</span>
-              </a>
-              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+              </button>
+              <button
+                onClick={() => setViewMode('version')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'version' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
+              >
                 <History className="w-5 h-5 mr-3" />
                 <span>版本快照</span>
-              </a>
-              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+              </button>
+              <button
+                onClick={() => setViewMode('template')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'template' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
+              >
                 <Bookmark className="w-5 h-5 mr-3" />
                 <span>模板管理</span>
-              </a>
+              </button>
             </nav>
           </aside>
 
@@ -753,7 +788,7 @@ export default function HomePage() {
               </div>
               <Switch checked={darkMode} onCheckedChange={(checked) => {
                 setDarkMode(checked);
-                // 实际应用深色模式到 html 元素
+                localStorage.setItem('datainsight-darkmode', String(checked));
                 if (checked) {
                   document.documentElement.classList.add('dark');
                 } else {

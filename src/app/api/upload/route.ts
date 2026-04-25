@@ -5,6 +5,13 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    const contentType = request.headers.get('content-type') || '';
+    if (!contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded')) {
+      return NextResponse.json(
+        { error: '请求格式错误，请使用 multipart/form-data 上传文件' },
+        { status: 400 }
+      );
+    }
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     
@@ -17,8 +24,23 @@ export async function POST(request: NextRequest) {
     
     const results: ParsedData[] = [];
     const errors: { fileName: string; error: string }[] = [];
-    
+
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+    const MAX_TOTAL_SIZE = 200 * 1024 * 1024; // 200MB
+
+    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return NextResponse.json(
+        { error: `总文件大小超过 ${MAX_TOTAL_SIZE / 1024 / 1024}MB 限制` },
+        { status: 413 }
+      );
+    }
+
     for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push({ fileName: file.name, error: `文件大小超过 ${MAX_FILE_SIZE / 1024 / 1024}MB 限制` });
+        continue;
+      }
       try {
         const parsedData = await parseFile(file);
         results.push(parsedData);
