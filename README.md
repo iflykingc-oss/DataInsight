@@ -1,30 +1,44 @@
-# projects
+# DataInsight Pro
 
-这是一个基于 [Next.js 16](https://nextjs.org) + [shadcn/ui](https://ui.shadcn.com) 的全栈应用项目，支持飞书表格、自定义表格数据处理和分析。
+企业级智能表格数据处理与可视化平台。基于 [Next.js 16](https://nextjs.org) + [shadcn/ui](https://ui.shadcn.com) 构建，支持多端表格上传、自动数据分析、交互式仪表盘和 AI 智能洞察。
 
 ## 快速开始
+
+### 安装依赖
+
+```bash
+pnpm install
+```
 
 ### 启动开发服务器
 
 ```bash
-coze dev
+pnpm dev
+# 或使用 coze dev
 ```
 
 启动后，在浏览器中打开 [http://localhost:5000](http://localhost:5000) 查看应用。
 
-开发服务器支持热更新，修改代码后页面会自动刷新。
-
 ### 构建生产版本
 
 ```bash
-coze build
+pnpm build
 ```
 
 ### 启动生产服务器
 
 ```bash
-coze start
+pnpm start
 ```
+
+## 核心功能
+
+- **多端表格上传**：支持 Excel（.xlsx/.xls）和 CSV 文件，单文件/批量上传
+- **自动数据分析**：数据清洗、基础统计、深度分析（含业务场景识别、相关性分析、趋势分析）
+- **交互式仪表盘**：自动生成 KPI 卡片、柱状图、折线图、饼图、面积图、雷达图
+- **AI 智能洞察**：基于大语言模型的自然语言数据问答，流式输出
+- **智能报表生成**：一键生成标准化统计报表，支持 PDF/Excel/图片导出
+- **AI 模型配置**：支持豆包、DeepSeek、Kimi、通义千问等多种大模型
 
 ## 项目结构
 
@@ -32,22 +46,24 @@ coze start
 src/
 ├── app/                      # Next.js App Router 目录
 │   ├── layout.tsx           # 根布局组件
-│   ├── page.tsx             # 首页
+│   ├── page.tsx             # 首页（主应用入口）
 │   ├── globals.css          # 全局样式（包含 shadcn 主题变量）
-│   └── [route]/             # 其他路由页面
-├── components/              # React 组件目录
-│   └── ui/                  # shadcn/ui 基础组件（优先使用）
-│       ├── button.tsx
-│       ├── card.tsx
-│       └── ...
-├── lib/                     # 工具函数库
-│   └── utils.ts            # cn() 等工具函数
-└── hooks/                   # 自定义 React Hooks（可选）
-
-server/
-├── index.ts                 # 自定义服务器入口
-├── tsconfig.json           # Server TypeScript 配置
-└── dist/                    # 编译输出目录（自动生成）
+│   └── api/                 # API 路由
+│       ├── upload/          # 文件上传接口
+│       ├── analyze/         # 数据分析接口
+│       └── llm-insight/     # LLM 智能洞察接口（SSE 流式）
+├── components/              # 业务组件
+│   ├── ui/                  # shadcn/ui 基础组件（优先使用）
+│   ├── data-table.tsx       # 数据表格
+│   ├── data-insights.tsx    # 深度数据分析
+│   ├── dashboard.tsx        # 交互式仪表盘
+│   ├── enhanced-llm-assistant.tsx  # AI 助手（SSE 流式）
+│   ├── ai-model-settings.tsx      # AI 模型配置
+│   ├── report-generator.tsx # 报表生成
+│   └── ...                  # 其他业务组件
+└── lib/                     # 工具函数库
+    ├── utils.ts            # cn() 等工具函数
+    └── data-processor.ts  # 数据处理与深度分析引擎
 ```
 
 ## 核心开发规范
