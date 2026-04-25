@@ -58,7 +58,7 @@ import {
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 
-type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share' | 'aiChart' | 'metric' | 'quality' | 'alert' | 'nl2dash' | 'version' | 'template' | 'export';
+type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share' | 'aiChart' | 'metric' | 'quality' | 'alert' | 'nl2dash' | 'version' | 'template' | 'export' | 'ai-settings';
 
 export default function HomePage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
@@ -246,8 +246,8 @@ export default function HomePage() {
 
               <div className="px-4 py-2 text-xs text-blue-200 uppercase tracking-wider mt-4">配置中心</div>
               <button
-                onClick={() => setShowSettings(true)}
-                className="w-full flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors text-left"
+                onClick={() => setViewMode('ai-settings')}
+                className={`w-full flex items-center px-4 py-3 transition-colors text-left ${viewMode === 'ai-settings' ? 'bg-[#006bb3] border-l-4 border-white' : 'hover:bg-[#006bb3]'}`}
               >
                 <Bot className="w-5 h-5 mr-3" />
                 <span>AI模型配置</span>
@@ -327,6 +327,10 @@ export default function HomePage() {
 
               {viewMode === 'template' && (
                 <TemplateManager />
+              )}
+
+              {viewMode === 'ai-settings' && (
+                <AIModelSettings />
               )}
 
               {['clean', 'metric', 'nl2dash', 'export', 'insights', 'dashboard', 'aiChart', 'chat', 'report', 'share', 'advanced', 'designer', 'quality', 'alert'].includes(viewMode) && (
@@ -465,44 +469,48 @@ export default function HomePage() {
         
         {/* 视图切换 - 侧边栏优先结构 */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <TabsList className="grid w-full grid-cols-10 overflow-x-auto">
-            <TabsTrigger value="table" className="flex items-center gap-1">
+          <TabsList className="flex w-full overflow-x-auto">
+            <TabsTrigger value="table" className="flex items-center gap-1 flex-shrink-0">
               <Table2 className="w-4 h-4" />
               <span className="hidden xl:inline">数据导入</span>
             </TabsTrigger>
-            <TabsTrigger value="source" className="flex items-center gap-1">
+            <TabsTrigger value="source" className="flex items-center gap-1 flex-shrink-0">
               <Database className="w-4 h-4" />
               <span className="hidden xl:inline">数据源</span>
             </TabsTrigger>
-            <TabsTrigger value="clean" className="flex items-center gap-1">
+            <TabsTrigger value="clean" className="flex items-center gap-1 flex-shrink-0">
               <Filter className="w-4 h-4" />
               <span className="hidden xl:inline">数据清洗</span>
             </TabsTrigger>
-            <TabsTrigger value="metric" className="flex items-center gap-1 text-orange-600">
+            <TabsTrigger value="metric" className="flex items-center gap-1 text-orange-600 flex-shrink-0">
               <Target className="w-4 h-4" />
               <span className="hidden xl:inline">指标层</span>
             </TabsTrigger>
-            <TabsTrigger value="nl2dash" className="flex items-center gap-1 text-purple-600">
+            <TabsTrigger value="nl2dash" className="flex items-center gap-1 text-purple-600 flex-shrink-0">
               <Wand2 className="w-4 h-4" />
               <span className="hidden xl:inline">NL2Dash</span>
             </TabsTrigger>
-            <TabsTrigger value="export" className="flex items-center gap-1">
+            <TabsTrigger value="export" className="flex items-center gap-1 flex-shrink-0">
               <Download className="w-4 h-4" />
               <span className="hidden xl:inline">导出</span>
             </TabsTrigger>
-            <TabsTrigger value="version" className="flex items-center gap-1">
+            <TabsTrigger value="version" className="flex items-center gap-1 flex-shrink-0">
               <History className="w-4 h-4" />
               <span className="hidden xl:inline">版本</span>
             </TabsTrigger>
-            <TabsTrigger value="template" className="flex items-center gap-1">
+            <TabsTrigger value="template" className="flex items-center gap-1 flex-shrink-0">
               <Bookmark className="w-4 h-4" />
               <span className="hidden xl:inline">模板</span>
             </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center gap-1 text-orange-600">
+            <TabsTrigger value="ai-settings" className="flex items-center gap-1 text-blue-600 flex-shrink-0">
+              <Bot className="w-4 h-4" />
+              <span className="hidden xl:inline">AI配置</span>
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="flex items-center gap-1 text-orange-600 flex-shrink-0">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden xl:inline">分析</span>
             </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-1 text-orange-600">
+            <TabsTrigger value="dashboard" className="flex items-center gap-1 text-orange-600 flex-shrink-0">
               <LayoutGrid className="w-4 h-4" />
               <span className="hidden xl:inline">仪表盘</span>
             </TabsTrigger>
@@ -722,11 +730,15 @@ export default function HomePage() {
               </Card>
             )}
           </TabsContent>
+
+          <TabsContent value="ai-settings" className="mt-6">
+            <AIModelSettings />
+          </TabsContent>
         </Tabs>
       </div>
     );
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
