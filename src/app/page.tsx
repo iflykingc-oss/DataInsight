@@ -19,6 +19,7 @@ import { DashboardDesigner } from '@/components/dashboard-designer';
 import { EnhancedLLMAssistant } from '@/components/enhanced-llm-assistant';
 import { ShareManager } from '@/components/share-manager';
 import { GlobalAIAssistant } from '@/components/global-ai-assistant';
+import { SmartChartRecommender } from '@/components/smart-chart-recommender';
 import {
   FileSpreadsheet,
   BarChart3,
@@ -35,11 +36,12 @@ import {
   LayoutGrid,
   Share2,
   Zap,
-  Settings
+  Settings,
+  Wand2
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis, FieldStat } from '@/lib/data-processor';
 
-type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share';
+type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share' | 'aiChart';
 
 export default function HomePage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
@@ -48,6 +50,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [linkedFilters, setLinkedFilters] = useState<{ field: string; values: string[] }[]>([]);
   
   const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
     setFiles(uploadedFiles);
@@ -248,7 +251,7 @@ export default function HomePage() {
         
         {/* 视图切换 */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <TabsList className="grid w-full grid-cols-10">
+          <TabsList className="grid w-full grid-cols-11">
             <TabsTrigger value="table" className="flex items-center gap-1">
               <Table2 className="w-4 h-4" />
               <span className="hidden lg:inline">数据表</span>
@@ -260,6 +263,10 @@ export default function HomePage() {
             <TabsTrigger value="insights" className="flex items-center gap-1">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden lg:inline">分析</span>
+            </TabsTrigger>
+            <TabsTrigger value="aiChart" className="flex items-center gap-1 text-purple-600">
+              <Wand2 className="w-4 h-4" />
+              <span className="hidden lg:inline">AI图表</span>
             </TabsTrigger>
             <TabsTrigger value="advanced" className="flex items-center gap-1">
               <Sparkles className="w-4 h-4" />
@@ -315,6 +322,21 @@ export default function HomePage() {
           <TabsContent value="insights" className="mt-6">
             {analysis ? (
               <DataInsights data={parsedData} analysis={analysis} />
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="aiChart" className="mt-6">
+            {analysis ? (
+              <SmartChartRecommender
+                data={parsedData}
+                fieldStats={analysis.fieldStats}
+                linkedFilters={linkedFilters}
+                onFilterChange={(filters) => setLinkedFilters(filters)}
+              />
             ) : (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
