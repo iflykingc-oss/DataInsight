@@ -182,72 +182,135 @@ export default function HomePage() {
     
     if (!parsedData) {
       return (
-        <div className="space-y-8">
-          {/* Hero Section */}
-          <div className="text-center py-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              智能表格数据处理与可视化
-            </h1>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-6">
-              企业级数据分析平台，支持多数据源接入、智能清洗、拖拽式仪表盘、NL2SQL自然语言查询
-            </p>
-          </div>
-          
-          {/* 核心功能区：AI配置 + 上传区域 */}
-          <div className="grid lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
-            {/* 左侧：AI模型配置 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-blue-500" />
-                  AI模型配置
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AIModelSettings />
-              </CardContent>
-            </Card>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+          {/* 顶部导航 */}
+          <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-bold text-lg">DataInsight</h1>
+                  <p className="text-xs text-gray-500">智能数据分析平台</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="sm">
+                  <Settings className="w-4 h-4 mr-1" />
+                  设置
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-7xl mx-auto px-6 py-12">
+            {/* Hero Section */}
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-6">
+                <Sparkles className="w-4 h-4" />
+                AI 驱动的智能数据分析
+              </div>
+              <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent">
+                轻松搞定数据分析
+              </h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+                上传数据，AI 自动分析，一键生成可视化报表和仪表盘
+              </p>
+              
+              {/* 核心指标 */}
+              <div className="flex items-center justify-center gap-8 text-sm text-gray-500">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>Excel / CSV / TXT</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>AI 智能分析</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>拖拽式仪表盘</span>
+                </div>
+              </div>
+            </div>
+
+            {/* AI配置 + 上传区域 */}
+            <div className="grid lg:grid-cols-3 gap-6 mb-12">
+              {/* AI配置 - 独立卡片 */}
+              <Card className="lg:col-span-1 border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+                      <Bot className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base">AI 模型配置</CardTitle>
+                      <p className="text-xs text-gray-500">选择或自定义 AI 模型</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AIModelSettings />
+                </CardContent>
+              </Card>
+
+              {/* 上传区域 */}
+              <Card className="lg:col-span-2 border-2 border-dashed border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:border-green-300 transition-colors">
+                <CardContent className="py-8">
+                  <FileUploader onFileUpload={handleFileUpload} />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* 功能特点 - 玻璃态卡片 */}
+            <div className="mb-12">
+              <h2 className="text-center text-lg font-semibold text-gray-700 mb-6">为什么选择 DataInsight</h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="group p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 shadow-sm hover:shadow-lg hover:bg-white transition-all cursor-pointer">
+                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Database className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">多数据源</h3>
+                  <p className="text-sm text-gray-500">支持 Excel、CSV、API 等多种数据格式</p>
+                </div>
+                <div className="group p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 shadow-sm hover:shadow-lg hover:bg-white transition-all cursor-pointer">
+                  <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Filter className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">智能清洗</h3>
+                  <p className="text-sm text-gray-500">AI 自动识别并修复数据问题</p>
+                </div>
+                <div className="group p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 shadow-sm hover:shadow-lg hover:bg-white transition-all cursor-pointer">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <LayoutGrid className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">拖拽仪表盘</h3>
+                  <p className="text-sm text-gray-500">无需编程，拖拽即可制作可视化</p>
+                </div>
+                <div className="group p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 shadow-sm hover:shadow-lg hover:bg-white transition-all cursor-pointer">
+                  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Zap className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-1">NL2SQL</h3>
+                  <p className="text-sm text-gray-500">用自然语言描述，数据秒变图表</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 数据源管理 */}
+            <DataSourceManager />
             
-            {/* 右侧：上传区域 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">上传数据文件</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FileUploader onFileUpload={handleFileUpload} />
-              </CardContent>
-            </Card>
-          </div>
-          
-          {/* 功能特点 */}
-          <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            <div className="p-4 bg-white rounded-lg border shadow-sm">
-              <Database className="w-8 h-8 text-green-500 mx-auto mb-2" />
-              <h3 className="font-medium">多数据源</h3>
-              <p className="text-sm text-gray-500">文件/API/数据库</p>
+            {/* 飞书集成 */}
+            <FeishuIntegration onImportData={handleFeishuImport} />
+          </main>
+
+          {/* Footer */}
+          <footer className="border-t bg-white/50 mt-12">
+            <div className="max-w-7xl mx-auto px-6 py-6 text-center text-sm text-gray-500">
+              DataInsight Pro - 企业级智能数据分析平台
             </div>
-            <div className="p-4 bg-white rounded-lg border shadow-sm">
-              <Filter className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-              <h3 className="font-medium">智能清洗</h3>
-              <p className="text-sm text-gray-500">可视化数据预处理</p>
-            </div>
-            <div className="p-4 bg-white rounded-lg border shadow-sm">
-              <LayoutGrid className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-              <h3 className="font-medium">拖拽仪表盘</h3>
-              <p className="text-sm text-gray-500">DIY可视化</p>
-            </div>
-            <div className="p-4 bg-white rounded-lg border shadow-sm">
-              <Zap className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-              <h3 className="font-medium">NL2SQL</h3>
-              <p className="text-sm text-gray-500">自然语言分析</p>
-            </div>
-          </div>
-          
-          {/* 数据源管理 */}
-          <DataSourceManager />
-          
-          {/* 飞书集成 */}
-          <FeishuIntegration onImportData={handleFeishuImport} />
+          </footer>
         </div>
       );
     }
