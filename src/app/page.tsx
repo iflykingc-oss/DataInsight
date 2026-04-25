@@ -422,48 +422,48 @@ export default function HomePage() {
           </Button>
         </div>
         
-        {/* 视图切换 - 扁平化结构 */}
+        {/* 视图切换 - 侧边栏优先结构 */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
           <TabsList className="grid w-full grid-cols-10 overflow-x-auto">
             <TabsTrigger value="table" className="flex items-center gap-1">
               <Table2 className="w-4 h-4" />
-              <span className="hidden xl:inline">数据表</span>
+              <span className="hidden xl:inline">数据导入</span>
+            </TabsTrigger>
+            <TabsTrigger value="source" className="flex items-center gap-1">
+              <Database className="w-4 h-4" />
+              <span className="hidden xl:inline">数据源</span>
             </TabsTrigger>
             <TabsTrigger value="clean" className="flex items-center gap-1">
               <Filter className="w-4 h-4" />
-              <span className="hidden xl:inline">清洗</span>
-            </TabsTrigger>
-            <TabsTrigger value="insights" className="flex items-center gap-1">
-              <BarChart3 className="w-4 h-4" />
-              <span className="hidden xl:inline">分析</span>
-            </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-1">
-              <LayoutGrid className="w-4 h-4" />
-              <span className="hidden xl:inline">仪表盘</span>
-            </TabsTrigger>
-            <TabsTrigger value="aiChart" className="flex items-center gap-1 text-purple-600">
-              <Wand2 className="w-4 h-4" />
-              <span className="hidden xl:inline">AI图表</span>
-            </TabsTrigger>
-            <TabsTrigger value="chat" className="flex items-center gap-1 text-purple-600">
-              <Brain className="w-4 h-4" />
-              <span className="hidden xl:inline">AI助手</span>
-            </TabsTrigger>
-            <TabsTrigger value="report" className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
-              <span className="hidden xl:inline">报表</span>
-            </TabsTrigger>
-            <TabsTrigger value="source" className="flex items-center gap-1 text-orange-600">
-              <Database className="w-4 h-4" />
-              <span className="hidden xl:inline">数据源</span>
+              <span className="hidden xl:inline">数据清洗</span>
             </TabsTrigger>
             <TabsTrigger value="metric" className="flex items-center gap-1 text-orange-600">
               <Target className="w-4 h-4" />
               <span className="hidden xl:inline">指标层</span>
             </TabsTrigger>
-            <TabsTrigger value="designer" className="flex items-center gap-1 text-orange-600">
-              <Sparkles className="w-4 h-4" />
-              <span className="hidden xl:inline">更多</span>
+            <TabsTrigger value="nl2dash" className="flex items-center gap-1 text-purple-600">
+              <Wand2 className="w-4 h-4" />
+              <span className="hidden xl:inline">NL2Dash</span>
+            </TabsTrigger>
+            <TabsTrigger value="export" className="flex items-center gap-1">
+              <Download className="w-4 h-4" />
+              <span className="hidden xl:inline">导出</span>
+            </TabsTrigger>
+            <TabsTrigger value="version" className="flex items-center gap-1">
+              <History className="w-4 h-4" />
+              <span className="hidden xl:inline">版本</span>
+            </TabsTrigger>
+            <TabsTrigger value="template" className="flex items-center gap-1">
+              <Bookmark className="w-4 h-4" />
+              <span className="hidden xl:inline">模板</span>
+            </TabsTrigger>
+            <TabsTrigger value="insights" className="flex items-center gap-1 text-orange-600">
+              <BarChart3 className="w-4 h-4" />
+              <span className="hidden xl:inline">分析</span>
+            </TabsTrigger>
+            <TabsTrigger value="dashboard" className="flex items-center gap-1 text-orange-600">
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden xl:inline">仪表盘</span>
             </TabsTrigger>
           </TabsList>
           
