@@ -710,12 +710,36 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
               <div className="p-2 max-h-48 overflow-auto">
                 {cleaningSteps.map((step, index) => {
                   const OpInfo = OPERATION_LABELS[step.type];
+                  // 生成详细描述
+                  const getStepDetail = () => {
+                    const config = step.config;
+                    switch (step.type) {
+                      case 'filter':
+                        if (config.operator === 'not_empty') return '筛选非空行';
+                        if (config.operator === 'no_duplicate') return '筛选无重复行';
+                        if (config.operator === 'not_outlier') return '筛选去除异常值';
+                        return `筛选字段: ${config.field || 'auto'}`;
+                      case 'deduplicate':
+                        return `去重字段: ${config.fields || '全部'}`;
+                      case 'fillnull':
+                        if (config.method === 'value') return `空值填为: ${config.value}`;
+                        if (config.method === 'mean') return '空值填为均值';
+                        if (config.method === 'median') return '空值填为中位数';
+                        return '空值填为众数';
+                      case 'normalize':
+                        return '清除多余空格';
+                      case 'convert':
+                        return `转换为: ${config.targetFormat || 'YYYY-MM-DD'}`;
+                      default:
+                        return step.description || OpInfo.name;
+                    }
+                  };
                   return (
                     <div 
                       key={step.id}
                       className={cn(
                         'flex items-center gap-2 p-2 rounded-lg mb-1',
-                        step.enabled ? 'bg-white' : 'bg-gray-100 opacity-60'
+                        step.enabled ? 'bg-white border border-gray-200' : 'bg-gray-50 opacity-60'
                       )}
                     >
                       <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
@@ -723,7 +747,10 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                         {index + 1}
                       </span>
                       <OpInfo.icon className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm flex-1">{step.description || OpInfo.name}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{OpInfo.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{getStepDetail()}</p>
+                      </div>
                       <Checkbox 
                         checked={step.enabled}
                         onCheckedChange={() => toggleStep(step.id)}
