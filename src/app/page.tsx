@@ -33,7 +33,7 @@ import {
   BarChart3,
   Table2,
   Brain,
-  Link2,
+  Link,
   FileText,
   Loader2,
   CheckCircle,
@@ -52,7 +52,8 @@ import {
   Bookmark,
   Download,
   History,
-  Bot
+  Bot,
+  Upload
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis, FieldStat } from '@/lib/data-processor';
 
@@ -182,135 +183,164 @@ export default function HomePage() {
     
     if (!parsedData) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-          {/* 顶部导航 */}
-          <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="font-bold text-lg">DataInsight</h1>
-                  <p className="text-xs text-gray-500">智能数据分析平台</p>
-                </div>
+        <div className="min-h-screen flex">
+          {/* 左侧导航菜单 - RuoYi风格 */}
+          <aside className="w-64 bg-[#1890ff] text-white flex-shrink-0">
+            {/* Logo区域 */}
+            <div className="h-16 flex items-center px-4 border-b border-blue-400/30">
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
+                <BarChart3 className="w-6 h-6 text-[#1890ff]" />
+              </div>
+              <div>
+                <h1 className="font-bold text-lg leading-tight">DataInsight</h1>
+                <p className="text-xs text-blue-200">智能数据分析平台</p>
+              </div>
+            </div>
+            
+            {/* 菜单 */}
+            <nav className="py-4">
+              <div className="px-4 py-2 text-xs text-blue-200 uppercase tracking-wider">数据中心</div>
+              <a href="#" className="flex items-center px-4 py-3 bg-[#006bb3] border-l-4 border-white">
+                <Database className="w-5 h-5 mr-3" />
+                <span>数据导入</span>
+              </a>
+              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+                <FileText className="w-5 h-5 mr-3" />
+                <span>数据源管理</span>
+              </a>
+              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+                <Link className="w-5 h-5 mr-3" />
+                <span>飞书集成</span>
+              </a>
+              
+              <div className="px-4 py-2 text-xs text-blue-200 uppercase tracking-wider mt-4">配置中心</div>
+              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+                <Bot className="w-5 h-5 mr-3" />
+                <span>AI模型配置</span>
+              </a>
+              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+                <Target className="w-5 h-5 mr-3" />
+                <span>指标语义层</span>
+              </a>
+              
+              <div className="px-4 py-2 text-xs text-blue-200 uppercase tracking-wider mt-4">工具箱</div>
+              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+                <Wand2 className="w-5 h-5 mr-3" />
+                <span>NL2Dashboard</span>
+              </a>
+              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+                <Download className="w-5 h-5 mr-3" />
+                <span>图表导出</span>
+              </a>
+              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+                <History className="w-5 h-5 mr-3" />
+                <span>版本快照</span>
+              </a>
+              <a href="#" className="flex items-center px-4 py-3 hover:bg-[#006bb3] transition-colors">
+                <Bookmark className="w-5 h-5 mr-3" />
+                <span>模板管理</span>
+              </a>
+            </nav>
+          </aside>
+
+          {/* 右侧内容区 */}
+          <div className="flex-1 flex flex-col">
+            {/* 顶部导航 */}
+            <header className="h-16 bg-white border-b flex items-center justify-between px-6">
+              <div className="flex items-center gap-4">
+                <span className="text-gray-500">首页</span>
               </div>
               <div className="flex items-center gap-4">
                 <Button variant="ghost" size="sm">
-                  <Settings className="w-4 h-4 mr-1" />
-                  设置
+                  <Bell className="w-4 h-4" />
                 </Button>
-              </div>
-            </div>
-          </header>
-
-          <main className="max-w-7xl mx-auto px-6 py-12">
-            {/* Hero Section */}
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-6">
-                <Sparkles className="w-4 h-4" />
-                AI 驱动的智能数据分析
-              </div>
-              <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent">
-                轻松搞定数据分析
-              </h1>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-                上传数据，AI 自动分析，一键生成可视化报表和仪表盘
-              </p>
-              
-              {/* 核心指标 */}
-              <div className="flex items-center justify-center gap-8 text-sm text-gray-500">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Excel / CSV / TXT</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>AI 智能分析</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>拖拽式仪表盘</span>
-                </div>
-              </div>
-            </div>
-
-            {/* AI配置 + 上传区域 */}
-            <div className="grid lg:grid-cols-3 gap-6 mb-12">
-              {/* AI配置 - 独立卡片 */}
-              <Card className="lg:col-span-1 border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                      <Bot className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">AI 模型配置</CardTitle>
-                      <p className="text-xs text-gray-500">选择或自定义 AI 模型</p>
-                    </div>
+                <Button variant="ghost" size="sm">
+                  <Settings className="w-4 h-4" />
+                </Button>
+                <div className="flex items-center gap-2 ml-4 pl-4 border-l">
+                  <div className="w-8 h-8 bg-[#1890ff] rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    A
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <AIModelSettings />
-                </CardContent>
-              </Card>
+                  <span className="text-sm">管理员</span>
+                </div>
+              </div>
+            </header>
 
-              {/* 上传区域 */}
-              <Card className="lg:col-span-2 border-2 border-dashed border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:border-green-300 transition-colors">
-                <CardContent className="py-8">
+            {/* 主内容区 */}
+            <main className="flex-1 bg-[#f0f2f5] p-6">
+              {/* 欢迎卡片 */}
+              <div className="bg-white rounded-lg p-6 mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">欢迎使用 DataInsight</h2>
+                <p className="text-gray-500">上传您的数据文件，开始智能数据分析之旅</p>
+              </div>
+
+              {/* 数据导入区域 */}
+              <div className="grid lg:grid-cols-3 gap-6">
+                {/* 上传区域 */}
+                <div className="lg:col-span-2 bg-white rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                    <Upload className="w-5 h-5 mr-2 text-[#1890ff]" />
+                    数据导入
+                  </h3>
                   <FileUploader onFileUpload={handleFileUpload} />
-                </CardContent>
-              </Card>
-            </div>
+                </div>
 
-            {/* 功能特点 - 玻璃态卡片 */}
-            <div className="mb-12">
-              <h2 className="text-center text-lg font-semibold text-gray-700 mb-6">为什么选择 DataInsight</h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="group p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 shadow-sm hover:shadow-lg hover:bg-white transition-all cursor-pointer">
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Database className="w-6 h-6 text-green-600" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">多数据源</h3>
-                  <p className="text-sm text-gray-500">支持 Excel、CSV、API 等多种数据格式</p>
-                </div>
-                <div className="group p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 shadow-sm hover:shadow-lg hover:bg-white transition-all cursor-pointer">
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Filter className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">智能清洗</h3>
-                  <p className="text-sm text-gray-500">AI 自动识别并修复数据问题</p>
-                </div>
-                <div className="group p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 shadow-sm hover:shadow-lg hover:bg-white transition-all cursor-pointer">
-                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <LayoutGrid className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">拖拽仪表盘</h3>
-                  <p className="text-sm text-gray-500">无需编程，拖拽即可制作可视化</p>
-                </div>
-                <div className="group p-6 bg-white/60 backdrop-blur-sm rounded-2xl border border-white/80 shadow-sm hover:shadow-lg hover:bg-white transition-all cursor-pointer">
-                  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Zap className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1">NL2SQL</h3>
-                  <p className="text-sm text-gray-500">用自然语言描述，数据秒变图表</p>
+                {/* AI配置 */}
+                <div className="bg-white rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                    <Bot className="w-5 h-5 mr-2 text-[#1890ff]" />
+                    AI模型配置
+                  </h3>
+                  <AIModelSettings />
                 </div>
               </div>
-            </div>
 
-            {/* 数据源管理 */}
-            <DataSourceManager />
-            
-            {/* 飞书集成 */}
-            <FeishuIntegration onImportData={handleFeishuImport} />
-          </main>
+              {/* 快捷入口 */}
+              <div className="grid md:grid-cols-4 gap-4 mt-6">
+                <div className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <Filter className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">数据清洗</h4>
+                    <p className="text-xs text-gray-500">智能数据预处理</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <BarChart3 className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">数据分析</h4>
+                    <p className="text-xs text-gray-500">自动生成洞察报告</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                    <LayoutGrid className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">仪表盘</h4>
+                    <p className="text-xs text-gray-500">拖拽式可视化</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 flex items-center cursor-pointer hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+                    <Wand2 className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">NL2SQL</h4>
+                    <p className="text-xs text-gray-500">自然语言查询</p>
+                  </div>
+                </div>
+              </div>
 
-          {/* Footer */}
-          <footer className="border-t bg-white/50 mt-12">
-            <div className="max-w-7xl mx-auto px-6 py-6 text-center text-sm text-gray-500">
-              DataInsight Pro - 企业级智能数据分析平台
-            </div>
-          </footer>
+              {/* 底部说明 */}
+              <div className="mt-6 text-center text-sm text-gray-400">
+                DataInsight Pro v1.0 - 企业级智能数据分析平台
+              </div>
+            </main>
+          </div>
         </div>
       );
     }
