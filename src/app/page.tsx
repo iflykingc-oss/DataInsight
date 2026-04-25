@@ -189,7 +189,7 @@ export default function HomePage() {
     
     if (!parsedData) {
       return (
-        <div className="min-h-screen flex">
+        <div className={`min-h-screen flex ${darkMode ? 'dark' : ''}`}>
           {/* 左侧导航菜单 - RuoYi风格 */}
           <aside className="w-64 bg-[#1890ff] text-white flex-shrink-0">
             {/* Logo区域 */}
@@ -260,7 +260,7 @@ export default function HomePage() {
                 <Button variant="ghost" size="sm">
                   <Bell className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={() => setShowSettings(true)}>
                   <Settings className="w-4 h-4" />
                 </Button>
                 <div className="flex items-center gap-2 ml-4 pl-4 border-l">
@@ -743,9 +743,17 @@ export default function HomePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">深色模式</p>
-                <p className="text-sm text-gray-500">开启深色主题</p>
+                <p className="text-sm text-gray-500">{darkMode ? '已开启深色主题' : '开启深色主题'}</p>
               </div>
-              <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+              <Switch checked={darkMode} onCheckedChange={(checked) => {
+                setDarkMode(checked);
+                // 实际应用深色模式到 html 元素
+                if (checked) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              }} />
             </div>
             <div className="flex items-center justify-between">
               <div>
