@@ -339,7 +339,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   onChange={e => setInviteEmail(e.target.value)}
                   className="flex-1"
                 />
-                <Select value={inviteRole} onValueChange={v => setInviteRole(v as any)}>
+                <Select value={inviteRole} onValueChange={v => setInviteRole(v as 'editor' | 'viewer')}>
                   <SelectTrigger className="w-28">
                     <SelectValue />
                   </SelectTrigger>
@@ -381,7 +381,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                     <div className="flex items-center gap-2">
                       <Select
                         value={member.role}
-                        onValueChange={v => updateMemberRole(member.id, v as any)}
+                        onValueChange={v => updateMemberRole(member.id, v as 'owner' | 'editor' | 'viewer')}
                       >
                         <SelectTrigger className="w-24">
                           <SelectValue />

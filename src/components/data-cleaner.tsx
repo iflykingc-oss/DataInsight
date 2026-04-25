@@ -146,7 +146,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
 
   // 应用清洗 - 改为普通函数避免顺序问题
   const applyCleaningFn = useCallback((steps: CleaningStep[]) => {
-    let result = { ...data, rows: [...data.rows] };
+    const result = { ...data, rows: [...data.rows] };
     
     steps.filter(s => s.enabled).forEach(step => {
       switch (step.type) {
@@ -491,7 +491,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                   <div className="flex-1">
                     <p className="text-sm font-medium text-purple-700">用自然语言描述清洗需求</p>
                     <p className="text-xs text-purple-600 mt-1">
-                      例如："删除所有空行"、"去除重复数据"、"用0填补空值"
+                      例如：{'"'}删除所有空行{'"'}、{'"'}去除重复数据{'"'}、{'"'}用0填补空值{'"'}
                     </p>
                   </div>
                 </div>

@@ -75,9 +75,12 @@ import {
 } from 'lucide-react';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 
+// Chart type
+type ChartType = 'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'radar';
+
 interface DashboardWidget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'table';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'scatter' | 'radar' | 'kpi' | 'table';
   title: string;
   x: number;
   y: number;
@@ -90,6 +93,8 @@ interface DashboardWidget {
   };
   data?: Record<string, string | number>[];
 }
+
+type WidgetType = DashboardWidget['type'];
 
 interface SortableWidgetProps {
   widget: DashboardWidget;
@@ -446,7 +451,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                       value={selectedWidgetData.type}
                       onValueChange={v => {
                         setWidgets(widgets.map(w =>
-                          w.id === selectedWidget ? { ...w, type: v as any } : w
+                          w.id === selectedWidget ? { ...w, type: v as ChartType } : w
                         ));
                       }}
                     >
@@ -560,7 +565,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                     <button
                       key={item.type}
                       onClick={() => {
-                        setNewWidgetConfig({ ...newWidgetConfig, type: item.type as any });
+                        setNewWidgetConfig({ ...newWidgetConfig, type: item.type as WidgetType });
                         setShowAddDialog(true);
                       }}
                       className="p-3 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
@@ -607,7 +612,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                   return (
                     <button
                       key={item.type}
-                      onClick={() => setNewWidgetConfig({ ...newWidgetConfig, type: item.type as any })}
+                      onClick={() => setNewWidgetConfig({ ...newWidgetConfig, type: item.type as WidgetType })}
                       className={`p-3 border rounded-lg transition-colors ${
                         newWidgetConfig.type === item.type
                           ? 'border-blue-500 bg-blue-50'

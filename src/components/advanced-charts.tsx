@@ -212,12 +212,12 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
       margin: { top: 20, right: 30, left: 20, bottom: 60 }
     };
     
-    const tooltipContent = ({ active, payload }: any) => {
+    const tooltipContent = ({ active, payload }: { active?: boolean; payload?: Array<{ payload?: Record<string, unknown> }> }) => {
       if (active && payload && payload.length) {
         const data = payload[0]?.payload;
         return (
           <div className="bg-white p-3 border rounded shadow-lg">
-            <p className="font-medium">{data?.fullName || data?.name}</p>
+            <p className="font-medium">{String(data?.fullName || data?.name || '')}</p>
             {data?.value !== undefined && <p className="text-sm text-gray-600">值: {Number(data.value).toLocaleString()}</p>}
             {data?.avg !== undefined && <p className="text-sm text-gray-600">均值: {Number(data.avg).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>}
           </div>

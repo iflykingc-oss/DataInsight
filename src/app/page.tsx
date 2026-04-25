@@ -20,6 +20,14 @@ import { EnhancedLLMAssistant } from '@/components/enhanced-llm-assistant';
 import { ShareManager } from '@/components/share-manager';
 import { GlobalAIAssistant } from '@/components/global-ai-assistant';
 import { SmartChartRecommender } from '@/components/smart-chart-recommender';
+import { AIModelSettings } from '@/components/ai-model-settings';
+import { MetricSemanticLayer } from '@/components/metric-semantic-layer';
+import { DataQualityChecker } from '@/components/data-quality-checker';
+import { DataAlerting } from '@/components/data-alerting';
+import { NL2Dashboard } from '@/components/nl2-dashboard';
+import { VersionHistory } from '@/components/version-history';
+import { TemplateManager } from '@/components/template-manager';
+import { ChartExporter } from '@/components/chart-exporter';
 import {
   FileSpreadsheet,
   BarChart3,
@@ -37,11 +45,18 @@ import {
   Share2,
   Zap,
   Settings,
-  Wand2
+  Wand2,
+  Target,
+  Shield,
+  Bell,
+  Bookmark,
+  Download,
+  History,
+  Bot
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis, FieldStat } from '@/lib/data-processor';
 
-type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share' | 'aiChart';
+type ViewMode = 'table' | 'insights' | 'dashboard' | 'chat' | 'report' | 'source' | 'clean' | 'advanced' | 'designer' | 'share' | 'aiChart' | 'aiModel' | 'metric' | 'quality' | 'alert' | 'nl2dash' | 'version' | 'template' | 'export';
 
 export default function HomePage() {
   const [files, setFiles] = useState<UploadFile[]>([]);
@@ -251,7 +266,7 @@ export default function HomePage() {
         
         {/* 视图切换 */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <TabsList className="grid w-full grid-cols-11">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="table" className="flex items-center gap-1">
               <Table2 className="w-4 h-4" />
               <span className="hidden lg:inline">数据表</span>
@@ -268,17 +283,9 @@ export default function HomePage() {
               <Wand2 className="w-4 h-4" />
               <span className="hidden lg:inline">AI图表</span>
             </TabsTrigger>
-            <TabsTrigger value="advanced" className="flex items-center gap-1">
-              <Sparkles className="w-4 h-4" />
-              <span className="hidden lg:inline">高级图表</span>
-            </TabsTrigger>
             <TabsTrigger value="dashboard" className="flex items-center gap-1">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden lg:inline">仪表盘</span>
-            </TabsTrigger>
-            <TabsTrigger value="designer" className="flex items-center gap-1">
-              <LayoutGrid className="w-4 h-4" />
-              <span className="hidden lg:inline">设计器</span>
             </TabsTrigger>
             <TabsTrigger value="chat" className="flex items-center gap-1">
               <Brain className="w-4 h-4" />
@@ -288,13 +295,9 @@ export default function HomePage() {
               <FileText className="w-4 h-4" />
               <span className="hidden lg:inline">报表</span>
             </TabsTrigger>
-            <TabsTrigger value="share" className="flex items-center gap-1">
-              <Share2 className="w-4 h-4" />
-              <span className="hidden lg:inline">分享</span>
-            </TabsTrigger>
-            <TabsTrigger value="source" className="flex items-center gap-1">
-              <Database className="w-4 h-4" />
-              <span className="hidden lg:inline">数据源</span>
+            <TabsTrigger value="advanced-tools" className="flex items-center gap-1 text-orange-600">
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden lg:inline">更多工具</span>
             </TabsTrigger>
           </TabsList>
           
@@ -444,6 +447,139 @@ export default function HomePage() {
           
           <TabsContent value="source" className="mt-6">
             <DataSourceManager onDataSourceChange={setParsedData} currentData={parsedData} />
+          </TabsContent>
+
+          {/* 更多工具 Tab */}
+          <TabsContent value="advanced-tools" className="mt-6">
+            <Tabs defaultValue="ai-model" className="w-full">
+              <TabsList className="grid w-full grid-cols-5 mb-4">
+                <TabsTrigger value="ai-model" className="flex items-center gap-1 text-xs">
+                  <Bot className="w-3 h-3" />
+                  AI模型
+                </TabsTrigger>
+                <TabsTrigger value="metric" className="flex items-center gap-1 text-xs">
+                  <Target className="w-3 h-3" />
+                  指标层
+                </TabsTrigger>
+                <TabsTrigger value="quality" className="flex items-center gap-1 text-xs">
+                  <Shield className="w-3 h-3" />
+                  质量检测
+                </TabsTrigger>
+                <TabsTrigger value="alert" className="flex items-center gap-1 text-xs">
+                  <Bell className="w-3 h-3" />
+                  数据预警
+                </TabsTrigger>
+                <TabsTrigger value="nl2dash" className="flex items-center gap-1 text-xs">
+                  <Wand2 className="w-3 h-3" />
+                  NL2Dash
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="ai-model">
+                <AIModelSettings />
+              </TabsContent>
+
+              <TabsContent value="metric">
+                {parsedData && analysis ? (
+                  <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} />
+                ) : (
+                  <Card className="border-dashed">
+                    <CardContent className="py-12 text-center">
+                      <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-gray-500">请先加载数据</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="quality">
+                {parsedData && analysis ? (
+                  <DataQualityChecker data={parsedData} fieldStats={analysis.fieldStats} />
+                ) : (
+                  <Card className="border-dashed">
+                    <CardContent className="py-12 text-center">
+                      <Shield className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-gray-500">请先加载数据</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="alert">
+                {parsedData ? (
+                  <DataAlerting data={parsedData} fieldStats={analysis?.fieldStats || []} />
+                ) : (
+                  <Card className="border-dashed">
+                    <CardContent className="py-12 text-center">
+                      <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-gray-500">请先加载数据</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="nl2dash">
+                {parsedData && analysis ? (
+                  <NL2Dashboard data={parsedData} fieldStats={analysis.fieldStats} />
+                ) : (
+                  <Card className="border-dashed">
+                    <CardContent className="py-12 text-center">
+                      <Wand2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-gray-500">请先加载数据</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            {/* 第二行工具 */}
+            <Tabs defaultValue="version" className="w-full mt-6">
+              <TabsList className="grid w-full grid-cols-4 mb-4">
+                <TabsTrigger value="version" className="flex items-center gap-1 text-xs">
+                  <History className="w-3 h-3" />
+                  版本快照
+                </TabsTrigger>
+                <TabsTrigger value="template" className="flex items-center gap-1 text-xs">
+                  <Bookmark className="w-3 h-3" />
+                  模板库
+                </TabsTrigger>
+                <TabsTrigger value="export" className="flex items-center gap-1 text-xs">
+                  <Download className="w-3 h-3" />
+                  图表导出
+                </TabsTrigger>
+                <TabsTrigger value="designer" className="flex items-center gap-1 text-xs">
+                  <LayoutGrid className="w-3 h-3" />
+                  设计器
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="version">
+                <VersionHistory 
+                  currentContent={parsedData ? { data: { rows: parsedData.rows } } : undefined}
+                />
+              </TabsContent>
+
+              <TabsContent value="template">
+                <TemplateManager />
+              </TabsContent>
+
+              <TabsContent value="export">
+                <ChartExporter chartName={parsedData?.fileName || '图表'} />
+              </TabsContent>
+
+              <TabsContent value="designer">
+                {parsedData && analysis ? (
+                  <DashboardDesigner data={parsedData} fieldStats={analysis.fieldStats} />
+                ) : (
+                  <Card className="border-dashed">
+                    <CardContent className="py-12 text-center">
+                      <LayoutGrid className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-gray-500">请先加载数据</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>

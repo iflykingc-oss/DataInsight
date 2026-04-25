@@ -52,7 +52,7 @@ interface NL2SQLResult {
 interface EnhancedLLMAssistantProps {
   data: ParsedData;
   analysis: DataAnalysis;
-  onDataFilter?: (filter: { field: string; operator: string; value: any }[]) => void;
+  onDataFilter?: (filter: { field: string; operator: string; value: unknown }[]) => void;
   onChartSuggest?: (suggestion: { type: string; xField: string; yField: string }) => void;
 }
 
