@@ -150,10 +150,18 @@ export default function HomePage() {
   const handleDataCleaned = (cleanedData: ParsedData) => {
     setParsedData(cleanedData);
     // 重新分析清洗后的数据
+    handleAnalyzeWith(cleanedData);
+  };
+
+  const handleAnalyze = () => {
+    if (parsedData) handleAnalyzeWith(parsedData);
+  };
+
+  const handleAnalyzeWith = (data: ParsedData) => {
     fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: cleanedData })
+      body: JSON.stringify({ data })
     })
       .then(res => res.json())
       .then(result => setAnalysis(result.analysis))
@@ -439,7 +447,7 @@ export default function HomePage() {
           
           <TabsContent value="insights" className="mt-6">
             {analysis ? (
-              <DataInsights data={parsedData} analysis={analysis} />
+              <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} />
             ) : (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -451,9 +459,7 @@ export default function HomePage() {
             {analysis ? (
               <SmartChartRecommender
                 data={parsedData}
-                fieldStats={analysis.fieldStats}
-                linkedFilters={linkedFilters}
-                onFilterChange={(filters) => setLinkedFilters(filters)}
+                analysis={analysis}
               />
             ) : (
               <div className="flex items-center justify-center py-12">
@@ -470,7 +476,7 @@ export default function HomePage() {
           
           <TabsContent value="dashboard" className="mt-6">
             {analysis && (
-              <Dashboard data={parsedData} fieldStats={analysis.fieldStats} />
+              <Dashboard data={parsedData} analysis={analysis} />
             )}
           </TabsContent>
           

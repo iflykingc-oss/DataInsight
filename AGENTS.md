@@ -24,24 +24,39 @@
 - 自动校验文件格式、数据完整性
 
 ### 2. 自动数据处理与分析能力
-- 自动数据清洗：去重、空值处理
-- 自动数据分析：基础统计（求和/均值/计数/占比）、趋势分析
+- 自动数据清洗：去重、空值处理、异常值检测、标准化
+- 自动数据分析：基础统计（求和/均值/计数/占比）+ 深度分析
+- 深度分析引擎：
+  - 数据健康评分（完整性/一致性/质量/可用性，0-100分）
+  - 关键发现（严重/警告/提示/正面，含影响+建议）
+  - Pearson 相关性分析
+  - 分布分析（偏度/峰度/正态性检验）
+  - 趋势分析（上升/下降/波动/稳定）
+  - 智能图表推荐（6种图表类型+推荐理由+优先级）
+  - 行动建议（高/中/低优先级+预期收益）
+  - 数据画像（自动推测数据类型/行业/成熟度/分析潜力）
 - 自动字段识别：智能识别表格表头、数据维度、指标字段
 
 ### 3. 交互式仪表盘视图能力
-- 自动生成可视化仪表盘（柱状图、折线图、饼图、面积图、雷达图）
+- 自动生成可视化仪表盘（KPI卡片、柱状图、折线图、饼图、面积图、雷达图）
+- 智能字段类型识别（数值/文本/日期自动分类）
+- 数据自动聚合（按分类字段聚合统计）
 - 维度筛选、图表类型切换
 - 支持仪表盘自定义配置
 
 ### 4. 智能报表生成能力
-- 一键生成标准化统计报表
-- 支持报表模板选择
-- 报表预览与打印
+- 一键生成标准化统计报表（含深度分析内容）
+- 支持报表模板选择（汇总/业务/财务/运营）
+- 报表实时预览（7大分析模块）
+- 打印/PDF导出
+- Excel导出（含数据+统计摘要两个Sheet）
 
 ### 5. AI 智能分析
-- 基于 LLM 的自然语言数据问答
+- 基于 LLM 的自然语言数据问答（SSE 流式输出）
+- 接入真实大语言模型 API（doubao-seed-2-0-lite）
 - 自动生成数据洞察和建议
-- 流式响应输出
+- 预设6种分析维度（趋势/洞察/质量/建议/预警/画像）
+- NL2SQL 意图识别与查询生成
 
 ### 6. 飞书多维表格集成（Beta）
 - 飞书应用配置入口
@@ -55,23 +70,38 @@ src/
 ├── app/
 │   ├── api/
 │   │   ├── upload/          # 文件上传 API
-│   │   ├── analyze/         # 数据分析 API
-│   │   └── llm-insight/     # LLM 智能洞察 API
+│   │   ├── analyze/         # 数据分析 API（含深度分析引擎）
+│   │   └── llm-insight/     # LLM 智能洞察 API（SSE流式）
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx             # 主页面
+│   └── page.tsx             # 主页面（RuoYi风格布局）
 ├── components/
 │   ├── ui/                  # shadcn/ui 组件库
 │   ├── file-uploader.tsx    # 文件上传组件
 │   ├── data-table.tsx       # 数据表格组件
-│   ├── data-insights.tsx    # 数据分析展示组件
-│   ├── dashboard.tsx        # 交互式仪表盘
-│   ├── llm-assistant.tsx    # AI 助手组件
-│   ├── feishu-integration.tsx  # 飞书集成组件
-│   └── report-generator.tsx # 报表生成组件
+│   ├── data-insights.tsx    # 深度数据分析组件（7大模块）
+│   ├── dashboard.tsx        # 自动生成交互式仪表盘
+│   ├── enhanced-llm-assistant.tsx  # AI助手（真实流式API）
+│   ├── smart-chart-recommender.tsx # AI智能图表推荐
+│   ├── report-generator.tsx # 报表生成组件（4模板+导出）
+│   ├── data-cleaner.tsx     # 数据清洗组件
+│   ├── ai-model-settings.tsx      # AI模型配置
+│   ├── metric-semantic-layer.tsx  # 指标语义层
+│   ├── data-quality-checker.tsx   # 数据质量检测
+│   ├── data-alerting.tsx          # 数据预警
+│   ├── nl2-dashboard.tsx          # NL2Dashboard
+│   ├── version-history.tsx        # 版本快照
+│   ├── template-manager.tsx       # 模板管理
+│   ├── chart-exporter.tsx         # 图表导出
+│   ├── dashboard-designer.tsx     # 仪表盘设计器
+│   ├── advanced-charts.tsx        # 高级图表
+│   ├── share-manager.tsx          # 分享管理
+│   ├── feishu-integration.tsx     # 飞书集成
+│   ├── data-source-manager.tsx    # 数据源管理
+│   └── global-ai-assistant.tsx    # 全局AI助手
 └── lib/
     ├── utils.ts             # 通用工具函数
-    └── data-processor.ts    # 数据处理工具
+    └── data-processor.ts    # 数据处理+深度分析引擎
 ```
 
 ## 开发命令

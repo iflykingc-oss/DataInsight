@@ -1,428 +1,507 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import {
-  Sparkles,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
   CheckCircle,
-  BarChart3,
-  PieChart,
-  ArrowUpRight,
-  ArrowDownRight,
+  Info,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Activity,
+  Shield,
   Target,
   Lightbulb,
-  Loader2,
-  RefreshCw,
-  Copy,
-  Share2,
+  BarChart3,
+  Zap,
+  ArrowRight,
+  AlertCircle,
+  ThumbsUp,
   ChevronDown,
   ChevronUp,
-  Info,
-  Percent,
-  Hash,
-  Calendar,
-  Flame,
-  Shield,
-  Zap,
-  BookOpen,
-  LineChart
+  Sparkles
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { DataAnalysis, FieldStat } from '@/lib/data-processor';
-
-interface AIAnalysisInsight {
-  id: string;
-  type: 'summary' | 'trend' | 'comparison' | 'anomaly' | 'suggestion';
-  title: string;
-  content: string;
-  confidence: number;
-  icon: React.ElementType;
-  color: string;
-  badge?: string;
-  details?: string[];
-  metrics?: { label: string; value: string; change?: string; trend?: 'up' | 'down' }[];
-}
+import type { ParsedData, DataAnalysis, DeepAnalysis } from '@/lib/data-processor';
+import {
+  BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
+  ScatterChart as RechartsScatter, Scatter,
+  AreaChart as RechartsArea, Area,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 
 interface DataInsightsProps {
-  data: {
-    headers: string[];
-    rows: Record<string, unknown>[];
-    rowCount: number;
-    columnCount: number;
-  };
-  analysis: DataAnalysis;
-  onRefresh?: () => void;
+  data: ParsedData;
+  analysis: DataAnalysis | null;
+  onAnalyze: () => void;
 }
 
-// 智能生成解读文案
-const generateBusinessInsight = (
-  headers: string[],
-  rows: Record<string, unknown>[],
-  fieldStats: FieldStat[]
-): AIAnalysisInsight[] => {
-  const insights: AIAnalysisInsight[] = [];
-  
-  // 1. 数据概览
-  const totalRows = rows.length;
-  const totalCols = headers.length;
-  const numericFields = fieldStats.filter(f => f.type === 'number');
-  const textFields = fieldStats.filter(f => f.type === 'string');
-  
-  insights.push({
-    id: 'overview',
-    type: 'summary',
-    title: '数据概览',
-    content: `该数据集包含 ${totalRows} 条记录，${totalCols} 个字段。其中 ${numericFields.length} 个数值型字段，${textFields.length} 个文本型字段。数据规模适中，适合进行多维度分析。`,
-    confidence: 0.98,
-    icon: BarChart3,
-    color: 'blue',
-    details: [
-      `总记录数：${totalRows.toLocaleString()} 条`,
-      `字段数量：${totalCols} 个`,
-      `数值字段：${numericFields.length} 个`,
-      `文本字段：${textFields.length} 个`,
-    ],
-    metrics: [
-      { label: '总记录数', value: totalRows.toLocaleString() },
-      { label: '字段数', value: totalCols.toString() },
-    ]
-  });
-
-  // 2. 数值字段分析
-  numericFields.slice(0, 3).forEach(field => {
-    const min = field.min ?? 0;
-    const max = field.max ?? 0;
-    const mean = field.mean ?? 0;
-    const sum = field.sum ?? 0;
-    
-    if (max > min) {
-      const range = max - min;
-      
-      insights.push({
-        id: `numeric-${field.field}`,
-        type: 'summary',
-        title: `${field.field} 字段分析`,
-        content: `${field.field} 的数值范围为 ${min.toLocaleString()} 到 ${max.toLocaleString()}，平均值为 ${mean.toLocaleString()}。数据分布较为 ${range > mean ? '分散' : '集中'}。`,
-        confidence: 0.92,
-        icon: Hash,
-        color: 'purple',
-        details: [
-          `最小值：${min.toLocaleString()}`,
-          `最大值：${max.toLocaleString()}`,
-          `平均值：${mean.toLocaleString()}`,
-          `总和：${sum.toLocaleString()}`,
-        ],
-        metrics: [
-          { label: '最小值', value: min.toLocaleString() },
-          { label: '最大值', value: max.toLocaleString() },
-          { label: '平均值', value: mean.toLocaleString() },
-        ]
-      });
-    }
-  });
-
-  // 3. 空值分析
-  const fieldsWithNulls = fieldStats.filter(f => (f.nullCount || 0) > 0);
-  if (fieldsWithNulls.length > 0) {
-    const totalNulls = fieldsWithNulls.reduce((sum, f) => sum + (f.nullCount || 0), 0);
-    const nullRate = (totalNulls / (totalRows * fieldsWithNulls.length)) * 100;
-    
-    insights.push({
-      id: 'null-analysis',
-      type: 'anomaly',
-      title: '数据完整性提示',
-      content: `发现 ${fieldsWithNulls.length} 个字段存在空值，共计 ${totalNulls} 个空值记录。整体空值率为 ${nullRate.toFixed(1)}%，数据质量 ${nullRate < 5 ? '良好' : '需要关注'}。`,
-      confidence: 0.95,
-      icon: AlertTriangle,
-      color: nullRate < 5 ? 'green' : 'orange',
-      badge: nullRate < 5 ? '数据完整' : '需要处理',
-      details: fieldsWithNulls.slice(0, 5).map(f => 
-        `${f.field}：${f.nullCount} 个空值 (${((f.nullCount || 0) / totalRows * 100).toFixed(1)}%)`
-      ),
-    });
-  } else {
-    insights.push({
-      id: 'complete-data',
-      type: 'summary',
-      title: '数据完整',
-      content: '所有字段均无空值，数据完整性良好，可以直接进行分析。',
-      confidence: 0.99,
-      icon: CheckCircle,
-      color: 'green',
-      badge: '完美',
-    });
-  }
-
-  // 4. 文本字段分析
-  textFields.slice(0, 2).forEach(field => {
-    const uniqueCount = field.uniqueCount || 0;
-    const topValues = field.topValues?.slice(0, 3) || [];
-    
-    if (topValues.length > 0) {
-      const firstValue = topValues[0];
-      insights.push({
-        id: `text-${field.field}`,
-        type: 'summary',
-        title: `${field.field} 字段分布`,
-        content: `${field.field} 共有 ${uniqueCount} 个不同取值。最常见的值是"${firstValue?.value}"，出现 ${firstValue?.count} 次。`,
-        confidence: 0.88,
-        icon: PieChart,
-        color: 'cyan',
-        details: topValues.map((v: { value: string; count: number; percentage: number }) => `"${v.value}"：${v.count} 次 (${v.percentage.toFixed(1)}%)`),
-      });
-    }
-  });
-
-  // 5. 智能建议
-  const suggestions: string[] = [];
-  
-  if (totalRows > 1000) {
-    suggestions.push('数据量较大，建议使用采样或筛选功能提高分析效率');
-  }
-  if (numericFields.length >= 2) {
-    suggestions.push('检测到多个数值字段，可以尝试进行相关性分析');
-  }
-  if (fieldsWithNulls.length > 0) {
-    suggestions.push('建议先进行数据清洗，处理空值后再进行分析');
-  }
-  if (textFields.length > 0 && numericFields.length > 0) {
-    suggestions.push('可以尝试按文本字段分组，查看数值字段的分布差异');
-  }
-  
-  if (suggestions.length > 0) {
-    insights.push({
-      id: 'suggestions',
-      type: 'suggestion',
-      title: '分析建议',
-      content: suggestions[0],
-      confidence: 0.85,
-      icon: Lightbulb,
-      color: 'yellow',
-      details: suggestions,
-    });
-  }
-
-  return insights;
+const SEVERITY_CONFIG = {
+  critical: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: '严重' },
+  warning: { icon: AlertCircle, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', label: '警告' },
+  info: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', label: '提示' },
+  positive: { icon: ThumbsUp, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', label: '正面' }
 };
 
-export function DataInsights({ data, analysis, onRefresh }: DataInsightsProps) {
-  const [insights, setInsights] = useState<AIAnalysisInsight[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [generatingProgress, setGeneratingProgress] = useState(0);
+const CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
 
-  // 生成解读
-  const generateInsights = useCallback(async () => {
-    setIsGenerating(true);
-    setGeneratingProgress(0);
-    
-    // 模拟生成进度
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 150));
-      setGeneratingProgress(i);
-    }
-    
-    const newInsights = generateBusinessInsight(
-      data.headers,
-      data.rows,
-      analysis.fieldStats
-    );
-    
-    setInsights(newInsights);
-    setIsGenerating(false);
-  }, [data, analysis.fieldStats]);
+export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
+  const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
+  const deep = analysis?.deepAnalysis;
 
-  // 初始生成
   useEffect(() => {
-    if (data.rows.length > 0) {
-      generateInsights();
-    }
-  }, [data.rows.length]);
+    if (!analysis) onAnalyze();
+  }, []);
 
-  // 复制内容
-  const copyContent = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
+  if (!analysis) {
+    return (
+      <Card className="text-center py-12">
+        <CardContent>
+          <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">正在分析数据...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  // 获取图标样式
-  const getIconStyle = (color: string) => {
-    const styles: Record<string, string> = {
-      blue: 'bg-blue-100 text-blue-600',
-      green: 'bg-green-100 text-green-600',
-      yellow: 'bg-yellow-100 text-yellow-600',
-      orange: 'bg-orange-100 text-orange-600',
-      red: 'bg-red-100 text-red-600',
-      purple: 'bg-purple-100 text-purple-600',
-      cyan: 'bg-cyan-100 text-cyan-600',
-    };
-    return styles[color] || styles.blue;
-  };
-
-  // 获取颜色徽章
-  const getColorBadge = (color: string) => {
-    const styles: Record<string, string> = {
-      blue: 'bg-blue-50 text-blue-600 border-blue-200',
-      green: 'bg-green-50 text-green-600 border-green-200',
-      yellow: 'bg-yellow-50 text-yellow-600 border-yellow-200',
-      orange: 'bg-orange-50 text-orange-600 border-orange-200',
-      purple: 'bg-purple-50 text-purple-600 border-purple-200',
-      cyan: 'bg-cyan-50 text-cyan-600 border-cyan-200',
-    };
-    return styles[color] || styles.blue;
-  };
+  if (!deep) {
+    return (
+      <Card className="text-center py-12">
+        <CardContent>
+          <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 mb-4">深度分析不可用，请重新分析</p>
+          <Button onClick={onAnalyze}>重新分析</Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-500" />
-            AI 数据解读
-            <Badge variant="secondary" className="ml-2">
-              {insights.length} 条洞察
-            </Badge>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={generateInsights}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4" />
-              )}
-              <span className="ml-1">重新解读</span>
-            </Button>
-          </div>
-        </CardTitle>
-        
-        {/* 生成进度 */}
-        {isGenerating && (
-          <div className="mt-2">
-            <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span>正在分析数据...</span>
-              <span>{generatingProgress}%</span>
+    <div className="space-y-6">
+      {/* 1. 数据画像 + 健康评分 */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        {/* 数据画像 */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Target className="w-5 h-5 text-[#1890ff]" />
+              数据画像
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">{deep.dataProfile.summary}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-blue-50 rounded-lg p-3">
+                <p className="text-xs text-blue-600 mb-1">数据类型</p>
+                <p className="font-semibold text-blue-900">{deep.dataProfile.dataType}</p>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-3">
+                <p className="text-xs text-purple-600 mb-1">推测行业</p>
+                <p className="font-semibold text-purple-900">{deep.dataProfile.suggestedIndustry}</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3">
+                <p className="text-xs text-green-600 mb-1">数据成熟度</p>
+                <p className="font-semibold text-green-900">
+                  {deep.dataProfile.dataMaturity === 'raw' ? '原始数据' :
+                   deep.dataProfile.dataMaturity === 'cleaned' ? '已清洗' :
+                   deep.dataProfile.dataMaturity === 'structured' ? '结构化' : '已分析'}
+                </p>
+              </div>
+              <div className="bg-orange-50 rounded-lg p-3">
+                <p className="text-xs text-orange-600 mb-1">分析潜力</p>
+                <p className="font-semibold text-orange-900">
+                  {deep.dataProfile.analysisPotential === 'high' ? '高' :
+                   deep.dataProfile.analysisPotential === 'medium' ? '中' : '低'}
+                </p>
+              </div>
             </div>
-            <Progress value={generatingProgress} className="h-1" />
-          </div>
-        )}
-      </CardHeader>
-      
-      <CardContent>
-        {insights.length === 0 && !isGenerating ? (
-          <div className="text-center py-12 text-gray-500">
-            <Sparkles className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>点击「重新解读」生成 AI 分析</p>
-          </div>
-        ) : (
-          <ScrollArea className="h-[500px] pr-4">
-            <div className="space-y-4">
-              {insights.map((insight) => {
-                const Icon = insight.icon;
-                const isExpanded = expandedId === insight.id;
-                
-                return (
+          </CardContent>
+        </Card>
+
+        {/* 健康评分 */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="w-5 h-5 text-[#1890ff]" />
+              数据健康评分
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center mb-4">
+              <div className="text-5xl font-bold" style={{ color: getScoreColor(deep.healthScore.overall) }}>
+                {deep.healthScore.overall}
+              </div>
+              <p className="text-sm text-gray-500 mt-1">综合评分</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: '完整性', value: deep.healthScore.completeness },
+                { label: '一致性', value: deep.healthScore.consistency },
+                { label: '质量', value: deep.healthScore.quality },
+                { label: '可用性', value: deep.healthScore.usability },
+              ].map(item => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 w-12">{item.label}</span>
+                  <Progress value={item.value} className="flex-1 h-2" />
+                  <span className="text-xs font-medium w-8 text-right">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 2. 关键发现 */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Lightbulb className="w-5 h-5 text-[#1890ff]" />
+            关键发现
+            <Badge variant="secondary">{deep.keyFindings.length}</Badge>
+          </CardTitle>
+          <CardDescription>AI 自动发现数据中的问题和机会</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {deep.keyFindings.map((finding, idx) => {
+              const config = SEVERITY_CONFIG[finding.severity];
+              const Icon = config.icon;
+              const isExpanded = expandedFinding === `${idx}`;
+              
+              return (
+                <div key={idx} className={`rounded-lg border ${config.border} ${config.bg} overflow-hidden`}>
                   <div 
-                    key={insight.id}
-                    className={cn(
-                      'border rounded-lg overflow-hidden transition-all',
-                      'hover:shadow-md'
-                    )}
+                    className="flex items-start gap-3 p-3 cursor-pointer"
+                    onClick={() => setExpandedFinding(isExpanded ? null : `${idx}`)}
                   >
-                    {/* 头部 */}
-                    <div 
-                      className="p-4 cursor-pointer"
-                      onClick={() => setExpandedId(isExpanded ? null : insight.id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={cn('p-2 rounded-lg flex-shrink-0', getIconStyle(insight.color))}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-sm">{insight.title}</h4>
-                            {insight.badge && (
-                              <Badge className={cn('text-xs border', getColorBadge(insight.color))}>
-                                {insight.badge}
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className="ml-auto text-xs">
-                              置信度 {Math.round(insight.confidence * 100)}%
-                            </Badge>
+                    <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.color}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className={`text-xs ${config.color} border-current`}>
+                          {config.label}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {finding.category === 'quality' ? '数据质量' :
+                           finding.category === 'distribution' ? '数据分布' :
+                           finding.category === 'trend' ? '趋势' :
+                           finding.category === 'correlation' ? '相关性' :
+                           finding.category === 'anomaly' ? '异常' : '洞察'}
+                        </Badge>
+                        <span className="font-medium text-sm">{finding.title}</span>
+                      </div>
+                      <p className="text-xs text-gray-600">{finding.detail}</p>
+                    </div>
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  </div>
+                  {isExpanded && (
+                    <div className="px-3 pb-3 pt-0 ml-8 border-t border-gray-100">
+                      <div className="mt-2 space-y-2">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-medium text-gray-700">影响</p>
+                            <p className="text-xs text-gray-500">{finding.impact}</p>
                           </div>
-                          
-                          <p className="text-sm text-gray-600 line-clamp-2">
-                            {insight.content}
-                          </p>
-                          
-                          {/* 指标卡片 */}
-                          {insight.metrics && (
-                            <div className="flex gap-4 mt-3">
-                              {insight.metrics.map((metric, idx) => (
-                                <div key={idx} className="bg-gray-50 rounded-lg px-3 py-1.5">
-                                  <p className="text-xs text-gray-500">{metric.label}</p>
-                                  <p className="text-sm font-medium">{metric.value}</p>
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </div>
-                        
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </Button>
+                        <div className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-medium text-gray-700">建议</p>
+                            <p className="text-xs text-gray-500">{finding.suggestion}</p>
+                          </div>
+                        </div>
+                        {finding.relatedFields.length > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-xs text-gray-400">相关字段:</span>
+                            {finding.relatedFields.map(f => (
+                              <Badge key={f} variant="outline" className="text-xs py-0">{f}</Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    
-                    {/* 展开详情 */}
-                    {isExpanded && insight.details && insight.details.length > 0 && (
-                      <div className="px-4 pb-4 border-t bg-gray-50">
-                        <div className="pt-3 space-y-2">
-                          <h5 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                            详细数据
-                          </h5>
-                          <ul className="space-y-1.5">
-                            {insight.details.map((detail, idx) => (
-                              <li key={idx} className="flex items-start gap-2 text-sm">
-                                <CheckCircle className="w-3 h-3 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-gray-600">{detail}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          
-                          {/* 操作按钮 */}
-                          <div className="flex gap-2 pt-2">
-                            <Button size="sm" variant="outline" onClick={() => copyContent(insight.content)}>
-                              <Copy className="w-3 h-3 mr-1" />
-                              复制
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              <Share2 className="w-3 h-3 mr-1" />
-                              分享
-                            </Button>
-                          </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. 趋势 + 分布 */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        {/* 趋势分析 */}
+        {deep.trends.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Activity className="w-5 h-5 text-[#1890ff]" />
+                趋势分析
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {deep.trends.map((trend, idx) => {
+                  const TrendIcon = trend.direction === 'up' ? TrendingUp : 
+                                     trend.direction === 'down' ? TrendingDown : 
+                                     trend.direction === 'volatile' ? Activity : Minus;
+                  const trendColor = trend.direction === 'up' ? 'text-green-600' :
+                                     trend.direction === 'down' ? 'text-red-600' :
+                                     trend.direction === 'volatile' ? 'text-orange-600' : 'text-gray-600';
+                  const trendBg = trend.direction === 'up' ? 'bg-green-50' :
+                                  trend.direction === 'down' ? 'bg-red-50' :
+                                  trend.direction === 'volatile' ? 'bg-orange-50' : 'bg-gray-50';
+                  
+                  return (
+                    <div key={idx} className={`flex items-center gap-3 p-3 rounded-lg ${trendBg}`}>
+                      <TrendIcon className={`w-8 h-8 ${trendColor}`} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{trend.field}</span>
+                          <Badge variant="outline" className={`text-xs ${trendColor}`}>
+                            {trend.direction === 'up' ? '上升' :
+                             trend.direction === 'down' ? '下降' :
+                             trend.direction === 'volatile' ? '波动' : '稳定'}
+                            {trend.changeRate !== 0 && ` ${Math.abs(trend.changeRate)}%`}
+                          </Badge>
                         </div>
+                        <p className="text-xs text-gray-500 mt-1">{trend.description}</p>
                       </div>
-                    )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 分布分析 */}
+        {deep.distributions.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-[#1890ff]" />
+                分布分析
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {deep.distributions.slice(0, 6).map((dist, idx) => (
+                  <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-sm">{dist.field}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {dist.type === 'normal' ? '正态' :
+                         dist.type === 'skewed_right' ? '右偏' :
+                         dist.type === 'skewed_left' ? '左偏' :
+                         dist.type === 'bimodal' ? '双峰' : '均匀'}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-500">{dist.description}</p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                      <span>偏度: {dist.skewness}</span>
+                      <span>峰度: {dist.kurtosis}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* 4. 相关性分析 */}
+      {deep.correlations.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Zap className="w-5 h-5 text-[#1890ff]" />
+              字段相关性
+              <Badge variant="secondary">{deep.correlations.length}</Badge>
+            </CardTitle>
+            <CardDescription>发现字段间的潜在关联关系</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {deep.correlations.slice(0, 9).map((corr, idx) => {
+                const strengthColor = corr.strength === 'strong' ? 'text-red-600 bg-red-50' :
+                                      corr.strength === 'moderate' ? 'text-orange-600 bg-orange-50' : 'text-blue-600 bg-blue-50';
+                const dirIcon = corr.direction === 'positive' ? '↑' : '↓';
+                
+                return (
+                  <div key={idx} className={`p-3 rounded-lg border ${strengthColor}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-sm">
+                        {corr.field1} {dirIcon} {corr.field2}
+                      </span>
+                      <Badge variant="outline" className="text-xs">
+                        {corr.strength === 'strong' ? '强' : corr.strength === 'moderate' ? '中' : '弱'}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Progress 
+                        value={Math.abs(corr.coefficient) * 100} 
+                        className="flex-1 h-2" 
+                      />
+                      <span className="text-xs font-mono font-medium">{(corr.coefficient * 100).toFixed(0)}%</span>
+                    </div>
+                    <p className="text-xs mt-1 opacity-70">
+                      {corr.direction === 'positive' ? '正相关：一个增大另一个也增大' : '负相关：一个增大另一个减小'}
+                    </p>
                   </div>
                 );
               })}
             </div>
-          </ScrollArea>
-        )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 5. 推荐图表 */}
+      {deep.recommendedCharts.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#1890ff]" />
+              智能图表推荐
+            </CardTitle>
+            <CardDescription>根据数据特征自动推荐最佳可视化方案</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {deep.recommendedCharts.map((rec, idx) => {
+                const priorityColor = rec.priority === 'high' ? 'border-l-4 border-l-red-400' :
+                                      rec.priority === 'medium' ? 'border-l-4 border-l-orange-400' : 'border-l-4 border-l-blue-400';
+                
+                return (
+                  <div key={idx} className={`p-4 bg-white border rounded-lg ${priorityColor} hover:shadow-md transition-shadow`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <BarChart3 className="w-5 h-5 text-[#1890ff]" />
+                      <span className="font-medium text-sm">{rec.title}</span>
+                    </div>
+                    <Badge variant="outline" className="text-xs mb-2">
+                      {rec.chartType === 'bar' ? '柱状图' :
+                       rec.chartType === 'line' ? '折线图' :
+                       rec.chartType === 'pie' ? '饼图' :
+                       rec.chartType === 'scatter' ? '散点图' :
+                       rec.chartType === 'area' ? '面积图' :
+                       rec.chartType === 'radar' ? '雷达图' : rec.chartType}
+                    </Badge>
+                    <p className="text-xs text-gray-500 mt-2">{rec.reason}</p>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                      <span>X: {rec.xField}</span>
+                      {rec.yField && <><ArrowRight className="w-3 h-3" /><span>Y: {rec.yField}</span></>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 6. 行动建议 */}
+      {deep.actionItems.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-[#1890ff]" />
+              行动建议
+            </CardTitle>
+            <CardDescription>基于分析结果的可操作建议</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {deep.actionItems.map((item, idx) => {
+                const priorityStyle = item.priority === 'high' ? 'border-l-4 border-l-red-400 bg-red-50/50' :
+                                      item.priority === 'medium' ? 'border-l-4 border-l-orange-400 bg-orange-50/50' : 
+                                      'border-l-4 border-l-blue-400 bg-blue-50/50';
+                const priorityLabel = item.priority === 'high' ? '高优' : item.priority === 'medium' ? '中优' : '低优';
+                
+                return (
+                  <div key={idx} className={`p-4 rounded-lg border ${priorityStyle}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline" className={`text-xs ${
+                        item.priority === 'high' ? 'text-red-600 border-red-300' :
+                        item.priority === 'medium' ? 'text-orange-600 border-orange-300' : 'text-blue-600 border-blue-300'
+                      }`}>
+                        {priorityLabel}
+                      </Badge>
+                      <span className="font-medium text-sm">{item.action}</span>
+                    </div>
+                    <p className="text-xs text-gray-600 ml-14">{item.detail}</p>
+                    <p className="text-xs text-green-600 ml-14 mt-1">预期收益: {item.expectedBenefit}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 7. 基础统计 */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-[#1890ff]" />
+            字段统计详情
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-3 font-medium text-gray-600">字段</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-600">类型</th>
+                  <th className="text-right py-2 px-3 font-medium text-gray-600">非空</th>
+                  <th className="text-right py-2 px-3 font-medium text-gray-600">唯一值</th>
+                  <th className="text-right py-2 px-3 font-medium text-gray-600">最小值</th>
+                  <th className="text-right py-2 px-3 font-medium text-gray-600">最大值</th>
+                  <th className="text-right py-2 px-3 font-medium text-gray-600">均值</th>
+                  <th className="text-left py-2 px-3 font-medium text-gray-600">示例</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analysis.fieldStats.map((stat, idx) => (
+                  <tr key={idx} className="border-b hover:bg-gray-50">
+                    <td className="py-2 px-3 font-medium">{stat.field}</td>
+                    <td className="py-2 px-3">
+                      <Badge variant="outline" className="text-xs">
+                        {stat.type === 'number' ? '数值' : stat.type === 'date' ? '日期' : '文本'}
+                      </Badge>
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      <span className={stat.nullCount > 0 ? 'text-orange-600' : 'text-green-600'}>
+                        {stat.count - stat.nullCount}/{stat.count}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-right">{stat.uniqueCount}</td>
+                    <td className="py-2 px-3 text-right">{stat.numericStats?.min ?? '-'}</td>
+                    <td className="py-2 px-3 text-right">{stat.numericStats?.max ?? '-'}</td>
+                    <td className="py-2 px-3 text-right">{stat.numericStats?.mean?.toFixed(2) ?? '-'}</td>
+                    <td className="py-2 px-3 text-gray-400 truncate max-w-[120px]">
+                      {stat.sampleValues.slice(0, 2).join(', ')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
+}
+
+function getScoreColor(score: number): string {
+  if (score >= 80) return '#52c41a';
+  if (score >= 60) return '#faad14';
+  if (score >= 40) return '#fa8c16';
+  return '#f5222d';
 }
