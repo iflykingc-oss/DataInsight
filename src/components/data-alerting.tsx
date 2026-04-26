@@ -37,24 +37,24 @@ import {
   MessageSquare,
   Webhook,
   Plus,
-  Play,
-  Pause,
+
+
   Trash2,
   Edit2,
   Save,
   History,
   Settings,
-  TrendingUp,
-  TrendingDown,
+
+
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
   Clock,
   Loader2,
-  ChevronRight,
+
   Zap,
   Eye,
-  MoreVertical,
+
   Send,
 	Info
 } from 'lucide-react';

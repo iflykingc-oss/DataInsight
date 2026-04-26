@@ -280,7 +280,7 @@ export async function POST(req: NextRequest) {
         throw new Error('No JSON found in response');
       }
       dashboardSpec = JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
+    } catch {
       console.warn('[NL2Dashboard] JSON parse failed, content preview:', content.substring(0, 200));
       return NextResponse.json({
         success: false,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -527,7 +527,7 @@ export function MetricSemanticLayer({ data, fieldStats }: MetricSemanticLayerPro
 
                 {Object.entries(groupedMetrics).map(([cat, metrics]) => {
                   const config = METRIC_CATEGORIES[cat as keyof typeof METRIC_CATEGORIES];
-                  const Icon = config?.icon || Activity;
+                  const _Icon = config?.icon || Activity;
                   return (
                     <TabsContent key={cat} value={cat} className="space-y-2">
                       {metrics.map((metric, idx) => (

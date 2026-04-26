@@ -482,7 +482,7 @@ export function DataQualityChecker({
   };
 
   // 获取状态颜色
-  const getStatusColor = (status: 'pass' | 'warning' | 'fail') => {
+  const _getStatusColor = (status: 'pass' | 'warning' | 'fail') => {
     switch (status) {
       case 'pass':
         return 'bg-green-500';

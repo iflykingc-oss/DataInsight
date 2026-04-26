@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import {
   BarChart3, LayoutGrid, Download,
-  TrendingUp, PieChart, LineChart, Activity, Layers,
+  TrendingUp, LineChart, Activity, Layers,
   Table2, Filter, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
   Search,
 } from 'lucide-react';

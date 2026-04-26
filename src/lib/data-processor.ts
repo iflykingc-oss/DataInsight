@@ -334,7 +334,7 @@ function detectAnomalies(data: ParsedData, fieldStats: FieldStat[]): Anomaly[] {
   const { rows, headers } = data;
   
   rows.forEach((row, rowIndex) => {
-    headers.forEach((field, fieldIndex) => {
+    headers.forEach((field, _fieldIndex) => {
       const value = row[field];
       const stat = fieldStats.find(s => s.field === field);
       
@@ -435,7 +435,7 @@ function generateKeyFindings(
   data: ParsedData, 
   fieldStats: FieldStat[], 
   summary: Summary, 
-  anomalies: Anomaly[]
+  _anomalies: Anomaly[]
 ): DeepAnalysis['keyFindings'] {
   const findings: DeepAnalysis['keyFindings'] = [];
   const totalCells = summary.totalRows * summary.totalColumns;
@@ -678,7 +678,7 @@ function analyzeTrends(data: ParsedData, fieldStats: FieldStat[]): DeepAnalysis[
   const trends: DeepAnalysis['trends'] = [];
   
   // 找日期字段
-  const dateFields = fieldStats.filter(f => f.type === 'date' || f.type === 'string');
+  const __dateFields = fieldStats.filter(f => f.type === 'date' || f.type === 'string');
   const numericFields = fieldStats.filter(f => f.type === 'number' && f.numericStats);
   
   if (numericFields.length === 0) return trends;
@@ -832,7 +832,7 @@ function generateActionItems(
   const items: DeepAnalysis['actionItems'] = [];
   const industry = dataProfile?.suggestedIndustry || '通用';
   const allFields = fieldStats.map(f => f.field.toLowerCase());
-  const allText = allFields.join(' ');
+  const _allText = allFields.join(' ');
 
   // === 立即行动（本周可落地）===
 

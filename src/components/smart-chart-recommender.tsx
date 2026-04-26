@@ -2,10 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import {} from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList} from '@/components/ui/tabs';
 import {
   Sparkles, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon,
   AreaChart as AreaChartIcon, ScatterChart as ScatterChartIcon,

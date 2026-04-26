@@ -18,7 +18,7 @@ function detectPlatform(url: string): PlatformType {
 // ============================================
 
 /** 飞书/Lark 卡片消息 */
-function buildFeishuPayload(title: string, content: string, timestamp?: string) {
+function buildFeishuPayload(title: string, content: string) {
   const body: Record<string, unknown> = {
     msg_type: 'interactive',
     card: {

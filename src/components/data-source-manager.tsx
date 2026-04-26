@@ -8,11 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlatformIntegrations } from '@/components/platform-integrations';
 import {
-  Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -313,7 +310,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
   }, []);
 
   // 获取数据源图标
-  const getSourceIcon = (type: string) => {
+  const _getSourceIcon = (type: string) => {
     switch (type) {
       case 'file': return <FileJson className="w-4 h-4" />;
       case 'api': return <Link2 className="w-4 h-4" />;
@@ -323,7 +320,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
   };
 
   // 获取状态徽章
-  const getStatusBadge = (source: DataSourceConfig) => {
+  const _getStatusBadge = (source: DataSourceConfig) => {
     if (source.status === 'testing') {
       return <Badge className="bg-blue-100 text-blue-700">
         <Loader2 className="w-3 h-3 mr-1 animate-spin" />

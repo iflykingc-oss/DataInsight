@@ -49,7 +49,7 @@ const SEVERITY_CONFIG = {
   positive: { icon: ThumbsUp, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', label: '正面' }
 };
 
-const CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
+const _CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
 
 export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);

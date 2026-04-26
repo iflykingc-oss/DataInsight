@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// Card components removed - using ReactMarkdown directly
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sparkles,
   Send,
-  Loader2,
+  
   X,
   Maximize2,
   Minimize2,

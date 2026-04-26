@@ -33,7 +33,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Plus,
+
   Trash2,
 } from 'lucide-react';
 
@@ -553,7 +553,8 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
 // 主组件：多平台集成面板
 export function PlatformIntegrations({ onImportData }: PlatformIntegrationProps) {
   const [savedConnections, setSavedConnections] = useState<Array<{ id: string; name: string; type: string; status: 'connected' | 'error' }>>([]);
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  // showAddDialog unused
+  
 
   return (
     <div className="space-y-4">

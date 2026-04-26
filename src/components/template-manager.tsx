@@ -345,7 +345,7 @@ export function TemplateManager({
   };
 
   // 复制模板
-  const handleDuplicate = (template: Template) => {
+  const _handleDuplicate = (template: Template) => {
     const duplicated: Template = {
       ...template,
       id: `user-${Date.now()}`,

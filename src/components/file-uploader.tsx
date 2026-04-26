@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, FileSpreadsheet, AlertCircle, CheckCircle, Loader2, FileText, Shield, Sparkles, Trash2, Eye } from 'lucide-react';
+import { Upload, X, FileSpreadsheet, AlertCircle, CheckCircle, FileText, Shield, Sparkles, Trash2, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -210,6 +210,7 @@ export function FileUploader({
         warnings: []
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxSize]);
 
   const updateFileStatus = useCallback((id: string, updates: Partial<UploadFile>) => {

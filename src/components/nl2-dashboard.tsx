@@ -37,14 +37,14 @@ import {
   TrendingUp,
   TrendingDown,
   Eye,
-  Copy,
+
   RefreshCw,
-  CheckCircle2,
+
   ArrowRight,
   Lightbulb,
   LayoutDashboard,
   History,
-  Plus,
+
   MessageSquare,
   Store,
   ShoppingBag,
@@ -54,8 +54,8 @@ import {
   BarChart2,
   PieChart,
   Edit3,
-  Trash2,
-  Download,
+
+
   ChevronDown,
   ChevronUp,
   AlertCircle,
@@ -249,7 +249,7 @@ const EXAMPLE_PROMPTS = [
 ];
 
 // 引导问题
-const GUIDANCE_QUESTIONS = [
+const _GUIDANCE_QUESTIONS = [
   {
     step: 'scenario',
     question: '您的业务场景是？',
@@ -453,7 +453,7 @@ export function NL2Dashboard({ data, fieldStats, className }: NL2DashboardProps)
     setGenerationStep(`正在调整图表：${instruction}`);
 
     try {
-      const chart = currentDashboard.charts.find(c => c.id === chartId);
+      const _chart = currentDashboard.charts.find(c => c.id === chartId);
       const response = await fetch('/api/nl2-dashboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -2,10 +2,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -88,10 +86,6 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
     [fieldStats]
   );
   
-  const textFields = useMemo(() =>
-    fieldStats.filter(f => f.type === 'string' || f.type === 'mixed'),
-    [fieldStats]
-  );
   
   // 处理散点图数据
   const scatterData = useMemo(() => {
@@ -109,7 +103,6 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
     if (numericFields.length < 3) return [];
     const topFields = numericFields.slice(0, 6);
     return topFields.map(field => {
-      const values = data.rows.map(r => Number(r[field.field])).filter(v => !isNaN(v));
       return {
         field: field.field.length > 8 ? field.field.substring(0, 8) : field.field,
         fullName: field.field,

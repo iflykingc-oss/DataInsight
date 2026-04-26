@@ -44,7 +44,6 @@ import {
   Wand2,
   Target,
   Shield,
-  Bell,
   Bookmark,
   Download,
   History,
@@ -63,14 +62,11 @@ import {
   AlertTriangle,
   Share2,
   Palette,
-  LayoutDashboard,
   TrendingUp,
   Zap,
-  ChevronDown,
   Search,
   Mail,
   Webhook,
-  Save,
   TestTube,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -202,7 +198,6 @@ const DEFAULT_NOTIFICATION_CONFIG: NotificationChannelConfig = {
 // 主组件
 // ============================================
 export default function HomePage() {
-  const [files, setFiles] = useState<UploadFile[]>([]);
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -240,20 +235,29 @@ export default function HomePage() {
     localStorage.setItem('datainsight_notification_config', JSON.stringify(notificationConfig));
   }, [notificationConfig]);
 
-  // 页面加载时应用保存的深色模式
+  // 页面加载时应用保存的深色模式（仅在首次渲染时执行）
   useEffect(() => {
-    if (darkMode) {
+    const saved = localStorage.getItem('datainsight-darkmode');
+    if (saved === 'true') {
       document.documentElement.classList.add('dark');
     }
   }, []);
+
+  // 同步深色模式切换
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   // ============================================
   // 事件处理
   // ============================================
   const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
-    setFiles(uploadedFiles);
-    setIsLoading(true);
-    setError(null);
+    setParsedData(null);
+    setAnalysis(null);
 
     try {
       const formData = new FormData();
@@ -295,27 +299,6 @@ export default function HomePage() {
     }
   };
 
-  const handleFeishuImport = (data: { headers: string[]; rows: Record<string, string | number>[] }) => {
-    setParsedData({
-      headers: data.headers,
-      rows: data.rows,
-      fileName: 'feishu_import',
-      rowCount: data.rows.length,
-      columnCount: data.headers.length,
-    });
-
-    fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        data: { headers: data.headers, rows: data.rows, fileName: 'feishu_import', rowCount: data.rows.length, columnCount: data.headers.length },
-      }),
-    })
-      .then(res => res.json())
-      .then(result => setAnalysis(result.analysis))
-      .catch(console.error);
-  };
-
   const handleDataCleaned = (cleanedData: ParsedData) => {
     setParsedData(cleanedData);
     handleAnalyzeWith(cleanedData);
@@ -339,7 +322,6 @@ export default function HomePage() {
   const handleGoHome = () => {
     setParsedData(null);
     setAnalysis(null);
-    setFiles([]);
     setViewMode('home');
   };
 
@@ -384,7 +366,7 @@ export default function HomePage() {
         <div className="flex flex-col items-center justify-center py-20">
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
           <p className="text-red-600">{error}</p>
-          <Button variant="outline" className="mt-4" onClick={() => { setError(null); setFiles([]); setParsedData(null); setAnalysis(null); }}>
+          <Button variant="outline" className="mt-4" onClick={() => { setError(null); setParsedData(null); setAnalysis(null); setViewMode('home'); }}>
             重新上传
           </Button>
         </div>
@@ -715,10 +697,7 @@ export default function HomePage() {
         {/* 导航菜单 */}
         <nav className="flex-1 overflow-y-auto py-2">
           {NAV_GROUPS.map(group => {
-            const visibleItems = group.items.filter(item => {
-              // 始终显示所有导航项，无数据时灰化而非隐藏
-              return true;
-            });
+            const visibleItems = group.items;
             if (visibleItems.length === 0) return null;
 
             return (
