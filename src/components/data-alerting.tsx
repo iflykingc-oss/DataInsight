@@ -412,7 +412,7 @@ export function DataAlerting({
 
     setIsTesting(true);
     
-    // 模拟计算当前值
+    // 基于真实数据计算当前值
     const values = data.rows
       .map(r => Number(r[editingRule.field]))
       .filter(v => !isNaN(v));
@@ -425,11 +425,23 @@ export function DataAlerting({
       case 'lt':
       case 'lte':
       case 'eq':
-        currentValue = values.length > 0 ? values.reduce((a, b) => a + b, 0) : 0;
+        // 取最新一条数据的值（如果数据按时间排序则更有意义）
+        currentValue = values.length > 0 ? values[values.length - 1] : 0;
         break;
       case 'change_up':
-      case 'change_down':
-        currentValue = 15.5; // 模拟环比变化
+      case 'change_down': {
+        // 计算真实环比变化率：最后一条vs前一条
+        if (values.length >= 2) {
+          const last = values[values.length - 1];
+          const prev = values[values.length - 2];
+          currentValue = prev !== 0 ? ((last - prev) / Math.abs(prev)) * 100 : 0;
+        } else {
+          currentValue = 0;
+        }
+        break;
+      }
+      case 'between':
+        currentValue = values.length > 0 ? values[values.length - 1] : 0;
         break;
       case 'null':
         currentValue = data.rows.filter(r => r[editingRule.field] === null || r[editingRule.field] === '').length;
@@ -450,7 +462,7 @@ export function DataAlerting({
           : false;
         break;
       case 'change_up': triggered = currentValue > editingRule.threshold; break;
-      case 'change_down': triggered = currentValue > editingRule.threshold; break;
+      case 'change_down': triggered = Math.abs(currentValue) > editingRule.threshold && currentValue < 0; break;
       case 'null': triggered = currentValue > 0; break;
     }
 
@@ -460,12 +472,22 @@ export function DataAlerting({
 
   // 测试告警
   const handleTestAlert = (rule: AlertRule) => {
+    // 基于真实数据计算当前值
+    const values = data.rows
+      .map(r => Number(r[rule.field]))
+      .filter(v => !isNaN(v));
+    
+    let currentValue = rule.threshold * 1.2; // 默认回退值
+    if (values.length > 0) {
+      currentValue = values[values.length - 1];
+    }
+
     const testHistory: AlertHistory = {
       id: `test-${Date.now()}`,
       ruleId: rule.id,
       ruleName: rule.name,
       triggeredAt: Date.now(),
-      value: rule.threshold * 1.2,
+      value: currentValue,
       threshold: rule.threshold,
       severity: rule.severity,
       status: 'firing',

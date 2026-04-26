@@ -285,13 +285,12 @@ export function MetricSemanticLayer({ data, fieldStats }: MetricSemanticLayerPro
     return acc;
   }, {} as Record<string, MetricItem[]>);
 
-  // 计算指标的实际值（简化模拟）
+  // 计算指标的实际值（基于真实数据）
   const calculateMetricValue = (metric: MetricItem): { value: string; trend: 'up' | 'down' | 'stable' } => {
     const sample = getSampleRows();
     if (sample.length === 0) return { value: 'N/A', trend: 'stable' };
 
     try {
-      // 简单模拟计算 - 实际应由后端计算
       const hasSum = metric.expression.toLowerCase().includes('sum') || metric.expression.toLowerCase().includes('总');
       const hasAvg = metric.expression.toLowerCase().includes('avg') || metric.expression.toLowerCase().includes('均');
       const hasCount = metric.expression.toLowerCase().includes('count') || metric.expression.toLowerCase().includes('数');
@@ -310,19 +309,30 @@ export function MetricSemanticLayer({ data, fieldStats }: MetricSemanticLayerPro
         });
       }
 
+      // 基于数据前后半段计算真实趋势
+      const half = Math.floor(sample.length / 2);
+      const firstHalf = sample.slice(0, half);
+      const secondHalf = sample.slice(half);
+      let firstTotal = 0, secondTotal = 0;
+      numericFields.forEach(f => {
+        firstHalf.forEach(row => { const v = Number(row[f]); if (!isNaN(v)) firstTotal += v; });
+        secondHalf.forEach(row => { const v = Number(row[f]); if (!isNaN(v)) secondTotal += v; });
+      });
+      const trendRatio = firstTotal > 0 ? (secondTotal - firstTotal) / firstTotal : 0;
+      const trend: 'up' | 'down' | 'stable' = trendRatio > 0.05 ? 'up' : trendRatio < -0.05 ? 'down' : 'stable';
+
       if (hasSum) {
-        const avgVal = total / (numericFields.length * sample.length);
-        return { value: avgVal.toFixed(2), trend: Math.random() > 0.5 ? 'up' : 'down' };
+        return { value: total.toFixed(2), trend };
       }
       if (hasAvg) {
         const avgVal = total / (numericFields.length * sample.length);
-        return { value: avgVal.toFixed(2), trend: 'stable' };
+        return { value: avgVal.toFixed(2), trend };
       }
       if (hasCount) {
-        return { value: sample.length.toString(), trend: 'up' };
+        return { value: sample.length.toString(), trend };
       }
 
-      return { value: total.toFixed(2), trend: 'stable' };
+      return { value: total.toFixed(2), trend };
     } catch {
       return { value: 'N/A', trend: 'stable' };
     }

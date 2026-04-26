@@ -1022,7 +1022,7 @@ export default function HomePage() {
       </Dialog>
 
       {/* 全局 AI 助手 */}
-      <GlobalAIAssistant hasData={!!parsedData} rowCount={parsedData?.rowCount} />
+      <GlobalAIAssistant hasData={!!parsedData} rowCount={parsedData?.rowCount} data={parsedData || undefined} fieldStats={analysis?.fieldStats} />
     </div>
   );
 }

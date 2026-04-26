@@ -1,35 +1,21 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-// Card components removed - using ReactMarkdown directly
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Sparkles,
   Send,
-  
   X,
   Maximize2,
   Minimize2,
-  MessageSquare,
-  BarChart3,
-  PieChart,
-  TrendingUp,
-  Filter,
-  Calculator,
-  FileText,
-  Zap,
-  RefreshCw,
-  ChevronDown,
-  Settings,
+  Lightbulb,
   Copy,
-  ThumbsUp,
-  ThumbsDown,
-  HelpCircle
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
+import type { ParsedData, FieldStat } from '@/lib/data-processor';
 
 // 对话消息
 interface ChatMessage {
@@ -37,284 +23,44 @@ interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   timestamp: Date;
-  actions?: QuickAction[];
   isStreaming?: boolean;
+  suggestions?: string[];
 }
 
-// 快捷操作
-interface QuickAction {
-  label: string;
-  icon: React.ElementType;
-  prompt: string;
-  category: 'analysis' | 'chart' | 'clean' | 'report';
-}
-
-// 全局快捷操作
-const GLOBAL_QUICK_ACTIONS: QuickAction[] = [
-  // 分析类
-  { label: '数据概览', icon: BarChart3, prompt: '给我数据的整体概览', category: 'analysis' },
-  { label: '趋势分析', icon: TrendingUp, prompt: '分析数据趋势变化', category: 'analysis' },
-  { label: '异常检测', icon: Zap, prompt: '找出数据中的异常值', category: 'analysis' },
-  { label: '数据解读', icon: HelpCircle, prompt: '详细解读这份数据', category: 'analysis' },
-  
-  // 图表类
-  { label: '生成柱状图', icon: BarChart3, prompt: '生成一个柱状图展示', category: 'chart' },
-  { label: '生成饼图', icon: PieChart, prompt: '生成一个饼图展示占比', category: 'chart' },
-  { label: '生成折线图', icon: TrendingUp, prompt: '生成一个折线图展示趋势', category: 'chart' },
-  
-  // 清洗类
-  { label: '清洗空值', icon: Filter, prompt: '帮我处理数据中的空值', category: 'clean' },
-  { label: '去除重复', icon: RefreshCw, prompt: '去除重复的数据', category: 'clean' },
-  
-  // 报表类
-  { label: '生成报告', icon: FileText, prompt: '生成一份数据报告', category: 'report' },
-  { label: '计算统计', icon: Calculator, prompt: '计算一些统计指标', category: 'report' },
-];
-
-// AI 响应生成器
-const generateAIResponse = (userMessage: string, context?: { hasData: boolean; rowCount?: number }): { content: string; actions?: QuickAction[] } => {
-  const lowerMsg = userMessage.toLowerCase();
-  
-  // 数据概览
-  if (lowerMsg.includes('概览') || lowerMsg.includes('整体') || lowerMsg.includes('overview')) {
-    if (context?.hasData) {
-      return {
-        content: `根据您的数据（共 ${context.rowCount} 条记录），我给出以下分析：
-
-📊 **数据规模**
-- 记录数：${context.rowCount} 条
-- 字段数：需要进一步扫描
-- 数据完整性：良好
-
-💡 **初步洞察**
-- 数据量适中，适合进行多维度分析
-- 建议先查看字段类型分布
-- 可以尝试生成可视化图表
-
-🎯 **推荐操作**
-您可以：
-1. 让我生成详细的数据解读
-2. 创建可视化图表
-3. 进行数据清洗
-4. 生成分析报告`,
-        actions: [
-          { label: '详细解读', icon: HelpCircle, prompt: '详细解读这份数据', category: 'analysis' },
-          { label: '生成图表', icon: BarChart3, prompt: '生成可视化图表', category: 'chart' },
-        ]
-      };
+// 从AI回复中提取推荐追问
+const extractSuggestions = (content: string): string[] => {
+  const suggestions: string[] = [];
+  const sectionMatch = content.match(/##\s*推荐追问\s*\n([\s\S]*?)$/);
+  if (sectionMatch) {
+    const lines = sectionMatch[1].split('\n');
+    for (const line of lines) {
+      const match = line.match(/^\s*\d+[.、）)]\s*(.+)/);
+      if (match && suggestions.length < 3) {
+        const q = match[1].trim().replace(/\*\*/g, '');
+        if (q.length > 5) suggestions.push(q);
+      }
     }
-    return {
-      content: `您好！我是您的 AI 数据助手。
-
-📋 **我能帮您做什么：**
-
-**数据分析**
-- 数据概览与统计
-- 趋势分析与预测
-- 异常值检测
-
-**可视化**
-- 智能图表推荐
-- 自定义图表生成
-
-**数据处理**
-- 智能数据清洗
-- 空值处理建议
-
-**报表生成**
-- 自动生成分析报告
-- 关键指标汇总
-
-请先上传您的数据文件（Excel/CSV），然后我就能为您提供更精准的分析！`,
-      actions: GLOBAL_QUICK_ACTIONS.slice(0, 4)
-    };
   }
-  
-  // 图表请求
-  if (lowerMsg.includes('图') && (lowerMsg.includes('生成') || lowerMsg.includes('展示') || lowerMsg.includes('画'))) {
-    if (!context?.hasData) {
-      return {
-        content: `我需要先了解您的数据才能生成合适的图表。
-
-请上传 Excel 或 CSV 文件，然后告诉我您想生成什么类型的图表：
-
-📈 **支持的图表类型：**
-- 柱状图：比较分类数据
-- 折线图：展示趋势变化
-- 饼图：展示占比分布
-- 散点图：分析相关性
-- 组合图：多维度展示`,
-        actions: GLOBAL_QUICK_ACTIONS.filter(a => a.category === 'chart')
-      };
-    }
-    
-    let chartType = '柱状图';
-    if (lowerMsg.includes('饼')) chartType = '饼图';
-    else if (lowerMsg.includes('折线') || lowerMsg.includes('趋势')) chartType = '折线图';
-    else if (lowerMsg.includes('散点')) chartType = '散点图';
-    
-    return {
-      content: `好的，我来帮您生成 ${chartType}！
-
-🎨 **${chartType}配置建议：**
-- X轴：选择分类字段（如时间、地区）
-- Y轴：选择数值字段（如销售额、数量）
-
-请告诉我：
-1. 您想用什么字段作为 X 轴？
-2. 您想用什么字段作为 Y 轴？
-
-或者我可以根据您的数据自动推荐最合适的图表！`,
-      actions: [
-        { label: '自动推荐', icon: Zap, prompt: '根据数据自动推荐图表', category: 'chart' },
-      ]
-    };
-  }
-  
-  // 清洗请求
-  if (lowerMsg.includes('清洗') || lowerMsg.includes('处理') || lowerMsg.includes('清理')) {
-    if (!context?.hasData) {
-      return {
-        content: `数据清洗需要先有数据哦！
-
-🧹 **我可以帮您处理：**
-- 删除空白行
-- 去除重复数据
-- 填补空值（均值/中位数/众数）
-- 统一日期格式
-- 清除多余空格
-- 类型转换
-
-请上传数据后告诉我您想要进行的清洗操作！`,
-        actions: GLOBAL_QUICK_ACTIONS.filter(a => a.category === 'clean')
-      };
-    }
-    
-    return {
-      content: `好的，让我分析一下数据质量问题：
-
-🔍 **初步检测：**
-- 空值数量：需要扫描
-- 重复行：需要检测
-- 格式问题：需要检查
-
-🧹 **推荐清洗操作：**
-1. 首先去除完全重复的行
-2. 然后处理空值
-3. 最后统一格式
-
-您想让我：
-- 自动执行完整清洗？
-- 逐项进行处理？
-- 还是指定特定的清洗规则？`,
-      actions: [
-        { label: '自动清洗', icon: Zap, prompt: '自动清洗数据', category: 'clean' },
-        { label: '去重', icon: RefreshCw, prompt: '去除重复数据', category: 'clean' },
-      ]
-    };
-  }
-  
-  // 报告请求
-  if (lowerMsg.includes('报告') || lowerMsg.includes('报表') || lowerMsg.includes('汇总')) {
-    if (!context?.hasData) {
-      return {
-        content: `生成报告需要先有数据！
-
-📄 **我可以帮您生成：**
-- 数据概览报告
-- 统计分析报告
-- 趋势分析报告
-- 业务汇总报告
-
-支持导出为：
-- PDF 格式
-- Excel 格式
-- 图片格式
-
-请上传数据后告诉我您需要什么类型的报告！`,
-        actions: [
-          { label: '生成报告', icon: FileText, prompt: '生成数据报告', category: 'report' },
-        ]
-      };
-    }
-    
-    return {
-      content: `好的，我来帮您生成数据报告！
-
-📊 **报告结构预览：**
-1. **数据概览**
-   - 数据规模、字段说明
-   
-2. **统计分析**
-   - 关键指标汇总
-   - 数值分布情况
-   
-3. **趋势分析**
-   - 时间维度变化
-   - 同比环比分析
-   
-4. **数据洞察**
-   - AI 智能发现
-   - 业务建议
-
-📥 **输出格式：**
-- 支持 PDF/Excel/图片
-- 可以添加水印
-- 自定义报告模板
-
-您想要什么格式的报告？`,
-      actions: [
-        { label: '生成PDF', icon: FileText, prompt: '生成PDF报告', category: 'report' },
-        { label: '生成Excel', icon: FileText, prompt: '生成Excel报告', category: 'report' },
-      ]
-    };
-  }
-  
-  // 默认响应
-  return {
-    content: `我理解了您的需求！
-
-🤖 **您可以这样问我：**
-
-**数据分析**
-- "分析这份数据的趋势"
-- "找出异常值"
-- "统计各字段的分布"
-
-**图表生成**
-- "生成柱状图"
-- "画一个饼图展示占比"
-- "做趋势折线图"
-
-**数据处理**
-- "清洗数据"
-- "去除重复"
-- "填补空值"
-
-**报告生成**
-- "生成分析报告"
-- "导出数据汇总"
-
-或者直接告诉我您想做什么，我会帮您分析！`,
-    actions: GLOBAL_QUICK_ACTIONS.slice(0, 4)
-  };
+  return suggestions;
 };
 
 interface GlobalAIAssistantProps {
   hasData?: boolean;
   rowCount?: number;
-  onQuickAction?: (action: QuickAction) => void;
+  data?: ParsedData;
+  fieldStats?: FieldStat[];
 }
 
-export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: GlobalAIAssistantProps) {
-  // 状态
+export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats }: GlobalAIAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
       role: 'assistant',
-      content: '您好！我是 AI 数据助手，可以帮您完成数据分析、图表生成、数据清洗等操作。有什么我可以帮您的吗？',
+      content: hasData
+        ? `您好！我是 AI 数据助手，已加载 ${rowCount || ''}条数据。您可以问我任何关于数据的问题，比如趋势分析、异常检测、指标计算等。`
+        : '您好！我是 AI 数据助手。上传数据后，我可以帮您进行深度分析、趋势预测和智能问答。有什么我可以帮您的吗？',
       timestamp: new Date(),
     }
   ]);
@@ -322,69 +68,180 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
   const [isTyping, setIsTyping] = useState(false);
   const [streamedContent, setStreamedContent] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // 滚动到底部
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, []);
-  
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamedContent, scrollToBottom]);
 
+  // 真实LLM流式调用
+  const callLLMStream = useCallback(async (userMessage: string) => {
+    if (!data || !fieldStats) return null;
+
+    const assistantId = `assistant-${Date.now()}`;
+    const emptyMsg: ChatMessage = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      isStreaming: true,
+    };
+    setMessages(prev => [...prev, emptyMsg]);
+
+    try {
+      abortControllerRef.current = new AbortController();
+
+      const response = await fetch('/api/llm-insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          data: { headers: data.headers, rows: data.rows.slice(0, 200), rowCount: data.rowCount, columnCount: data.columnCount },
+          fieldStats: fieldStats.slice(0, 20),
+          analysisMode: 'trend',
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader');
+
+      const decoder = new TextDecoder();
+      let fullContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim();
+            if (dataStr === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.content) {
+                fullContent += parsed.content;
+                setStreamedContent(fullContent);
+              }
+            } catch {
+              // 非JSON行，可能是原始文本
+              fullContent += dataStr;
+              setStreamedContent(fullContent);
+            }
+          } else if (line.trim() && !line.startsWith('event:') && !line.startsWith('id:') && !line.startsWith('retry:')) {
+            // 非SSE格式，直接拼接
+            fullContent += line;
+            setStreamedContent(fullContent);
+          }
+        }
+      }
+
+      // 流式结束，更新消息
+      const suggestions = extractSuggestions(fullContent);
+      setMessages(prev => prev.map(m =>
+        m.id === assistantId
+          ? { ...m, content: fullContent.replace(/##\s*推荐追问[\s\S]*$/, ''), isStreaming: false, suggestions }
+          : m
+      ));
+      setStreamedContent('');
+
+      return fullContent;
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') return null;
+      console.error('LLM stream failed:', error);
+      setMessages(prev => prev.map(m =>
+        m.id === assistantId
+          ? { ...m, content: '抱歉，AI 分析服务暂时不可用，请稍后再试。', isStreaming: false }
+          : m
+      ));
+      setStreamedContent('');
+      return null;
+    }
+  }, [data, fieldStats]);
+
+  // 无数据时的模板回复
+  const generateTemplateResponse = useCallback((userMessage: string): { content: string; suggestions: string[] } => {
+    const lowerMsg = userMessage.toLowerCase();
+
+    if (lowerMsg.includes('概览') || lowerMsg.includes('整体') || lowerMsg.includes('overview')) {
+      return {
+        content: `请先上传您的数据文件（Excel/CSV），我就能为您提供精准的数据概览分析。\n\n支持的分析能力：\n- 数据规模与完整性评估\n- 字段类型自动识别\n- 基础统计指标计算\n- 分布特征与异常检测`,
+        suggestions: ['上传数据后查看概览', '支持哪些数据格式', '如何进行趋势分析']
+      };
+    }
+
+    if (lowerMsg.includes('图') && (lowerMsg.includes('生成') || lowerMsg.includes('展示'))) {
+      return {
+        content: `上传数据后，我可以根据数据特征自动推荐最合适的图表类型。\n\n支持的图表类型：\n- 柱状图：对比分类数据\n- 折线图：展示趋势变化\n- 饼图：展示占比分布\n- 面积图：展示累积趋势\n- 雷达图：多维度对比`,
+        suggestions: ['上传数据后推荐图表', '如何自定义图表配置']
+      };
+    }
+
+    return {
+      content: `您好！我是 AI 数据分析助手，上传数据后我可以帮您：\n\n1. **智能问答** - 自然语言查询数据\n2. **趋势分析** - 识别数据变化趋势\n3. **异常检测** - 发现异常值和离群点\n4. **图表推荐** - 自动推荐最佳可视化\n5. **数据清洗** - 空值/重复/异常值处理\n6. **报告生成** - 一键生成分析报告\n\n请上传 Excel 或 CSV 文件开始分析！`,
+      suggestions: ['支持哪些数据格式', '如何进行深度分析', 'AI分析准确度如何']
+    };
+  }, []);
+
   // 发送消息
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim()) return;
-    
-    // 添加用户消息
+
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
       content: content.trim(),
       timestamp: new Date(),
     };
-    
+
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
-    setStreamedContent('');
-    
-    // 模拟流式响应
-    const response = generateAIResponse(content, { hasData, rowCount });
-    
-    // 模拟打字机效果
-    const fullContent = response.content;
-    let currentIndex = 0;
-    
-    const typeInterval = setInterval(() => {
-      if (currentIndex < fullContent.length) {
-        setStreamedContent(fullContent.slice(0, currentIndex + 10));
-        currentIndex += 10;
-      } else {
-        clearInterval(typeInterval);
-        setStreamedContent('');
-        setIsTyping(false);
-        
-        // 添加完整助手消息
-        const assistantMessage: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: fullContent,
-          timestamp: new Date(),
-          actions: response.actions,
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      }
-    }, 30);
-    
-  }, [hasData, rowCount]);
 
-  // 执行快捷操作
-  const executeQuickAction = useCallback((action: QuickAction) => {
-    sendMessage(action.prompt);
-  }, [sendMessage]);
+    if (hasData && data && fieldStats) {
+      // 有数据时：调用真实LLM
+      await callLLMStream(content);
+    } else {
+      // 无数据时：模板回复 + 模拟打字机
+      const response = generateTemplateResponse(content);
+      const fullContent = response.content;
+      let currentIndex = 0;
+
+      const typeInterval = setInterval(() => {
+        if (currentIndex < fullContent.length) {
+          setStreamedContent(fullContent.slice(0, currentIndex + 8));
+          currentIndex += 8;
+        } else {
+          clearInterval(typeInterval);
+          setStreamedContent('');
+
+          const assistantMessage: ChatMessage = {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: fullContent,
+            timestamp: new Date(),
+            suggestions: response.suggestions,
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+        }
+      }, 30);
+    }
+
+    setIsTyping(false);
+  }, [hasData, data, fieldStats, callLLMStream, generateTemplateResponse]);
 
   // 复制消息
   const copyMessage = useCallback((content: string) => {
@@ -411,22 +268,18 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
           <span className="absolute right-full mr-3 bg-gray-900 text-white text-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             AI 助手
           </span>
-          {/* 消息提示 */}
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center animate-pulse">
-            1
-          </span>
         </button>
       )}
-      
+
       {/* 聊天窗口 */}
       {isOpen && (
-        <div 
+        <div
           className={cn(
             'fixed bottom-6 right-6 z-50',
             'bg-white rounded-2xl shadow-2xl',
             'transition-all duration-300',
-            isMinimized 
-              ? 'w-80 h-14' 
+            isMinimized
+              ? 'w-80 h-14'
               : 'w-96 h-[600px] max-h-[80vh]'
           )}
           style={{ maxWidth: 'calc(100vw - 48px)' }}
@@ -439,7 +292,9 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
               </div>
               <div>
                 <h3 className="font-medium text-white">AI 数据助手</h3>
-                <p className="text-xs text-white/70">随时为您提供帮助</p>
+                <p className="text-xs text-white/70">
+                  {hasData ? `已加载 ${rowCount || 0} 条数据` : '上传数据后开启智能分析'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -461,24 +316,24 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
               </button>
             </div>
           </div>
-          
+
           {/* 聊天内容 */}
           {!isMinimized && (
             <>
               <div ref={scrollRef} className="h-[calc(100%-140px)] overflow-y-auto p-4 space-y-4">
                 {messages.map((msg) => (
-                  <div 
+                  <div
                     key={msg.id}
                     className={cn(
                       'flex',
                       msg.role === 'user' ? 'justify-end' : 'justify-start'
                     )}
                   >
-                    <div 
+                    <div
                       className={cn(
                         'max-w-[85%] rounded-2xl px-4 py-3',
-                        msg.role === 'user' 
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-br-md' 
+                        msg.role === 'user'
+                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-br-md'
                           : 'bg-gray-100 text-gray-800 rounded-bl-md'
                       )}
                     >
@@ -494,18 +349,18 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
                             [&_ol]:my-1 [&_ol]:pl-4 [&_ol]:list-decimal
                             [&_li]:my-0.5 [&_li]:text-gray-700
                             [&_strong]:text-gray-900 [&_strong]:font-semibold
-                            [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:text-blue-700
+                            [&_code]:bg-gray-200 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:text-blue-700
                             [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:text-xs
                             [&_blockquote]:border-l-3 [&_blockquote]:border-blue-400 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-gray-600
                           ">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
-                          <div className="whitespace-pre-wrap text-white/80">{msg.content}</div>
+                          <div className="whitespace-pre-wrap text-white/90">{msg.content}</div>
                         )}
                       </div>
-                      
-                      {/* 时间戳和操作 */}
+
+                      {/* 时间戳 */}
                       <div className={cn(
                         'flex items-center justify-between mt-2 pt-2 border-t',
                         msg.role === 'user' ? 'border-white/20' : 'border-gray-200'
@@ -528,34 +383,52 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
                           </button>
                         </div>
                       </div>
-                      
-                      {/* 快捷操作 */}
-                      {msg.actions && msg.actions.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {msg.actions.slice(0, 4).map((action, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => executeQuickAction(action)}
-                              className={cn(
-                                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs',
-                                'transition-colors',
-                                msg.role === 'user' 
-                                  ? 'bg-white/20 hover:bg-white/30 text-white' 
-                                  : 'bg-purple-50 hover:bg-purple-100 text-purple-600'
-                              )}
-                            >
-                              <action.icon className="w-3 h-3" />
-                              {action.label}
-                            </button>
-                          ))}
+
+                      {/* 推荐追问 */}
+                      {msg.role === 'assistant' && msg.suggestions && msg.suggestions.length > 0 && !msg.isStreaming && (
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <p className="text-xs font-medium mb-1.5 text-purple-500 flex items-center gap-1">
+                            <Lightbulb className="w-3 h-3" />
+                            深度追问：
+                          </p>
+                          <div className="flex flex-col gap-1">
+                            {msg.suggestions.slice(0, 3).map((s, i) => (
+                              <button
+                                key={i}
+                                onClick={() => sendMessage(s)}
+                                className="text-xs text-left py-1 px-2 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 transition-colors"
+                              >
+                                <span className="text-purple-400 mr-1">{i + 1}.</span>
+                                {s}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
-                
+
+                {/* 流式内容 */}
+                {streamedContent && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md px-4 py-3">
+                      <div className="text-sm leading-relaxed prose prose-sm prose-gray max-w-none
+                        [&_p]:my-1 [&_p]:text-gray-700
+                        [&_strong]:text-gray-900 [&_strong]:font-semibold
+                        [&_ul]:my-1 [&_ul]:pl-4 [&_ul]:list-disc
+                        [&_ol]:my-1 [&_ol]:pl-4 [&_ol]:list-decimal
+                        [&_li]:my-0.5 [&_li]:text-gray-700
+                      ">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamedContent.replace(/##\s*推荐追问[\s\S]*$/, '')}</ReactMarkdown>
+                      </div>
+                      <span className="inline-block w-1.5 h-4 bg-purple-400 animate-pulse ml-0.5" />
+                    </div>
+                  </div>
+                )}
+
                 {/* 正在输入 */}
-                {isTyping && (
+                {isTyping && !streamedContent && (
                   <div className="flex justify-start">
                     <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
                       <div className="flex gap-1">
@@ -567,14 +440,14 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
                   </div>
                 )}
               </div>
-              
+
               {/* 输入框 */}
               <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white rounded-b-2xl">
                 <div className="flex gap-2">
                   <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="输入您的问题..."
+                    placeholder={hasData ? "输入数据问题，如：各区域销售额对比..." : "输入您的问题..."}
                     className="flex-1"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
@@ -583,7 +456,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
                       }
                     }}
                   />
-                  <Button 
+                  <Button
                     size="icon"
                     onClick={() => sendMessage(inputValue)}
                     disabled={!inputValue.trim() || isTyping}
@@ -592,10 +465,13 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
-                
+
                 {/* 快捷问题 */}
                 <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
-                  {['数据概览', '生成图表', '数据清洗', '生成报告'].map((q) => (
+                  {(hasData
+                    ? ['数据概览', '趋势分析', '异常检测', '深度解读']
+                    : ['数据概览', '生成图表', '数据清洗', '生成报告']
+                  ).map((q) => (
                     <button
                       key={q}
                       onClick={() => sendMessage(q)}

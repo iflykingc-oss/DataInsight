@@ -212,17 +212,45 @@ export function EnhancedLLMAssistant({
     }
   }, [data, analysis]);
 
-  // 从响应中提取建议
+  // 从响应中提取推荐追问
   const extractSuggestions = (content: string): string[] => {
     const suggestions: string[] = [];
-    const lines = content.split('\n');
-    for (const line of lines) {
-      const match = line.match(/^\s*[-•*]\s*(.+)/);
-      if (match && suggestions.length < 4) {
-        suggestions.push(match[1].trim());
+    
+    // 查找 "## 推荐追问" 或 "##推荐追问" 章节
+    const sectionMatch = content.match(/##\s*推荐追问\s*\n([\s\S]*?)$/);
+    if (sectionMatch) {
+      const section = sectionMatch[1];
+      // 提取编号的追问行：1. 2. 3. 或 1）2）3）
+      const lines = section.split('\n');
+      for (const line of lines) {
+        const match = line.match(/^\s*\d+[.、）)]\s*(.+)/);
+        if (match && suggestions.length < 3) {
+          const q = match[1].trim().replace(/\*\*/g, '');
+          if (q.length > 5) suggestions.push(q);
+        }
       }
     }
-    return suggestions;
+    
+    // 如果LLM没有输出推荐追问章节，基于数据上下文生成追问
+    if (suggestions.length === 0) {
+      const numericFields = analysis.fieldStats.filter(f => f.type === 'number').map(f => f.field);
+      const textFields = analysis.fieldStats.filter(f => f.type === 'string').map(f => f.field);
+      
+      if (numericFields.length > 0 && textFields.length > 0) {
+        suggestions.push(`按${textFields[0]}拆分，各组的${numericFields[0]}差异有多大，哪个组贡献最大`);
+      }
+      if (numericFields.length >= 2) {
+        suggestions.push(`${numericFields[0]}和${numericFields[1]}之间是否存在相关性，相关系数是多少`);
+      }
+      if (data.rows.length > 30) {
+        suggestions.push('前20%的关键项贡献了整体多大比例，是否符合二八法则');
+      }
+      if (numericFields.length > 0) {
+        suggestions.push(`剔除异常值（3σ外）后，${numericFields[0]}的均值和中位数变化多少`);
+      }
+    }
+    
+    return suggestions.slice(0, 3);
   };
 
   const handleSend = async () => {
@@ -357,7 +385,7 @@ export function EnhancedLLMAssistant({
                       [&_hr]:my-3 [&_hr]:border-gray-200
                       [&_table]:my-2 [&_table]:text-xs [&_th]:bg-gray-50 [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1 [&_td]:border-gray-100
                     ">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content.replace(/##\s*推荐追问[\s\S]*$/, '')}</ReactMarkdown>
                     </div>
                   ) : (
                     <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -391,20 +419,24 @@ export function EnhancedLLMAssistant({
                   </div>
                 )}
 
-                {/* 建议操作 */}
+                {/* 推荐追问 */}
                 {msg.role === 'assistant' && msg.suggestions && msg.suggestions.length > 0 && !msg.isStreaming && (
                   <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs font-medium mb-2 text-gray-500">推荐追问：</p>
-                    <div className="flex flex-wrap gap-1">
+                    <p className="text-xs font-medium mb-2 text-blue-500 flex items-center gap-1">
+                      <Lightbulb className="w-3 h-3" />
+                      深度追问：
+                    </p>
+                    <div className="flex flex-col gap-1">
                       {msg.suggestions.slice(0, 3).map((s, i) => (
                         <Button
                           key={i}
                           variant="outline"
                           size="sm"
                           onClick={() => handlePresetQuery(s)}
-                          className="text-xs h-7"
+                          className="text-xs h-auto py-1.5 px-2 text-left justify-start whitespace-normal hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
                         >
-                          {s.slice(0, 30)}{s.length > 30 ? '...' : ''}
+                          <span className="text-blue-400 mr-1 shrink-0">{i + 1}.</span>
+                          {s}
                         </Button>
                       ))}
                     </div>

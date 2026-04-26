@@ -383,68 +383,167 @@ export function DataQualityChecker({
     setIsAIGenerating(true);
 
     try {
-      // 模拟 AI 分析延迟
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
       const promptLower = aiPrompt.toLowerCase();
       const aiChecks: QualityCheckResult[] = [];
 
-      // 根据提示词生成检查
-      if (promptLower.includes('格式') || promptLower.includes('pattern')) {
+      // 根据提示词+真实数据生成检查（不模拟，基于实际数据计算）
+      if (promptLower.includes('格式') || promptLower.includes('一致性') || promptLower.includes('pattern')) {
         fieldStats.filter(f => f.type === 'string').forEach(field => {
+          const values = data.rows.map(r => String(r[field.field])).filter(v => v && v !== 'null');
+          if (values.length === 0) return;
+          
+          // 检测格式一致性：计算最常见模式的占比
+          const patterns = new Map<string, number>();
+          values.forEach(v => {
+            const pattern = v.replace(/\d/g, '9').replace(/[a-z]/g, 'a').replace(/[A-Z]/g, 'A');
+            patterns.set(pattern, (patterns.get(pattern) || 0) + 1);
+          });
+          const dominantPattern = [...patterns.entries()].sort((a, b) => b[1] - a[1])[0];
+          const consistencyRate = dominantPattern ? dominantPattern[1] / values.length : 1;
+          const failCount = values.length - (dominantPattern ? dominantPattern[1] : 0);
+
           aiChecks.push({
             id: `ai-${field.field}-format-${Date.now()}`,
             field: field.field,
             checkType: 'format_check',
-            status: 'pass',
+            status: consistencyRate < 0.7 ? 'warning' : 'pass',
             dimension: 'consistency',
-            description: `AI检测：格式一致性良好`,
+            description: consistencyRate >= 0.7
+              ? `格式一致性良好，${(consistencyRate * 100).toFixed(1)}%的数据遵循统一格式`
+              : `格式不一致，仅${(consistencyRate * 100).toFixed(1)}%遵循主格式「${dominantPattern?.[0]?.slice(0, 20)}」`,
             details: {
-              totalCount: data.rows.length,
-              failCount: 0,
-              failRate: 0
-            }
-          });
-        });
-      }
-
-      if (promptLower.includes('异常') || promptLower.includes('outlier')) {
-        fieldStats.filter(f => f.type === 'number').forEach(field => {
-          const stat = field.numericStats;
-          if (!stat) return;
-
-          aiChecks.push({
-            id: `ai-${field.field}-outlier-${Date.now()}`,
-            field: field.field,
-            checkType: 'range_check',
-            status: 'warning',
-            dimension: 'accuracy',
-            description: `AI检测：存在可能的异常值波动`,
-            details: {
-              totalCount: data.rows.length,
-              failCount: Math.ceil(data.rows.length * 0.05),
-              failRate: 0.05
+              totalCount: values.length,
+              failCount,
+              failRate: 1 - consistencyRate,
+              sampleFails: values.filter(v => {
+                const p = v.replace(/\d/g, '9').replace(/[a-z]/g, 'a').replace(/[A-Z]/g, 'A');
+                return p !== dominantPattern?.[0];
+              }).slice(0, 3)
             },
-            suggestion: '建议使用箱线图查看数据分布，确认异常原因'
+            suggestion: consistencyRate < 0.7 ? `建议：统一${field.field}的数据格式` : undefined
           });
         });
       }
 
-      if (promptLower.includes('重复') || promptLower.includes('duplicate')) {
+      if (promptLower.includes('异常') || promptLower.includes('outlier') || promptLower.includes('离群')) {
+        fieldStats.filter(f => f.type === 'number' && f.numericStats).forEach(field => {
+          const stat = field.numericStats!;
+          const values = data.rows.map(r => Number(r[field.field])).filter(v => !isNaN(v));
+          
+          // 使用3σ原则检测异常值
+          const mean = values.reduce((a, b) => a + b, 0) / values.length;
+          const std = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length);
+          
+          if (std > 0) {
+            const outliers = values.filter(v => Math.abs(v - mean) > 3 * std);
+            const outlierRate = outliers.length / values.length;
+            
+            aiChecks.push({
+              id: `ai-${field.field}-outlier-${Date.now()}`,
+              field: field.field,
+              checkType: 'range_check',
+              status: outlierRate > 0.05 ? 'warning' : 'pass',
+              dimension: 'accuracy',
+              description: outliers.length > 0
+                ? `发现${outliers.length}个异常值（3σ外），占比${(outlierRate * 100).toFixed(1)}%`
+                : '未检测到显著异常值',
+              details: {
+                totalCount: values.length,
+                failCount: outliers.length,
+                failRate: outlierRate,
+                sampleFails: outliers.slice(0, 3).map(v => String(v))
+              },
+              suggestion: outliers.length > 0
+                ? `异常值范围：超过${(mean + 3 * std).toFixed(2)}或低于${(mean - 3 * std).toFixed(2)}，建议核实这些数据`
+                : undefined
+            });
+          }
+        });
+      }
+
+      if (promptLower.includes('重复') || promptLower.includes('duplicate') || promptLower.includes('冗余')) {
+        // 真实计算重复记录
+        const seen = new Map<string, number>();
+        data.rows.forEach(r => {
+          const key = JSON.stringify(r);
+          seen.set(key, (seen.get(key) || 0) + 1);
+        });
+        const duplicateRows = [...seen.entries()].filter(([, count]) => count > 1);
+        const totalDuplicateCount = duplicateRows.reduce((sum, [, count]) => sum + count - 1, 0);
+        
+        // 也检查关键列的部分重复
+        const keyFields = fieldStats.filter(f => f.type === 'string' && f.uniqueCount && f.uniqueCount < data.rows.length * 0.5);
+        const partialDuplicates: string[] = [];
+        keyFields.forEach(f => {
+          const valCount = new Map<string, number>();
+          data.rows.forEach(r => {
+            const v = String(r[f.field]);
+            valCount.set(v, (valCount.get(v) || 0) + 1);
+          });
+          const dups = [...valCount.entries()].filter(([, c]) => c > 1);
+          if (dups.length > 0) {
+            partialDuplicates.push(`${f.field}有${dups.length}个重复值（共${dups.reduce((s, [, c]) => s + c - 1, 0)}条重复记录）`);
+          }
+        });
+
         aiChecks.push({
           id: `ai-duplicate-${Date.now()}`,
           field: '__all__',
           checkType: 'duplicate_check',
-          status: 'warning',
+          status: totalDuplicateCount > 0 ? 'warning' : 'pass',
           dimension: 'consistency',
-          description: 'AI检测：建议检查是否存在语义重复的记录',
+          description: totalDuplicateCount > 0
+            ? `发现${totalDuplicateCount}条完全重复记录${partialDuplicates.length > 0 ? '，' + partialDuplicates.join('；') : ''}`
+            : '未发现完全重复记录' + (partialDuplicates.length > 0 ? '，但' + partialDuplicates.join('；') : ''),
           details: {
             totalCount: data.rows.length,
-            failCount: Math.ceil(data.rows.length * 0.02),
-            failRate: 0.02
+            failCount: totalDuplicateCount,
+            failRate: totalDuplicateCount / data.rows.length,
+            sampleFails: duplicateRows.slice(0, 3).map(([key]) => key.slice(0, 100))
           },
-          suggestion: '对于关键字段进行去重检查'
+          suggestion: totalDuplicateCount > 0 ? '建议：使用数据清洗功能去重' : undefined
         });
+      }
+
+      // 如果没有匹配任何关键词，执行综合检查
+      if (aiChecks.length === 0) {
+        // 自动执行空值+异常+重复的综合检查
+        const nullCheckField = fieldStats[0];
+        if (nullCheckField) {
+          const nullCount = nullCheckField.nullCount || 0;
+          const nullRate = nullCount / data.rows.length;
+          aiChecks.push({
+            id: `ai-general-null-${Date.now()}`,
+            field: nullCheckField.field,
+            checkType: 'null_check',
+            status: nullRate > 0.1 ? 'warning' : 'pass',
+            dimension: 'completeness',
+            description: `综合检测：${nullCheckField.field}空值率${(nullRate * 100).toFixed(1)}%`,
+            details: { totalCount: data.rows.length, failCount: nullCount, failRate: nullRate },
+            suggestion: nullRate > 0 ? '建议检查数据采集流程' : undefined
+          });
+        }
+        
+        const numField = fieldStats.find(f => f.type === 'number' && f.numericStats);
+        if (numField && numField.numericStats) {
+          const stat = numField.numericStats;
+          const values = data.rows.map(r => Number(r[numField.field])).filter(v => !isNaN(v));
+          const mean = values.reduce((a, b) => a + b, 0) / values.length;
+          const std = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length);
+          if (std > 0) {
+            const outliers = values.filter(v => Math.abs(v - mean) > 3 * std);
+            aiChecks.push({
+              id: `ai-general-outlier-${Date.now()}`,
+              field: numField.field,
+              checkType: 'range_check',
+              status: outliers.length > 0 ? 'warning' : 'pass',
+              dimension: 'accuracy',
+              description: `综合检测：${numField.field}发现${outliers.length}个异常值`,
+              details: { totalCount: values.length, failCount: outliers.length, failRate: outliers.length / values.length },
+              suggestion: outliers.length > 0 ? '建议核实异常数据' : undefined
+            });
+          }
+        }
       }
 
       setCustomChecks(aiChecks);
