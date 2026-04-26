@@ -88,7 +88,8 @@ src/
 │   │   ├── upload/          # 文件上传 API
 │   │   ├── analyze/         # 数据分析 API（含深度分析引擎）
 │   │   ├── metric-ai/       # AI 指标生成 API（调用 LLM 生成业务指标体系）
-│   │   └── llm-insight/     # LLM 智能洞察 API（SSE流式）
+│   │   ├── llm-insight/     # LLM 智能洞察 API（SSE流式）
+│   │   └── nl2-dashboard/   # NL2Dashboard 智能仪表盘生成 API
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx             # 主页面（RuoYi风格布局）
@@ -210,6 +211,51 @@ AI 智能生成指标体系
       }
     ],
     "summary": "整体指标体系设计思路..."
+  }
+}
+```
+
+### POST /api/nl2-dashboard
+NL2Dashboard 智能仪表盘生成（业务驱动）
+
+**请求**:
+```json
+{
+  "userMessage": "生成电商店铺月度销售仪表盘",
+  "data": { "headers": [...], "rows": [...] },
+  "fieldStats": [{ "field": "...", "type": "number" }],
+  "context": { "scenario": "...", "charts": [...] }
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": {
+    "name": "2024年电商店铺月度销售仪表盘",
+    "scenario": "零售/电商/销售",
+    "scenarioDescription": "...",
+    "detectedMetrics": ["销售额", "订单量", "客单价", ...],
+    "kpis": [
+      { "label": "本月总销售额", "value": "89.6万元", "change": "+18.5%", "changeType": "up", "icon": "💰" }
+    ],
+    "charts": [
+      {
+        "id": "chart-1",
+        "type": "line",
+        "title": "2024年1-12月月度销售额趋势",
+        "xAxis": "月份",
+        "yAxis": "销售额（元）",
+        "insight": "全年销售额符合Q4大促峰值规律，11月双11大促销售额156万元，同比增长22.5%",
+        "recommendation": "折线图适合展示销售额随时间的变化趋势",
+        "dataDescription": "覆盖2024年全年12个月数据，Q4含双11峰值",
+        "order": 1
+      }
+    ],
+    "layout": "grid",
+    "mockData": { "chart-1": [{ "month": "1月", "sales": 720000 }] },
+    "aiSummary": "本仪表盘覆盖2024年电商店铺全月度销售经营数据..."
   }
 }
 ```
