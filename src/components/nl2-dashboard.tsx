@@ -930,9 +930,9 @@ export function NL2Dashboard({ data, fieldStats, className }: NL2DashboardProps)
                 <div className="text-xs text-amber-800 space-y-0.5">
                   <p className="font-medium">生成技巧</p>
                   <ul className="space-y-0.5 list-disc list-inside text-amber-700">
-                    <li>描述越具体，生成越精准：如"8月各门店销售额对比"</li>
-                    <li>指定场景效果更好：如"电商店铺复盘"</li>
-                    <li>指定关注指标：如"重点看客单价和复购率"</li>
+                    <li>描述越具体，生成越精准：如&ldquo;8月各门店销售额对比&rdquo;</li>
+                    <li>指定场景效果更好：如&ldquo;电商店铺复盘&rdquo;</li>
+                    <li>指定关注指标：如&ldquo;重点看客单价和复购率&rdquo;</li>
                   </ul>
                 </div>
               </div>

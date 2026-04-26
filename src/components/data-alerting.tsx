@@ -47,6 +47,7 @@ import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
+  AlertCircle,
   CheckCircle2,
   Clock,
   Loader2,
@@ -273,39 +274,58 @@ export function DataAlerting({
     localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(channelConfig));
   }, [channelConfig]);
 
-  // 测试发送通知
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // 测试发送通知（调用后端代理，真实发送飞书/Webhook）
   const handleTestNotification = async (channel: 'email' | 'feishu' | 'webhook') => {
     setIsSendingTest(channel);
+    setTestResult(null);
 
     try {
-      let result: { success: boolean; message: string };
+      let payload: Record<string, unknown>;
 
       if (channel === 'email') {
         const { email } = channelConfig;
         if (!email?.smtpHost || !email?.recipients) {
+          setTestResult({ success: false, message: '请先填写 SMTP 服务器和收件人邮箱' });
           setIsSendingTest(null);
           return;
         }
-        result = { success: true, message: '邮件发送成功（模拟）' };
+        payload = { channel: 'email', config: email };
       } else if (channel === 'feishu') {
         const { feishu } = channelConfig;
         if (!feishu?.webhookUrl) {
+          setTestResult({ success: false, message: '请先填写飞书 Webhook 地址' });
           setIsSendingTest(null);
           return;
         }
-        result = { success: true, message: '飞书通知发送成功（模拟）' };
+        payload = { channel: 'feishu', config: feishu };
       } else {
         const { webhook } = channelConfig;
         if (!webhook?.url) {
+          setTestResult({ success: false, message: '请先填写 Webhook URL' });
           setIsSendingTest(null);
           return;
         }
-        result = { success: true, message: 'Webhook 请求发送成功（模拟）' };
+        payload = { channel: 'webhook', config: webhook };
       }
 
-      alert(result.message);
+      const response = await fetch('/api/test-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      setTestResult({
+        success: result.success,
+        message: result.success ? result.message : (result.error || '发送失败'),
+      });
     } catch (err) {
-      alert(`发送失败: ${err instanceof Error ? err.message : '未知错误'}`);
+      setTestResult({
+        success: false,
+        message: `发送失败: ${err instanceof Error ? err.message : '网络错误'}`,
+      });
     } finally {
       setIsSendingTest(null);
     }
@@ -1038,6 +1058,13 @@ export function DataAlerting({
                       发送测试邮件
                     </Button>
                   </div>
+                  {/* 测试结果 */}
+                  {testResult && isSendingTest === null && (
+                    <div className={cn('mt-2 p-2.5 rounded-lg text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+                      {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                      {testResult.message}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1112,6 +1139,12 @@ export function DataAlerting({
                       发送测试消息
                     </Button>
                   </div>
+                  {testResult && isSendingTest === null && (
+                    <div className={cn('mt-2 p-2.5 rounded-lg text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+                      {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                      {testResult.message}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1214,6 +1247,12 @@ export function DataAlerting({
                       发送测试请求
                     </Button>
                   </div>
+                  {testResult && isSendingTest === null && (
+                    <div className={cn('mt-2 p-2.5 rounded-lg text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+                      {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                      {testResult.message}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

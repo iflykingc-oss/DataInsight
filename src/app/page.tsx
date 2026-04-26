@@ -786,14 +786,36 @@ export default function HomePage() {
             </div>
             <Separator />
             <div className="space-y-2">
-              <p className="font-medium text-sm">其他设置</p>
-              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => { alert('功能开发中'); setShowSettings(false); }}>
+              <p className="font-medium text-sm">数据管理</p>
+              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
+                // 导出所有 localStorage 配置为 JSON 文件
+                const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library'];
+                const exportData: Record<string, unknown> = {};
+                configKeys.forEach(key => {
+                  const val = localStorage.getItem(key);
+                  if (val) exportData[key] = JSON.parse(val);
+                });
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `datainsight-config-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                setShowSettings(false);
+              }}>
                 <Download className="w-4 h-4 mr-2" />
                 导出配置
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => { if (confirm('确定清除所有缓存数据？')) { localStorage.clear(); alert('已清除'); setShowSettings(false); } }}>
+              <Button variant="outline" size="sm" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => {
+                if (confirm('确定清除所有缓存数据？此操作不可恢复。')) {
+                  localStorage.clear();
+                  setShowSettings(false);
+                  window.location.reload();
+                }
+              }}>
                 <Trash2 className="w-4 h-4 mr-2" />
-                清除缓存
+                清除缓存并刷新
               </Button>
             </div>
           </div>

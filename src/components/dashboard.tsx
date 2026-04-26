@@ -5,9 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  BarChart3, LayoutGrid, RefreshCw, Download, Settings2,
+  BarChart3, LayoutGrid, Download,
   TrendingUp, PieChart, LineChart, Activity, Layers
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
@@ -39,13 +38,16 @@ export function Dashboard({ data, analysis }: DashboardProps) {
   const [chartType, setChartType] = useState<string>('auto');
   
   // 自动生成仪表盘图表
-  const widgets = useMemo(() => generateDashboard(data, analysis), [data, analysis]);
+  const allWidgets = useMemo(() => generateDashboard(data, analysis), [data, analysis]);
 
   // KPI 卡片
-  const kpiWidgets = widgets.filter(w => w.type === 'kpi');
-  const chartWidgets = widgets.filter(w => w.type !== 'kpi');
+  const kpiWidgets = allWidgets.filter(w => w.type === 'kpi');
+  // 根据图表类型筛选
+  const chartWidgets = chartType === 'auto' 
+    ? allWidgets.filter(w => w.type !== 'kpi') 
+    : allWidgets.filter(w => w.type !== 'kpi' && w.type === chartType);
 
-  if (widgets.length === 0) {
+  if (allWidgets.length === 0) {
     return (
       <Card className="text-center py-12">
         <CardContent>
@@ -76,8 +78,55 @@ export function Dashboard({ data, analysis }: DashboardProps) {
         </div>
       )}
 
+      {/* 工具栏 */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Select value={chartType} onValueChange={setChartType}>
+            <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectValue placeholder="图表类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">全部类型</SelectItem>
+              <SelectItem value="bar">柱状图</SelectItem>
+              <SelectItem value="line">折线图</SelectItem>
+              <SelectItem value="pie">饼图</SelectItem>
+              <SelectItem value="area">面积图</SelectItem>
+              <SelectItem value="radar">雷达图</SelectItem>
+            </SelectContent>
+          </Select>
+          <Badge variant="outline" className="text-xs">
+            {chartWidgets.length} 个图表
+          </Badge>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => {
+              const el = document.getElementById('dashboard-chart-area');
+              if (el) {
+                import('html2canvas').then(mod => {
+                  mod.default(el).then((canvas: HTMLCanvasElement) => {
+                    const link = document.createElement('a');
+                    link.download = 'dashboard.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                  });
+                }).catch(() => {
+                  /* html2canvas not available */
+                });
+              }
+            }}
+          >
+            <Download className="w-3.5 h-3.5 mr-1" />
+            导出图片
+          </Button>
+        </div>
+      </div>
+
       {/* 图表网格 */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div id="dashboard-chart-area" className="grid md:grid-cols-2 gap-4">
         {chartWidgets.map(widget => (
           <Card key={widget.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
