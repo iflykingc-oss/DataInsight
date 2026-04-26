@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PlatformIntegrations } from '@/components/platform-integrations';
 import {
   Dialog,
   DialogContent,
@@ -361,11 +362,14 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs defaultValue="database" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="database">数据库</TabsTrigger>
             <TabsTrigger value="api">API接口</TabsTrigger>
             <TabsTrigger value="history">数据快照</TabsTrigger>
-            <TabsTrigger value="feishu">飞书集成</TabsTrigger>
+            <TabsTrigger value="feishu">飞书</TabsTrigger>
+            <TabsTrigger value="wechat">企业微信</TabsTrigger>
+            <TabsTrigger value="dingtalk">钉钉</TabsTrigger>
+            <TabsTrigger value="wps">金山文档</TabsTrigger>
           </TabsList>
           
           {/* 数据库连接 - 简化版 */}
@@ -743,13 +747,52 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                 </div>
               </div>
             </div>
-            
-            <div className="text-center py-8">
-              <Button variant="outline" disabled>
-                <Cloud className="w-4 h-4 mr-2" />
-                即将上线，敬请期待
-              </Button>
+            <PlatformIntegrations onImportData={(d) => onDataSourceChange?.({ ...d, fileName: '飞书数据', rowCount: d.rows.length, columnCount: d.headers.length } as ParsedData)} />
+          </TabsContent>
+
+          <TabsContent value="wechat" className="space-y-4">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Cloud className="w-5 h-5 text-green-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-green-700">企业微信集成</p>
+                  <p className="text-xs text-green-600 mt-1">
+                    对接企业微信，获取组织成员和业务数据
+                  </p>
+                </div>
+              </div>
             </div>
+            <PlatformIntegrations onImportData={(d) => onDataSourceChange?.({ ...d, fileName: '企业微信数据', rowCount: d.rows.length, columnCount: d.headers.length } as ParsedData)} />
+          </TabsContent>
+
+          <TabsContent value="dingtalk" className="space-y-4">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Cloud className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-blue-700">钉钉集成</p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    集成钉钉考勤、审批、任务数据
+                  </p>
+                </div>
+              </div>
+            </div>
+            <PlatformIntegrations onImportData={(d) => onDataSourceChange?.({ ...d, fileName: '钉钉数据', rowCount: d.rows.length, columnCount: d.headers.length } as ParsedData)} />
+          </TabsContent>
+
+          <TabsContent value="wps" className="space-y-4">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Cloud className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-amber-700">金山文档集成</p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    连接 WPS 云文档，导入表格数据
+                  </p>
+                </div>
+              </div>
+            </div>
+            <PlatformIntegrations onImportData={(d) => onDataSourceChange?.({ ...d, fileName: '金山文档数据', rowCount: d.rows.length, columnCount: d.headers.length } as ParsedData)} />
           </TabsContent>
         </Tabs>
       </CardContent>

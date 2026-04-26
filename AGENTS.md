@@ -64,10 +64,12 @@
 - **价值挖掘导向**：20%数据现状 → 30%业务洞察 → 50%可执行建议
 - 预设6种业务化分析维度：趋势与机会/业务洞察/优化方案/风险与预警/数据诊断/全面诊断
 
-### 6. 飞书多维表格集成（Beta）
-- 飞书应用配置入口
-- 多维表格数据导入
-- API 调用示例
+### 6. 多平台数据源集成（Beta）
+- 飞书多维表格：App ID + Secret + App Token 配置，4步集成指南，数据实时同步
+- 企业微信：Corp ID + Agent ID + Secret，对接组织成员和业务数据
+- 钉钉：App Key + App Secret，支持考勤/审批/任务数据导入
+- 金山文档（WPS）：API Key + Secret，导入云文档表格数据
+- 各平台均有连接配置、集成指南、数据预览三个子标签
 
 ## 项目结构
 
@@ -102,8 +104,9 @@ src/
 │   ├── dashboard-designer.tsx     # 仪表盘设计器
 │   ├── advanced-charts.tsx        # 高级图表
 │   ├── share-manager.tsx          # 分享管理
-│   ├── feishu-integration.tsx     # 飞书集成
-│   ├── data-source-manager.tsx    # 数据源管理
+│   ├── feishu-integration.tsx     # 飞书集成（已整合到 platform-integrations）
+│   ├── platform-integrations.tsx   # 多平台集成面板（飞书/企微/钉钉/WPS）
+│   ├── data-source-manager.tsx     # 数据源管理（含平台集成 Tab）
 │   └── global-ai-assistant.tsx    # 全局AI助手
 └── lib/
     ├── utils.ts             # 通用工具函数
