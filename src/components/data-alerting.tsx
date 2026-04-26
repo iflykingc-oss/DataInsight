@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,7 +54,8 @@ import {
   Zap,
   Eye,
   MoreVertical,
-  Send
+  Send,
+	Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
@@ -136,6 +137,41 @@ const CHANNEL_CONFIG: Record<NotificationChannel, { label: string; icon: React.E
   webhook: { label: 'Webhook', icon: Webhook, color: 'text-gray-600' }
 };
 
+// ============================================
+// 通知渠道配置类型
+// ============================================
+interface NotificationConfig {
+  enabled: boolean;
+  // 应用内
+  in_app?: { enabled: boolean };
+  // 邮件
+  email?: {
+    enabled: boolean;
+    smtpHost: string;
+    smtpPort: number;
+    username: string;
+    password: string;
+    senderName: string;
+    senderEmail: string;
+    recipients: string; // 逗号分隔
+  };
+  // 飞书
+  feishu?: {
+    enabled: boolean;
+    webhookUrl: string;
+    secret: string; // 签名密钥（可选）
+  };
+  // Webhook
+  webhook?: {
+    enabled: boolean;
+    url: string;
+    method: 'POST' | 'GET';
+    headers: string; // JSON 格式
+  };
+}
+
+const CONFIG_STORAGE_KEY = 'datainsight_alert_config';
+
 // 本地存储
 const ALERTS_STORAGE_KEY = 'datainsight_alerts';
 const HISTORY_STORAGE_KEY = 'datainsight_alert_history';
@@ -160,29 +196,66 @@ export function DataAlerting({
   const [isCreating, setIsCreating] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('rules');
+  const [activeChannelTab, setActiveChannelTab] = useState<'email' | 'feishu' | 'webhook' | 'advanced'>('email');
   const [previewResult, setPreviewResult] = useState<{ triggered: boolean; value: number } | null>(null);
   const [isTesting, setIsTesting] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState<string | null>(null);
 
-  // 加载保存的规则和历史
+  // 通知渠道配置
+  const [channelConfig, setChannelConfig] = useState<NotificationConfig>({
+    enabled: true,
+    in_app: { enabled: true },
+    email: {
+      enabled: false,
+      smtpHost: '',
+      smtpPort: 465,
+      username: '',
+      password: '',
+      senderName: 'DataInsight',
+      senderEmail: '',
+      recipients: '',
+    },
+    feishu: {
+      enabled: false,
+      webhookUrl: '',
+      secret: '',
+    },
+    webhook: {
+      enabled: false,
+      url: '',
+      method: 'POST',
+      headers: '{"Content-Type":"application/json"}',
+    },
+  });
+
+  // 加载保存的规则、历史和配置
   useEffect(() => {
     const savedRules = localStorage.getItem(ALERTS_STORAGE_KEY);
     const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
-    
+    const savedConfig = localStorage.getItem(CONFIG_STORAGE_KEY);
+
     if (savedRules) {
-      try {
-        setRules(JSON.parse(savedRules));
-      } catch {
-        console.error('Failed to load rules');
-      }
+      try { setRules(JSON.parse(savedRules)); } catch { /* ignore */ }
     }
-    
+
     if (savedHistory) {
-      try {
-        setHistory(JSON.parse(savedHistory));
-      } catch {
-        console.error('Failed to load history');
-      }
+      try { setHistory(JSON.parse(savedHistory)); } catch { /* ignore */ }
     }
+
+    if (savedConfig) {
+      try {
+        const parsed = JSON.parse(savedConfig);
+        // 合并默认配置，确保新字段存在
+        setChannelConfig({
+          ...channelConfig,
+          ...parsed,
+          email: { ...channelConfig.email, ...parsed.email },
+          feishu: { ...channelConfig.feishu, ...parsed.feishu },
+          webhook: { ...channelConfig.webhook, ...parsed.webhook },
+        });
+      } catch { /* ignore */ }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 保存规则
@@ -194,6 +267,67 @@ export function DataAlerting({
   useEffect(() => {
     localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, 100)));
   }, [history]);
+
+  // 保存渠道配置
+  useEffect(() => {
+    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(channelConfig));
+  }, [channelConfig]);
+
+  // 测试发送通知
+  const handleTestNotification = async (channel: 'email' | 'feishu' | 'webhook') => {
+    setIsSendingTest(channel);
+
+    try {
+      let result: { success: boolean; message: string };
+
+      if (channel === 'email') {
+        const { email } = channelConfig;
+        if (!email?.smtpHost || !email?.recipients) {
+          setIsSendingTest(null);
+          return;
+        }
+        result = { success: true, message: '邮件发送成功（模拟）' };
+      } else if (channel === 'feishu') {
+        const { feishu } = channelConfig;
+        if (!feishu?.webhookUrl) {
+          setIsSendingTest(null);
+          return;
+        }
+        result = { success: true, message: '飞书通知发送成功（模拟）' };
+      } else {
+        const { webhook } = channelConfig;
+        if (!webhook?.url) {
+          setIsSendingTest(null);
+          return;
+        }
+        result = { success: true, message: 'Webhook 请求发送成功（模拟）' };
+      }
+
+      alert(result.message);
+    } catch (err) {
+      alert(`发送失败: ${err instanceof Error ? err.message : '未知错误'}`);
+    } finally {
+      setIsSendingTest(null);
+    }
+  };
+
+  // 更新渠道配置
+  const updateChannelConfig = <K extends keyof NotificationConfig>(
+    key: K,
+    value: NotificationConfig[K]
+  ) => {
+    setChannelConfig(prev => ({ ...prev, [key]: value }));
+  };
+
+  const updateSubConfig = <T extends 'email' | 'feishu' | 'webhook'>(
+    channel: T,
+    updates: Partial<NonNullable<NotificationConfig[T]>>
+  ) => {
+    setChannelConfig(prev => ({
+      ...prev,
+      [channel]: { ...(prev[channel] as Record<string, unknown>), ...updates } as NonNullable<NotificationConfig[T]>,
+    }));
+  };
 
   // 创建新规则
   const handleCreateRule = () => {
@@ -765,57 +899,395 @@ export function DataAlerting({
         </TabsContent>
 
         {/* 设置 */}
+        {/* ===== 设置 Tab ===== */}
         <TabsContent value="settings" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">通知设置</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">邮件通知</p>
-                  <p className="text-sm text-gray-500">接收告警邮件通知</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">飞书通知</p>
-                  <p className="text-sm text-gray-500">通过飞书机器人推送通知</p>
-                </div>
-                <Switch />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">应用内通知</p>
-                  <p className="text-sm text-gray-500">在页面内显示弹窗通知</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold text-base">通知渠道配置</h3>
+              <p className="text-xs text-gray-500 mt-0.5">配置告警通知的发送渠道和凭证，配置后自动保存</p>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">高级设置</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">告警抑制</p>
-                  <p className="text-sm text-gray-500">同类告警在短时间内不重复发送</p>
-                </div>
-                <Switch defaultChecked />
+          <Tabs value={activeChannelTab} onValueChange={(v) => setActiveChannelTab(v as typeof activeChannelTab)}>
+            <TabsList className="grid w-full grid-cols-4 mb-4">
+              <TabsTrigger value="email" className="text-xs flex items-center gap-1">
+                <Mail className="w-3.5 h-3.5" />
+                邮件
+                {channelConfig.email?.enabled && <CheckCircle2 className="w-3 h-3 text-green-500 ml-1" />}
+              </TabsTrigger>
+              <TabsTrigger value="feishu" className="text-xs flex items-center gap-1">
+                <MessageSquare className="w-3.5 h-3.5" />
+                飞书
+                {channelConfig.feishu?.enabled && <CheckCircle2 className="w-3 h-3 text-green-500 ml-1" />}
+              </TabsTrigger>
+              <TabsTrigger value="webhook" className="text-xs flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5" />
+                Webhook
+                {channelConfig.webhook?.enabled && <CheckCircle2 className="w-3 h-3 text-green-500 ml-1" />}
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="text-xs flex items-center gap-1">
+                <Settings className="w-3.5 h-3.5" />
+                高级
+              </TabsTrigger>
+            </TabsList>
+
+            {/* ===== 邮件配置 ===== */}
+            <TabsContent value="email">
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-blue-100 rounded-lg">
+                        <Mail className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm">邮件通知</CardTitle>
+                        <CardDescription className="text-xs">通过 SMTP 发送告警邮件</CardDescription>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={channelConfig.email?.enabled ?? false}
+                      onCheckedChange={(checked) => updateSubConfig('email', { enabled: checked })}
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">SMTP 服务器</label>
+                      <Input
+                        placeholder="smtp.example.com"
+                        value={channelConfig.email?.smtpHost ?? ''}
+                        onChange={(e) => updateSubConfig('email', { smtpHost: e.target.value })}
+                        disabled={!channelConfig.email?.enabled}
+                        className="text-sm h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">SMTP 端口</label>
+                      <Input
+                        placeholder="465"
+                        type="number"
+                        value={channelConfig.email?.smtpPort ?? 465}
+                        onChange={(e) => updateSubConfig('email', { smtpPort: parseInt(e.target.value) || 465 })}
+                        disabled={!channelConfig.email?.enabled}
+                        className="text-sm h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">用户名</label>
+                      <Input
+                        placeholder="your@email.com"
+                        value={channelConfig.email?.username ?? ''}
+                        onChange={(e) => updateSubConfig('email', { username: e.target.value })}
+                        disabled={!channelConfig.email?.enabled}
+                        className="text-sm h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">密码 / 授权码</label>
+                      <Input
+                        type="password"
+                        placeholder="邮箱密码或授权码"
+                        value={channelConfig.email?.password ?? ''}
+                        onChange={(e) => updateSubConfig('email', { password: e.target.value })}
+                        disabled={!channelConfig.email?.enabled}
+                        className="text-sm h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">发件人名称</label>
+                      <Input
+                        placeholder="DataInsight"
+                        value={channelConfig.email?.senderName ?? ''}
+                        onChange={(e) => updateSubConfig('email', { senderName: e.target.value })}
+                        disabled={!channelConfig.email?.enabled}
+                        className="text-sm h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 mb-1 block">发件人邮箱</label>
+                      <Input
+                        placeholder="sender@example.com"
+                        value={channelConfig.email?.senderEmail ?? ''}
+                        onChange={(e) => updateSubConfig('email', { senderEmail: e.target.value })}
+                        disabled={!channelConfig.email?.enabled}
+                        className="text-sm h-9"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">收件人邮箱 <span className="text-red-500">*</span></label>
+                    <Input
+                      placeholder="receiver1@example.com, receiver2@example.com（多个用逗号分隔）"
+                      value={channelConfig.email?.recipients ?? ''}
+                      onChange={(e) => updateSubConfig('email', { recipients: e.target.value })}
+                      disabled={!channelConfig.email?.enabled}
+                      className="text-sm h-9"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">支持多个收件人，用英文逗号分隔</p>
+                  </div>
+                  <div className="flex justify-end pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleTestNotification('email')}
+                      disabled={!channelConfig.email?.enabled || !channelConfig.email?.smtpHost || !channelConfig.email?.recipients || isSendingTest === 'email'}
+                    >
+                      {isSendingTest === 'email' ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                      发送测试邮件
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="mt-3 bg-amber-50 border-amber-200">
+                <CardContent className="pt-4">
+                  <div className="flex items-start gap-2">
+                    <Info className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                    <div className="text-xs text-amber-700 space-y-0.5">
+                      <p className="font-medium text-amber-800">常用邮箱 SMTP 配置参考</p>
+                      <p>QQ邮箱：smtp.qq.com:587（SSL: smtp.qq.com:465）</p>
+                      <p>163邮箱：smtp.163.com:465 | 阿里邮箱：smtp.aliyun.com:465</p>
+                      <p>Gmail：smtp.gmail.com:587 | 企业邮箱：请咨询邮箱服务商</p>
+                      <p className="mt-1 text-amber-900">建议使用企业邮箱或个人邮箱「授权码」而非登录密码</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ===== 飞书配置 ===== */}
+            <TabsContent value="feishu">
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-green-100 rounded-lg">
+                        <MessageSquare className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm">飞书 Webhook 通知</CardTitle>
+                        <CardDescription className="text-xs">通过飞书群机器人发送告警卡片</CardDescription>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={channelConfig.feishu?.enabled ?? false}
+                      onCheckedChange={(checked) => updateSubConfig('feishu', { enabled: checked })}
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">
+                      Webhook 地址 <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxx"
+                      value={channelConfig.feishu?.webhookUrl ?? ''}
+                      onChange={(e) => updateSubConfig('feishu', { webhookUrl: e.target.value })}
+                      disabled={!channelConfig.feishu?.enabled}
+                      className="text-sm h-9 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">签名密钥（可选）</label>
+                    <Input
+                      type="password"
+                      placeholder="开启签名校验后填写密钥，否则留空"
+                      value={channelConfig.feishu?.secret ?? ''}
+                      onChange={(e) => updateSubConfig('feishu', { secret: e.target.value })}
+                      disabled={!channelConfig.feishu?.enabled}
+                      className="text-sm h-9"
+                    />
+                  </div>
+                  <div className="flex justify-end pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleTestNotification('feishu')}
+                      disabled={!channelConfig.feishu?.enabled || !channelConfig.feishu?.webhookUrl || isSendingTest === 'feishu'}
+                    >
+                      {isSendingTest === 'feishu' ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                      发送测试消息
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="mt-3 bg-green-50 border-green-200">
+                <CardContent className="pt-4">
+                  <div className="flex items-start gap-2">
+                    <Info className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                    <div className="text-xs text-green-700 space-y-1">
+                      <p className="font-medium text-green-800">如何获取飞书 Webhook？</p>
+                      <p>1. 打开飞书群 → 右上角「群设置」→「群机器人」→「添加机器人」</p>
+                      <p>2. 选择「自定义机器人」→ 填写机器人名称</p>
+                      <p>3. 复制 Webhook 地址（格式：.../hook/xxx-xxx-xxx）</p>
+                      <p className="mt-1 text-green-900">如开启签名校验，保存密钥并在配置中填写</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ===== Webhook 配置 ===== */}
+            <TabsContent value="webhook">
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-purple-100 rounded-lg">
+                        <Zap className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm">Webhook 通知</CardTitle>
+                        <CardDescription className="text-xs">向任意 HTTP 端点发送告警请求</CardDescription>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={channelConfig.webhook?.enabled ?? false}
+                      onCheckedChange={(checked) => updateSubConfig('webhook', { enabled: checked })}
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">Webhook URL <span className="text-red-500">*</span></label>
+                    <Input
+                      placeholder="https://your-server.com/api/alert"
+                      value={channelConfig.webhook?.url ?? ''}
+                      onChange={(e) => updateSubConfig('webhook', { url: e.target.value })}
+                      disabled={!channelConfig.webhook?.enabled}
+                      className="text-sm h-9 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">请求方法</label>
+                    <Select
+                      value={channelConfig.webhook?.method ?? 'POST'}
+                      onValueChange={(v) => updateSubConfig('webhook', { method: v as 'POST' | 'GET' })}
+                      disabled={!channelConfig.webhook?.enabled}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="POST">POST</SelectItem>
+                        <SelectItem value="GET">GET</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 mb-1 block">自定义请求头</label>
+                    <Textarea
+                      placeholder='{"Authorization":"Bearer xxx","Content-Type":"application/json"}'
+                      value={channelConfig.webhook?.headers ?? ''}
+                      onChange={(e) => updateSubConfig('webhook', { headers: e.target.value })}
+                      disabled={!channelConfig.webhook?.enabled}
+                      className="text-xs h-20 font-mono"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">JSON 格式，填写 Authorization 等认证 header</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                    <p className="text-xs text-blue-700 font-medium mb-1.5">POST 请求 Body 示例</p>
+                    <pre className="text-[10px] text-blue-600 font-mono whitespace-pre-wrap overflow-x-auto">
+{`{
+  "alert_name": "销售额告警",
+  "severity": "warning",
+  "message": "8月销售额低于阈值 10万",
+  "metric": "销售额",
+  "value": 85000,
+  "threshold": 100000,
+  "triggered_at": "2024-08-15T10:30:00Z"
+}`}
+                    </pre>
+                  </div>
+                  <div className="flex justify-end pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleTestNotification('webhook')}
+                      disabled={!channelConfig.webhook?.enabled || !channelConfig.webhook?.url || isSendingTest === 'webhook'}
+                    >
+                      {isSendingTest === 'webhook' ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Send className="w-3.5 h-3.5 mr-1" />}
+                      发送测试请求
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ===== 高级配置 ===== */}
+            <TabsContent value="advanced">
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">告警抑制（去重）</CardTitle>
+                    <CardDescription className="text-xs">同类告警在设定时间内不重复发送，避免告警风暴</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm">启用告警抑制</p>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-gray-600">冷却时间</label>
+                      <Select defaultValue="30">
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5 分钟（高频监控场景）</SelectItem>
+                          <SelectItem value="15">15 分钟（标准场景）</SelectItem>
+                          <SelectItem value="30">30 分钟（推荐）</SelectItem>
+                          <SelectItem value="60">1 小时（低频监控）</SelectItem>
+                          <SelectItem value="0">不限制</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">静默时段</CardTitle>
+                    <CardDescription className="text-xs">设置不发送告警的时间段（如夜间维护窗口）</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">启用静默时段</p>
+                        <p className="text-xs text-gray-500 mt-0.5">00:00 ~ 06:00 期间不发送告警</p>
+                      </div>
+                      <Switch />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 应用内通知 */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-indigo-100 rounded-lg">
+                          <Bell className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-sm">应用内通知</CardTitle>
+                          <CardDescription className="text-xs">在界面内实时显示告警弹窗（默认开启）</CardDescription>
+                        </div>
+                      </div>
+                      <Switch checked disabled />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-gray-500">应用内通知无需额外配置，告警实时显示。此功能始终启用。</p>
+                  </CardContent>
+                </Card>
               </div>
-              
-              <div className="space-y-2">
-                <Label>抑制时间（分钟）</Label>
-                <Input type="number" defaultValue={5} className="w-32" />
-              </div>
-            </CardContent>
-          </Card>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>
