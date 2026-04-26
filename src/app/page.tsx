@@ -28,6 +28,8 @@ import { ChartExporter } from '@/components/chart-exporter';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   BarChart3,
@@ -63,9 +65,13 @@ import {
   Palette,
   LayoutDashboard,
   TrendingUp,
-  Link,
   Zap,
   ChevronDown,
+  Search,
+  Mail,
+  Webhook,
+  Save,
+  TestTube,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
@@ -82,15 +88,6 @@ type ViewMode =
   | 'alert' | 'version' | 'template' | 'export' | 'share'
   | 'ai-settings';
 
-interface NavItem {
-  id: ViewMode;
-  label: string;
-  icon: React.ElementType;
-  color?: string;        // 侧边栏高亮色
-  needsData?: boolean;   // 是否需要数据才可用
-  badge?: string;        // 角标
-}
-
 const NAV_GROUPS: Array<{
   label: string;
   items: Array<{
@@ -105,49 +102,101 @@ const NAV_GROUPS: Array<{
   {
     label: '总览',
     items: [
-      { id: 'home' as ViewMode, label: '首页', icon: Home },
+      { id: 'home', label: '工作台', icon: Home },
     ],
   },
   {
     label: '数据',
     items: [
-      { id: 'table' as ViewMode, label: '数据表格', icon: Table2 },
-      { id: 'source' as ViewMode, label: '数据源管理', icon: Database },
-      { id: 'clean' as ViewMode, label: '数据清洗', icon: Filter, needsData: true },
-      { id: 'quality' as ViewMode, label: '数据质量', icon: Shield, needsData: true },
+      { id: 'table', label: '数据表格', icon: Table2, needsData: true },
+      { id: 'source', label: '数据源管理', icon: Database },
+      { id: 'clean', label: '数据清洗', icon: Filter, needsData: true },
+      { id: 'quality', label: '数据质量', icon: Shield, needsData: true },
     ],
   },
   {
     label: '分析',
     items: [
-      { id: 'insights' as ViewMode, label: '智能分析', icon: Brain, needsData: true, color: 'text-orange-600' },
-      { id: 'dashboard' as ViewMode, label: '仪表盘', icon: LayoutGrid, needsData: true, color: 'text-purple-600' },
-      { id: 'nl2dash' as ViewMode, label: 'NL2Dashboard', icon: Wand2, needsData: true, color: 'text-purple-600', badge: 'AI' },
-      { id: 'metric' as ViewMode, label: '指标语义层', icon: Target, needsData: true, color: 'text-orange-600', badge: 'AI' },
-      { id: 'aiChart' as ViewMode, label: '智能图表', icon: PieChart, needsData: true },
+      { id: 'insights', label: '智能分析', icon: Brain, needsData: true, color: 'text-orange-500' },
+      { id: 'dashboard', label: '仪表盘', icon: LayoutGrid, needsData: true },
+      { id: 'nl2dash', label: 'NL2Dashboard', icon: Wand2, needsData: true, color: 'text-violet-500', badge: 'AI' },
+      { id: 'metric', label: '指标语义层', icon: Target, needsData: true, color: 'text-orange-500', badge: 'AI' },
+      { id: 'aiChart', label: '智能图表', icon: PieChart, needsData: true },
     ],
   },
   {
     label: 'AI 助手',
     items: [
-      { id: 'chat' as ViewMode, label: 'AI 对话', icon: MessageSquare, needsData: true, color: 'text-blue-600' },
-      { id: 'ai-settings' as ViewMode, label: 'AI 模型配置', icon: Bot },
+      { id: 'chat', label: 'AI 对话', icon: MessageSquare, needsData: true, color: 'text-blue-500' },
+      { id: 'ai-settings', label: 'AI 模型配置', icon: Bot },
     ],
   },
   {
     label: '工具',
     items: [
-      { id: 'report' as ViewMode, label: '报表生成', icon: FileText, needsData: true },
-      { id: 'designer' as ViewMode, label: '仪表盘设计', icon: Palette, needsData: true },
-      { id: 'advanced' as ViewMode, label: '高级图表', icon: TrendingUp, needsData: true },
-      { id: 'alert' as ViewMode, label: '数据预警', icon: AlertTriangle, needsData: true },
-      { id: 'export' as ViewMode, label: '图表导出', icon: Download, needsData: true },
-      { id: 'share' as ViewMode, label: '分享管理', icon: Share2, needsData: true },
-      { id: 'version' as ViewMode, label: '版本快照', icon: History },
-      { id: 'template' as ViewMode, label: '模板管理', icon: Bookmark },
+      { id: 'report', label: '报表生成', icon: FileText, needsData: true },
+      { id: 'designer', label: '仪表盘设计', icon: Palette, needsData: true },
+      { id: 'advanced', label: '高级图表', icon: TrendingUp, needsData: true },
+      { id: 'alert', label: '数据预警', icon: AlertTriangle, needsData: true },
+      { id: 'export', label: '图表导出', icon: Download, needsData: true },
+      { id: 'share', label: '分享管理', icon: Share2, needsData: true },
+      { id: 'version', label: '版本快照', icon: History },
+      { id: 'template', label: '模板管理', icon: Bookmark },
     ],
   },
 ];
+
+// ============================================
+// 首页功能卡片定义（始终展示，无数据灰化）
+// ============================================
+interface HomeCard {
+  id: ViewMode;
+  icon: React.ElementType;
+  label: string;
+  desc: string;
+  color: string;
+  bgColor: string;
+  needsData: boolean;
+  badge?: string;
+  highlight?: boolean;
+}
+
+const HOME_CARDS: HomeCard[] = [
+  { id: 'insights', icon: Brain, label: '智能分析', desc: 'AI 自动洞察数据规律与健康评分', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, highlight: true },
+  { id: 'nl2dash', icon: Wand2, label: 'NL2Dashboard', desc: '对话生成业务仪表盘', color: 'text-violet-600', bgColor: 'bg-violet-50', needsData: true, badge: 'AI', highlight: true },
+  { id: 'chat', icon: MessageSquare, label: 'AI 问数', desc: '自然语言检索、统计、归因、预测', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI', highlight: true },
+  { id: 'metric', icon: Target, label: '指标语义层', desc: 'AI 生成业务指标体系与解读', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI' },
+  { id: 'dashboard', icon: LayoutGrid, label: '自动仪表盘', desc: '一键生成可视化仪表盘', color: 'text-purple-600', bgColor: 'bg-purple-50', needsData: true },
+  { id: 'aiChart', icon: PieChart, label: '智能图表', desc: 'AI 推荐最佳图表类型', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true },
+  { id: 'report', icon: FileText, label: '报表生成', desc: '一键生成分析报表并导出', color: 'text-green-600', bgColor: 'bg-green-50', needsData: true },
+  { id: 'table', icon: Table2, label: '数据表格', desc: '查看、排序、筛选原始数据', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: true },
+  { id: 'clean', icon: Filter, label: '数据清洗', desc: '去重、空值处理、异常值修复', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true },
+  { id: 'quality', icon: Shield, label: '数据质量', desc: '完整性/一致性/质量/可用性评估', color: 'text-emerald-600', bgColor: 'bg-emerald-50', needsData: true },
+  { id: 'source', icon: Database, label: '数据源管理', desc: '连接数据库、API、平台集成', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: false },
+  { id: 'advanced', icon: TrendingUp, label: '高级图表', desc: '6种高级图表类型与数据映射', color: 'text-indigo-600', bgColor: 'bg-indigo-50', needsData: true },
+  { id: 'designer', icon: Palette, label: '仪表盘设计', desc: '拖拽式自定义仪表盘布局', color: 'text-pink-600', bgColor: 'bg-pink-50', needsData: true },
+  { id: 'alert', icon: AlertTriangle, label: '数据预警', desc: '阈值/趋势/异常预警与通知', color: 'text-amber-600', bgColor: 'bg-amber-50', needsData: true },
+  { id: 'export', icon: Download, label: '图表导出', desc: 'PNG/PDF/Excel/复制导出', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: true },
+  { id: 'share', icon: Share2, label: '分享管理', desc: '生成分享链接与权限控制', color: 'text-sky-600', bgColor: 'bg-sky-50', needsData: true },
+  { id: 'version', icon: History, label: '版本快照', desc: '创建/恢复/导出数据快照', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: false },
+  { id: 'template', icon: Bookmark, label: '模板管理', desc: '创建/收藏/应用分析模板', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: false },
+  { id: 'ai-settings', icon: Bot, label: 'AI 模型配置', desc: '配置模型参数与测试连接', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: false },
+];
+
+// ============================================
+// 通知渠道配置类型
+// ============================================
+interface NotificationChannelConfig {
+  email: { smtp: string; port: string; user: string; password: string; from: string; to: string; enabled: boolean };
+  feishu: { webhookUrl: string; secret: string; enabled: boolean };
+  webhook: { url: string; method: string; headers: string; enabled: boolean };
+}
+
+const DEFAULT_NOTIFICATION_CONFIG: NotificationChannelConfig = {
+  email: { smtp: '', port: '465', user: '', password: '', from: '', to: '', enabled: false },
+  feishu: { webhookUrl: '', secret: '', enabled: false },
+  webhook: { url: '', method: 'POST', headers: '', enabled: false },
+};
 
 // ============================================
 // 主组件
@@ -167,6 +216,29 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [notificationConfig, setNotificationConfig] = useState<NotificationChannelConfig>(DEFAULT_NOTIFICATION_CONFIG);
+  const [notifTestResult, setNotifTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [isTestingNotif, setIsTestingNotif] = useState(false);
+
+  // 加载通知配置
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('datainsight_notification_config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setNotificationConfig(prev => ({
+          email: { ...prev.email, ...parsed.email },
+          feishu: { ...prev.feishu, ...parsed.feishu },
+          webhook: { ...prev.webhook, ...parsed.webhook },
+        }));
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // 保存通知配置
+  useEffect(() => {
+    localStorage.setItem('datainsight_notification_config', JSON.stringify(notificationConfig));
+  }, [notificationConfig]);
 
   // 页面加载时应用保存的深色模式
   useEffect(() => {
@@ -174,13 +246,6 @@ export default function HomePage() {
       document.documentElement.classList.add('dark');
     }
   }, []);
-
-  // 上传数据后自动跳转到智能分析（核心入口）
-  useEffect(() => {
-    if (parsedData && viewMode === 'home') {
-      setViewMode('insights');
-    }
-  }, [parsedData]);
 
   // ============================================
   // 事件处理
@@ -243,13 +308,7 @@ export default function HomePage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        data: {
-          headers: data.headers,
-          rows: data.rows,
-          fileName: 'feishu_import',
-          rowCount: data.rows.length,
-          columnCount: data.headers.length,
-        },
+        data: { headers: data.headers, rows: data.rows, fileName: 'feishu_import', rowCount: data.rows.length, columnCount: data.headers.length },
       }),
     })
       .then(res => res.json())
@@ -284,6 +343,27 @@ export default function HomePage() {
     setViewMode('home');
   };
 
+  const handleTestNotification = async (channel: 'email' | 'feishu' | 'webhook') => {
+    setIsTestingNotif(true);
+    setNotifTestResult(null);
+    try {
+      const response = await fetch('/api/test-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel,
+          config: notificationConfig[channel],
+        }),
+      });
+      const result = await response.json();
+      setNotifTestResult({ success: result.success, message: result.message || result.error });
+    } catch (err) {
+      setNotifTestResult({ success: false, message: `测试失败: ${err instanceof Error ? err.message : '网络错误'}` });
+    } finally {
+      setIsTestingNotif(false);
+    }
+  };
+
   // ============================================
   // 渲染主内容区
   // ============================================
@@ -311,111 +391,132 @@ export default function HomePage() {
       );
     }
 
-    // 首页
+    // 首页（工作台）- 始终展示所有功能卡片
     if (viewMode === 'home') {
-      // 已有数据时显示数据概览
-      if (parsedData) {
-        return (
-          <div className="max-w-5xl mx-auto space-y-6">
-            <div className="text-center py-4">
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">数据已就绪</h1>
-              <p className="text-gray-500">选择一个功能开始分析</p>
-            </div>
-
-            {/* 数据信息卡片 */}
-            <Card className="border-l-4 border-l-[#1890ff]">
-              <CardContent className="pt-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileSpreadsheet className="w-8 h-8 text-green-500" />
-                  <div>
-                    <h3 className="font-medium">{parsedData.fileName}</h3>
-                    <p className="text-sm text-gray-500">{parsedData.rowCount.toLocaleString()} 行 × {parsedData.columnCount} 列</p>
+      const hasData = !!parsedData;
+      return (
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* 数据状态栏 */}
+          <Card className={cn(
+            'border transition-colors',
+            hasData ? 'border-l-4 border-l-green-500 bg-green-50/30' : 'border-dashed border-gray-300'
+          )}>
+            <CardContent className="py-4">
+              {hasData ? (
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <FileSpreadsheet className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-800">{parsedData.fileName}</h3>
+                        <Badge className="bg-green-100 text-green-700 border-green-200 text-[10px]">已加载</Badge>
+                      </div>
+                      <p className="text-sm text-gray-500">{parsedData.rowCount.toLocaleString()} 行 &times; {parsedData.columnCount} 列</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setViewMode('source')}>
+                      <Database className="w-3.5 h-3.5 mr-1" />
+                      数据源
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleGoHome} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                      清除数据
+                    </Button>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleGoHome}>切换数据</Button>
-              </CardContent>
-            </Card>
+              ) : (
+                <div className="flex flex-col items-center gap-4 py-2">
+                  <div className="text-center">
+                    <h3 className="font-medium text-gray-700 mb-1">上传数据开始分析</h3>
+                    <p className="text-sm text-gray-400">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
+                  </div>
+                  <div className="w-full max-w-lg">
+                    <FileUploader onFileUpload={handleFileUpload} />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* 快捷功能入口 */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { id: 'insights' as ViewMode, icon: Brain, label: '智能分析', desc: 'AI 自动洞察数据规律', color: 'bg-orange-100 text-orange-600' },
-                { id: 'dashboard' as ViewMode, icon: LayoutGrid, label: '仪表盘', desc: '自动生成可视化仪表盘', color: 'bg-purple-100 text-purple-600' },
-                { id: 'nl2dash' as ViewMode, icon: Wand2, label: 'NL2Dashboard', desc: '对话生成业务仪表盘', color: 'bg-purple-100 text-purple-600', badge: 'AI' },
-                { id: 'chat' as ViewMode, icon: MessageSquare, label: 'AI 对话', desc: '自然语言查询数据', color: 'bg-blue-100 text-blue-600' },
-                { id: 'metric' as ViewMode, icon: Target, label: '指标语义层', desc: 'AI 生成业务指标体系', color: 'bg-orange-100 text-orange-600', badge: 'AI' },
-                { id: 'report' as ViewMode, icon: FileText, label: '报表生成', desc: '一键生成分析报表', color: 'bg-green-100 text-green-600' },
-                { id: 'table' as ViewMode, icon: Table2, label: '数据表格', desc: '查看原始数据', color: 'bg-gray-100 text-gray-600' },
-                { id: 'clean' as ViewMode, icon: Filter, label: '数据清洗', desc: '智能数据预处理', color: 'bg-cyan-100 text-cyan-600' },
-              ].map(item => {
-                const Icon = item.icon;
+          {/* 快速操作区 - 有数据时显示核心 AI 功能 */}
+          {hasData && (
+            <div className="grid md:grid-cols-3 gap-4">
+              {HOME_CARDS.filter(c => c.highlight).map(card => {
+                const Icon = card.icon;
                 return (
                   <button
-                    key={item.id}
-                    onClick={() => setViewMode(item.id)}
-                    className="group p-4 bg-white border rounded-xl hover:shadow-md hover:border-blue-200 transition-all text-left"
+                    key={card.id}
+                    onClick={() => setViewMode(card.id)}
+                    className={cn(
+                      'group relative p-5 bg-white border rounded-xl hover:shadow-lg transition-all text-left',
+                      'hover:border-blue-200'
+                    )}
                   >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className={cn('p-2 rounded-lg', item.color)}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      {item.badge && (
-                        <Badge className="h-4 px-1 text-[9px] bg-purple-500 hover:bg-purple-500 text-white border-0">
-                          {item.badge}
-                        </Badge>
-                      )}
+                    {card.badge && (
+                      <Badge className="absolute top-3 right-3 h-5 px-1.5 text-[10px] bg-violet-500 hover:bg-violet-500 text-white border-0">
+                        {card.badge}
+                      </Badge>
+                    )}
+                    <div className={cn('p-2.5 rounded-lg w-fit mb-3', card.bgColor)}>
+                      <Icon className={cn('w-6 h-6', card.color)} />
                     </div>
-                    <h4 className="font-medium text-sm">{item.label}</h4>
-                    <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+                    <h4 className="font-semibold text-gray-800">{card.label}</h4>
+                    <p className="text-sm text-gray-500 mt-1">{card.desc}</p>
                   </button>
                 );
               })}
             </div>
-          </div>
-        );
-      }
+          )}
 
-      // 无数据时显示上传页面
-      return (
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* 欢迎区 */}
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <BarChart3 className="w-9 h-9 text-white" />
+          {/* 全部功能网格 */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-4 h-4 text-gray-400" />
+              <h2 className="font-semibold text-gray-700">全部功能</h2>
+              <Badge variant="outline" className="text-[10px]">{HOME_CARDS.length} 项</Badge>
             </div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">欢迎使用 DataInsight Pro</h1>
-            <p className="text-gray-500">上传您的数据文件，开始智能数据分析之旅</p>
-          </div>
-
-          {/* 上传区域 */}
-          <Card className="border-2 border-dashed border-blue-200 hover:border-blue-400 transition-colors">
-            <CardContent className="pt-6">
-              <FileUploader onFileUpload={handleFileUpload} />
-            </CardContent>
-          </Card>
-
-          {/* 快速开始提示 */}
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-              <div className="flex items-center gap-2 mb-2">
-                <Upload className="w-5 h-5 text-blue-600" />
-                <span className="font-medium text-blue-800 text-sm">第一步：上传数据</span>
-              </div>
-              <p className="text-xs text-blue-600">支持 Excel (.xlsx/.xls) 和 CSV 文件</p>
-            </div>
-            <div className="p-4 bg-green-50 rounded-xl border border-green-100">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-5 h-5 text-green-600" />
-                <span className="font-medium text-green-800 text-sm">第二步：自动分析</span>
-              </div>
-              <p className="text-xs text-green-600">AI 自动识别数据特征，生成洞察报告</p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-xl border border-purple-100">
-              <div className="flex items-center gap-2 mb-2">
-                <LayoutDashboard className="w-5 h-5 text-purple-600" />
-                <span className="font-medium text-purple-800 text-sm">第三步：可视化</span>
-              </div>
-              <p className="text-xs text-purple-600">一键生成仪表盘、报表，AI 辅助解读</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {HOME_CARDS.map(card => {
+                const Icon = card.icon;
+                const disabled = card.needsData && !hasData;
+                return (
+                  <Tooltip key={card.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => !disabled && setViewMode(card.id)}
+                        disabled={disabled}
+                        className={cn(
+                          'group p-3.5 bg-white border rounded-xl transition-all text-left',
+                          disabled
+                            ? 'opacity-40 cursor-not-allowed border-gray-100'
+                            : 'hover:shadow-md hover:border-blue-200 cursor-pointer'
+                        )}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <div className={cn('p-1.5 rounded-md', card.bgColor)}>
+                            <Icon className={cn('w-4 h-4', card.color)} />
+                          </div>
+                          {card.badge && (
+                            <Badge className="h-3.5 px-1 text-[8px] bg-violet-500 hover:bg-violet-500 text-white border-0">
+                              {card.badge}
+                            </Badge>
+                          )}
+                        </div>
+                        <h4 className="font-medium text-sm text-gray-800">{card.label}</h4>
+                        <p className={cn('text-[11px] mt-0.5', disabled ? 'text-gray-300' : 'text-gray-500')}>
+                          {disabled ? '需先上传数据' : card.desc}
+                        </p>
+                      </button>
+                    </TooltipTrigger>
+                    {disabled && (
+                      <TooltipContent>请先上传数据文件</TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -494,7 +595,7 @@ export default function HomePage() {
       return <SmartChartRecommender data={parsedData!} analysis={analysis} />;
     }
 
-    // AI 对话
+    // AI 对话（增强版：AI 问数模式）
     if (viewMode === 'chat' && analysis) {
       return (
         <div className="grid lg:grid-cols-2 gap-6">
@@ -502,12 +603,13 @@ export default function HomePage() {
           <Card>
             <CardContent className="pt-6 space-y-4">
               <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-800 mb-2">支持的分析意图</h4>
-                <ul className="text-sm text-blue-600 space-y-1">
-                  <li>趋势分析 - &ldquo;分析销售趋势&rdquo;</li>
-                  <li>占比分析 - &ldquo;各品类占比&rdquo;</li>
-                  <li>异常检测 - &ldquo;找出异常值&rdquo;</li>
-                  <li>排序对比 - &ldquo;按销售额排序&rdquo;</li>
+                <h4 className="font-medium text-blue-800 mb-2">AI 问数 - 五大能力</h4>
+                <ul className="text-sm text-blue-600 space-y-1.5">
+                  <li className="flex items-start gap-2"><Search className="w-4 h-4 mt-0.5 shrink-0" />数据检索 - &ldquo;查找销售额超过10万的订单&rdquo;</li>
+                  <li className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 shrink-0" />统计计算 - &ldquo;按区域计算平均绩效得分&rdquo;</li>
+                  <li className="flex items-start gap-2"><TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />归因分析 - &ldquo;分析本月销售额下降15%的原因&rdquo;</li>
+                  <li className="flex items-start gap-2"><BarChart3 className="w-4 h-4 mt-0.5 shrink-0" />趋势预测 - &ldquo;预测下月新增用户数&rdquo;</li>
+                  <li className="flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />分析报告 - &ldquo;生成本周项目进展周报&rdquo;</li>
                 </ul>
               </div>
               <div className="p-4 bg-green-50 rounded-lg">
@@ -515,7 +617,8 @@ export default function HomePage() {
                 <div className="space-y-2 text-sm text-green-600">
                   <p>&ldquo;哪些产品销量最高&rdquo;</p>
                   <p>&ldquo;月度收入变化趋势&rdquo;</p>
-                  <p>&ldquo;用户年龄分布&rdquo;</p>
+                  <p>&ldquo;分析用户年龄分布&rdquo;</p>
+                  <p>&ldquo;找出异常数据并归因&rdquo;</p>
                 </div>
               </div>
             </CardContent>
@@ -612,10 +715,8 @@ export default function HomePage() {
         {/* 导航菜单 */}
         <nav className="flex-1 overflow-y-auto py-2">
           {NAV_GROUPS.map(group => {
-            // 过滤掉不需要的分组（根据数据状态）
             const visibleItems = group.items.filter(item => {
-              // 没有数据时，隐藏需要数据的项
-              if (item.needsData && !parsedData) return false;
+              // 始终显示所有导航项，无数据时灰化而非隐藏
               return true;
             });
             if (visibleItems.length === 0) return null;
@@ -630,24 +731,28 @@ export default function HomePage() {
                 {sidebarCollapsed && <div className="my-2 mx-3 border-t border-white/10" />}
                 {visibleItems.map(item => {
                   const isActive = viewMode === item.id;
+                  const isDisabled = item.needsData && !parsedData;
                   const Icon = item.icon;
                   return (
                     <Tooltip key={item.id} delayDuration={sidebarCollapsed ? 100 : 500}>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => setViewMode(item.id)}
+                          onClick={() => !isDisabled && setViewMode(item.id)}
+                          disabled={isDisabled}
                           className={cn(
                             'w-full flex items-center transition-colors text-left relative',
                             sidebarCollapsed ? 'justify-center px-0 py-3' : 'px-5 py-2.5',
                             isActive
                               ? 'bg-[#1890ff] text-white'
-                              : 'text-blue-100/80 hover:bg-white/5 hover:text-white'
+                              : isDisabled
+                                ? 'text-blue-100/30 cursor-not-allowed'
+                                : 'text-blue-100/80 hover:bg-white/5 hover:text-white'
                           )}
                         >
                           {isActive && !sidebarCollapsed && (
                             <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-white rounded-r" />
                           )}
-                          <Icon className={cn('flex-shrink-0', sidebarCollapsed ? 'w-5 h-5' : 'w-4 h-4 mr-3', item.color)} />
+                          <Icon className={cn('flex-shrink-0', sidebarCollapsed ? 'w-5 h-5' : 'w-4 h-4 mr-3', isDisabled ? 'opacity-40' : item.color)} />
                           {!sidebarCollapsed && (
                             <>
                               <span className="text-sm flex-1">{item.label}</span>
@@ -695,7 +800,7 @@ export default function HomePage() {
               onClick={() => setViewMode('home')}
               className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
             >
-              首页
+              工作台
             </button>
             {viewMode !== 'home' && (
               <>
@@ -714,7 +819,7 @@ export default function HomePage() {
                   {parsedData.fileName}
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">
-                  {parsedData.rowCount.toLocaleString()} 行 × {parsedData.columnCount} 列
+                  {parsedData.rowCount.toLocaleString()} 行 &times; {parsedData.columnCount} 列
                 </Badge>
                 <Button
                   variant="ghost"
@@ -750,46 +855,161 @@ export default function HomePage() {
 
       {/* ===== 设置弹窗 ===== */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>系统设置</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">深色模式</p>
-                <p className="text-sm text-gray-500">{darkMode ? '已开启深色主题' : '开启深色主题'}</p>
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="w-full">
+              <TabsTrigger value="general" className="flex-1">通用</TabsTrigger>
+              <TabsTrigger value="notifications" className="flex-1">通知渠道</TabsTrigger>
+              <TabsTrigger value="data" className="flex-1">数据管理</TabsTrigger>
+            </TabsList>
+
+            {/* 通用设置 */}
+            <TabsContent value="general" className="space-y-4 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">深色模式</p>
+                  <p className="text-xs text-gray-500">{darkMode ? '已开启深色主题' : '开启深色主题'}</p>
+                </div>
+                <Switch checked={darkMode} onCheckedChange={(checked) => {
+                  setDarkMode(checked);
+                  localStorage.setItem('datainsight-darkmode', String(checked));
+                  if (checked) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                }} />
               </div>
-              <Switch checked={darkMode} onCheckedChange={(checked) => {
-                setDarkMode(checked);
-                localStorage.setItem('datainsight-darkmode', String(checked));
-                if (checked) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              }} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">数据缓存</p>
-                <p className="text-sm text-gray-500">本地存储分析数据</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">数据缓存</p>
+                  <p className="text-xs text-gray-500">本地存储分析数据</p>
+                </div>
+                <Switch defaultChecked />
               </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">自动保存</p>
-                <p className="text-sm text-gray-500">每5分钟自动保存</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">自动保存</p>
+                  <p className="text-xs text-gray-500">每5分钟自动保存</p>
+                </div>
+                <Switch defaultChecked />
               </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <p className="font-medium text-sm">数据管理</p>
+            </TabsContent>
+
+            {/* 通知渠道设置 */}
+            <TabsContent value="notifications" className="space-y-4 py-4">
+              <p className="text-xs text-gray-500">配置告警通知渠道，数据预警触发时将通过已启用的渠道发送通知。</p>
+
+              {/* 邮件 */}
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-blue-600" />
+                      <span className="font-medium text-sm">邮件通知</span>
+                    </div>
+                    <Switch
+                      checked={notificationConfig.email.enabled}
+                      onCheckedChange={(v) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, enabled: v } }))}
+                    />
+                  </div>
+                  {notificationConfig.email.enabled && (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input placeholder="SMTP 服务器" value={notificationConfig.email.smtp} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, smtp: e.target.value } }))} className="text-xs h-8" />
+                        <Input placeholder="端口" value={notificationConfig.email.port} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, port: e.target.value } }))} className="text-xs h-8" />
+                        <Input placeholder="用户名" value={notificationConfig.email.user} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, user: e.target.value } }))} className="text-xs h-8" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input placeholder="密码/授权码" type="password" value={notificationConfig.email.password} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, password: e.target.value } }))} className="text-xs h-8" />
+                        <Input placeholder="收件人邮箱" value={notificationConfig.email.to} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, to: e.target.value } }))} className="text-xs h-8" />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 飞书 */}
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-sm">飞书通知</span>
+                    </div>
+                    <Switch
+                      checked={notificationConfig.feishu.enabled}
+                      onCheckedChange={(v) => setNotificationConfig(prev => ({ ...prev, feishu: { ...prev.feishu, enabled: v } }))}
+                    />
+                  </div>
+                  {notificationConfig.feishu.enabled && (
+                    <div className="space-y-2">
+                      <Input placeholder="飞书机器人 Webhook 地址" value={notificationConfig.feishu.webhookUrl} onChange={(e) => setNotificationConfig(prev => ({ ...prev, feishu: { ...prev.feishu, webhookUrl: e.target.value } }))} className="text-xs h-8" />
+                      <Input placeholder="签名密钥（可选）" value={notificationConfig.feishu.secret} onChange={(e) => setNotificationConfig(prev => ({ ...prev, feishu: { ...prev.feishu, secret: e.target.value } }))} className="text-xs h-8" />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Webhook */}
+              <Card>
+                <CardContent className="pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Webhook className="w-4 h-4 text-gray-600" />
+                      <span className="font-medium text-sm">Webhook</span>
+                    </div>
+                    <Switch
+                      checked={notificationConfig.webhook.enabled}
+                      onCheckedChange={(v) => setNotificationConfig(prev => ({ ...prev, webhook: { ...prev.webhook, enabled: v } }))}
+                    />
+                  </div>
+                  {notificationConfig.webhook.enabled && (
+                    <div className="space-y-2">
+                      <Input placeholder="Webhook URL" value={notificationConfig.webhook.url} onChange={(e) => setNotificationConfig(prev => ({ ...prev, webhook: { ...prev.webhook, url: e.target.value } }))} className="text-xs h-8" />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 测试按钮 + 结果 */}
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isTestingNotif || (!notificationConfig.email.enabled && !notificationConfig.feishu.enabled && !notificationConfig.webhook.enabled)}
+                  onClick={() => {
+                    // 测试第一个已启用的渠道
+                    if (notificationConfig.feishu.enabled) handleTestNotification('feishu');
+                    else if (notificationConfig.webhook.enabled) handleTestNotification('webhook');
+                    else if (notificationConfig.email.enabled) handleTestNotification('email');
+                  }}
+                >
+                  {isTestingNotif ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <TestTube className="w-3.5 h-3.5 mr-1" />}
+                  测试通知
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setNotifTestResult(null)}>
+                  清除结果
+                </Button>
+              </div>
+              {notifTestResult && (
+                <div className={cn(
+                  'p-3 rounded-lg text-xs flex items-center gap-2',
+                  notifTestResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+                )}>
+                  {notifTestResult.success ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                  {notifTestResult.message}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* 数据管理 */}
+            <TabsContent value="data" className="space-y-3 py-4">
               <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
-                // 导出所有 localStorage 配置为 JSON 文件
-                const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library'];
+                const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library', 'datainsight_notification_config'];
                 const exportData: Record<string, unknown> = {};
                 configKeys.forEach(key => {
                   const val = localStorage.getItem(key);
@@ -817,8 +1037,8 @@ export default function HomePage() {
                 <Trash2 className="w-4 h-4 mr-2" />
                 清除缓存并刷新
               </Button>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
