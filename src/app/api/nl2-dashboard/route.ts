@@ -281,7 +281,7 @@ export async function POST(req: NextRequest) {
       }
       dashboardSpec = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
-      console.error('JSON parse error:', parseError, 'Content:', content);
+      console.warn('[NL2Dashboard] JSON parse failed, content preview:', content.substring(0, 200));
       return NextResponse.json({
         success: false,
         error: 'AI 生成内容解析失败，请重试',

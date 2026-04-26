@@ -228,10 +228,10 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
     setTestResult(null);
   };
 
-  // 测试连接
+  // 测试连接（通过服务端代理，避免CORS跨域限制）
   const handleTestConnection = async () => {
     if (!editingConfig?.apiKey || !editingConfig.baseUrl || !editingConfig.model) {
-      setTestResult({ success: false, message: '请先填写完整的连接信息' });
+      setTestResult({ success: false, message: '请先填写完整的连接信息（API Key、Base URL、模型名称）' });
       return;
     }
 
@@ -239,32 +239,27 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
     setTestResult(null);
 
     try {
-      const response = await fetch(`${editingConfig.baseUrl}/chat/completions`, {
+      const response = await fetch('/api/test-connection', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${editingConfig.apiKey}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          baseUrl: editingConfig.baseUrl,
+          apiKey: editingConfig.apiKey,
           model: editingConfig.model,
-          messages: [{ role: 'user', content: 'Hello' }],
-          max_tokens: 10
-        })
+        }),
       });
 
-      if (response.ok) {
-        setTestResult({ success: true, message: '连接成功！模型响应正常' });
+      const result = await response.json();
+
+      if (result.success) {
+        setTestResult({ success: true, message: result.message + (result.reply ? `（AI回复：${result.reply}）` : '') });
       } else {
-        const error = await response.json().catch(() => ({}));
-        setTestResult({ 
-          success: false, 
-          message: `连接失败: ${error.error?.message || response.statusText}` 
-        });
+        setTestResult({ success: false, message: result.error || '连接失败' });
       }
     } catch (error) {
-      setTestResult({ 
-        success: false, 
-        message: `连接失败: ${error instanceof Error ? error.message : '网络错误'}` 
+      setTestResult({
+        success: false,
+        message: `连接失败: ${error instanceof Error ? error.message : '网络错误，请检查 Base URL 是否正确'}`
       });
     } finally {
       setIsTesting(false);
