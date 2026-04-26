@@ -969,7 +969,7 @@ export default function HomePage() {
                   </div>
                   {notificationConfig.webhook.enabled && (
                     <div className="space-y-2">
-                      <Input placeholder="Webhook URL" value={notificationConfig.webhook.url} onChange={(e) => setNotificationConfig(prev => ({ ...prev, webhook: { ...prev.webhook, url: e.target.value } }))} className="text-xs h-8" />
+                      <Input placeholder="Webhook URL（支持飞书/钉钉/企微自动适配）" value={notificationConfig.webhook.url} onChange={(e) => setNotificationConfig(prev => ({ ...prev, webhook: { ...prev.webhook, url: e.target.value } }))} className="text-xs h-8" />
                     </div>
                   )}
                 </CardContent>

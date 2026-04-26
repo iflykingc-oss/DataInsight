@@ -1,14 +1,18 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import {
   BarChart3, LayoutGrid, Download,
-  TrendingUp, PieChart, LineChart, Activity, Layers
+  TrendingUp, PieChart, LineChart, Activity, Layers,
+  Table2, Filter, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
+  Search,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import {
   BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
@@ -17,6 +21,9 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 
+// ============================================
+// 类型定义
+// ============================================
 interface DashboardProps {
   data: ParsedData;
   analysis: DataAnalysis | null;
@@ -24,28 +31,103 @@ interface DashboardProps {
 
 const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16', '#2f54eb', '#a0d911'];
 
+type WidgetType = 'kpi' | 'bar' | 'line' | 'pie' | 'area' | 'radar' | 'pivot' | 'detail' | 'filter';
+
 interface ChartWidget {
   id: string;
-  type: 'kpi' | 'bar' | 'line' | 'pie' | 'area' | 'radar';
+  type: WidgetType;
   title: string;
   xField: string;
   yField: string;
   data: Record<string, string | number>[];
   priority: number;
+  // 透视表专用
+  pivotConfig?: { rowField: string; colField: string; valField: string; aggFunc: string };
+  // 筛选器专用
+  filterField?: string;
 }
 
+// ============================================
+// 主组件
+// ============================================
 export function Dashboard({ data, analysis }: DashboardProps) {
   const [chartType, setChartType] = useState<string>('auto');
-  
+  const [filterValues, setFilterValues] = useState<Record<string, string[]>>({});
+  const [detailSortField, setDetailSortField] = useState<string>('');
+  const [detailSortDir, setDetailSortDir] = useState<'asc' | 'desc'>('desc');
+  const [detailPage, setDetailPage] = useState(0);
+  const [detailSearch, setDetailSearch] = useState('');
+  const DETAIL_PAGE_SIZE = 20;
+
+  // 应用筛选器过滤数据
+  const filteredData = useMemo(() => {
+    let rows = data.rows;
+    Object.entries(filterValues).forEach(([field, values]) => {
+      if (values.length > 0) {
+        rows = rows.filter(r => values.includes(String(r[field])));
+      }
+    });
+    return rows;
+  }, [data.rows, filterValues]);
+
   // 自动生成仪表盘图表
   const allWidgets = useMemo(() => generateDashboard(data, analysis), [data, analysis]);
 
   // KPI 卡片
   const kpiWidgets = allWidgets.filter(w => w.type === 'kpi');
-  // 根据图表类型筛选
-  const chartWidgets = chartType === 'auto' 
-    ? allWidgets.filter(w => w.type !== 'kpi') 
-    : allWidgets.filter(w => w.type !== 'kpi' && w.type === chartType);
+  // 筛选器
+  const filterWidgets = allWidgets.filter(w => w.type === 'filter');
+  // 图表（含透视表/明细表）
+  const chartWidgets = chartType === 'auto'
+    ? allWidgets.filter(w => w.type !== 'kpi' && w.type !== 'filter')
+    : allWidgets.filter(w => w.type !== 'kpi' && w.type !== 'filter' && w.type === chartType);
+
+  // 筛选器切换
+  const toggleFilterValue = useCallback((field: string, value: string) => {
+    setFilterValues(prev => {
+      const current = prev[field] || [];
+      const next = current.includes(value)
+        ? current.filter(v => v !== value)
+        : [...current, value];
+      return { ...prev, [field]: next };
+    });
+  }, []);
+
+  // 清除某筛选器
+  const clearFilter = useCallback((field: string) => {
+    setFilterValues(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }, []);
+
+  // 明细表排序数据
+  const sortedDetailRows = useMemo(() => {
+    if (!detailSortField) return filteredData;
+    const dir = detailSortDir === 'asc' ? 1 : -1;
+    return [...filteredData].sort((a, b) => {
+      const va = a[detailSortField];
+      const vb = b[detailSortField];
+      const na = Number(va);
+      const nb = Number(vb);
+      if (!isNaN(na) && !isNaN(nb)) return (na - nb) * dir;
+      return String(va).localeCompare(String(vb)) * dir;
+    });
+  }, [filteredData, detailSortField, detailSortDir]);
+
+  // 明细表搜索过滤
+  const searchedDetailRows = useMemo(() => {
+    if (!detailSearch) return sortedDetailRows;
+    const lower = detailSearch.toLowerCase();
+    return sortedDetailRows.filter(r =>
+      Object.values(r).some(v => String(v).toLowerCase().includes(lower))
+    );
+  }, [sortedDetailRows, detailSearch]);
+
+  // 明细表分页
+  const detailTotalPages = Math.ceil(searchedDetailRows.length / DETAIL_PAGE_SIZE);
+  const detailPagedRows = searchedDetailRows.slice(detailPage * DETAIL_PAGE_SIZE, (detailPage + 1) * DETAIL_PAGE_SIZE);
 
   if (allWidgets.length === 0) {
     return (
@@ -78,6 +160,52 @@ export function Dashboard({ data, analysis }: DashboardProps) {
         </div>
       )}
 
+      {/* 筛选器栏 */}
+      {filterWidgets.length > 0 && (
+        <Card>
+          <CardContent className="py-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <span className="text-xs text-gray-500 font-medium">数据筛选</span>
+              {filterWidgets.map(fw => {
+                const values = fw.data.map(d => String(d.value));
+                const selected = filterValues[fw.filterField || ''] || [];
+                return (
+                  <div key={fw.id} className="flex items-center gap-1 flex-wrap">
+                    <span className="text-xs text-gray-600 font-medium">{fw.filterField}:</span>
+                    {values.slice(0, 8).map(v => (
+                      <button
+                        key={v}
+                        onClick={() => toggleFilterValue(fw.filterField || '', v)}
+                        className={cn(
+                          'px-2 py-0.5 rounded text-[11px] border transition-colors',
+                          selected.includes(v)
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                        )}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                    {values.length > 8 && <span className="text-[10px] text-gray-400">+{values.length - 8}</span>}
+                    {selected.length > 0 && (
+                      <button onClick={() => clearFilter(fw.filterField || '')} className="text-[10px] text-red-400 hover:text-red-600 ml-1">
+                        清除
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {Object.keys(filterValues).some(k => filterValues[k].length > 0) && (
+                <Badge variant="secondary" className="text-[10px]">
+                  {filteredData.length}/{data.rows.length} 行
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 工具栏 */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
@@ -92,10 +220,12 @@ export function Dashboard({ data, analysis }: DashboardProps) {
               <SelectItem value="pie">饼图</SelectItem>
               <SelectItem value="area">面积图</SelectItem>
               <SelectItem value="radar">雷达图</SelectItem>
+              <SelectItem value="pivot">透视表</SelectItem>
+              <SelectItem value="detail">明细表</SelectItem>
             </SelectContent>
           </Select>
           <Badge variant="outline" className="text-xs">
-            {chartWidgets.length} 个图表
+            {chartWidgets.length} 个组件
           </Badge>
         </div>
         <div className="flex items-center gap-1">
@@ -113,9 +243,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                     link.href = canvas.toDataURL();
                     link.click();
                   });
-                }).catch(() => {
-                  /* html2canvas not available */
-                });
+                }).catch(() => { /* html2canvas not available */ });
               }
             }}
           >
@@ -125,37 +253,263 @@ export function Dashboard({ data, analysis }: DashboardProps) {
         </div>
       </div>
 
-      {/* 图表网格 */}
+      {/* 图表/表格网格 */}
       <div id="dashboard-chart-area" className="grid md:grid-cols-2 gap-4">
-        {chartWidgets.map(widget => (
-          <Card key={widget.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
-                <Badge variant="outline" className="text-xs">
-                  {widget.type === 'bar' ? '柱状图' :
-                   widget.type === 'line' ? '折线图' :
-                   widget.type === 'pie' ? '饼图' :
-                   widget.type === 'area' ? '面积图' :
-                   widget.type === 'radar' ? '雷达图' : widget.type}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                {renderChart(widget)}
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        ))}
+        {chartWidgets.map(widget => {
+          // 透视表渲染
+          if (widget.type === 'pivot' && widget.pivotConfig) {
+            return (
+              <Card key={widget.id} className="hover:shadow-md transition-shadow md:col-span-2">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
+                    <Badge variant="outline" className="text-xs">透视表</Badge>
+                  </div>
+                  <CardDescription className="text-xs">
+                    {widget.pivotConfig.rowField} &times; {widget.pivotConfig.colField} &rarr; {widget.pivotConfig.aggFunc}({widget.pivotConfig.valField})
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PivotTableView
+                    rows={filteredData}
+                    rowField={widget.pivotConfig.rowField}
+                    colField={widget.pivotConfig.colField}
+                    valField={widget.pivotConfig.valField}
+                    aggFunc={widget.pivotConfig.aggFunc}
+                  />
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // 明细表渲染
+          if (widget.type === 'detail') {
+            return (
+              <Card key={widget.id} className="hover:shadow-md transition-shadow md:col-span-2">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
+                    <Badge variant="outline" className="text-xs">明细表</Badge>
+                  </div>
+                  <CardDescription className="text-xs">
+                    共 {searchedDetailRows.length} 条记录{Object.keys(filterValues).some(k => filterValues[k].length > 0) ? ` (已筛选)` : ''}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {/* 搜索栏 */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="relative flex-1 max-w-xs">
+                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                      <Input
+                        placeholder="搜索数据..."
+                        value={detailSearch}
+                        onChange={(e) => { setDetailSearch(e.target.value); setDetailPage(0); }}
+                        className="h-8 text-xs pl-8"
+                      />
+                    </div>
+                  </div>
+                  {/* 表格 */}
+                  <div className="overflow-x-auto border rounded-lg">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          {data.headers.map(h => (
+                            <th
+                              key={h}
+                              className="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-100"
+                              onClick={() => {
+                                if (detailSortField === h) {
+                                  setDetailSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+                                } else {
+                                  setDetailSortField(h);
+                                  setDetailSortDir('desc');
+                                }
+                              }}
+                            >
+                              <span className="flex items-center gap-1">
+                                {h}
+                                {detailSortField === h ? (
+                                  detailSortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                                ) : (
+                                  <ArrowUpDown className="w-3 h-3 text-gray-300" />
+                                )}
+                              </span>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {detailPagedRows.map((row, i) => (
+                          <tr key={i} className="border-t hover:bg-blue-50/50">
+                            {data.headers.map(h => (
+                              <td key={h} className="px-3 py-1.5 whitespace-nowrap max-w-[200px] truncate">
+                                {String(row[h] ?? '')}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* 分页 */}
+                  {detailTotalPages > 1 && (
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-gray-500">
+                        第 {detailPage + 1}/{detailTotalPages} 页，共 {searchedDetailRows.length} 条
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button variant="outline" size="sm" className="h-7 w-7 p-0" disabled={detailPage === 0} onClick={() => setDetailPage(p => p - 1)}>
+                          <ChevronLeft className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-7 w-7 p-0" disabled={detailPage >= detailTotalPages - 1} onClick={() => setDetailPage(p => p + 1)}>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // 图表渲染
+          return (
+            <Card key={widget.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    {widget.type === 'bar' ? '柱状图' :
+                     widget.type === 'line' ? '折线图' :
+                     widget.type === 'pie' ? '饼图' :
+                     widget.type === 'area' ? '面积图' :
+                     widget.type === 'radar' ? '雷达图' : widget.type}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  {renderChart(widget)}
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
 }
 
+// ============================================
+// 透视表组件
+// ============================================
+function PivotTableView({
+  rows,
+  rowField,
+  colField,
+  valField,
+  aggFunc,
+}: {
+  rows: Record<string, string | number>[];
+  rowField: string;
+  colField: string;
+  valField: string;
+  aggFunc: string;
+}) {
+  const pivotData = useMemo(() => {
+    // 获取行和列的唯一值
+    const rowValues = [...new Set(rows.map(r => String(r[rowField])))].sort();
+    const colValues = [...new Set(rows.map(r => String(r[colField])))].sort();
+
+    // 构建透视数据
+    const matrix: Record<string, Record<string, number[]>> = {};
+    rows.forEach(r => {
+      const rv = String(r[rowField]);
+      const cv = String(r[colField]);
+      const val = Number(r[valField]);
+      if (!matrix[rv]) matrix[rv] = {};
+      if (!matrix[rv][cv]) matrix[rv][cv] = [];
+      if (!isNaN(val)) matrix[rv][cv].push(val);
+    });
+
+    // 聚合
+    const aggregate = (vals: number[]): string => {
+      if (vals.length === 0) return '-';
+      switch (aggFunc) {
+        case 'sum': return vals.reduce((a, b) => a + b, 0).toLocaleString();
+        case 'avg': return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
+        case 'count': return vals.length.toString();
+        case 'max': return Math.max(...vals).toLocaleString();
+        case 'min': return Math.min(...vals).toLocaleString();
+        default: return vals.reduce((a, b) => a + b, 0).toLocaleString();
+      }
+    };
+
+    // 计算行合计
+    const rowTotals: Record<string, string> = {};
+    rowValues.forEach(rv => {
+      const allVals = colValues.flatMap(cv => matrix[rv]?.[cv] || []);
+      rowTotals[rv] = aggregate(allVals);
+    });
+
+    // 计算列合计
+    const colTotals: Record<string, string> = {};
+    colValues.forEach(cv => {
+      const allVals = rowValues.flatMap(rv => matrix[rv]?.[cv] || []);
+      colTotals[cv] = aggregate(allVals);
+    });
+
+    return { rowValues, colValues, matrix, aggregate, rowTotals, colTotals };
+  }, [rows, rowField, colField, valField, aggFunc]);
+
+  const { rowValues, colValues, matrix, aggregate, rowTotals, colTotals } = pivotData;
+
+  return (
+    <div className="overflow-x-auto border rounded-lg">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="bg-gray-50">
+            <th className="px-3 py-2 text-left font-medium text-gray-600 border-r">{rowField}</th>
+            {colValues.map(cv => (
+              <th key={cv} className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{cv}</th>
+            ))}
+            <th className="px-3 py-2 text-right font-medium text-blue-600 whitespace-nowrap border-l">合计</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rowValues.map(rv => (
+            <tr key={rv} className="border-t hover:bg-blue-50/30">
+              <td className="px-3 py-1.5 font-medium text-gray-700 border-r whitespace-nowrap">{rv}</td>
+              {colValues.map(cv => (
+                <td key={cv} className="px-3 py-1.5 text-right text-gray-600">
+                  {aggregate(matrix[rv]?.[cv] || [])}
+                </td>
+              ))}
+              <td className="px-3 py-1.5 text-right font-medium text-blue-600 border-l">{rowTotals[rv]}</td>
+            </tr>
+          ))}
+          {/* 合计行 */}
+          <tr className="border-t bg-gray-50 font-medium">
+            <td className="px-3 py-1.5 text-blue-600 border-r">合计</td>
+            {colValues.map(cv => (
+              <td key={cv} className="px-3 py-1.5 text-right text-blue-600">{colTotals[cv]}</td>
+            ))}
+            <td className="px-3 py-1.5 text-right text-blue-600 border-l">
+              {aggregate(Object.values(matrix).flatMap(rv => Object.values(rv).flat()))}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ============================================
+// 图表渲染
+// ============================================
 function renderChart(widget: ChartWidget) {
   const { type, xField, yField, data: chartData } = widget;
-  
+
   switch (type) {
     case 'bar':
       return (
@@ -187,7 +541,7 @@ function renderChart(widget: ChartWidget) {
             cx="50%"
             cy="50%"
             outerRadius={100}
-            label={({ name, percent }: { name: string; percent: number }) => 
+            label={({ name, percent }: { name: string; percent: number }) =>
               `${name} ${(percent * 100).toFixed(0)}%`
             }
             labelLine={{ strokeWidth: 1 }}
@@ -225,26 +579,28 @@ function renderChart(widget: ChartWidget) {
   }
 }
 
+// ============================================
+// 仪表盘生成逻辑
+// ============================================
 function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): ChartWidget[] {
   const widgets: ChartWidget[] = [];
   if (!data || !data.rows || data.rows.length === 0) return widgets;
-  
+
   const headers = data.headers;
   const rows = data.rows;
-  
+
   // 识别字段类型
   const numericCols: Array<{ name: string; idx: number }> = [];
   const textCols: Array<{ name: string; idx: number; uniqueCount: number }> = [];
   const dateCols: Array<{ name: string; idx: number }> = [];
-  
+
   headers.forEach((h, idx) => {
     const sampleValues = rows.slice(0, 10).map(r => r[h]);
     const numericCount = sampleValues.filter(v => !isNaN(Number(v)) && v !== '' && v !== null).length;
-    
+
     if (numericCount >= sampleValues.length * 0.7) {
       numericCols.push({ name: h, idx });
     } else {
-      // 检测日期
       const datePatterns = /\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/;
       const dateCount = sampleValues.filter(v => datePatterns.test(String(v))).length;
       if (dateCount >= sampleValues.length * 0.5) {
@@ -255,21 +611,23 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
       }
     }
   });
-  
-  // 1. KPI 卡片 - 数值字段的汇总
+
+  // ===== 1. KPI 卡片 =====
   numericCols.slice(0, 4).forEach((col, i) => {
     const values = rows.map(r => Number(r[col.name])).filter(v => !isNaN(v));
     const sum = values.reduce((a, b) => a + b, 0);
     const avg = values.length > 0 ? sum / values.length : 0;
     const max = Math.max(...values);
-    
+    const min = Math.min(...values);
+    const variance = calculateVariance(values);
+
     const metrics = [
-      { label: `总${col.name}`, value: sum.toLocaleString(), sub: `共 ${values.length} 条数据` },
-      { label: `平均${col.name}`, value: avg.toLocaleString(undefined, { maximumFractionDigits: 2 }), sub: `范围: ${Math.min(...values).toLocaleString()} ~ ${max.toLocaleString()}` },
-      { label: `最大${col.name}`, value: max.toLocaleString(), sub: `最小: ${Math.min(...values).toLocaleString()}` },
-      { label: `${col.name}方差`, value: calculateVariance(values).toLocaleString(undefined, { maximumFractionDigits: 2 }), sub: `标准差: ${Math.sqrt(calculateVariance(values)).toLocaleString(undefined, { maximumFractionDigits: 2 })}` }
+      { label: `总 ${col.name}`, value: sum.toLocaleString(), sub: `共 ${values.length} 条数据` },
+      { label: `平均 ${col.name}`, value: avg.toLocaleString(undefined, { maximumFractionDigits: 2 }), sub: `范围: ${min.toLocaleString()} ~ ${max.toLocaleString()}` },
+      { label: `最大 ${col.name}`, value: max.toLocaleString(), sub: `最小: ${min.toLocaleString()}` },
+      { label: `${col.name} 方差`, value: variance.toLocaleString(undefined, { maximumFractionDigits: 2 }), sub: `标准差: ${Math.sqrt(variance).toLocaleString(undefined, { maximumFractionDigits: 2 })}` },
     ];
-    
+
     const metric = metrics[i % metrics.length];
     widgets.push({
       id: `kpi-${col.name}`,
@@ -278,35 +636,81 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
       xField: '',
       yField: col.name,
       data: [{ value: metric.value, sub: metric.sub }],
-      priority: 10
+      priority: 10,
     });
   });
-  
-  // 2. 分类字段+数值字段 → 柱状图
-  const goodTextCols = textCols.filter(c => c.uniqueCount >= 2 && c.uniqueCount <= 30);
+
+  // ===== 2. 筛选器 =====
+  const goodTextCols = textCols.filter(c => c.uniqueCount >= 2 && c.uniqueCount <= 20);
+  goodTextCols.slice(0, 3).forEach(col => {
+    const uniqueValues = [...new Set(rows.map(r => String(r[col.name])))];
+    widgets.push({
+      id: `filter-${col.name}`,
+      type: 'filter',
+      title: `筛选: ${col.name}`,
+      xField: '',
+      yField: '',
+      filterField: col.name,
+      data: uniqueValues.map(v => ({ value: v })),
+      priority: 10,
+    });
+  });
+
+  // ===== 3. 透视表 =====
+  if (textCols.length >= 2 && numericCols.length >= 1) {
+    const rowField = textCols[0].name;
+    const colField = textCols[1].name;
+    const valField = numericCols[0].name;
+    const rowUnique = new Set(rows.map(r => String(r[rowField]))).size;
+    const colUnique = new Set(rows.map(r => String(r[colField]))).size;
+
+    if (rowUnique <= 15 && colUnique <= 10) {
+      widgets.push({
+        id: `pivot-${rowField}-${colField}`,
+        type: 'pivot',
+        title: `${rowField} × ${colField} 交叉分析`,
+        xField: rowField,
+        yField: valField,
+        data: [],
+        priority: 9,
+        pivotConfig: { rowField, colField, valField, aggFunc: 'sum' },
+      });
+    }
+  }
+
+  // ===== 4. 明细表 =====
+  widgets.push({
+    id: 'detail-table',
+    type: 'detail',
+    title: '数据明细表',
+    xField: '',
+    yField: '',
+    data: [],
+    priority: 8,
+  });
+
+  // ===== 5. 分类字段+数值字段 → 柱状图 =====
   if (goodTextCols.length > 0 && numericCols.length > 0) {
     const xCol = goodTextCols[0];
     const yCol = numericCols[0];
-    
-    // 按分类聚合
     const grouped = groupByField(rows, xCol.name, yCol.name);
     const chartData = Object.entries(grouped)
-      .sort(([,a], [,b]) => (b as number) - (a as number))
+      .sort(([, a], [, b]) => (b as number) - (a as number))
       .slice(0, 15)
       .map(([key, val]) => ({ [xCol.name]: key, [yCol.name]: val }));
-    
+
     widgets.push({
       id: `bar-${xCol.name}-${yCol.name}`,
       type: 'bar',
-      title: `${yCol.name} by ${xCol.name}`,
+      title: `${yCol.name} 按 ${xCol.name} 分布`,
       xField: xCol.name,
       yField: yCol.name,
       data: chartData,
-      priority: 9
+      priority: 9,
     });
   }
-  
-  // 3. 饼图 - 分类占比
+
+  // ===== 6. 饼图 - 分类占比 =====
   if (goodTextCols.length > 0) {
     const col = goodTextCols[0];
     const counts: Record<string, number> = {};
@@ -315,10 +719,10 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
       counts[key] = (counts[key] || 0) + 1;
     });
     const chartData = Object.entries(counts)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
       .map(([key, val]) => ({ [col.name]: key, count: val }));
-    
+
     if (chartData.length >= 2) {
       widgets.push({
         id: `pie-${col.name}`,
@@ -327,20 +731,20 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
         xField: col.name,
         yField: 'count',
         data: chartData,
-        priority: 8
+        priority: 8,
       });
     }
   }
-  
-  // 4. 日期字段+数值字段 → 折线图
+
+  // ===== 7. 日期字段+数值字段 → 折线图 =====
   if (dateCols.length > 0 && numericCols.length > 0) {
     const dateCol = dateCols[0];
     const numCol = numericCols[0];
     const chartData = rows.slice(0, 30).map(r => ({
       [dateCol.name]: String(r[dateCol.name]),
-      [numCol.name]: Number(r[numCol.name]) || 0
+      [numCol.name]: Number(r[numCol.name]) || 0,
     }));
-    
+
     widgets.push({
       id: `line-${dateCol.name}-${numCol.name}`,
       type: 'line',
@@ -348,18 +752,18 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
       xField: dateCol.name,
       yField: numCol.name,
       data: chartData,
-      priority: 9
+      priority: 9,
     });
   }
-  
-  // 5. 面积图
+
+  // ===== 8. 面积图 =====
   if (numericCols.length > 0) {
     const xAxisField = dateCols.length > 0 ? dateCols[0].name : (goodTextCols.length > 0 ? goodTextCols[0].name : '');
     const yCol = numericCols[0];
     if (xAxisField) {
       const chartData = rows.slice(0, 25).map(r => ({
         [xAxisField]: String(r[xAxisField]),
-        [yCol.name]: Number(r[yCol.name]) || 0
+        [yCol.name]: Number(r[yCol.name]) || 0,
       }));
       widgets.push({
         id: `area-${xAxisField}-${yCol.name}`,
@@ -368,12 +772,12 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
         xField: xAxisField,
         yField: yCol.name,
         data: chartData,
-        priority: 7
+        priority: 7,
       });
     }
   }
-  
-  // 6. 多数值字段对比柱状图
+
+  // ===== 9. 多数值字段对比柱状图 =====
   if (goodTextCols.length > 0 && numericCols.length >= 2) {
     const xCol = goodTextCols[0];
     const grouped: Record<string, Record<string, number>> = {};
@@ -387,7 +791,7 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
     const chartData = Object.entries(grouped)
       .slice(0, 10)
       .map(([key, vals]) => ({ [xCol.name]: key, ...vals }));
-    
+
     widgets.push({
       id: `multi-bar-${xCol.name}`,
       type: 'bar',
@@ -395,11 +799,11 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
       xField: xCol.name,
       yField: numericCols[1].name,
       data: chartData,
-      priority: 6
+      priority: 6,
     });
   }
-  
-  // 7. 雷达图
+
+  // ===== 10. 雷达图 =====
   if (goodTextCols.length > 0 && numericCols.length >= 2) {
     const xCol = goodTextCols[0];
     const categories = [...new Set(rows.map(r => String(r[xCol.name])))].slice(0, 6);
@@ -412,7 +816,7 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
       });
       return entry;
     });
-    
+
     widgets.push({
       id: `radar-${xCol.name}`,
       type: 'radar',
@@ -420,13 +824,16 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
       xField: xCol.name,
       yField: numericCols[0].name,
       data: chartData,
-      priority: 5
+      priority: 5,
     });
   }
-  
+
   return widgets.sort((a, b) => b.priority - a.priority);
 }
 
+// ============================================
+// 工具函数
+// ============================================
 function groupByField(rows: Record<string, string | number>[], groupField: string, valueField: string): Record<string, number> {
   const grouped: Record<string, number> = {};
   rows.forEach(r => {

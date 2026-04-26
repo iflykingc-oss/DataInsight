@@ -64,6 +64,8 @@ import {
   Zap,
   Clock,
   ArrowUpRight,
+  Table2,
+  Filter,
   RotateCcw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -97,7 +99,7 @@ import {
 // ============================================
 interface ChartSpec {
   id: string;
-  type: 'line' | 'bar' | 'pie' | 'area' | 'radar' | 'donut';
+  type: 'line' | 'bar' | 'pie' | 'area' | 'radar' | 'donut' | 'pivot' | 'detail' | 'filter';
   title: string;
   xAxis: string;
   yAxis: string;
@@ -686,7 +688,7 @@ export function NL2Dashboard({ data, fieldStats, className }: NL2DashboardProps)
   // ============================================
   const getChartTypeLabel = (type: string) => {
     const map: Record<string, string> = {
-      line: '折线图', bar: '条形图', pie: '饼图', area: '面积图', radar: '雷达图', donut: '环形图',
+      line: '折线图', bar: '条形图', pie: '饼图', area: '面积图', radar: '雷达图', donut: '环形图', pivot: '透视表', detail: '明细表', filter: '筛选器',
     };
     return map[type] || type;
   };
@@ -699,6 +701,9 @@ export function NL2Dashboard({ data, fieldStats, className }: NL2DashboardProps)
       case 'area': return <TrendingUp className="w-4 h-4" />;
       case 'radar': return <BarChart2 className="w-4 h-4" />;
       case 'donut': return <PieChart className="w-4 h-4" />;
+      case 'pivot': return <Table2 className="w-4 h-4" />;
+      case 'detail': return <Table2 className="w-4 h-4" />;
+      case 'filter': return <Filter className="w-4 h-4" />;
       default: return <BarChart3 className="w-4 h-4" />;
     }
   };
@@ -1196,6 +1201,9 @@ export function NL2Dashboard({ data, fieldStats, className }: NL2DashboardProps)
                     <SelectItem value="pie">饼图</SelectItem>
                     <SelectItem value="donut">环形图</SelectItem>
                     <SelectItem value="radar">雷达图</SelectItem>
+                    <SelectItem value="pivot">透视表</SelectItem>
+                    <SelectItem value="detail">明细表</SelectItem>
+                    <SelectItem value="filter">筛选器</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

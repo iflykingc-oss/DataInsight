@@ -1194,6 +1194,18 @@ export function DataAlerting({
                       disabled={!channelConfig.webhook?.enabled}
                       className="text-sm h-9 font-mono"
                     />
+                    {/* 平台自动检测提示 */}
+                    {channelConfig.webhook?.url && (
+                      <p className="text-[10px] mt-1 text-blue-600">
+                        {channelConfig.webhook.url.includes('open.feishu.cn') || channelConfig.webhook.url.includes('open.larksuite.com')
+                          ? '\u2713 检测到飞书 Webhook，将自动适配消息格式'
+                          : channelConfig.webhook.url.includes('oapi.dingtalk.com')
+                            ? '\u2713 检测到钉钉 Webhook，将自动适配消息格式'
+                            : channelConfig.webhook.url.includes('qyapi.weixin.qq.com')
+                              ? '\u2713 检测到企业微信 Webhook，将自动适配消息格式'
+                              : '通用 Webhook，发送标准 JSON 格式'}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600 mb-1 block">请求方法</label>
