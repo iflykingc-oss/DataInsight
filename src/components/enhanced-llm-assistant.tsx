@@ -28,6 +28,8 @@ import {
   Shield,
   RotateCcw
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 
 interface ChatMessage {
@@ -339,8 +341,28 @@ export function EnhancedLLMAssistant({
                   : 'bg-gray-50 text-gray-800 border border-gray-100'
               }`}>
                 {/* 消息内容 */}
-                <div className="text-sm whitespace-pre-wrap leading-relaxed">
-                  {msg.content}
+                <div className="text-sm leading-relaxed">
+                  {msg.role === 'assistant' ? (
+                    <div className="prose prose-sm prose-gray max-w-none
+                      [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:text-gray-900
+                      [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1.5 [&_h2]:text-gray-800
+                      [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-gray-700
+                      [&_p]:my-1.5 [&_p]:text-gray-700
+                      [&_ul]:my-1.5 [&_ul]:pl-4 [&_ul]:list-disc
+                      [&_ol]:my-1.5 [&_ol]:pl-4 [&_ol]:list-decimal
+                      [&_li]:my-0.5 [&_li]:text-gray-700
+                      [&_strong]:text-gray-900 [&_strong]:font-semibold
+                      [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:text-blue-700
+                      [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:text-xs [&_pre]:overflow-x-auto
+                      [&_blockquote]:border-l-3 [&_blockquote]:border-blue-400 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-gray-600
+                      [&_hr]:my-3 [&_hr]:border-gray-200
+                      [&_table]:my-2 [&_table]:text-xs [&_th]:bg-gray-50 [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1 [&_td]:border-gray-100
+                    ">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  )}
                   {msg.isStreaming && (
                     <span className="inline-block w-1.5 h-4 bg-[#1890ff] animate-pulse ml-0.5 align-middle" />
                   )}

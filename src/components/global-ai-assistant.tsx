@@ -29,6 +29,8 @@ import {
   ThumbsDown,
   HelpCircle
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 
 // 对话消息
@@ -483,29 +485,26 @@ export function GlobalAIAssistant({ hasData = false, rowCount, onQuickAction }: 
                       )}
                     >
                       {/* 消息内容 */}
-                      <div className="text-sm whitespace-pre-wrap leading-relaxed">
-                        {msg.content.split('\n').map((line, i) => {
-                          // 处理 Markdown 风格的格式化
-                          const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '【$1】');
-                          return (
-                            <div key={i}>
-                              {formattedLine.split('【').map((part, j) => {
-                                if (part.includes('】')) {
-                                  const [before, after] = part.split('】');
-                                  return (
-                                    <React.Fragment key={j}>
-                                      <span className={msg.role === 'user' ? 'text-white/80' : 'text-gray-500'}>{before}</span>
-                                      <span className={msg.role === 'user' ? 'font-medium' : 'font-medium text-purple-600'}>
-                                        {after}
-                                      </span>
-                                    </React.Fragment>
-                                  );
-                                }
-                                return <span key={j}>{part}</span>;
-                              })}
-                            </div>
-                          );
-                        })}
+                      <div className="text-sm leading-relaxed">
+                        {msg.role === 'assistant' ? (
+                          <div className="prose prose-sm prose-gray max-w-none
+                            [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h1]:text-gray-900
+                            [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-2 [&_h2]:mb-1 [&_h2]:text-gray-800
+                            [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-gray-700
+                            [&_p]:my-1 [&_p]:text-gray-700
+                            [&_ul]:my-1 [&_ul]:pl-4 [&_ul]:list-disc
+                            [&_ol]:my-1 [&_ol]:pl-4 [&_ol]:list-decimal
+                            [&_li]:my-0.5 [&_li]:text-gray-700
+                            [&_strong]:text-gray-900 [&_strong]:font-semibold
+                            [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:text-blue-700
+                            [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:text-xs
+                            [&_blockquote]:border-l-3 [&_blockquote]:border-blue-400 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-gray-600
+                          ">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <div className="whitespace-pre-wrap text-white/80">{msg.content}</div>
+                        )}
                       </div>
                       
                       {/* 时间戳和操作 */}
