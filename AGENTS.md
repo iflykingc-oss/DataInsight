@@ -40,6 +40,14 @@
   - 数据画像（自动推测数据类型/行业/细分场景/成熟度/分析潜力）
 - 自动字段识别：智能识别表格表头、数据维度、指标字段、业务指标语义
 
+### 2.5. AI 智能指标生成与解读
+- **对话式指标生成**：基于 LLM（doubao-seed-2.0-lite）根据数据特征 + 用户业务描述生成指标体系
+- **业务场景识别**：自动识别 8 大行业（零售/电商/用户运营/财务/人力/营销/供应链/教育）
+- **多维度指标分类**：核心 KPI / 过程指标 / 复合指标 / 趋势指标
+- **指标深度解读**：点击任意指标打开 AI 对话窗口，支持追问业务含义、趋势变化、影响因素、提升建议
+- **指标保存与管理**：用户可将指标保存到"我的指标库"
+- **数据质量评估**：每个指标附带数据质量评估（高/中/低）及原因
+
 ### 3. 交互式仪表盘视图能力
 - 自动生成可视化仪表盘（KPI卡片、柱状图、折线图、饼图、面积图、雷达图）
 - 智能字段类型识别（数值/文本/日期自动分类）
@@ -79,6 +87,7 @@ src/
 │   ├── api/
 │   │   ├── upload/          # 文件上传 API
 │   │   ├── analyze/         # 数据分析 API（含深度分析引擎）
+│   │   ├── metric-ai/       # AI 指标生成 API（调用 LLM 生成业务指标体系）
 │   │   └── llm-insight/     # LLM 智能洞察 API（SSE流式）
 │   ├── globals.css
 │   ├── layout.tsx
@@ -94,7 +103,7 @@ src/
 │   ├── report-generator.tsx # 报表生成组件（4模板+导出）
 │   ├── data-cleaner.tsx     # 数据清洗组件
 │   ├── ai-model-settings.tsx      # AI模型配置
-│   ├── metric-semantic-layer.tsx  # 指标语义层
+│   ├── metric-semantic-layer.tsx  # AI 指标语义层（对话式指标生成 + 解读分析）
 │   ├── data-quality-checker.tsx   # 数据质量检测
 │   ├── data-alerting.tsx          # 数据预警
 │   ├── nl2-dashboard.tsx          # NL2Dashboard
@@ -166,6 +175,44 @@ src/
 
 ### POST /api/llm-insight
 获取 AI 智能洞察（SSE 流式响应）
+
+### POST /api/metric-ai
+AI 智能生成指标体系
+
+**请求**:
+```json
+{
+  "headers": ["字段1", "字段2"],
+  "rows": [{ "字段1": "值1", "字段2": 100 }],
+  "userDescription": "分析销售业绩，包括收入、毛利率等",
+  "fieldStats": [{ "field": "字段1", "type": "number", ... }]
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": {
+    "scenario": "零售/销售",
+    "detectedScenario": ["零售/销售", "财务/成本"],
+    "metrics": [
+      {
+        "name": "总销售额",
+        "expression": "SUM(销售额)",
+        "category": "kpi",
+        "description": "统计周期内所有销售订单的总金额",
+        "businessValue": "衡量整体销售规模的核心指标",
+        "businessMeaning": "...",
+        "dataQuality": "高",
+        "dataQualityReason": "数据完整，无缺失值",
+        "usageSuggestion": "..."
+      }
+    ],
+    "summary": "整体指标体系设计思路..."
+  }
+}
+```
 
 ## 注意事项
 

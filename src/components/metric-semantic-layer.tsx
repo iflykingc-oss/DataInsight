@@ -1,21 +1,26 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
@@ -23,878 +28,778 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  Calculator,
   Sparkles,
-  Save,
-  Trash2,
-  Edit2,
-  Play,
-  Plus,
-  ChevronRight,
-  Info,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  BarChart3,
-  Database,
+  TrendingUp,
+  TrendingDown,
+  Activity,
   Target,
   Lightbulb,
+  ArrowRight,
   Loader2,
-  Copy,
-  ArrowRight
+  Plus,
+  Search,
+  BarChart3,
+  Calculator,
+  AlertCircle,
+  CheckCircle2,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Zap,
+  Layers,
+  RefreshCw,
+  MessageSquare,
+  BookOpen,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { ParsedData, FieldStat } from '@/lib/data-processor';
 
-// ============================================
-// 类型定义
-// ============================================
-
-// 指标类型
-type MetricType = 'sum' | 'avg' | 'count' | 'count_distinct' | 'min' | 'max' | 'custom';
-
-// 指标定义
-export interface MetricDefinition {
-  id: string;
-  name: string;                    // 指标名称
-  description: string;             // 业务描述
-  type: MetricType;                // 聚合类型
-  formula?: string;                // 自定义公式
-  field: string;                   // 计算字段
-  dataSource?: string;             // 数据源
-  tags: string[];                  // 标签分类
-  createdAt: number;
-  updatedAt: number;
-}
-
-// 指标计算结果
-interface MetricResult {
-  metric: MetricDefinition;
-  value: number;
-  formattedValue: string;
-  dataContext: {
-    totalRows: number;
-    nullCount: number;
-    sampleSize: number;
-  };
-}
-
-// 预设指标模板
-const PRESET_METRICS: Omit<MetricDefinition, 'id' | 'createdAt' | 'updatedAt'>[] = [
-  {
-    name: '总计',
-    description: '计算指定字段的总和',
-    type: 'sum',
-    field: '',
-    tags: ['基础']
-  },
-  {
-    name: '平均值',
-    description: '计算指定字段的平均值',
-    type: 'avg',
-    field: '',
-    tags: ['基础']
-  },
-  {
-    name: '计数',
-    description: '计算记录总数',
-    type: 'count',
-    field: '',
-    tags: ['基础']
-  },
-  {
-    name: '去重计数',
-    description: '计算指定字段的去重数量',
-    type: 'count_distinct',
-    field: '',
-    tags: ['基础']
-  },
-  {
-    name: '最大值',
-    description: '获取指定字段的最大值',
-    type: 'max',
-    field: '',
-    tags: ['基础']
-  },
-  {
-    name: '最小值',
-    description: '获取指定字段的最小值',
-    type: 'min',
-    field: '',
-    tags: ['基础']
-  }
+// 业务场景配置
+const BUSINESS_SCENARIOS = [
+  { id: 'retail', label: '零售/销售', icon: '🛒', color: 'bg-orange-100 text-orange-700', keywords: ['销售', '门店', '商品', '库存', '采购', '营收'] },
+  { id: 'ecommerce', label: '电商', icon: '🛍️', color: 'bg-purple-100 text-purple-700', keywords: ['订单', '转化率', '流量', 'GMV', '退款'] },
+  { id: 'user_operation', label: '用户运营', icon: '👥', color: 'bg-blue-100 text-blue-700', keywords: ['用户', '会员', 'DAU', '留存', 'ARPU'] },
+  { id: 'finance', label: '财务/成本', icon: '💰', color: 'bg-green-100 text-green-700', keywords: ['成本', '利润', '预算', '收入', 'ROI'] },
+  { id: 'hr', label: '人力/组织', icon: '👔', color: 'bg-indigo-100 text-indigo-700', keywords: ['员工', '招聘', '绩效', '考勤', '人效'] },
+  { id: 'marketing', label: '市场营销', icon: '📢', color: 'bg-pink-100 text-pink-700', keywords: ['营销', '推广', '广告', 'ROI', '曝光'] },
+  { id: 'supply_chain', label: '供应链/库存', icon: '📦', color: 'bg-amber-100 text-amber-700', keywords: ['库存', '周转', '补货', '物流'] },
+  { id: 'education', label: '教育/培训', icon: '🎓', color: 'bg-cyan-100 text-cyan-700', keywords: ['学员', '课程', '续班', '师资'] },
+  { id: 'general', label: '通用业务', icon: '📊', color: 'bg-gray-100 text-gray-700', keywords: [] },
 ];
 
-// 聚合函数映射
-const AGGREGATE_FUNCTIONS: Record<string, { label: string; icon: string; example: string }> = {
-  sum: { label: '求和', icon: 'Σ', example: 'Sum(销售额)' },
-  avg: { label: '平均值', icon: 'μ', example: 'Avg(评分)' },
-  count: { label: '计数', icon: 'N', example: 'Count(*)' },
-  count_distinct: { label: '去重计数', icon: 'U', example: 'Count(DISTINCT 用户ID)' },
-  min: { label: '最小值', icon: '↓', example: 'Min(价格)' },
-  max: { label: '最大值', icon: '↑', example: 'Max(日期)' },
-  custom: { label: '自定义', icon: '?', example: '自定义公式' }
+// 指标类别配置
+const METRIC_CATEGORIES = {
+  kpi: { label: '核心KPI', color: 'bg-red-100 text-red-700', icon: Target },
+  process: { label: '过程指标', color: 'bg-blue-100 text-blue-700', icon: Activity },
+  composite: { label: '复合指标', color: 'bg-purple-100 text-purple-700', icon: Layers },
+  trend: { label: '趋势指标', color: 'bg-green-100 text-green-700', icon: TrendingUp },
 };
 
-// 本地存储
-const METRICS_STORAGE_KEY = 'datainsight_metrics';
-
-interface MetricSemanticLayerProps {
-  data: ParsedData;
-  fieldStats: FieldStat[];
-  onMetricUse?: (metric: MetricDefinition, result: number) => void;
-  className?: string;
+// AI 生成的指标结构
+interface MetricItem {
+  name: string;
+  expression: string;
+  category: 'kpi' | 'process' | 'composite' | 'trend';
+  description: string;
+  businessValue: string;
+  businessMeaning?: string;
+  dataQuality?: '高' | '中' | '低';
+  dataQualityReason?: string;
+  usageSuggestion?: string;
+  alertThreshold?: string;
+  value?: number | string;
+  trend?: 'up' | 'down' | 'stable';
+  trendValue?: string;
 }
 
-export function MetricSemanticLayer({
-  data,
-  fieldStats,
-  onMetricUse,
-  className
-}: MetricSemanticLayerProps) {
-  // 状态
-  const [metrics, setMetrics] = useState<MetricDefinition[]>([]);
-  const [editingMetric, setEditingMetric] = useState<MetricDefinition | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isAIGenerating, setIsAIGenerating] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [activeTab, setActiveTab] = useState('metrics');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [metricResults, setMetricResults] = useState<Map<string, MetricResult>>(new Map());
+// 指标解读对话记录
+interface InsightMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
-  // 加载保存的指标
-  useEffect(() => {
-    const saved = localStorage.getItem(METRICS_STORAGE_KEY);
-    if (saved) {
-      try {
-        setMetrics(JSON.parse(saved));
-      } catch {
-        console.error('Failed to load metrics');
-      }
-    }
-  }, []);
-
-  // 保存指标
-  useEffect(() => {
-    if (metrics.length > 0) {
-      localStorage.setItem(METRICS_STORAGE_KEY, JSON.stringify(metrics));
-    }
-  }, [metrics]);
-
-  // 计算指标值
-  const calculateMetric = useCallback((metric: MetricDefinition): number => {
-    const values = data.rows
-      .map(row => row[metric.field])
-      .filter(v => v !== null && v !== undefined && v !== '')
-      .map(v => Number(v));
-
-    if (values.length === 0) return 0;
-
-    switch (metric.type) {
-      case 'sum':
-        return values.reduce((a, b) => a + b, 0);
-      case 'avg':
-        return values.reduce((a, b) => a + b, 0) / values.length;
-      case 'count':
-        return data.rows.length;
-      case 'count_distinct':
-        return new Set(data.rows.map(row => row[metric.field])).size;
-      case 'min':
-        return Math.min(...values);
-      case 'max':
-        return Math.max(...values);
-      case 'custom':
-        // 解析自定义公式（简化版）
-        if (metric.formula) {
-          try {
-            // 这里可以解析更复杂的公式
-            return evaluateCustomFormula(metric.formula, data.rows, metric.field);
-          } catch {
-            return 0;
-          }
-        }
-        return 0;
-      default:
-        return 0;
-    }
-  }, [data]);
-
-  // 简化公式求值
-  const evaluateCustomFormula = (formula: string, rows: Record<string, unknown>[], field: string): number => {
-    // 支持简单表达式如: "销售额 * 1.1", "利润 / 销售额 * 100"
-    const values = rows.map(r => Number(r[field])).filter(v => !isNaN(v));
-    const sum = values.reduce((a, b) => a + b, 0);
-    
-    if (formula.includes('*')) {
-      const match = formula.match(/(\w+)\s*\*\s*([\d.]+)/);
-      if (match) return sum * Number(match[2]);
-    }
-    if (formula.includes('/')) {
-      const match = formula.match(/(\w+)\s*\/\s*(\w+)/);
-      if (match) {
-        const field1 = rows.map(r => Number(r[match[1]])).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
-        const field2 = rows.map(r => Number(r[match[2]])).filter(v => !isNaN(v)).reduce((a, b) => a + b, 0);
-        return field2 !== 0 ? field1 / field2 : 0;
-      }
-    }
-    return sum;
+interface MetricSemanticLayerProps {
+  data: {
+    headers: string[];
+    rows: Record<string, string | number>[];
   };
-
-  // 格式化数值
-  const formatValue = (value: number, type: MetricType): string => {
-    switch (type) {
-      case 'avg':
-        return value.toFixed(2);
-      case 'count':
-      case 'count_distinct':
-        return value.toLocaleString();
-      default:
-        return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
-    }
-  };
-
-  // 创建新指标
-  const handleCreateMetric = () => {
-    const numericFields = fieldStats.filter(f => f.type === 'number');
-    setEditingMetric({
-      id: `metric-${Date.now()}`,
-      name: '',
-      description: '',
-      type: 'sum',
-      field: numericFields[0]?.field || '',
-      tags: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
-    setIsCreating(true);
-    setIsDialogOpen(true);
-  };
-
-  // 使用预设创建
-  const handleCreateFromPreset = (preset: typeof PRESET_METRICS[0]) => {
-    const numericFields = fieldStats.filter(f => f.type === 'number');
-    setEditingMetric({
-      id: `metric-${Date.now()}`,
-      name: preset.name,
-      description: preset.description,
-      type: preset.type,
-      field: numericFields[0]?.field || '',
-      tags: preset.tags,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
-    setIsCreating(true);
-    setIsDialogOpen(true);
-  };
-
-  // 保存指标
-  const handleSaveMetric = () => {
-    if (!editingMetric) return;
-    if (!editingMetric.name || !editingMetric.field) {
-      return; // 验证
-    }
-
-    const updated = { ...editingMetric, updatedAt: Date.now() };
-    
-    if (isCreating) {
-      setMetrics(prev => [...prev, updated]);
-    } else {
-      setMetrics(prev => prev.map(m => m.id === editingMetric.id ? updated : m));
-    }
-
-    // 计算并缓存结果
-    const result = calculateMetric(updated);
-    const metricResult: MetricResult = {
-      metric: updated,
-      value: result,
-      formattedValue: formatValue(result, updated.type),
-      dataContext: {
-        totalRows: data.rows.length,
-        nullCount: data.rows.filter(r => r[updated.field] === null || r[updated.field] === '').length,
-        sampleSize: Math.min(100, data.rows.length)
-      }
+  fieldStats: Array<{
+    field: string;
+    type: string;
+    count: number;
+    nullCount: number;
+    uniqueCount: number;
+    sampleValues?: unknown[];
+    numericStats?: {
+      min: number;
+      max: number;
+      mean: number;
     };
-    setMetricResults(prev => new Map(prev).set(updated.id, metricResult));
+    min?: number;
+    max?: number;
+    completeness?: number;
+  }>;
+}
 
-    setIsDialogOpen(false);
-    setEditingMetric(null);
-    onMetricUse?.(updated, result);
-  };
+export function MetricSemanticLayer({ data, fieldStats }: MetricSemanticLayerProps) {
+  const [businessScenario, setBusinessScenario] = useState<string>('general');
+  const [customDescription, setCustomDescription] = useState('');
+  const [generatedMetrics, setGeneratedMetrics] = useState<MetricItem[]>([]);
+  const [detectedScenario, setDetectedScenario] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<MetricItem | null>(null);
+  const [showInsightDialog, setShowInsightDialog] = useState(false);
+  const [insightMessages, setInsightMessages] = useState<InsightMessage[]>([]);
+  const [insightInput, setInsightInput] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeTab, setActiveTab] = useState('generate');
+  const [savedMetrics, setSavedMetrics] = useState<MetricItem[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    kpi: true,
+    process: true,
+    composite: false,
+    trend: false,
+  });
 
-  // 删除指标
-  const handleDeleteMetric = (id: string) => {
-    setMetrics(prev => prev.filter(m => m.id !== id));
-    setMetricResults(prev => {
-      const next = new Map(prev);
-      next.delete(id);
-      return next;
-    });
-  };
+  // 计算选中业务场景的数据样本
+  const getSampleRows = () => data.rows.slice(0, 5);
 
-  // AI 生成指标
-  const handleAIGenerate = async () => {
-    if (!aiPrompt.trim()) return;
-
-    setIsAIGenerating(true);
+  // 使用 AI 生成指标
+  const handleGenerateMetrics = useCallback(async () => {
+    if (!data || data.rows.length === 0) return;
+    setIsGenerating(true);
 
     try {
-      // 模拟 AI 生成指标逻辑
-      const generated = await generateMetricFromPrompt(aiPrompt, fieldStats, data);
-      
-      setMetrics(prev => [...prev, ...generated]);
-      
-      // 计算每个生成指标的结果
-      generated.forEach(metric => {
-        const result = calculateMetric(metric);
-        const metricResult: MetricResult = {
-          metric,
-          value: result,
-          formattedValue: formatValue(result, metric.type),
-          dataContext: {
-            totalRows: data.rows.length,
-            nullCount: data.rows.filter(r => r[metric.field] === null || r[metric.field] === '').length,
-            sampleSize: Math.min(100, data.rows.length)
-          }
-        };
-        setMetricResults(prev => new Map(prev).set(metric.id, metricResult));
+      const response = await fetch('/api/metric-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headers: data.headers,
+          rows: data.rows,
+          userDescription: customDescription,
+          fieldStats,
+        }),
       });
 
-      setAiPrompt('');
-      setActiveTab('metrics');
+      const result = await response.json();
+      if (result.success && result.data) {
+        const metrics: MetricItem[] = result.data.metrics || [];
+        setGeneratedMetrics(metrics);
+        setDetectedScenario(result.data.detectedScenario || []);
+
+        if (result.data.summary) {
+          setInsightMessages([{
+            role: 'assistant',
+            content: `已识别您的业务场景：${(result.data.detectedScenario || []).join('、')}。\n\n这是为您设计的指标体系总览：\n${result.data.summary}`,
+          }]);
+        }
+      }
     } catch (error) {
-      console.error('AI generation failed:', error);
+      console.error('Failed to generate metrics:', error);
     } finally {
-      setIsAIGenerating(false);
+      setIsGenerating(false);
+    }
+  }, [data, customDescription, fieldStats]);
+
+  // 自动检测业务场景
+  const autoDetectScenario = useCallback(() => {
+    const combined = data.headers.join(' ').toLowerCase();
+    const detected: string[] = [];
+
+    BUSINESS_SCENARIOS.forEach(scenario => {
+      if (scenario.id === 'general') return;
+      const matchCount = scenario.keywords.filter(kw =>
+        combined.includes(kw.toLowerCase())
+      ).length;
+      if (matchCount >= 1) {
+        detected.push(scenario.label);
+      }
+    });
+
+    return detected.length > 0 ? detected : ['通用业务'];
+  }, [data.headers]);
+
+  // 一键使用推荐场景
+  const handleUseRecommended = useCallback(() => {
+    const detected = autoDetectScenario();
+    const firstMatch = BUSINESS_SCENARIOS.find(s => detected.includes(s.label));
+    if (firstMatch) {
+      setBusinessScenario(firstMatch.id);
+    }
+    setDetectedScenario(detected);
+  }, [autoDetectScenario]);
+
+  // 打开指标解读对话
+  const handleOpenInsight = (metric: MetricItem) => {
+    setSelectedMetric(metric);
+    setInsightMessages([{
+      role: 'assistant',
+      content: `让我为您深入解读「${metric.name}」这个指标：\n\n📌 **计算公式**: ${metric.expression}\n\n📌 **业务含义**: ${metric.businessMeaning || metric.description}\n\n您可以继续追问，例如：\n- "这个指标最近有什么变化？"\n- "有哪些因素影响了这个指标？"\n- "如何提升这个指标？"\n- "这个指标的行业标准是多少？"`,
+    }]);
+    setShowInsightDialog(true);
+  };
+
+  // 发送指标解读对话
+  const handleSendInsight = useCallback(async () => {
+    if (!insightInput.trim() || !selectedMetric) return;
+
+    const userMsg: InsightMessage = { role: 'user', content: insightInput };
+    setInsightMessages(prev => [...prev, userMsg]);
+    setInsightInput('');
+    setIsAnalyzing(true);
+
+    try {
+      const response = await fetch('/api/metric-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headers: data.headers,
+          rows: data.rows,
+          userDescription: `请解读指标「${selectedMetric.name}」: ${selectedMetric.expression}\n\n用户问题: ${insightInput}`,
+          fieldStats,
+          mode: 'insight',
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success && result.data?.summary) {
+        setInsightMessages(prev => [...prev, {
+          role: 'assistant',
+          content: result.data.summary,
+        }]);
+      } else {
+        setInsightMessages(prev => [...prev, {
+          role: 'assistant',
+          content: '抱歉，我无法完成这次解读，请稍后重试。',
+        }]);
+      }
+    } catch {
+      setInsightMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '网络错误，请检查连接后重试。',
+      }]);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [insightInput, selectedMetric, data, fieldStats]);
+
+  // 保存指标
+  const handleSaveMetric = (metric: MetricItem) => {
+    if (!savedMetrics.find(m => m.name === metric.name)) {
+      setSavedMetrics(prev => [...prev, metric]);
     }
   };
 
-  // AI 生成指标的核心逻辑
-  const generateMetricFromPrompt = async (
-    prompt: string,
-    fieldStats: FieldStat[],
-    data: ParsedData
-  ): Promise<MetricDefinition[]> => {
-    const numericFields = fieldStats.filter(f => f.type === 'number');
-    const generated: MetricDefinition[] = [];
-    
-    const promptLower = prompt.toLowerCase();
+  // 移除已保存的指标
+  const handleRemoveMetric = (metricName: string) => {
+    setSavedMetrics(prev => prev.filter(m => m.name !== metricName));
+  };
 
-    // 分析意图
-    if (promptLower.includes('总') || promptLower.includes('sum') || promptLower.includes('合计')) {
-      numericFields.forEach(field => {
-        generated.push({
-          id: `metric-ai-${Date.now()}-${field.field}`,
-          name: `${field.field}总计`,
-          description: `AI生成: 计算${field.field}的总和`,
-          type: 'sum',
-          field: field.field,
-          tags: ['AI生成', '求和'],
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        });
-      });
-    }
+  // 按类别分组指标
+  const groupedMetrics = generatedMetrics.reduce((acc, metric) => {
+    const cat = metric.category || 'kpi';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(metric);
+    return acc;
+  }, {} as Record<string, MetricItem[]>);
 
-    if (promptLower.includes('平均') || promptLower.includes('avg') || promptLower.includes('均')) {
-      numericFields.forEach(field => {
-        generated.push({
-          id: `metric-ai-${Date.now()}-avg-${field.field}`,
-          name: `${field.field}平均值`,
-          description: `AI生成: 计算${field.field}的平均值`,
-          type: 'avg',
-          field: field.field,
-          tags: ['AI生成', '平均'],
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        });
-      });
-    }
+  // 计算指标的实际值（简化模拟）
+  const calculateMetricValue = (metric: MetricItem): { value: string; trend: 'up' | 'down' | 'stable' } => {
+    const sample = getSampleRows();
+    if (sample.length === 0) return { value: 'N/A', trend: 'stable' };
 
-    if (promptLower.includes('增长') || promptLower.includes('同比') || promptLower.includes('环比')) {
-      const dateFields = fieldStats.filter(f => f.type === 'date');
-      if (dateFields.length > 0 && numericFields.length > 0) {
-        generated.push({
-          id: `metric-ai-${Date.now()}-growth`,
-          name: `${numericFields[0].field}增长率`,
-          description: 'AI生成: 计算指标的环比增长率',
-          type: 'custom',
-          formula: '增长率 = (本期 - 上期) / 上期 * 100',
-          field: numericFields[0].field,
-          tags: ['AI生成', '增长分析'],
-          createdAt: Date.now(),
-          updatedAt: Date.now()
+    try {
+      // 简单模拟计算 - 实际应由后端计算
+      const hasSum = metric.expression.toLowerCase().includes('sum') || metric.expression.toLowerCase().includes('总');
+      const hasAvg = metric.expression.toLowerCase().includes('avg') || metric.expression.toLowerCase().includes('均');
+      const hasCount = metric.expression.toLowerCase().includes('count') || metric.expression.toLowerCase().includes('数');
+
+      let total = 0;
+      const numericFields = data.headers.filter(h =>
+        fieldStats?.find(s => s.field === h && s.type === 'number')
+      );
+
+      if (numericFields.length > 0) {
+        numericFields.forEach(f => {
+          sample.forEach(row => {
+            const val = Number(row[f]);
+            if (!isNaN(val)) total += val;
+          });
         });
       }
-    }
 
-    if (promptLower.includes('占比') || promptLower.includes('比例') || promptLower.includes('percent')) {
-      if (numericFields.length >= 2) {
-        generated.push({
-          id: `metric-ai-${Date.now()}-ratio`,
-          name: `${numericFields[0].field}占${numericFields[1].field}比例`,
-          description: 'AI生成: 计算两个指标的比例',
-          type: 'custom',
-          formula: `${numericFields[0].field} / ${numericFields[1].field}`,
-          field: numericFields[0].field,
-          tags: ['AI生成', '占比分析'],
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        });
+      if (hasSum) {
+        const avgVal = total / (numericFields.length * sample.length);
+        return { value: avgVal.toFixed(2), trend: Math.random() > 0.5 ? 'up' : 'down' };
       }
+      if (hasAvg) {
+        const avgVal = total / (numericFields.length * sample.length);
+        return { value: avgVal.toFixed(2), trend: 'stable' };
+      }
+      if (hasCount) {
+        return { value: sample.length.toString(), trend: 'up' };
+      }
+
+      return { value: total.toFixed(2), trend: 'stable' };
+    } catch {
+      return { value: 'N/A', trend: 'stable' };
     }
-
-    // 如果没有匹配，返回默认推荐
-    if (generated.length === 0 && numericFields.length > 0) {
-      generated.push({
-        id: `metric-ai-${Date.now()}-default`,
-        name: `${numericFields[0].field}求和`,
-        description: `AI生成: ${prompt}`,
-        type: 'sum',
-        field: numericFields[0].field,
-        tags: ['AI生成'],
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      });
-    }
-
-    // 模拟 API 延迟
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    return generated;
   };
 
-  // 复制指标 SQL
-  const handleCopySQL = (metric: MetricDefinition) => {
-    const field = metric.field;
-    let sql = '';
-    
-    switch (metric.type) {
-      case 'sum':
-        sql = `SUM(${field})`;
-        break;
-      case 'avg':
-        sql = `AVG(${field})`;
-        break;
-      case 'count':
-        sql = `COUNT(*)`;
-        break;
-      case 'count_distinct':
-        sql = `COUNT(DISTINCT ${field})`;
-        break;
-      case 'min':
-        sql = `MIN(${field})`;
-        break;
-      case 'max':
-        sql = `MAX(${field})`;
-        break;
-      case 'custom':
-        sql = metric.formula || field;
-        break;
-    }
-
-    navigator.clipboard.writeText(sql);
+  const toggleCategory = (cat: string) => {
+    setExpandedCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
   };
 
-  // 获取聚合函数图标
-  const getAggIcon = (type: MetricType) => {
-    const func = AGGREGATE_FUNCTIONS[type];
-    return <span className="text-sm font-mono">{func?.icon || '?'}</span>;
-  };
+  const scenarioConfig = BUSINESS_SCENARIOS.find(s => s.id === businessScenario) || BUSINESS_SCENARIOS[8];
 
   return (
-    <div className={cn('space-y-4', className)}>
-      {/* 头部 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Target className="w-5 h-5 text-purple-500" />
-          <h3 className="font-medium">指标语义层</h3>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={handleCreateMetric}>
-              <Plus className="w-4 h-4 mr-1" />
-              新建指标
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {isCreating ? '创建新指标' : '编辑指标'}
-              </DialogTitle>
-              <DialogDescription>
-                定义业务指标，统一数据口径
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              {/* 快速模板 */}
-              {isCreating && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-500">快速创建</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {PRESET_METRICS.slice(0, 4).map((preset, i) => (
-                      <Button
-                        key={i}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCreateFromPreset(preset)}
-                      >
-                        {getAggIcon(preset.type)}
-                        <span className="ml-1">{preset.name}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 表单 */}
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="metric-name">指标名称 *</Label>
-                  <Input
-                    id="metric-name"
-                    placeholder="如：月活跃用户数、季度销售额"
-                    value={editingMetric?.name || ''}
-                    onChange={e => setEditingMetric(prev => prev ? { ...prev, name: e.target.value } : null)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="metric-desc">业务描述</Label>
-                  <Textarea
-                    id="metric-desc"
-                    placeholder="描述这个指标的业务含义..."
-                    rows={2}
-                    value={editingMetric?.description || ''}
-                    onChange={e => setEditingMetric(prev => prev ? { ...prev, description: e.target.value } : null)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>聚合函数 *</Label>
-                    <Select
-                      value={editingMetric?.type || 'sum'}
-                      onValueChange={v => setEditingMetric(prev => prev ? { ...prev, type: v as MetricType } : null)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(AGGREGATE_FUNCTIONS).map(([key, func]) => (
-                          <SelectItem key={key} value={key}>
-                            <span className="flex items-center gap-2">
-                              <span className="font-mono text-sm">{func.icon}</span>
-                              {func.label}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>计算字段 *</Label>
-                    <Select
-                      value={editingMetric?.field || ''}
-                      onValueChange={v => setEditingMetric(prev => prev ? { ...prev, field: v } : null)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="选择字段" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fieldStats.map(f => (
-                          <SelectItem key={f.field} value={f.field}>
-                            {f.field}
-                            {f.type === 'number' && <span className="ml-2 text-gray-400">数值</span>}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* 自定义公式 */}
-                {editingMetric?.type === 'custom' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="formula">计算公式</Label>
-                    <Input
-                      id="formula"
-                      placeholder="如: 销售额 * 1.1 或 利润 / 销售额 * 100"
-                      value={editingMetric.formula || ''}
-                      onChange={e => setEditingMetric(prev => prev ? { ...prev, formula: e.target.value } : null)}
-                    />
-                    <p className="text-xs text-gray-500">
-                      支持 + - * / 运算符，字段名用花括号包裹
-                    </p>
-                  </div>
-                )}
-
-                {/* 预览 */}
-                {editingMetric?.name && editingMetric?.field && (
-                  <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                    <div className="flex items-center gap-2 text-purple-700">
-                      <Info className="w-4 h-4" />
-                      <span className="text-sm font-medium">预览</span>
-                    </div>
-                    <p className="mt-1 text-sm text-purple-600">
-                      {AGGREGATE_FUNCTIONS[editingMetric.type]?.example?.replace(/\w+/, editingMetric.field) || editingMetric.field}
-                    </p>
-                  </div>
-                )}
-              </div>
+    <div className="space-y-4">
+      {/* 场景选择 + 描述输入 */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-500" />
+              AI 智能指标生成
+            </CardTitle>
+            {detectedScenario.length > 0 && (
+              <Badge variant="outline" className="text-xs">
+                已识别: {detectedScenario.join('、')}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* 业务场景快速选择 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              选择业务场景（可选）
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {BUSINESS_SCENARIOS.map(scenario => (
+                <button
+                  key={scenario.id}
+                  onClick={() => setBusinessScenario(scenario.id)}
+                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                    businessScenario === scenario.id
+                      ? `${scenario.color} ring-2 ring-offset-1 ring-gray-300`
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="mr-1">{scenario.icon}</span>
+                  {scenario.label}
+                </button>
+              ))}
             </div>
+            <button
+              onClick={handleUseRecommended}
+              className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+            >
+              <Zap className="w-3 h-3" /> 使用 AI 自动识别场景
+            </button>
+          </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                取消
+          {/* 业务需求描述 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              描述您的业务需求（可选，越详细越精准）
+            </label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="例如：我想分析门店的销售业绩，包括收入、成本、毛利率、客单价等核心指标..."
+                value={customDescription}
+                onChange={e => setCustomDescription(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                disabled={isGenerating || data.rows.length === 0}
+                onClick={handleGenerateMetrics}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {isGenerating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-1" />
+                    生成指标
+                  </>
+                )}
               </Button>
-              <Button onClick={handleSaveMetric}>
-                <Save className="w-4 h-4 mr-2" />
-                保存指标
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              示例：分析用户留存和转化、分析销售业绩、分析营销投放ROI...
+            </p>
+          </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="metrics" className="flex items-center gap-1">
-            <Calculator className="w-4 h-4" />
-            我的指标
-          </TabsTrigger>
-          <TabsTrigger value="ai" className="flex items-center gap-1">
-            <Sparkles className="w-4 h-4" />
-            AI 生成
-          </TabsTrigger>
-          <TabsTrigger value="guide" className="flex items-center gap-1">
-            <Lightbulb className="w-4 h-4" />
-            使用指南
-          </TabsTrigger>
-        </TabsList>
+          {/* 快速提示 */}
+          <div className="flex flex-wrap gap-2">
+            {['分析销售业绩', '用户留存分析', '营销ROI分析', '库存周转分析'].map(hint => (
+              <button
+                key={hint}
+                onClick={() => setCustomDescription(hint)}
+                className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+              >
+                {hint}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* 指标列表 */}
-        <TabsContent value="metrics" className="mt-4">
-          <div className="grid gap-3">
-            {metrics.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="py-8 text-center">
-                  <Calculator className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500">暂未创建任何指标</p>
-                  <p className="text-sm text-gray-400 mt-1">点击上方按钮创建第一个指标</p>
-                </CardContent>
-              </Card>
-            ) : (
-              metrics.map(metric => {
-                const result = metricResults.get(metric.id);
-                
-                return (
-                  <Card key={metric.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className={cn(
-                              'p-1.5 rounded-lg',
-                              metric.type === 'custom' ? 'bg-purple-100' : 'bg-blue-100'
-                            )}>
-                              {getAggIcon(metric.type)}
-                            </div>
-                            <div>
-                              <h4 className="font-medium">{metric.name}</h4>
-                              <p className="text-sm text-gray-500">{metric.description}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-3 mt-2">
-                            <Badge variant="outline" className="text-xs">
-                              {AGGREGATE_FUNCTIONS[metric.type]?.label}
-                            </Badge>
-                            <code className="text-xs bg-gray-100 px-2 py-0.5 rounded">
-                              {metric.field}
-                            </code>
-                            {metric.tags.map(tag => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                {tag}
-                              </Badge>
+      {/* 生成的指标体系 */}
+      {generatedMetrics.length > 0 && (
+        <>
+          {/* 指标体系总览 */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-blue-500" />
+                  指标体系 — {scenarioConfig.icon} {scenarioConfig.label}
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={handleGenerateMetrics} disabled={isGenerating}>
+                    <RefreshCw className={`w-3 h-3 mr-1 ${isGenerating ? 'animate-spin' : ''}`} />
+                    重新生成
+                  </Button>
+                  {savedMetrics.length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      已保存 {savedMetrics.length} 个指标
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* 统计概览 */}
+              <div className="grid grid-cols-4 gap-3 mb-4">
+                {Object.entries(groupedMetrics).map(([cat, metrics]) => {
+                  const config = METRIC_CATEGORIES[cat as keyof typeof METRIC_CATEGORIES];
+                  return (
+                    <div key={cat} className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-xs px-2 py-0.5 rounded ${config?.color || 'bg-gray-100 text-gray-600'}`}>
+                          {config?.label || cat}
+                        </span>
+                        <span className="text-lg font-bold">{metrics.length}</span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {cat === 'kpi' ? '核心KPI指标' :
+                         cat === 'process' ? '业务过程指标' :
+                         cat === 'composite' ? '复合计算指标' : '趋势对比指标'}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 指标分类展示 */}
+              <Tabs defaultValue="all" className="space-y-3">
+                <TabsList className="grid grid-cols-5 w-auto">
+                  <TabsTrigger value="all">全部</TabsTrigger>
+                  {Object.entries(METRIC_CATEGORIES).map(([key, config]) =>
+                    groupedMetrics[key] ? (
+                      <TabsTrigger key={key} value={key}>
+                        {config.label} ({groupedMetrics[key].length})
+                      </TabsTrigger>
+                    ) : null
+                  )}
+                </TabsList>
+
+                <TabsContent value="all" className="space-y-4">
+                  {Object.entries(groupedMetrics).map(([cat, metrics]) => {
+                    const config = METRIC_CATEGORIES[cat as keyof typeof METRIC_CATEGORIES];
+                    const Icon = config?.icon || Activity;
+                    return (
+                      <div key={cat} className="space-y-2">
+                        <button
+                          onClick={() => toggleCategory(cat)}
+                          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                        >
+                          {expandedCategories[cat] ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                          <Icon className="w-4 h-4" />
+                          {config?.label}（{metrics.length}个）
+                        </button>
+                        {expandedCategories[cat] && (
+                          <div className="grid gap-2">
+                            {metrics.map((metric, idx) => (
+                              <MetricCard
+                                key={`${cat}-${idx}`}
+                                metric={metric}
+                                calculation={calculateMetricValue(metric)}
+                                onOpenInsight={handleOpenInsight}
+                                onSave={handleSaveMetric}
+                                isSaved={savedMetrics.some(m => m.name === metric.name)}
+                              />
                             ))}
                           </div>
-                        </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </TabsContent>
 
-                        {/* 计算结果 */}
-                        <div className="text-right mr-4">
-                          <div className="text-2xl font-bold text-purple-600">
-                            {result?.formattedValue || '--'}
+                {Object.entries(groupedMetrics).map(([cat, metrics]) => {
+                  const config = METRIC_CATEGORIES[cat as keyof typeof METRIC_CATEGORIES];
+                  const Icon = config?.icon || Activity;
+                  return (
+                    <TabsContent key={cat} value={cat} className="space-y-2">
+                      {metrics.map((metric, idx) => (
+                        <MetricCard
+                          key={`${cat}-${idx}`}
+                          metric={metric}
+                          calculation={calculateMetricValue(metric)}
+                          onOpenInsight={handleOpenInsight}
+                          onSave={handleSaveMetric}
+                          isSaved={savedMetrics.some(m => m.name === metric.name)}
+                        />
+                      ))}
+                    </TabsContent>
+                  );
+                })}
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          {/* 已保存的指标 */}
+          {savedMetrics.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-green-500" />
+                  我的指标库（{savedMetrics.length}）
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {savedMetrics.map((metric, idx) => {
+                    const config = METRIC_CATEGORIES[metric.category as keyof typeof METRIC_CATEGORIES];
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline" className={`text-xs ${config?.color || ''}`}>
+                            {config?.label}
+                          </Badge>
+                          <div>
+                            <p className="text-sm font-medium">{metric.name}</p>
+                            <p className="text-xs text-gray-500 font-mono">{metric.expression}</p>
                           </div>
-                          {result && (
-                            <p className="text-xs text-gray-400">
-                              基于 {result.dataContext.totalRows.toLocaleString()} 条数据
-                            </p>
-                          )}
                         </div>
-
-                        {/* 操作 */}
-                        <div className="flex items-center gap-1">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleCopySQL(metric)}
-                              >
-                                <Copy className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>复制 SQL</TooltipContent>
-                          </Tooltip>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteMetric(metric.id)}
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => handleOpenInsight(metric)}>
+                            <MessageSquare className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleRemoveMetric(metric.name)}>
+                            ✕
                           </Button>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* 字段参考 */}
+      {data && data.headers.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Info className="w-5 h-5 text-gray-500" />
+              可用字段参考
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+              {data.headers.map((header, idx) => {
+                const stats = fieldStats?.find(s => s.field === header);
+                return (
+                  <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+                    <span className="font-mono font-medium">{header}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {stats?.type === 'number' ? '数值' : stats?.type === 'date' ? '日期' : '文本'}
+                    </Badge>
+                  </div>
                 );
-              })
-            )}
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 指标解读 Dialog */}
+      <Dialog open={showInsightDialog} onOpenChange={setShowInsightDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-yellow-500" />
+              指标深度解读
+              {selectedMetric && (
+                <Badge variant="outline" className="ml-2">
+                  {selectedMetric.name}
+                </Badge>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              基于您的数据和业务场景，深入分析指标含义与业务价值
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* 指标基本信息 */}
+          {selectedMetric && (
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 space-y-2">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">计算公式：</span>
+                  <code className="ml-1 bg-white px-2 py-0.5 rounded text-purple-600">{selectedMetric.expression}</code>
+                </div>
+                <div>
+                  <span className="text-gray-500">类别：</span>
+                  <Badge variant="outline" className="ml-1 text-xs">
+                    {METRIC_CATEGORIES[selectedMetric.category as keyof typeof METRIC_CATEGORIES]?.label}
+                  </Badge>
+                </div>
+              </div>
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">业务含义：</span>
+                {selectedMetric.businessMeaning || selectedMetric.description}
+              </p>
+              {selectedMetric.usageSuggestion && (
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">使用建议：</span>
+                  {selectedMetric.usageSuggestion}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* 对话历史 */}
+          <ScrollArea className="flex-1 min-h-[200px] max-h-[300px] border rounded-lg p-3 bg-gray-50">
+            <div className="space-y-3">
+              {insightMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-lg p-3 text-sm whitespace-pre-wrap ${
+                      msg.role === 'user'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white border text-gray-800'
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {isAnalyzing && (
+                <div className="flex justify-start">
+                  <div className="bg-white border rounded-lg p-3 text-sm text-gray-500 flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    AI 正在分析...
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* 输入框 */}
+          <div className="flex gap-2 pt-2">
+            <Input
+              placeholder="继续提问，例如：这个指标最近的趋势如何？"
+              value={insightInput}
+              onChange={e => setInsightInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSendInsight()}
+              disabled={isAnalyzing}
+              className="flex-1"
+            />
+            <Button
+              onClick={handleSendInsight}
+              disabled={!insightInput.trim() || isAnalyzing}
+            >
+              {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+            </Button>
           </div>
-        </TabsContent>
-
-        {/* AI 生成 */}
-        <TabsContent value="ai" className="mt-4">
-          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-500" />
-                AI 智能生成指标
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>描述你的需求</Label>
-                <Textarea
-                  placeholder="例如：
-- 计算所有数值字段的总和
-- 生成平均值的指标
-- 创建销售额增长率指标
-- 生成各项占比分析"
-                  rows={4}
-                  value={aiPrompt}
-                  onChange={e => setAiPrompt(e.target.value)}
-                />
-              </div>
-
-              <Button
-                className="w-full"
-                onClick={handleAIGenerate}
-                disabled={!aiPrompt.trim() || isAIGenerating}
-              >
-                {isAIGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    AI 正在分析并生成指标...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    智能生成指标
-                  </>
-                )}
-              </Button>
-
-              {/* 提示示例 */}
-              <div className="space-y-2">
-                <p className="text-xs text-gray-500 font-medium">试试这样说：</p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    '计算所有金额字段的总计',
-                    '生成各项的平均值',
-                    '创建增长率分析指标',
-                    '计算占比和比例指标'
-                  ].map((example, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setAiPrompt(example)}
-                      className="text-xs px-3 py-1.5 bg-white border rounded-full hover:border-purple-300 hover:bg-purple-50 transition-colors"
-                    >
-                      {example}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 使用指南 */}
-        <TabsContent value="guide" className="mt-4">
-          <Card>
-            <CardContent className="pt-4 space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <BarChart3 className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">什么是指标语义层？</h4>
-                    <p className="text-sm text-gray-600 mt-1">
-                      指标语义层是将复杂的技术数据转换为统一、易于理解的业务术语的中间层。
-                      定义一次，处处使用，确保数据口径一致。
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">使用场景</h4>
-                    <ul className="text-sm text-gray-600 mt-1 space-y-1 list-disc list-inside">
-                      <li>统一{'"'}月活用户{'"'}的口径定义</li>
-                      <li>定义{'"'}转化率{'"'}等复合指标</li>
-                      <li>标准化各部门的数据报表</li>
-                      <li>快速复用已计算的指标</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Database className="w-4 h-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">最佳实践</h4>
-                    <ul className="text-sm text-gray-600 mt-1 space-y-1 list-disc list-inside">
-                      <li>使用业务语言命名（如{'"'}订单量{'"'}而非{'"'}count_orders{'"'}）</li>
-                      <li>添加清晰的描述，方便团队理解</li>
-                      <li>使用标签分类管理大量指标</li>
-                      <li>定期审核指标定义，确保准确性</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-export default MetricSemanticLayer;
+// 指标卡片组件
+function MetricCard({
+  metric,
+  calculation,
+  onOpenInsight,
+  onSave,
+  isSaved,
+}: {
+  metric: MetricItem;
+  calculation: { value: string; trend: 'up' | 'down' | 'stable' };
+  onOpenInsight: (m: MetricItem) => void;
+  onSave: (m: MetricItem) => void;
+  isSaved: boolean;
+}) {
+  const config = METRIC_CATEGORIES[metric.category as keyof typeof METRIC_CATEGORIES];
+  const Icon = config?.icon || Activity;
+
+  return (
+    <div className="border rounded-lg p-4 hover:shadow-sm transition-shadow bg-white">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+            config?.color || 'bg-gray-100'
+          }`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="font-medium text-sm">{metric.name}</h4>
+              <code className="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded font-mono">
+                {metric.expression}
+              </code>
+            </div>
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+              {metric.businessMeaning || metric.description}
+            </p>
+            {metric.businessValue && (
+              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                {metric.businessValue}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <div className="text-right">
+            <p className="text-lg font-bold">{calculation.value}</p>
+            <div className="flex items-center gap-1">
+              {calculation.trend === 'up' && <TrendingUp className="w-4 h-4 text-red-500" />}
+              {calculation.trend === 'down' && <TrendingDown className="w-4 h-4 text-green-500" />}
+              {calculation.trend === 'stable' && <Activity className="w-4 h-4 text-gray-400" />}
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <Button size="sm" variant="ghost" onClick={() => onOpenInsight(metric)} title="解读">
+              <Lightbulb className="w-4 h-4 text-yellow-500" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onSave(metric)}
+              title={isSaved ? '已保存' : '保存'}
+              className={isSaved ? 'text-green-600' : ''}
+            >
+              {isSaved ? <CheckCircle2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* 数据质量提示 */}
+      {metric.dataQuality && (
+        <div className={`mt-2 text-xs px-2 py-1 rounded inline-flex items-center gap-1 ${
+          metric.dataQuality === '高' ? 'bg-green-50 text-green-600' :
+          metric.dataQuality === '中' ? 'bg-yellow-50 text-yellow-600' :
+          'bg-red-50 text-red-600'
+        }`}>
+          {metric.dataQuality === '高' && <CheckCircle2 className="w-3 h-3" />}
+          {metric.dataQuality === '中' && <AlertCircle className="w-3 h-3" />}
+          {metric.dataQuality === '低' && <AlertCircle className="w-3 h-3" />}
+          数据质量: {metric.dataQuality}
+          {metric.dataQualityReason && <span className="text-gray-400">({metric.dataQualityReason})</span>}
+        </div>
+      )}
+    </div>
+  );
+}
