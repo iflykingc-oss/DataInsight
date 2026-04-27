@@ -222,6 +222,18 @@ export default function HomePage() {
     model: string;
   } | null>(() => {
     if (typeof window !== 'undefined') {
+      // 优先从模型列表中找当前活动模型
+      const modelsJson = localStorage.getItem('datainsight_ai_models');
+      if (modelsJson) {
+        try {
+          const models = JSON.parse(modelsJson);
+          const active = models.find((c: { isDefault: boolean; enabled: boolean }) => c.isDefault && c.enabled) || models.find((c: { enabled: boolean }) => c.enabled);
+          if (active?.apiKey && active?.baseUrl && active?.model) {
+            return { apiKey: active.apiKey, baseUrl: active.baseUrl, model: active.model };
+          }
+        } catch { /* ignore */ }
+      }
+      // 回退到简化配置
       const saved = localStorage.getItem('datainsight-model-config');
       if (saved) {
         try { return JSON.parse(saved); } catch { /* ignore */ }
@@ -230,11 +242,15 @@ export default function HomePage() {
     return null;
   });
 
-  const handleModelChange = useCallback((model: { apiKey: string; baseUrl: string; model: string; isDefault?: boolean; enabled?: boolean }) => {
-    if (model.apiKey && model.baseUrl && model.model && model.isDefault && model.enabled !== false) {
+  const handleModelChange = useCallback((model: { apiKey: string; baseUrl: string; model: string; isDefault?: boolean; enabled?: boolean } | null) => {
+    if (model && model.apiKey && model.baseUrl && model.model) {
       const config = { apiKey: model.apiKey, baseUrl: model.baseUrl, model: model.model };
       setActiveModelConfig(config);
       localStorage.setItem('datainsight-model-config', JSON.stringify(config));
+    } else {
+      // 模型被禁用时清除配置
+      setActiveModelConfig(null);
+      localStorage.removeItem('datainsight-model-config');
     }
   }, []);
 

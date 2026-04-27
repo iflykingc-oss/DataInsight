@@ -115,7 +115,7 @@ const saveConfigs = (configs: AIModelConfig[]) => {
 };
 
 interface AIModelSettingsProps {
-  onModelChange?: (config: AIModelConfig) => void;
+  onModelChange?: (config: AIModelConfig | null) => void;
   className?: string;
 }
 
@@ -148,16 +148,16 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
     saveConfigs(configs);
   }, [configs]);
 
-  // 通知父组件当前默认模型
-  useEffect(() => {
-    const defaultModel = configs.find(c => c.isDefault && c.enabled);
-    if (defaultModel) {
-      onModelChange?.(defaultModel);
-    }
-  }, [configs, onModelChange]);
+  // 获取当前使用的模型（优先默认+启用，其次第一个启用的）
+  const getActiveModel = React.useCallback((cfgs: AIModelConfig[]): AIModelConfig | undefined => {
+    return cfgs.find(c => c.isDefault && c.enabled) || cfgs.find(c => c.enabled);
+  }, []);
 
-  // 获取当前使用的模型
-  const activeModel = configs.find(c => c.isDefault && c.enabled);
+  // 通知父组件当前活动模型
+  useEffect(() => {
+    const active = getActiveModel(configs);
+    onModelChange?.(active || null);
+  }, [configs, onModelChange, getActiveModel]);
 
   // 添加新配置
   const handleAddConfig = () => {
@@ -184,22 +184,68 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
 
   // 删除配置
   const handleDeleteConfig = (id: string) => {
-    setConfigs(prev => prev.filter(c => c.id !== id));
+    setConfigs(prev => {
+      const target = prev.find(c => c.id === id);
+      if (!target) return prev;
+      const wasDefault = target.isDefault;
+      const remaining = prev.filter(c => c.id !== id);
+      // 如果删除的是默认模型，自动切换默认到下一个启用的
+      if (wasDefault && remaining.length > 0) {
+        const nextEnabled = remaining.find(c => c.enabled);
+        if (nextEnabled) {
+          return remaining.map(c =>
+            c.id === nextEnabled.id ? { ...c, isDefault: true } : { ...c, isDefault: false }
+          );
+        }
+        // 没有启用的模型，让第一个成为默认
+        return remaining.map((c, i) => ({ ...c, isDefault: i === 0 }));
+      }
+      return remaining;
+    });
   };
 
-  // 设置默认模型
+  // 设置默认模型（同时启用该模型）
   const handleSetDefault = (id: string) => {
     setConfigs(prev => prev.map(c => ({
       ...c,
-      isDefault: c.id === id
+      isDefault: c.id === id,
+      enabled: c.id === id ? true : c.enabled  // 设为默认时自动启用
     })));
   };
 
   // 切换启用状态
   const handleToggleEnabled = (id: string) => {
-    setConfigs(prev => prev.map(c =>
-      c.id === id ? { ...c, enabled: !c.enabled } : c
-    ));
+    setConfigs(prev => {
+      const target = prev.find(c => c.id === id);
+      if (!target) return prev;
+
+      const willEnable = !target.enabled;
+
+      if (willEnable) {
+        // 启用模型：如果没有默认模型，自动设为默认
+        const hasDefault = prev.some(c => c.isDefault && c.id !== id);
+        return prev.map(c =>
+          c.id === id
+            ? { ...c, enabled: true, isDefault: hasDefault ? c.isDefault : true }
+            : c
+        );
+      } else {
+        // 禁用模型：如果禁用的是默认模型，切换默认到下一个启用的
+        const wasDefault = target.isDefault;
+        const newConfigs = prev.map(c =>
+          c.id === id ? { ...c, enabled: false, isDefault: false } : c
+        );
+        if (wasDefault) {
+          const nextEnabled = newConfigs.find(c => c.enabled);
+          if (nextEnabled) {
+            return newConfigs.map(c =>
+              c.id === nextEnabled.id ? { ...c, isDefault: true } : c
+            );
+          }
+        }
+        return newConfigs;
+      }
+    });
   };
 
   // 保存配置
@@ -213,7 +259,16 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
     }
 
     if (isAddingNew) {
-      setConfigs(prev => [...prev, editingConfig]);
+      setConfigs(prev => {
+        const isFirst = prev.length === 0;
+        const hasDefault = prev.some(c => c.isDefault);
+        const newConfig = {
+          ...editingConfig,
+          enabled: true,
+          isDefault: isFirst || !hasDefault  // 首个模型或没有默认模型时自动设为默认
+        };
+        return [...prev, newConfig];
+      });
     } else {
       setConfigs(prev => prev.map(c => c.id === editingConfig.id ? editingConfig : c));
     }
@@ -295,15 +350,15 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                 <Bot className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="font-medium">{activeModel?.name || '未配置'}</p>
+                <p className="font-medium">{getActiveModel(configs)?.name || '未配置'}</p>
                 <p className="text-sm text-gray-500">
-                  {activeModel?.provider || '请配置模型'}
-                  {activeModel?.model && ` · ${activeModel.model}`}
+                  {getActiveModel(configs)?.provider || '请配置模型'}
+                  {getActiveModel(configs)?.model && ` · ${getActiveModel(configs)!.model}`}
                 </p>
               </div>
             </div>
-            <Badge variant={activeModel?.enabled ? 'default' : 'secondary'}>
-              {activeModel?.enabled ? '使用中' : '未启用'}
+            <Badge variant={getActiveModel(configs) ? 'default' : 'secondary'}>
+              {getActiveModel(configs) ? '使用中' : '未启用'}
             </Badge>
           </div>
         </CardContent>
