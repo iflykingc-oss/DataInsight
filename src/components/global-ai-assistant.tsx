@@ -81,10 +81,8 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
     scrollToBottom();
   }, [messages, streamedContent, scrollToBottom]);
 
-  // 真实LLM流式调用
+  // 真实LLM流式调用（即使没有数据也能调用，API会处理）
   const callLLMStream = useCallback(async (userMessage: string) => {
-    if (!data || !fieldStats) return null;
-
     const assistantId = `assistant-${Date.now()}`;
     const emptyMsg: ChatMessage = {
       id: assistantId,
@@ -103,8 +101,8 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage,
-          data: { headers: data.headers, rows: data.rows.slice(0, 200), rowCount: data.rowCount, columnCount: data.columnCount },
-          fieldStats: fieldStats.slice(0, 20),
+          data: data ? { headers: data.headers, rows: data.rows.slice(0, 200), rowCount: data.rowCount, columnCount: data.columnCount } : undefined,
+          fieldStats: fieldStats ? fieldStats.slice(0, 20) : undefined,
           analysisMode: 'trend',
           modelConfig,
         }),
@@ -213,11 +211,14 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
     setInputValue('');
     setIsTyping(true);
 
-    if (hasData && data && fieldStats) {
-      // 有数据时：调用真实LLM
+    // 有模型配置时：调用真实LLM（即使没有数据，API也会返回提示）
+    if (modelConfig) {
+      await callLLMStream(content);
+    } else if (hasData && data && fieldStats) {
+      // 有数据无模型：也调用LLM（API会返回"请先配置模型"）
       await callLLMStream(content);
     } else {
-      // 无数据时：模板回复 + 模拟打字机
+      // 无数据也无模型：使用模板回复
       const response = generateTemplateResponse(content);
       const fullContent = response.content;
       let currentIndex = 0;
@@ -243,7 +244,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
     }
 
     setIsTyping(false);
-  }, [hasData, data, fieldStats, callLLMStream, generateTemplateResponse]);
+  }, [hasData, data, fieldStats, modelConfig, callLLMStream, generateTemplateResponse]);
 
   // 复制消息
   const copyMessage = useCallback((content: string) => {
