@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { LLMClient, Config, HeaderUtils } from "coze-coding-dev-sdk";
+import { callLLM, validateModelConfig, type LLMModelConfig } from "@/lib/llm";
 
 // 业务场景识别关键词
 const BUSINESS_SCENARIOS = [
@@ -17,14 +17,14 @@ const BUSINESS_SCENARIOS = [
 function detectBusinessScenario(userDescription: string, headers: string[]): string[] {
   const combined = (userDescription + " " + headers.join(" ")).toLowerCase();
   const detected: string[] = [];
-  
+
   for (const scenario of BUSINESS_SCENARIOS) {
     const matched = scenario.keywords.filter(kw => combined.includes(kw.toLowerCase()));
     if (matched.length >= 2) {
       detected.push(scenario.label);
     }
   }
-  
+
   return detected.length > 0 ? detected : ["通用业务"];
 }
 
@@ -76,50 +76,60 @@ ${fieldInfo}
 
 export async function POST(request: NextRequest) {
   try {
-    const { headers, rows, userDescription, fieldStats } = await request.json();
+    const { headers, rows, userDescription, fieldStats, modelConfig } = await request.json() as {
+      headers: string[];
+      rows: Record<string, unknown>[];
+      userDescription?: string;
+      fieldStats?: Array<Record<string, unknown>>;
+      modelConfig?: LLMModelConfig;
+    };
+
+    // 验证模型配置
+    const validation = validateModelConfig(modelConfig);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
+    }
 
     // 构建字段信息摘要
     const fieldInfo = headers.map((h: string) => {
       const stats = fieldStats?.find((s: { field?: string; name?: string }) => s.field === h || s.name === h);
       const sampleValues = rows?.slice(0, 3).map((r: Record<string, unknown>) => r[h]);
-      return `字段名: ${h}, 类型: ${stats?.type || 'unknown'}, 示例值: ${sampleValues?.join(", ") || 'N/A'}, 非空率: ${stats?.completeness ? (stats.completeness * 100).toFixed(0) + '%' : stats?.uniqueCount ? ((1 - (stats.nullCount || 0) / Math.max(stats.count, 1)) * 100).toFixed(0) + '%' : 'N/A'}`;
+      const nullCount = Number(stats?.nullCount || 0);
+      const count = Number(stats?.count || 1);
+      const completeness = stats?.completeness as number | undefined;
+      const nonNullRate = completeness ? (completeness * 100).toFixed(0) + '%' : ((1 - nullCount / Math.max(count, 1)) * 100).toFixed(0) + '%';
+      return `字段名: ${h}, 类型: ${stats?.type || 'unknown'}, 示例值: ${sampleValues?.join(", ") || 'N/A'}, 非空率: ${nonNullRate}`;
     }).join("\n");
 
     const businessScenario = detectBusinessScenario(userDescription || "", headers);
     const systemPrompt = buildSystemPrompt(businessScenario, fieldInfo);
 
-    const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
-    const config = new Config();
-    const client = new LLMClient(config, customHeaders);
-
     const userPrompt = userDescription
       ? `请根据以下业务描述，为这些数据设计指标体系：\n\n${userDescription}`
       : `请根据这些数据字段，自动识别业务场景并设计指标体系。`;
 
-    const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
+    const messages = [
+      { role: "system" as const, content: systemPrompt },
+      { role: "user" as const, content: userPrompt },
     ];
 
-    const response = await client.invoke(messages, {
-      model: "doubao-seed-2-0-lite-260215",
-      temperature: 0.3,
-    });
+    const content = await callLLM(modelConfig!, messages, { temperature: 0.3, max_tokens: 4096 });
 
     // 解析 LLM 返回的 JSON
     let parsedMetrics;
     try {
-      const content = response.content.trim();
-      // 尝试从 markdown 代码块中提取 JSON
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || content.match(/^\s*\{[\s\S]*\}\s*$/);
-      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+      const trimmed = content.trim();
+      const jsonMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || trimmed.match(/^\s*\{[\s\S]*\}\s*$/);
+      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : trimmed;
       parsedMetrics = JSON.parse(jsonStr);
     } catch {
-      // 如果 JSON 解析失败，返回原始文本
       parsedMetrics = {
         scenario: businessScenario.join("、"),
         metrics: [],
-        summary: response.content,
+        summary: content,
         rawResponse: true,
       };
     }
@@ -134,8 +144,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Metric AI API error:", error);
+    const errorMsg = error instanceof Error ? error.message : "指标生成失败";
     return NextResponse.json(
-      { success: false, error: "指标生成失败，请稍后重试" },
+      { success: false, error: errorMsg },
       { status: 500 }
     );
   }

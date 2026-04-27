@@ -290,12 +290,13 @@ interface NL2DashboardProps {
   fieldStats: FieldStat[];
   onDashboardGenerate?: (dashboard: GeneratedDashboardSpec) => void;
   className?: string;
+  modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
 }
 
 // ============================================
 // 主组件
 // ============================================
-export function NL2Dashboard({ data, fieldStats, className }: NL2DashboardProps) {
+export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2DashboardProps) {
   // 对话状态
   const [conversations, setConversations] = useState<ConversationMessage[]>([]);
   const [input, setInput] = useState('');
@@ -383,6 +384,7 @@ export function NL2Dashboard({ data, fieldStats, className }: NL2DashboardProps)
           data,
           fieldStats,
           context,
+          modelConfig,
         }),
       });
 

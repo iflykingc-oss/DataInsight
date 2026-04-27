@@ -121,9 +121,10 @@ interface MetricSemanticLayerProps {
     max?: number;
     completeness?: number;
   }>;
+  modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
 }
 
-export function MetricSemanticLayer({ data, fieldStats }: MetricSemanticLayerProps) {
+export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSemanticLayerProps) {
   const [businessScenario, setBusinessScenario] = useState<string>('general');
   const [customDescription, setCustomDescription] = useState('');
   const [generatedMetrics, setGeneratedMetrics] = useState<MetricItem[]>([]);
@@ -160,6 +161,7 @@ export function MetricSemanticLayer({ data, fieldStats }: MetricSemanticLayerPro
           rows: data.rows,
           userDescription: customDescription,
           fieldStats,
+          modelConfig,
         }),
       });
 

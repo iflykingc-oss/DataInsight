@@ -45,6 +45,7 @@ interface ChatMessage {
 interface EnhancedLLMAssistantProps {
   data: ParsedData;
   analysis: DataAnalysis;
+  modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
   onDataFilter?: (filter: { field: string; operator: string; value: string }[]) => void;
   onChartSuggest?: (suggestion: { type: string; xField: string; yField: string }) => void;
 }
@@ -85,6 +86,7 @@ const PRESET_QUERIES = [
 export function EnhancedLLMAssistant({
   data,
   analysis,
+  modelConfig,
   onDataFilter,
   onChartSuggest
 }: EnhancedLLMAssistantProps) {
@@ -139,7 +141,13 @@ export function EnhancedLLMAssistant({
       const response = await fetch('/api/llm-insight', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data, analysis, question }),
+        body: JSON.stringify({
+          message: question,
+          data: { headers: data.headers, rows: data.rows.slice(0, 200), rowCount: data.rowCount, columnCount: data.columnCount },
+          fieldStats: analysis.fieldStats.slice(0, 20),
+          analysisMode: 'comprehensive',
+          modelConfig,
+        }),
         signal: abortRef.current.signal
       });
 

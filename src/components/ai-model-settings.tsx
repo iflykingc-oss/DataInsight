@@ -91,19 +91,8 @@ export interface AIModelConfig {
 // 本地存储键名
 const STORAGE_KEY = 'datainsight_ai_models';
 
-// 默认配置
-const DEFAULT_CONFIG: AIModelConfig[] = [
-  {
-    id: 'doubao-default',
-    name: '豆包 Seed',
-    provider: '字节跳动',
-    apiKey: '',
-    baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
-    model: 'doubao-seed-2-0-lite',
-    isDefault: true,
-    enabled: true
-  }
-];
+// 默认配置 - 无内置模型，用户必须自行配置
+const DEFAULT_CONFIG: AIModelConfig[] = [];
 
 // 加载保存的配置
 const loadConfigs = (): AIModelConfig[] => {
@@ -131,22 +120,36 @@ interface AIModelSettingsProps {
 }
 
 export function AIModelSettings({ onModelChange, className }: AIModelSettingsProps) {
-  const [configs, setConfigs] = useState<AIModelConfig[]>(DEFAULT_CONFIG);
+  const [configs, setConfigs] = useState<AIModelConfig[]>(() => {
+    // 初始化时直接从localStorage加载，避免覆盖问题
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch { /* ignore */ }
+      }
+    }
+    return DEFAULT_CONFIG;
+  });
   const [editingConfig, setEditingConfig] = useState<AIModelConfig | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const isInitialMount = React.useRef(true);
 
-  // 加载配置
+  // 保存配置到localStorage（跳过首次挂载避免覆盖）
   useEffect(() => {
-    const loaded = loadConfigs();
-    setConfigs(loaded);
-  }, []);
-
-  // 保存配置
-  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     saveConfigs(configs);
+  }, [configs]);
+
+  // 通知父组件当前默认模型
+  useEffect(() => {
     const defaultModel = configs.find(c => c.isDefault && c.enabled);
     if (defaultModel) {
       onModelChange?.(defaultModel);

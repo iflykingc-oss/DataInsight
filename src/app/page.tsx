@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -214,6 +214,29 @@ export default function HomePage() {
   const [notificationConfig, setNotificationConfig] = useState<NotificationChannelConfig>(DEFAULT_NOTIFICATION_CONFIG);
   const [notifTestResult, setNotifTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isTestingNotif, setIsTestingNotif] = useState(false);
+
+  // 模型配置状态 - 从localStorage加载
+  const [activeModelConfig, setActiveModelConfig] = useState<{
+    apiKey: string;
+    baseUrl: string;
+    model: string;
+  } | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('datainsight-model-config');
+      if (saved) {
+        try { return JSON.parse(saved); } catch { /* ignore */ }
+      }
+    }
+    return null;
+  });
+
+  const handleModelChange = useCallback((model: { apiKey: string; baseUrl: string; model: string; isDefault?: boolean; enabled?: boolean }) => {
+    if (model.apiKey && model.baseUrl && model.model && model.isDefault && model.enabled !== false) {
+      const config = { apiKey: model.apiKey, baseUrl: model.baseUrl, model: model.model };
+      setActiveModelConfig(config);
+      localStorage.setItem('datainsight-model-config', JSON.stringify(config));
+    }
+  }, []);
 
   // 加载通知配置
   useEffect(() => {
@@ -564,12 +587,12 @@ export default function HomePage() {
 
     // NL2Dashboard
     if (viewMode === 'nl2dash' && parsedData && analysis) {
-      return <NL2Dashboard data={parsedData} fieldStats={analysis.fieldStats} />;
+      return <NL2Dashboard data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />;
     }
 
     // 指标语义层
     if (viewMode === 'metric' && parsedData && analysis) {
-      return <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} />;
+      return <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />;
     }
 
     // 智能图表
@@ -581,7 +604,7 @@ export default function HomePage() {
     if (viewMode === 'chat' && analysis) {
       return (
         <div className="grid lg:grid-cols-2 gap-6">
-          <EnhancedLLMAssistant data={parsedData!} analysis={analysis} />
+          <EnhancedLLMAssistant data={parsedData!} analysis={analysis} modelConfig={activeModelConfig} />
           <Card>
             <CardContent className="pt-6 space-y-4">
               <div className="p-4 bg-blue-50 rounded-lg">
@@ -611,7 +634,7 @@ export default function HomePage() {
 
     // AI 模型配置
     if (viewMode === 'ai-settings') {
-      return <AIModelSettings />;
+      return <AIModelSettings onModelChange={handleModelChange} />;
     }
 
     // 报表生成
@@ -790,6 +813,16 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* 模型未配置警告 */}
+            {!activeModelConfig && (
+              <button
+                onClick={() => setViewMode('ai-settings')}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
+              >
+                <AlertCircle className="w-3 h-3" />
+                未配置AI模型
+              </button>
+            )}
             {/* 数据状态指示 */}
             {parsedData ? (
               <div className="flex items-center gap-2">
@@ -810,7 +843,7 @@ export default function HomePage() {
                 </Button>
               </div>
             ) : (
-              <Badge variant="outline" className="text-xs text-gray-400">未加载数据</Badge>
+              <span className="text-xs text-gray-400">请上传数据</span>
             )}
 
             <Separator orientation="vertical" className="h-5" />
@@ -1022,7 +1055,7 @@ export default function HomePage() {
       </Dialog>
 
       {/* 全局 AI 助手 */}
-      <GlobalAIAssistant hasData={!!parsedData} rowCount={parsedData?.rowCount} data={parsedData || undefined} fieldStats={analysis?.fieldStats} />
+      <GlobalAIAssistant hasData={!!parsedData} rowCount={parsedData?.rowCount} data={parsedData || undefined} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig} />
     </div>
   );
 }

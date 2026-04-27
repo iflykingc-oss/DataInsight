@@ -49,9 +49,10 @@ interface GlobalAIAssistantProps {
   rowCount?: number;
   data?: ParsedData;
   fieldStats?: FieldStat[];
+  modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
 }
 
-export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats }: GlobalAIAssistantProps) {
+export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats, modelConfig }: GlobalAIAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -105,6 +106,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats 
           data: { headers: data.headers, rows: data.rows.slice(0, 200), rowCount: data.rowCount, columnCount: data.columnCount },
           fieldStats: fieldStats.slice(0, 20),
           analysisMode: 'trend',
+          modelConfig,
         }),
         signal: abortControllerRef.current.signal,
       });

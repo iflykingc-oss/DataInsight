@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LLMClient, Config } from 'coze-coding-dev-sdk';
+import { callLLM, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 
 // ============================================
@@ -228,7 +228,7 @@ function buildPrompt(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userMessage, data, fieldStats, context } = body as {
+    const { userMessage, data, fieldStats, context, modelConfig } = body as {
       userMessage: string;
       data: ParsedData;
       fieldStats: FieldStat[];
@@ -243,6 +243,7 @@ export async function POST(req: NextRequest) {
           yAxis?: string;
         }>;
       };
+      modelConfig?: LLMModelConfig;
     };
 
     if (!userMessage || !data || !fieldStats) {
@@ -252,24 +253,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 验证模型配置
+    const validation = validateModelConfig(modelConfig);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
+    }
+
     // 构建 prompt
     const prompt = buildPrompt(userMessage, data, fieldStats, context);
 
     // 调用 LLM
-    const config = new Config();
-    const client = new LLMClient(config);
-
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
       { role: 'system', content: '你是专业的销售数据分析仪表盘生成助手。你必须严格只输出JSON，禁止输出任何其他文字。' },
       { role: 'user', content: prompt },
     ];
 
-    const response = await client.invoke(messages, {
-      model: 'doubao-seed-2-0-lite-260215',
-      temperature: 0.3,
-    });
-
-    const content = response.content || '';
+    const content = await callLLM(modelConfig!, messages, { temperature: 0.3, max_tokens: 4096 });
 
     // 解析 JSON
     let dashboardSpec: GeneratedDashboardSpec;
