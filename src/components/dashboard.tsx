@@ -59,6 +59,9 @@ export function Dashboard({ data, analysis }: DashboardProps) {
   const [detailSearch, setDetailSearch] = useState('');
   const DETAIL_PAGE_SIZE = 20;
 
+  // 图表联动筛选：点击图表数据点后设置筛选
+  const [linkedFilter, setLinkedFilter] = useState<{ field: string; value: string } | null>(null);
+
   // 仪表盘持久化
   const [savedConfigs, setSavedConfigs] = useState<Array<{ id: string; name: string; chartType: string; filterValues: Record<string, string[]>; savedAt: string }>>([]);
   const [activeConfigId, setActiveConfigId] = useState<string | null>(null);
@@ -126,20 +129,27 @@ export function Dashboard({ data, analysis }: DashboardProps) {
         rows = rows.filter(r => values.includes(String(r[field])));
       }
     });
+    // 图表联动筛选
+    if (linkedFilter) {
+      rows = rows.filter(r => String(r[linkedFilter.field]) === linkedFilter.value);
+    }
     return rows;
-  }, [data.rows, filterValues]);
+  }, [data.rows, filterValues, linkedFilter]);
 
   // 自动生成仪表盘图表
   const allWidgets = useMemo(() => generateDashboard(data, analysis), [data, analysis]);
 
+  // 基于筛选后数据（含联动筛选）的图表数据
+  const filteredWidgets = useMemo(() => generateDashboard({ ...data, rows: filteredData }, analysis), [data, filteredData, analysis]);
+
   // KPI 卡片
   const kpiWidgets = allWidgets.filter(w => w.type === 'kpi');
-  // 筛选器
+  // 筛选器（始终基于全量数据）
   const filterWidgets = allWidgets.filter(w => w.type === 'filter');
-  // 图表（含透视表/明细表）
+  // 图表（基于筛选后数据）
   const chartWidgets = chartType === 'auto'
-    ? allWidgets.filter(w => w.type !== 'kpi' && w.type !== 'filter')
-    : allWidgets.filter(w => w.type !== 'kpi' && w.type !== 'filter' && w.type === chartType);
+    ? filteredWidgets.filter(w => w.type !== 'kpi' && w.type !== 'filter')
+    : filteredWidgets.filter(w => w.type !== 'kpi' && w.type !== 'filter' && w.type === chartType);
 
   // 筛选器切换
   const toggleFilterValue = useCallback((field: string, value: string) => {
@@ -159,6 +169,20 @@ export function Dashboard({ data, analysis }: DashboardProps) {
       delete next[field];
       return next;
     });
+  }, []);
+
+  // 图表联动点击处理
+  const handleChartClick = useCallback((field: string, value: string) => {
+    setLinkedFilter(prev => {
+      // 点击相同数据点则取消筛选
+      if (prev && prev.field === field && prev.value === value) return null;
+      return { field, value };
+    });
+  }, []);
+
+  // 清除联动筛选
+  const clearLinkedFilter = useCallback(() => {
+    setLinkedFilter(null);
   }, []);
 
   // 明细表排序数据
@@ -342,6 +366,25 @@ export function Dashboard({ data, analysis }: DashboardProps) {
           </Button>
         </div>
       </div>
+
+      {/* 图表联动筛选提示 */}
+      {linkedFilter && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+          <Filter className="w-3.5 h-3.5 text-blue-600" />
+          <span className="text-xs text-blue-700">
+            联动筛选: <strong>{linkedFilter.field}</strong> = <strong>{linkedFilter.value}</strong>
+          </span>
+          <span className="text-xs text-blue-500">（点击图表数据点触发，所有图表同步更新）</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs ml-auto text-blue-600 hover:text-blue-800"
+            onClick={clearLinkedFilter}
+          >
+            清除联动
+          </Button>
+        </div>
+      )}
 
       {/* 保存对话框 */}
       {showSaveDialog && (
@@ -537,7 +580,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={280}>
-                  {renderChart(widget)}
+                  {renderChart(widget, handleChartClick)}
                 </ResponsiveContainer>
               </CardContent>
             </Card>
@@ -655,8 +698,17 @@ function PivotTableView({
 // ============================================
 // 图表渲染
 // ============================================
-function renderChart(widget: ChartWidget) {
+function renderChart(widget: ChartWidget, onDataPointClick?: (field: string, value: string) => void) {
   const { type, xField, yField, data: chartData } = widget;
+
+  // 点击处理：根据图表类型提取对应维度值
+  const handleClick = (payload: Record<string, unknown> | null) => {
+    if (!payload || !onDataPointClick) return;
+    const xValue = payload[xField] ?? payload.name;
+    if (xValue != null) {
+      onDataPointClick(xField, String(xValue));
+    }
+  };
 
   switch (type) {
     case 'bar':
@@ -666,17 +718,19 @@ function renderChart(widget: ChartWidget) {
           <XAxis dataKey={xField} tick={{ fontSize: 11 }} interval={0} angle={-30} textAnchor="end" height={60} />
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip formatter={(v: number) => typeof v === 'number' ? v.toLocaleString() : v} />
-          <Bar dataKey={yField} fill="#1890ff" radius={[4, 4, 0, 0]} />
+          <Bar dataKey={yField} fill="#1890ff" radius={[4, 4, 0, 0]} onClick={(data: Record<string, unknown>) => handleClick(data)} cursor="pointer" />
         </BarChart>
       );
     case 'line':
       return (
-        <RechartsLineChart data={chartData.slice(0, 30)} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+        <RechartsLineChart data={chartData.slice(0, 30)} margin={{ top: 5, right: 10, left: 0, bottom: 5 }} onClick={(e: { activePayload?: Array<{ payload: Record<string, unknown> }> }) => {
+          if (e?.activePayload?.[0]?.payload) handleClick(e.activePayload[0].payload);
+        }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey={xField} tick={{ fontSize: 11 }} angle={-30} textAnchor="end" height={60} />
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip formatter={(v: number) => typeof v === 'number' ? v.toLocaleString() : v} />
-          <Line type="monotone" dataKey={yField} stroke="#1890ff" strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey={yField} stroke="#1890ff" strokeWidth={2} dot={{ r: 3, cursor: 'pointer' }} activeDot={{ r: 5, cursor: 'pointer' }} />
         </RechartsLineChart>
       );
     case 'pie':
@@ -693,6 +747,8 @@ function renderChart(widget: ChartWidget) {
               `${name} ${(percent * 100).toFixed(0)}%`
             }
             labelLine={{ strokeWidth: 1 }}
+            onClick={(data: Record<string, unknown>) => handleClick(data)}
+            cursor="pointer"
           >
             {chartData.slice(0, 10).map((_, idx) => (
               <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
@@ -704,12 +760,14 @@ function renderChart(widget: ChartWidget) {
       );
     case 'area':
       return (
-        <RechartsArea data={chartData.slice(0, 30)} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+        <RechartsArea data={chartData.slice(0, 30)} margin={{ top: 5, right: 10, left: 0, bottom: 5 }} onClick={(e: { activePayload?: Array<{ payload: Record<string, unknown> }> }) => {
+          if (e?.activePayload?.[0]?.payload) handleClick(e.activePayload[0].payload);
+        }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey={xField} tick={{ fontSize: 11 }} angle={-30} textAnchor="end" height={60} />
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip formatter={(v: number) => typeof v === 'number' ? v.toLocaleString() : v} />
-          <Area type="monotone" dataKey={yField} stroke="#1890ff" fill="#1890ff" fillOpacity={0.2} strokeWidth={2} />
+          <Area type="monotone" dataKey={yField} stroke="#1890ff" fill="#1890ff" fillOpacity={0.2} strokeWidth={2} cursor="pointer" />
         </RechartsArea>
       );
     case 'radar':
@@ -718,7 +776,7 @@ function renderChart(widget: ChartWidget) {
           <PolarGrid />
           <PolarAngleAxis dataKey={xField} tick={{ fontSize: 11 }} />
           <PolarRadiusAxis tick={{ fontSize: 10 }} />
-          <Radar name={yField} dataKey={yField} stroke="#1890ff" fill="#1890ff" fillOpacity={0.3} />
+          <Radar name={yField} dataKey={yField} stroke="#1890ff" fill="#1890ff" fillOpacity={0.3} cursor="pointer" />
           <Tooltip />
         </RadarChart>
       );

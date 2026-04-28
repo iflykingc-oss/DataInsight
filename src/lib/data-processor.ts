@@ -91,6 +91,47 @@ export interface DeepAnalysis {
     scaleFeature?: string;     // 数据规模特征
     summary: string;
   };
+  // 自动归因分析
+  attribution?: AttributionAnalysis;
+}
+
+export interface AttributionAnalysis {
+  // 异常指标列表
+  anomalyMetrics: Array<{
+    field: string;
+    direction: 'spike_up' | 'drop_down' | 'volatile' | 'outlier_cluster';
+    severity: 'high' | 'medium' | 'low';
+    description: string;
+    changeRate: number;         // 变化率百分比
+    affectedRows: number;       // 受影响行数
+    baseline: number;           // 基线值（均值/中位数）
+    actualValue: number;        // 实际值
+  }>;
+  // 维度拆解
+  dimensionBreakdowns: Array<{
+    metricField: string;       // 被拆解的指标字段
+    dimensionField: string;    // 拆解维度
+    segments: Array<{
+      segmentValue: string;    // 维度值
+      contribution: number;    // 贡献度百分比 (0-100)
+      metricValue: number;     // 该维度的指标值
+      deviation: number;       // 偏离均值程度
+      isKeyDriver: boolean;    // 是否核心驱动因素
+    }>;
+    keyDriver: string;         // 核心驱动因素维度值
+    keyDriverContribution: number; // 核心驱动因素贡献度
+  }>;
+  // 根因分析
+  rootCauses: Array<{
+    metric: string;            // 指标
+    cause: string;             // 根因描述
+    confidence: 'high' | 'medium' | 'low'; // 置信度
+    evidence: string[];        // 证据链
+    relatedDimensions: string[]; // 相关维度
+    suggestion: string;        // 建议措施
+  }>;
+  // 汇总洞察
+  summary: string;
 }
 
 export interface FieldStat {
@@ -394,6 +435,7 @@ function generateDeepAnalysis(
   const recommendedCharts = recommendCharts(data, fieldStats, summary);
   const dataProfile = generateDataProfile(data, fieldStats, summary);
   const actionItems = generateActionItems(healthScore, keyFindings, fieldStats, summary, dataProfile);
+  const attribution = analyzeAttribution(data, fieldStats, correlations);
 
   return {
     healthScore,
@@ -403,7 +445,8 @@ function generateDeepAnalysis(
     trends,
     recommendedCharts,
     actionItems,
-    dataProfile
+    dataProfile,
+    attribution
   };
 }
 
@@ -1208,7 +1251,7 @@ export function cleanData(data: ParsedData, options: {
               countMap.forEach((count, v) => {
                 if (count > maxCount) { maxCount = count; modeValue = v; }
               });
-              newRow[header] = modeValue || options.nullFillValue ?? '';
+              newRow[header] = (modeValue || options.nullFillValue) ?? '';
               break;
             }
             case 'forward': {
@@ -1449,5 +1492,280 @@ export function aggregateData(
     fileName: data.fileName,
     rowCount: result.length,
     columnCount: result[0] ? Object.keys(result[0]).length : 0
+  };
+}
+
+/**
+ * AI 自动归因分析引擎
+ * 1. 检测数值字段异常波动（基于IQR/标准差）
+ * 2. 对异常指标按分类维度拆解，找到核心驱动因素
+ * 3. 结合相关性分析定位根因
+ */
+function analyzeAttribution(
+  data: ParsedData,
+  fieldStats: FieldStat[],
+  correlations: DeepAnalysis['correlations']
+): AttributionAnalysis | undefined {
+  const { headers, rows } = data;
+  if (rows.length < 5) return undefined;
+
+  // 识别数值字段和分类字段
+  const numericFields = fieldStats.filter(f => f.type === 'number');
+  const categoryFields = fieldStats.filter(f => 
+    f.type === 'string' && f.uniqueCount >= 2 && f.uniqueCount <= Math.min(50, rows.length * 0.5)
+  );
+
+  if (numericFields.length === 0) return undefined;
+
+  // === 第1步：异常指标检测 ===
+  const anomalyMetrics: AttributionAnalysis['anomalyMetrics'] = [];
+
+  for (const field of numericFields) {
+    const values = rows.map(r => Number(r[field.field])).filter(v => !isNaN(v));
+    if (values.length < 5) continue;
+
+    values.sort((a, b) => a - b);
+    const n = values.length;
+    const mean = values.reduce((a, b) => a + b, 0) / n;
+    const stdDev = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / n);
+    if (stdDev === 0) continue;
+
+    // IQR方法检测极端值
+    const q1 = values[Math.floor(n * 0.25)];
+    const q3 = values[Math.floor(n * 0.75)];
+    const iqr = q3 - q1;
+    const lowerFence = q1 - 1.5 * iqr;
+    const upperFence = q3 + 1.5 * iqr;
+
+    // 检测尾部异常（最大/最小10%与中位数对比）
+    const topDecile = values.slice(Math.floor(n * 0.9));
+    const bottomDecile = values.slice(0, Math.ceil(n * 0.1));
+    const topMean = topDecile.reduce((a, b) => a + b, 0) / topDecile.length;
+    const bottomMean = bottomDecile.reduce((a, b) => a + b, 0) / bottomDecile.length;
+    const median = values[Math.floor(n / 2)];
+
+    // 上行异常
+    if (topMean > median * 1.3 && topMean > upperFence) {
+      const changeRate = median !== 0 ? Math.round(((topMean - median) / Math.abs(median)) * 100) : 0;
+      const affectedRows = values.filter(v => v > upperFence).length;
+      anomalyMetrics.push({
+        field: field.field,
+        direction: 'spike_up',
+        severity: changeRate > 100 ? 'high' : changeRate > 50 ? 'medium' : 'low',
+        description: `${field.field}出现显著上行波动，头部均值偏离中位数${changeRate}%`,
+        changeRate,
+        affectedRows,
+        baseline: Math.round(median * 100) / 100,
+        actualValue: Math.round(topMean * 100) / 100,
+      });
+    }
+
+    // 下行异常
+    if (bottomMean < median * 0.7 && bottomMean < lowerFence) {
+      const changeRate = median !== 0 ? Math.round(((median - bottomMean) / Math.abs(median)) * 100) : 0;
+      const affectedRows = values.filter(v => v < lowerFence).length;
+      anomalyMetrics.push({
+        field: field.field,
+        direction: 'drop_down',
+        severity: changeRate > 50 ? 'high' : changeRate > 25 ? 'medium' : 'low',
+        description: `${field.field}出现显著下行波动，底部均值偏离中位数${changeRate}%`,
+        changeRate,
+        affectedRows,
+        baseline: Math.round(median * 100) / 100,
+        actualValue: Math.round(bottomMean * 100) / 100,
+      });
+    }
+
+    // 高波动性（变异系数 > 0.5）
+    const cv = stdDev / Math.abs(mean);
+    if (cv > 0.5 && !anomalyMetrics.some(m => m.field === field.field)) {
+      anomalyMetrics.push({
+        field: field.field,
+        direction: 'volatile',
+        severity: cv > 1 ? 'high' : cv > 0.7 ? 'medium' : 'low',
+        description: `${field.field}波动性极高（变异系数${(cv * 100).toFixed(0)}%），数据离散程度大`,
+        changeRate: Math.round(cv * 100),
+        affectedRows: values.filter(v => Math.abs((v - mean) / stdDev) > 2).length,
+        baseline: Math.round(mean * 100) / 100,
+        actualValue: Math.round(stdDev * 100) / 100,
+      });
+    }
+  }
+
+  // 如果没有异常指标且有数值字段，对第一个数值字段做基准分析
+  if (anomalyMetrics.length === 0 && numericFields.length > 0) {
+    const field = numericFields[0];
+    const values = rows.map(r => Number(r[field.field])).filter(v => !isNaN(v));
+    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+    const stdDev = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length);
+    const cv = stdDev / Math.abs(mean);
+    if (cv > 0.2) {
+      anomalyMetrics.push({
+        field: field.field,
+        direction: 'volatile',
+        severity: 'low',
+        description: `${field.field}存在一定波动（变异系数${(cv * 100).toFixed(0)}%）`,
+        changeRate: Math.round(cv * 100),
+        affectedRows: 0,
+        baseline: Math.round(mean * 100) / 100,
+        actualValue: Math.round(stdDev * 100) / 100,
+      });
+    }
+  }
+
+  // === 第2步：维度拆解 ===
+  const dimensionBreakdowns: AttributionAnalysis['dimensionBreakdowns'] = [];
+
+  for (const metric of anomalyMetrics.slice(0, 5)) {
+    for (const catField of categoryFields.slice(0, 5)) {
+      // 按分类字段分组计算指标值
+      const groupMap = new Map<string, number[]>();
+      for (const row of rows) {
+        const catValue = String(row[catField.field] ?? '未知');
+        const numValue = Number(row[metric.field]);
+        if (isNaN(numValue)) continue;
+        if (!groupMap.has(catValue)) groupMap.set(catValue, []);
+        groupMap.get(catValue)!.push(numValue);
+      }
+
+      if (groupMap.size < 2) continue;
+
+      // 计算每组的汇总值和总体均值
+      const overallSum = rows.reduce((acc, r) => {
+        const v = Number(r[metric.field]);
+        return isNaN(v) ? acc : acc + v;
+      }, 0);
+
+      const segments: AttributionAnalysis['dimensionBreakdowns'][0]['segments'] = [];
+      let keyDriverValue = '';
+      let keyDriverContribution = 0;
+
+      for (const [segValue, segValues] of groupMap) {
+        const segSum = segValues.reduce((a, b) => a + b, 0);
+        const contribution = overallSum !== 0 ? (segSum / overallSum) * 100 : 0;
+        const segMean = segValues.reduce((a, b) => a + b, 0) / segValues.length;
+        const overallMean = overallSum / rows.filter(r => !isNaN(Number(r[metric.field]))).length;
+        const deviation = overallMean !== 0 ? ((segMean - overallMean) / Math.abs(overallMean)) * 100 : 0;
+
+        segments.push({
+          segmentValue: segValue,
+          contribution: Math.round(contribution * 100) / 100,
+          metricValue: Math.round(segSum * 100) / 100,
+          deviation: Math.round(deviation * 100) / 100,
+          isKeyDriver: false,
+        });
+
+        if (Math.abs(contribution) > Math.abs(keyDriverContribution)) {
+          keyDriverContribution = contribution;
+          keyDriverValue = segValue;
+        }
+      }
+
+      // 标记核心驱动因素
+      const sortedSegments = segments.sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+      if (sortedSegments.length > 0) {
+        sortedSegments[0].isKeyDriver = true;
+      }
+
+      dimensionBreakdowns.push({
+        metricField: metric.field,
+        dimensionField: catField.field,
+        segments: sortedSegments.slice(0, 10),
+        keyDriver: keyDriverValue,
+        keyDriverContribution: Math.round(keyDriverContribution * 100) / 100,
+      });
+    }
+  }
+
+  // === 第3步：根因分析 ===
+  const rootCauses: AttributionAnalysis['rootCauses'] = [];
+
+  for (const metric of anomalyMetrics) {
+    // 查找与该指标强相关的字段
+    const relatedCorrelations = correlations.filter(
+      c => (c.field1 === metric.field || c.field2 === metric.field) && c.strength !== 'weak'
+    );
+
+    // 查找该指标的维度拆解
+    const breakdowns = dimensionBreakdowns.filter(b => b.metricField === metric.field);
+
+    const evidence: string[] = [];
+    const relatedDimensions: string[] = [];
+    let causeDescription = '';
+    let confidence: 'high' | 'medium' | 'low' = 'low';
+    let suggestion = '';
+
+    // 基于维度拆解的根因
+    if (breakdowns.length > 0) {
+      const mainBreakdown = breakdowns[0];
+      evidence.push(
+        `维度"${mainBreakdown.dimensionField}"中"${mainBreakdown.keyDriver}"贡献了${Math.abs(mainBreakdown.keyDriverContribution).toFixed(1)}%的${metric.field}`
+      );
+      relatedDimensions.push(mainBreakdown.dimensionField);
+
+      if (metric.direction === 'spike_up') {
+        causeDescription = `${metric.field}上行主要由"${mainBreakdown.dimensionField}"="${mainBreakdown.keyDriver}"驱动，该维度贡献度${mainBreakdown.keyDriverContribution.toFixed(1)}%`;
+        suggestion = `重点关注"${mainBreakdown.keyDriver}"相关业务，评估增长是否可持续，考虑是否需要资源倾斜`;
+      } else if (metric.direction === 'drop_down') {
+        causeDescription = `${metric.field}下降主要由"${mainBreakdown.dimensionField}"="${mainBreakdown.keyDriver}"拖累，该维度贡献度${mainBreakdown.keyDriverContribution.toFixed(1)}%`;
+        suggestion = `优先排查"${mainBreakdown.keyDriver}"相关业务下滑原因，制定针对性修复方案`;
+      } else {
+        causeDescription = `${metric.field}波动主要由"${mainBreakdown.dimensionField}"维度差异导致，最大贡献维度"${mainBreakdown.keyDriver}"占比${Math.abs(mainBreakdown.keyDriverContribution).toFixed(1)}%`;
+        suggestion = `对"${mainBreakdown.dimensionField}"各维度值分别制定标准化运营策略，减少波动`;
+      }
+      confidence = mainBreakdown.keyDriverContribution > 50 ? 'high' : 'medium';
+    }
+
+    // 基于相关性的根因补充
+    for (const corr of relatedCorrelations.slice(0, 2)) {
+      const relatedField = corr.field1 === metric.field ? corr.field2 : corr.field1;
+      evidence.push(
+        `与"${relatedField}"存在${corr.strength === 'strong' ? '强' : '中等'}${corr.direction === 'positive' ? '正' : '负'}相关（r=${corr.coefficient.toFixed(2)}）`
+      );
+      relatedDimensions.push(relatedField);
+    }
+
+    if (relatedCorrelations.length > 0 && breakdowns.length === 0) {
+      const topCorr = relatedCorrelations[0];
+      const relatedField = topCorr.field1 === metric.field ? topCorr.field2 : topCorr.field1;
+      causeDescription = `${metric.field}异常与"${relatedField}"高度相关（r=${topCorr.coefficient.toFixed(2)}），变化可能由"${relatedField}"传导`;
+      suggestion = `同步监控"${relatedField}"的变化趋势，考虑联动调控策略`;
+      confidence = topCorr.strength === 'strong' ? 'high' : 'medium';
+    }
+
+    if (causeDescription) {
+      rootCauses.push({
+        metric: metric.field,
+        cause: causeDescription,
+        confidence,
+        evidence,
+        relatedDimensions: [...new Set(relatedDimensions)],
+        suggestion,
+      });
+    }
+  }
+
+  // 汇总洞察
+  const anomalyCount = anomalyMetrics.length;
+  const highSeverity = anomalyMetrics.filter(m => m.severity === 'high').length;
+  const driverCount = dimensionBreakdowns.filter(b => Math.abs(b.keyDriverContribution) > 30).length;
+  const causeCount = rootCauses.length;
+
+  let summary = '';
+  if (anomalyCount === 0) {
+    summary = '当前数据整体平稳，未检测到显著异常波动。建议持续监控关键指标变化。';
+  } else {
+    summary = `检测到${anomalyCount}个指标存在异常波动`;
+    if (highSeverity > 0) summary += `（其中${highSeverity}个高严重度）`;
+    if (driverCount > 0) summary += `，${driverCount}个指标已定位核心驱动因素`;
+    if (causeCount > 0) summary += `，${causeCount}个指标已生成根因分析`;
+    summary += '。建议优先处理高严重度异常，关注核心驱动因素的业务变化。';
+  }
+
+  return {
+    anomalyMetrics,
+    dimensionBreakdowns,
+    rootCauses,
+    summary,
   };
 }

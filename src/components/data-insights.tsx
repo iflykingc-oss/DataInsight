@@ -25,9 +25,11 @@ import {
   ThumbsUp,
   ChevronDown,
   ChevronUp,
-  Sparkles
+  Sparkles,
+  Crosshair,
+  Flame
 } from 'lucide-react';
-import type { ParsedData, DataAnalysis, DeepAnalysis } from '@/lib/data-processor';
+import type { ParsedData, DataAnalysis, DeepAnalysis, AttributionAnalysis } from '@/lib/data-processor';
 import {
   BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
   ScatterChart as RechartsScatter, Scatter,
@@ -326,7 +328,161 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         )}
       </div>
 
-      {/* 4. 相关性分析 */}
+      {/* 4. 自动归因分析 */}
+      {deep.attribution && deep.attribution.anomalyMetrics.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Crosshair className="w-5 h-5 text-[#1890ff]" />
+              自动归因分析
+              <Badge variant="secondary">{deep.attribution.anomalyMetrics.length}</Badge>
+            </CardTitle>
+            <CardDescription>{deep.attribution.summary}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* 异常指标 */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                <Flame className="w-4 h-4 text-orange-500" />
+                异常指标检测
+              </h4>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {deep.attribution.anomalyMetrics.map((metric, idx) => {
+                  const dirIcon = metric.direction === 'spike_up' ? TrendingUp :
+                                  metric.direction === 'drop_down' ? TrendingDown : Activity;
+                  const DirIcon = dirIcon;
+                  const dirColor = metric.direction === 'spike_up' ? 'text-green-600 bg-green-50' :
+                                   metric.direction === 'drop_down' ? 'text-red-600 bg-red-50' : 'text-orange-600 bg-orange-50';
+                  const sevColor = metric.severity === 'high' ? 'border-l-4 border-l-red-400' :
+                                   metric.severity === 'medium' ? 'border-l-4 border-l-orange-400' : 'border-l-4 border-l-blue-400';
+                  
+                  return (
+                    <div key={idx} className={`p-3 rounded-lg border ${sevColor} ${dirColor}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{metric.field}</span>
+                        <DirIcon className="w-4 h-4" />
+                      </div>
+                      <p className="text-xs opacity-80 mb-2">{metric.description}</p>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span>基线: {metric.baseline}</span>
+                        <span>实际: {metric.actualValue}</span>
+                        <Badge variant="outline" className="text-xs py-0">
+                          {metric.severity === 'high' ? '高' : metric.severity === 'medium' ? '中' : '低'}
+                        </Badge>
+                      </div>
+                      {metric.changeRate > 0 && (
+                        <div className="mt-1 text-xs font-medium">
+                          偏离率: {metric.changeRate}%
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 维度拆解 */}
+            {deep.attribution.dimensionBreakdowns.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                  <BarChart3 className="w-4 h-4 text-blue-500" />
+                  维度拆解
+                </h4>
+                <div className="space-y-4">
+                  {deep.attribution.dimensionBreakdowns.slice(0, 4).map((breakdown, idx) => (
+                    <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-sm font-medium">{breakdown.metricField}</span>
+                        <ArrowRight className="w-3 h-3 text-gray-400" />
+                        <span className="text-sm text-gray-600">按 {breakdown.dimensionField} 拆解</span>
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs ml-auto">
+                          核心驱动: {breakdown.keyDriver} ({Math.abs(breakdown.keyDriverContribution).toFixed(1)}%)
+                        </Badge>
+                      </div>
+                      <div className="space-y-2">
+                        {breakdown.segments.slice(0, 6).map((seg, si) => (
+                          <div key={si} className="flex items-center gap-3">
+                            <span className="text-xs text-gray-600 w-24 truncate" title={seg.segmentValue}>
+                              {seg.segmentValue}
+                            </span>
+                            <div className="flex-1 h-5 bg-gray-200 rounded-full overflow-hidden relative">
+                              <div
+                                className={`h-full rounded-full ${seg.isKeyDriver ? 'bg-blue-500' : Math.abs(seg.contribution) > 20 ? 'bg-blue-300' : 'bg-gray-400'}`}
+                                style={{ width: `${Math.min(Math.abs(seg.contribution), 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-mono w-14 text-right">
+                              {seg.contribution.toFixed(1)}%
+                            </span>
+                            {seg.isKeyDriver && (
+                              <Badge className="bg-blue-500 text-white hover:bg-blue-500 text-xs py-0 px-1.5">驱动</Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 根因分析 */}
+            {deep.attribution.rootCauses.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                  <Crosshair className="w-4 h-4 text-red-500" />
+                  根因定位
+                </h4>
+                <div className="space-y-3">
+                  {deep.attribution.rootCauses.map((rc, idx) => {
+                    const confColor = rc.confidence === 'high' ? 'border-l-4 border-l-red-400 bg-red-50/30' :
+                                      rc.confidence === 'medium' ? 'border-l-4 border-l-orange-400 bg-orange-50/30' :
+                                      'border-l-4 border-l-blue-400 bg-blue-50/30';
+                    
+                    return (
+                      <div key={idx} className={`p-3 rounded-lg ${confColor}`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-medium text-sm">{rc.metric}</span>
+                          <Badge variant="outline" className="text-xs">
+                            置信度: {rc.confidence === 'high' ? '高' : rc.confidence === 'medium' ? '中' : '低'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-700 mb-2">{rc.cause}</p>
+                        {/* 证据链 */}
+                        <div className="mb-2">
+                          <p className="text-xs text-gray-500 mb-1">证据链:</p>
+                          {rc.evidence.map((ev, ei) => (
+                            <div key={ei} className="flex items-start gap-1 ml-2">
+                              <span className="text-xs text-gray-400 mt-0.5">•</span>
+                              <span className="text-xs text-gray-600">{ev}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {/* 相关维度 */}
+                        {rc.relatedDimensions.length > 0 && (
+                          <div className="flex items-center gap-1 mb-2">
+                            <span className="text-xs text-gray-400">相关维度:</span>
+                            {rc.relatedDimensions.map(d => (
+                              <Badge key={d} variant="outline" className="text-xs py-0">{d}</Badge>
+                            ))}
+                          </div>
+                        )}
+                        {/* 建议 */}
+                        <div className="flex items-start gap-1.5 mt-2 p-2 bg-green-50/50 rounded">
+                          <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-xs text-gray-700">{rc.suggestion}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 5. 相关性分析 */}
       {deep.correlations.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -372,7 +528,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         </Card>
       )}
 
-      {/* 5. 推荐图表 */}
+      {/* 6. 推荐图表 */}
       {deep.recommendedCharts.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -415,7 +571,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         </Card>
       )}
 
-      {/* 6. 行动建议 - 按时间维度分组 */}
+      {/* 7. 行动建议 - 按时间维度分组 */}
       {deep.actionItems.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -495,7 +651,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         </Card>
       )}
 
-      {/* 7. 基础统计 */}
+      {/* 8. 基础统计 */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
