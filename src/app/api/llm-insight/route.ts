@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
       fieldStats,
       analysisMode = 'comprehensive',
       modelConfig,
+      chatHistory,
     } = body as {
       message: string;
       data?: { headers: string[]; rows: Record<string, unknown>[]; rowCount?: number; columnCount?: number };
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
       }>;
       analysisMode?: string;
       modelConfig?: LLMModelConfig;
+      chatHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
     };
 
     // 验证模型配置
@@ -116,11 +118,23 @@ export async function POST(request: NextRequest) {
     // 构建系统提示词
     const systemPrompt = buildSystemPrompt(activeMode, data, fieldStats);
 
-    // 构建消息
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      { role: 'user' as const, content: `数据概要：\n${dataContext}\n\n用户问题：${question}` },
+    // 构建消息（含多轮对话上下文）
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+      { role: 'system', content: systemPrompt },
     ];
+
+    // 注入最近5轮对话上下文
+    if (chatHistory && chatHistory.length > 0) {
+      const recentHistory = chatHistory.slice(-10); // 最近5轮=10条消息
+      for (const msg of recentHistory) {
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+    }
+
+    messages.push({ role: 'user', content: `数据概要：\n${dataContext}\n\n用户问题：${question}` });
 
     // 流式调用 LLM
     try {

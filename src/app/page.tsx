@@ -18,6 +18,7 @@ import { ShareManager } from '@/components/share-manager';
 import { GlobalAIAssistant } from '@/components/global-ai-assistant';
 import { SmartChartRecommender } from '@/components/smart-chart-recommender';
 import { AIModelSettings } from '@/components/ai-model-settings';
+import AITableBuilder from '@/components/ai-table-builder';
 import { MetricSemanticLayer } from '@/components/metric-semantic-layer';
 import { DataQualityChecker } from '@/components/data-quality-checker';
 import { DataAlerting } from '@/components/data-alerting';
@@ -77,6 +78,7 @@ import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 // ============================================
 type ViewMode =
   | 'home'
+  | 'ai-table-builder'
   | 'table' | 'source' | 'clean' | 'quality'
   | 'insights' | 'dashboard' | 'nl2dash' | 'metric' | 'aiChart'
   | 'chat' | 'report'
@@ -104,10 +106,11 @@ const NAV_GROUPS: Array<{
   {
     label: '数据',
     items: [
-      { id: 'table', label: '数据表格', icon: Table2, needsData: true },
-      { id: 'source', label: '数据源管理', icon: Database },
-      { id: 'clean', label: '数据清洗', icon: Filter, needsData: true },
-      { id: 'quality', label: '数据质量', icon: Shield, needsData: true },
+      { id: 'ai-table-builder' as ViewMode, label: 'AI 智能建表', icon: Sparkles, color: 'text-primary', badge: 'NEW' },
+      { id: 'table' as ViewMode, label: '数据表格', icon: Table2, needsData: true },
+      { id: 'source' as ViewMode, label: '数据源管理', icon: Database },
+      { id: 'clean' as ViewMode, label: '数据清洗', icon: Filter, needsData: true },
+      { id: 'quality' as ViewMode, label: '数据质量', icon: Shield, needsData: true },
     ],
   },
   {
@@ -158,6 +161,7 @@ interface HomeCard {
 }
 
 const HOME_CARDS: HomeCard[] = [
+  { id: 'ai-table-builder' as ViewMode, icon: Sparkles, label: 'AI 智能建表', desc: 'AI 一键生成标准化经营台账', color: 'text-primary', bgColor: 'bg-primary/5', needsData: false, badge: 'NEW', highlight: true },
   { id: 'insights', icon: Brain, label: '智能分析', desc: 'AI 自动洞察数据规律与健康评分', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, highlight: true },
   { id: 'nl2dash', icon: Wand2, label: 'NL2Dashboard', desc: '对话生成业务仪表盘', color: 'text-violet-600', bgColor: 'bg-violet-50', needsData: true, badge: 'AI', highlight: true },
   { id: 'chat', icon: MessageSquare, label: 'AI 问数', desc: '自然语言检索、统计、归因、预测', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI', highlight: true },
@@ -557,6 +561,11 @@ export default function HomePage() {
           <Button onClick={() => setViewMode('home')}>去上传数据</Button>
         </div>
       );
+    }
+
+    // AI 智能建表（不需要数据）
+    if (viewMode === 'ai-table-builder') {
+      return <AITableBuilder modelConfig={activeModelConfig} />;
     }
 
     // 数据表格

@@ -1150,9 +1150,16 @@ export function cleanData(data: ParsedData, options: {
   removeDuplicates?: boolean;
   fillNulls?: boolean;
   nullFillValue?: CellValue;
+  nullFillStrategy?: 'value' | 'mean' | 'median' | 'mode' | 'forward';
+  outlierMethod?: 'iqr' | 'zscore' | 'none';
+  outlierThreshold?: number;
+  outlierAction?: 'remove' | 'mark' | 'replace';
 }): ParsedData {
   let { rows } = data;
+  let removedOutliers = 0;
+  let filledNulls = 0;
   
+  // 1. 去重
   if (options.removeDuplicates) {
     const seen = new Set<string>();
     rows = rows.filter(row => {
@@ -1163,22 +1170,225 @@ export function cleanData(data: ParsedData, options: {
     });
   }
   
-  if (options.fillNulls && options.nullFillValue !== undefined) {
-    rows = rows.map(row => {
+  // 2. 缺失值填充（多策略）
+  if (options.fillNulls) {
+    const strategy = options.nullFillStrategy || 'value';
+    rows = rows.map((row, rowIdx) => {
       const newRow = { ...row };
       data.headers.forEach(header => {
         if (newRow[header] === null || newRow[header] === undefined || newRow[header] === '') {
-          newRow[header] = options.nullFillValue;
+          filledNulls++;
+          switch (strategy) {
+            case 'value':
+              newRow[header] = options.nullFillValue ?? '';
+              break;
+            case 'mean': {
+              const validNums = rows.map(row => Number(row[header])).filter(v => !isNaN(v));
+              newRow[header] = validNums.length > 0 ? validNums.reduce((a, b) => a + b, 0) / validNums.length : 0;
+              break;
+            }
+            case 'median': {
+              const nums = rows.map(row => Number(row[header])).filter(v => !isNaN(v)).sort((a, b) => a - b);
+              newRow[header] = nums.length > 0
+                ? (nums.length % 2 === 0
+                  ? (nums[nums.length / 2 - 1] + nums[nums.length / 2]) / 2
+                  : nums[Math.floor(nums.length / 2)])
+                : 0;
+              break;
+            }
+            case 'mode': {
+              const countMap = new Map<string, number>();
+              rows.forEach(r => {
+                const v = String(r[header]);
+                if (v !== '' && v !== 'null' && v !== 'undefined') {
+                  countMap.set(v, (countMap.get(v) || 0) + 1);
+                }
+              });
+              let maxCount = 0; let modeValue = '';
+              countMap.forEach((count, v) => {
+                if (count > maxCount) { maxCount = count; modeValue = v; }
+              });
+              newRow[header] = modeValue || options.nullFillValue ?? '';
+              break;
+            }
+            case 'forward': {
+              // 前向填充：用前一个非空值填充
+              for (let i = rowIdx - 1; i >= 0; i--) {
+                const prev = rows[i]?.[header];
+                if (prev !== null && prev !== undefined && prev !== '') {
+                  newRow[header] = prev;
+                  break;
+                }
+              }
+              break;
+            }
+          }
         }
       });
       return newRow;
     });
   }
   
+  // 3. 异常值检测与处理
+  if (options.outlierMethod && options.outlierMethod !== 'none') {
+    const threshold = options.outlierThreshold || (options.outlierMethod === 'iqr' ? 1.5 : 3);
+    const action = options.outlierAction || 'mark';
+    
+    // 对每个数值字段检测异常值
+    data.headers.forEach(header => {
+      const values = rows.map(r => Number(r[header])).filter(v => !isNaN(v));
+      if (values.length === 0) return;
+      
+      const isOutlier = options.outlierMethod === 'iqr'
+        ? getIQROutlierChecker(values, threshold)
+        : getZScoreOutlierChecker(values, threshold);
+      
+      rows = rows.map(row => {
+        const val = Number(row[header]);
+        if (isNaN(val) || !isOutlier(val)) return row;
+        
+        removedOutliers++;
+        const newRow = { ...row };
+        switch (action) {
+          case 'mark':
+            newRow[header] = `⚠${val}`;
+            return newRow;
+          case 'replace': {
+            // 替换为中位数
+            const sorted = values.filter(v => !isOutlier(v)).sort((a, b) => a - b);
+            newRow[header] = sorted.length > 0
+              ? (sorted.length % 2 === 0
+                ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+                : sorted[Math.floor(sorted.length / 2)])
+              : val;
+            return newRow;
+          }
+          case 'remove':
+            return null; // 标记为删除
+        }
+        return row;
+      }).filter((row): row is Record<string, unknown> => row !== null);
+    });
+  }
+  
   return {
     ...data,
     rows,
-    rowCount: rows.length
+    rowCount: rows.length,
+  };
+}
+
+// IQR异常值检测器
+function getIQROutlierChecker(values: number[], multiplier: number): (v: number) => boolean {
+  const sorted = [...values].sort((a, b) => a - b);
+  const q1 = sorted[Math.floor(sorted.length * 0.25)];
+  const q3 = sorted[Math.floor(sorted.length * 0.75)];
+  const iqr = q3 - q1;
+  const lower = q1 - multiplier * iqr;
+  const upper = q3 + multiplier * iqr;
+  return (v: number) => v < lower || v > upper;
+}
+
+// Z-score异常值检测器
+function getZScoreOutlierChecker(values: number[], threshold: number): (v: number) => boolean {
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const std = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length);
+  if (std === 0) return () => false;
+  return (v: number) => Math.abs((v - mean) / std) > threshold;
+}
+
+// 数据质量报告生成
+export function generateQualityReport(data: ParsedData, fieldStats: Array<{ field: string; type: string; nullCount?: number; uniqueCount?: number; numericStats?: { min: number; max: number; mean: number; std?: number } }>): {
+  overallScore: number;
+  completeness: number;
+  consistency: number;
+  quality: number;
+  usability: number;
+  missingRate: number;
+  duplicateRate: number;
+  outlierRate: number;
+  beforeVsAfter?: { beforeRows: number; afterRows: number; removed: number; filled: number };
+  fieldReports: Array<{
+    field: string;
+    type: string;
+    missingRate: number;
+    uniqueRate: number;
+    outlierCount: number;
+    score: number;
+    issues: string[];
+  }>;
+} {
+  const totalCells = data.rowCount * data.headers.length;
+  const nullCells = fieldStats.reduce((sum, f) => sum + (f.nullCount || 0), 0);
+  const missingRate = totalCells > 0 ? nullCells / totalCells : 0;
+  
+  // 重复率
+  const seen = new Set<string>();
+  let dupes = 0;
+  data.rows.forEach(row => {
+    const key = JSON.stringify(row);
+    if (seen.has(key)) dupes++;
+    seen.add(key);
+  });
+  const duplicateRate = data.rowCount > 0 ? dupes / data.rowCount : 0;
+  
+  // 异常值率
+  let outlierCount = 0;
+  const fieldReports = fieldStats.map(f => {
+    const issues: string[] = [];
+    const fieldMissingRate = data.rowCount > 0 ? (f.nullCount || 0) / data.rowCount : 0;
+    
+    if (f.type === 'number' && f.numericStats && f.numericStats.std && f.numericStats.std > 0) {
+      const mean = f.numericStats.mean;
+      const std = f.numericStats.std;
+      const outlierThreshold = 3;
+      const isOutlier = (v: number) => Math.abs((v - mean) / std) > outlierThreshold;
+      let fieldOutliers = 0;
+      data.rows.forEach(row => {
+        const val = Number(row[f.field]);
+        if (!isNaN(val) && isOutlier(val)) fieldOutliers++;
+      });
+      outlierCount += fieldOutliers;
+      
+      if (fieldOutliers > 0) issues.push(`${fieldOutliers}个异常值`);
+    }
+    
+    if (fieldMissingRate > 0.2) issues.push(`缺失率${(fieldMissingRate * 100).toFixed(1)}%`);
+    if (f.uniqueCount !== undefined && data.rowCount > 0) {
+      const uniqueRate = f.uniqueCount / data.rowCount;
+      if (f.type === 'string' && uniqueRate < 0.01) issues.push('低区分度');
+    }
+    
+    const score = Math.max(0, 100 - fieldMissingRate * 50 - (issues.length > 0 ? 15 : 0));
+    
+    return {
+      field: f.field,
+      type: f.type,
+      missingRate: fieldMissingRate,
+      uniqueRate: data.rowCount > 0 ? (f.uniqueCount || 0) / data.rowCount : 0,
+      outlierCount: 0,
+      score,
+      issues,
+    };
+  });
+  
+  const outlierRate = data.rowCount > 0 ? outlierCount / data.rowCount : 0;
+  const completeness = Math.max(0, 100 - missingRate * 100);
+  const consistency = Math.max(0, 100 - duplicateRate * 100);
+  const quality = Math.max(0, 100 - missingRate * 40 - duplicateRate * 30 - outlierRate * 30);
+  const usability = data.rowCount > 10 && data.headers.length > 2 ? 100 : 50;
+  const overallScore = Math.round(completeness * 0.3 + consistency * 0.2 + quality * 0.3 + usability * 0.2);
+  
+  return {
+    overallScore,
+    completeness: Math.round(completeness),
+    consistency: Math.round(consistency),
+    quality: Math.round(quality),
+    usability: Math.round(usability),
+    missingRate,
+    duplicateRate,
+    outlierRate,
+    fieldReports,
   };
 }
 

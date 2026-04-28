@@ -147,6 +147,10 @@ export function EnhancedLLMAssistant({
           fieldStats: analysis.fieldStats.slice(0, 20),
           analysisMode: 'comprehensive',
           modelConfig,
+          chatHistory: messages
+            .filter(m => m.role === 'user' || m.role === 'assistant')
+            .slice(-10)
+            .map(m => ({ role: m.role, content: m.content })),
         }),
         signal: abortRef.current.signal
       });

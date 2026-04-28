@@ -105,6 +105,10 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
           fieldStats: fieldStats ? fieldStats.slice(0, 20) : undefined,
           analysisMode: 'trend',
           modelConfig,
+          chatHistory: messages
+            .filter(m => m.role === 'user' || m.role === 'assistant')
+            .slice(-10)
+            .map(m => ({ role: m.role, content: m.content })),
         }),
         signal: abortControllerRef.current.signal,
       });

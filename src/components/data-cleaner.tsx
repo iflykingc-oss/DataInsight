@@ -135,7 +135,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
   const [quickFilterOp, setQuickFilterOp] = useState('equals');
   const [quickFilterValue, setQuickFilterValue] = useState('');
   const [nullFillField, setNullFillField] = useState('');
-  const [nullFillMethod, setNullFillMethod] = useState<'value' | 'mean' | 'median' | 'mode'>('value');
+  const [nullFillMethod, setNullFillMethod] = useState<'value' | 'mean' | 'median' | 'mode' | 'forward'>('value');
   const [nullFillValue, setNullFillValue] = useState('');
 
   // 生成唯一ID
@@ -221,6 +221,16 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                     if (count > maxCount) { maxCount = count; modeValue = v; }
                   });
                   newRow[field] = modeValue;
+                } else if (method === 'forward') {
+                  // 前向填充
+                  const rowIdx = result.rows.indexOf(row);
+                  for (let i = rowIdx - 1; i >= 0; i--) {
+                    const prev = result.rows[i]?.[field];
+                    if (prev !== null && prev !== undefined && prev !== '') {
+                      newRow[field] = prev;
+                      break;
+                    }
+                  }
                 }
               }
             });
@@ -639,6 +649,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                       <SelectItem value="mean">均值</SelectItem>
                       <SelectItem value="median">中位数</SelectItem>
                       <SelectItem value="mode">众数</SelectItem>
+                      <SelectItem value="forward">前向填充</SelectItem>
                     </SelectContent>
                   </Select>
                   <Input 
@@ -725,6 +736,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                         if (config.method === 'value') return `空值填为: ${config.value}`;
                         if (config.method === 'mean') return '空值填为均值';
                         if (config.method === 'median') return '空值填为中位数';
+                        if (config.method === 'forward') return '空值前向填充';
                         return '空值填为众数';
                       case 'normalize':
                         return '清除多余空格';
