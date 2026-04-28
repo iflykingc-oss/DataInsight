@@ -27,9 +27,11 @@ import {
   ChevronUp,
   Sparkles,
   Crosshair,
-  Flame
+  Flame,
+  LayoutTemplate,
+  Layers
 } from 'lucide-react';
-import type { ParsedData, DataAnalysis, DeepAnalysis } from '@/lib/data-processor';
+import type { ParsedData, DataAnalysis, DeepAnalysis, ScenarioAnalysis } from '@/lib/data-processor';
 import {
   BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
   ScatterChart as RechartsScatter, Scatter,
@@ -169,7 +171,93 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         </Card>
       </div>
 
-      {/* 2. 关键发现 */}
+      {/* 2. 场景化分析模板 */}
+      {deep.scenarioAnalysis && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <LayoutTemplate className="w-5 h-5 text-[#1890ff]" />
+              场景化分析
+              <Badge variant="secondary">{deep.scenarioAnalysis.detectedScenario}</Badge>
+              <Badge variant={deep.scenarioAnalysis.confidence === 'high' ? 'default' : 'outline'} className="text-xs">
+                {deep.scenarioAnalysis.confidence === 'high' ? '高置信度' : deep.scenarioAnalysis.confidence === 'medium' ? '中置信度' : '低置信度'}
+              </Badge>
+            </CardTitle>
+            <CardDescription>
+              基于数据特征自动匹配 {deep.scenarioAnalysis.detectedScenario} 场景，推荐以下分析指标与维度
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {/* 推荐 KPI */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                <Target className="w-4 h-4 text-blue-500" />
+                推荐核心指标
+              </h4>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {deep.scenarioAnalysis.kpiRecommendations.map((kpi, idx) => (
+                  <div key={idx} className={`p-3 rounded-lg border ${
+                    kpi.priority === 'p0' ? 'border-l-4 border-l-red-400 bg-red-50/30' :
+                    kpi.priority === 'p1' ? 'border-l-4 border-l-orange-400 bg-orange-50/30' :
+                    'border-l-4 border-l-blue-400 bg-blue-50/30'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm">{kpi.name}</span>
+                      <Badge variant="outline" className="text-xs py-0">
+                        {kpi.priority === 'p0' ? 'P0' : kpi.priority === 'p1' ? 'P1' : 'P2'}
+                      </Badge>
+                    </div>
+                    <code className="text-xs text-gray-500 block mb-1">{kpi.expression}</code>
+                    <p className="text-xs text-gray-600">{kpi.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 推荐维度 */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                <Layers className="w-4 h-4 text-purple-500" />
+                推荐分析维度
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {deep.scenarioAnalysis.recommendedDimensions.map((dim, idx) => (
+                  <Badge key={idx} variant="secondary" className="text-sm py-1 px-3">
+                    {dim}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* 行业化建议 */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                <Lightbulb className="w-4 h-4 text-yellow-500" />
+                行业化分析建议
+              </h4>
+              <div className="space-y-2">
+                {deep.scenarioAnalysis.industrySuggestions.map((s, idx) => (
+                  <div key={idx} className={`flex items-start gap-3 p-3 rounded-lg ${
+                    s.priority === 'high' ? 'bg-red-50/50 border-l-4 border-l-red-400' :
+                    s.priority === 'medium' ? 'bg-orange-50/50 border-l-4 border-l-orange-400' :
+                    'bg-blue-50/50 border-l-4 border-l-blue-400'
+                  }`}>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{s.title}</p>
+                      <p className="text-xs text-gray-600 mt-1">{s.description}</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs py-0 flex-shrink-0">
+                      {s.priority === 'high' ? '高优先级' : s.priority === 'medium' ? '中优先级' : '低优先级'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 3. 关键发现 */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">

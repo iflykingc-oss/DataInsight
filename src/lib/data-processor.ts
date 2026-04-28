@@ -93,6 +93,27 @@ export interface DeepAnalysis {
   };
   // 自动归因分析
   attribution?: AttributionAnalysis;
+  // 场景化分析模板
+  scenarioAnalysis?: ScenarioAnalysis;
+}
+
+export interface ScenarioAnalysis {
+  detectedScenario: string;           // 检测到的场景
+  confidence: 'high' | 'medium' | 'low';
+  matchedIndicators: string[];        // 匹配到的场景指标
+  kpiRecommendations: Array<{
+    name: string;
+    expression: string;
+    fieldRefs?: string[];
+    description: string;
+    priority: 'p0' | 'p1' | 'p2';
+  }>;
+  recommendedDimensions: string[];    // 推荐分析维度
+  industrySuggestions: Array<{
+    title: string;
+    description: string;
+    priority: 'high' | 'medium' | 'low';
+  }>;
 }
 
 export interface AttributionAnalysis {
@@ -436,6 +457,7 @@ function generateDeepAnalysis(
   const dataProfile = generateDataProfile(data, fieldStats, summary);
   const actionItems = generateActionItems(healthScore, keyFindings, fieldStats, summary, dataProfile);
   const attribution = analyzeAttribution(data, fieldStats, correlations);
+  const scenarioAnalysis = generateScenarioAnalysis(data, fieldStats, dataProfile);
 
   return {
     healthScore,
@@ -446,7 +468,8 @@ function generateDeepAnalysis(
     recommendedCharts,
     actionItems,
     dataProfile,
-    attribution
+    attribution,
+    scenarioAnalysis
   };
 }
 
@@ -1763,5 +1786,200 @@ function analyzeAttribution(
     dimensionBreakdowns,
     rootCauses,
     summary,
+  };
+}
+
+/**
+ * 场景化分析模板
+ * 根据数据字段名自动匹配业务场景，生成针对性的分析建议
+ */
+const SCENARIO_DEFINITIONS: Array<{
+  id: string;
+  name: string;
+  keywords: RegExp;
+  indicators: Array<{ name: string; keywords: RegExp; expression: string; description: string; priority: 'p0' | 'p1' | 'p2' }>;
+  dimensions: string[];
+  suggestions: Array<{ title: string; description: string; priority: 'high' | 'medium' | 'low' }>;
+}> = [
+  {
+    id: 'retail',
+    name: '电商/零售',
+    keywords: /销售|sale|订单|order|商品|product|客户|customer|库存|inventory|单价|price|金额|amount|营收|revenue|毛利|profit|gmv|uv|pv|转化率|conversion/i,
+    indicators: [
+      { name: '总销售额', keywords: /销售额|销售金额|amount|revenue|gmv|sales|sale/i, expression: 'SUM(销售额字段)', description: '统计周期内所有销售订单的总金额', priority: 'p0' },
+      { name: '订单量', keywords: /订单|order|单量|quantity|count/i, expression: 'COUNT(订单ID)', description: '统计周期内的总订单数量', priority: 'p0' },
+      { name: '客单价', keywords: /单价|客单价|avg.*price|price.*avg|unit.*price|aov/i, expression: 'SUM(金额) / COUNT(订单)', description: '平均每笔订单的金额', priority: 'p0' },
+      { name: '毛利率', keywords: /毛利|利润|profit|margin|gross/i, expression: '(销售额 - 成本) / 销售额', description: '销售收入扣除成本后的利润率', priority: 'p1' },
+      { name: '转化率', keywords: /转化|conversion|rate|convert/i, expression: '成交数 / 访客数', description: '访客转化为购买客户的比例', priority: 'p1' },
+    ],
+    dimensions: ['时间（日/周/月）', '商品类别', '客户等级', '区域/渠道', '促销活动'],
+    suggestions: [
+      { title: 'TOP商品分析', description: '识别销售额TOP20%的商品，重点优化其库存和供应链', priority: 'high' },
+      { title: '滞销商品清理', description: '找出30天无销量的SKU，制定清仓或下架策略', priority: 'high' },
+      { title: '客户分层运营', description: '基于消费金额和频次将客户分为高价值/潜力/流失群体', priority: 'medium' },
+      { title: '促销效果追踪', description: '对比促销期间与非促销期间的销售额变化，评估ROI', priority: 'medium' },
+    ],
+  },
+  {
+    id: 'finance',
+    name: '财务/成本',
+    keywords: /收入|income|支出|expense|成本|cost|预算|budget|费用|fee|报销|reimburse|资产|asset|负债|liability|现金流|cashflow|利润|profit|税务|tax|发票|invoice/i,
+    indicators: [
+      { name: '总收入', keywords: /收入|revenue|income|营业额/i, expression: 'SUM(收入字段)', description: '统计周期内所有收入来源的总和', priority: 'p0' },
+      { name: '总支出', keywords: /支出|expense|成本|cost|费用/i, expression: 'SUM(支出字段)', description: '统计周期内所有支出的总和', priority: 'p0' },
+      { name: '净利润', keywords: /净利|利润|profit|net/i, expression: '总收入 - 总支出', description: '扣除所有成本费用后的净收益', priority: 'p0' },
+      { name: '费用占比', keywords: /费用|fee|expense/i, expression: '某类费用 / 总支出', description: '各类费用在总支出中的占比', priority: 'p1' },
+    ],
+    dimensions: ['时间（月/季/年）', '部门/项目', '费用类别', '收支类型'],
+    suggestions: [
+      { title: '预算执行监控', description: '对比实际支出与预算，识别超支部门并预警', priority: 'high' },
+      { title: '费用结构优化', description: '分析固定成本与变动成本比例，寻找降本空间', priority: 'high' },
+      { title: '应收应付管理', description: '跟踪应收账款账龄，加速资金回笼', priority: 'medium' },
+    ],
+  },
+  {
+    id: 'hr',
+    name: '人力资源',
+    keywords: /员工|employee|人员|staff|招聘|recruit|入职|onboard|离职|turnover|考勤|attendance|绩效|performance|薪资|salary|薪酬|compensation|培训|training|人事|hr/i,
+    indicators: [
+      { name: '在职人数', keywords: /员工|人员|在职|人数|count.*emp|headcount/i, expression: 'COUNT(员工ID)', description: '当前在职员工总数', priority: 'p0' },
+      { name: '离职率', keywords: /离职|流失|turnover|leave/i, expression: '离职人数 / 平均在职人数', description: '统计周期内员工离职的比例', priority: 'p0' },
+      { name: '平均薪资', keywords: /薪资|工资|salary|compensation/i, expression: 'AVG(薪资)', description: '员工平均薪酬水平', priority: 'p1' },
+      { name: '招聘完成率', keywords: /招聘|recruit|hire/i, expression: '实际入职 / 计划招聘', description: '招聘计划完成情况', priority: 'p1' },
+    ],
+    dimensions: ['部门', '岗位级别', '入职时间', '性别/年龄区间'],
+    suggestions: [
+      { title: '离职风险预警', description: '识别高离职率部门，分析根因并制定留人方案', priority: 'high' },
+      { title: '薪酬竞争力分析', description: '对比行业平均薪酬，评估薪资竞争力', priority: 'medium' },
+      { title: '人才结构优化', description: '分析各部门人员配比，识别冗余或短缺', priority: 'medium' },
+    ],
+  },
+  {
+    id: 'education',
+    name: '教育培训',
+    keywords: /学生|student|学员|course|课程|成绩|score|考试|exam|教师|teacher|班级|class|学校|school|培训|training|课时|hour|出勤|attendance/i,
+    indicators: [
+      { name: '学员总数', keywords: /学生|学员|student|learner/i, expression: 'COUNT(学员ID)', description: '在册学员总数', priority: 'p0' },
+      { name: '平均成绩', keywords: /成绩|分数|score|grade/i, expression: 'AVG(成绩)', description: '学员平均成绩', priority: 'p0' },
+      { name: '出勤率', keywords: /出勤|attendance|到课/i, expression: '实际出勤 / 应出勤', description: '学员出勤比例', priority: 'p1' },
+      { name: '及格率', keywords: /及格|pass|合格/i, expression: '及格人数 / 总人数', description: '考试及格比例', priority: 'p1' },
+    ],
+    dimensions: ['课程/科目', '班级', '时间（月/学期）', '教师'],
+    suggestions: [
+      { title: '学业预警', description: '识别成绩低于及格线或出勤率不足的学员，及时干预', priority: 'high' },
+      { title: '课程效果评估', description: '对比不同课程的平均成绩，优化教学内容', priority: 'medium' },
+      { title: '教师绩效分析', description: '分析各班级成绩分布，识别教学薄弱环节', priority: 'medium' },
+    ],
+  },
+  {
+    id: 'manufacturing',
+    name: '生产制造',
+    keywords: /生产|production|产量|output|产能|capacity|设备|equipment|质量|quality|质检|inspect|缺陷|defect|工单|workorder|工序|process|物料|material|库存|inventory|供应商|supplier/i,
+    indicators: [
+      { name: '总产量', keywords: /产量|产出|output|production/i, expression: 'SUM(产量)', description: '统计周期内生产的产品总量', priority: 'p0' },
+      { name: '良品率', keywords: /良品|合格|质量|quality|pass.*rate/i, expression: '良品数 / 总生产数', description: '合格产品占总产量的比例', priority: 'p0' },
+      { name: '设备稼动率', keywords: /设备|稼动|利用率|utilization/i, expression: '实际运行时间 / 计划运行时间', description: '设备有效利用比例', priority: 'p1' },
+      { name: '单位成本', keywords: /成本|cost|单位/i, expression: '总成本 / 总产量', description: '每单位产品的生产成本', priority: 'p1' },
+    ],
+    dimensions: ['生产线/车间', '产品型号', '时间（日/周）', '班次', '供应商'],
+    suggestions: [
+      { title: '质量异常追溯', description: '分析缺陷产品分布，定位问题工序和根因', priority: 'high' },
+      { title: '产能瓶颈识别', description: '对比各产线产能利用率，找出瓶颈环节', priority: 'high' },
+      { title: '库存周转优化', description: '分析原材料和成品库存周转天数，减少资金占用', priority: 'medium' },
+    ],
+  },
+  {
+    id: 'general',
+    name: '通用数据',
+    keywords: /.*/,
+    indicators: [
+      { name: '数据总量', keywords: /.*/, expression: 'COUNT(*)', description: '数据记录总数', priority: 'p0' },
+      { name: '平均值', keywords: /.*/, expression: 'AVG(数值字段)', description: '数值字段的平均值', priority: 'p1' },
+    ],
+    dimensions: ['时间', '类别', '状态'],
+    suggestions: [
+      { title: '数据质量提升', description: '检查缺失值和异常值，提升数据完整性', priority: 'medium' },
+      { title: '趋势监控', description: '建立关键指标的趋势监控，及时发现异常', priority: 'medium' },
+    ],
+  },
+];
+
+function generateScenarioAnalysis(
+  data: ParsedData,
+  fieldStats: FieldStat[],
+  dataProfile: DeepAnalysis['dataProfile']
+): ScenarioAnalysis | undefined {
+  const { rows } = data;
+  if (rows.length === 0 || fieldStats.length === 0) return undefined;
+
+  // 收集所有字段名和样例值，用于场景匹配
+  const fieldTexts = fieldStats.map(f => f.field).join(' ');
+  const sampleTexts = fieldStats.flatMap(f => f.sampleValues?.slice(0, 3) || []).join(' ');
+  const combinedText = `${fieldTexts} ${sampleTexts}`;
+
+  // 匹配场景（通用场景作为兜底，匹配度最低）
+  let bestScenario = SCENARIO_DEFINITIONS[SCENARIO_DEFINITIONS.length - 1];
+  let bestScore = 0;
+
+  for (const scenario of SCENARIO_DEFINITIONS) {
+    if (scenario.id === 'general') continue;
+    const match = combinedText.match(scenario.keywords);
+    if (match) {
+      const score = match.length;
+      if (score > bestScore) {
+        bestScore = score;
+        bestScenario = scenario;
+      }
+    }
+  }
+
+  // 匹配具体指标（支持字段名 + 样例值匹配）
+  const matchedIndicators: typeof bestScenario.indicators = [];
+  const matchedFieldNames = new Set<string>();
+
+  for (const indicator of bestScenario.indicators) {
+    for (const field of fieldStats) {
+      const fieldText = `${field.field} ${(field.sampleValues || []).join(' ')}`;
+      const fieldNameLower = field.field.toLowerCase();
+      if (indicator.keywords.test(fieldText) || indicator.keywords.test(fieldNameLower)) {
+        matchedIndicators.push(indicator);
+        matchedFieldNames.add(field.field);
+        break;
+      }
+    }
+  }
+
+  // 推荐分析维度（优先匹配数据中实际存在的字段）
+  const recommendedDimensions = bestScenario.dimensions.filter(dim => {
+    // 检查是否有字段名或样例值与维度描述匹配
+    return fieldStats.some(f => {
+      const fieldText = `${f.field} ${(f.sampleValues || []).join(' ')} ${f.type}`;
+      return dim.split(/[/（]/).some(part => fieldText.includes(part.trim()));
+    });
+  });
+
+  // 如果没有匹配的维度，显示全部推荐维度
+  const finalDimensions = recommendedDimensions.length > 0 ? recommendedDimensions : bestScenario.dimensions;
+
+  const confidence: ScenarioAnalysis['confidence'] = bestScore >= 3 ? 'high' : bestScore >= 1 ? 'medium' : 'low';
+
+  // 为每个匹配的指标填充 fieldRefs（fallback 时从全部字段中找最相关的）
+  const fallbackFields = matchedFieldNames.size === 0
+    ? new Set(fieldStats.filter(f => f.type === 'number').map(f => f.field).slice(0, 3))
+    : matchedFieldNames;
+
+  const kpiRecommendations = (matchedIndicators.length > 0 ? matchedIndicators : bestScenario.indicators.slice(0, 2))
+    .map(kpi => ({
+      ...kpi,
+      fieldRefs: Array.from(fallbackFields).slice(0, 3),
+    }));
+
+  return {
+    detectedScenario: bestScenario.name,
+    confidence,
+    matchedIndicators: Array.from(matchedFieldNames),
+    kpiRecommendations,
+    recommendedDimensions: finalDimensions.slice(0, 5),
+    industrySuggestions: bestScenario.suggestions,
   };
 }

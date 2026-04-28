@@ -381,6 +381,14 @@ export function Dashboard({ data, analysis }: DashboardProps) {
           <Button
             variant="ghost"
             size="sm"
+            className="h-6 text-xs text-blue-600 hover:text-blue-800"
+            onClick={() => setChartType('detail')}
+          >
+            查看明细
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-6 text-xs ml-auto text-blue-600 hover:text-blue-800"
             onClick={clearLinkedFilter}
           >
