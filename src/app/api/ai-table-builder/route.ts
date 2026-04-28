@@ -38,25 +38,27 @@ const SCENE_TEMPLATES = [
   { id: 'team-reimbursement', name: '费用审批表', industry: '小微团队', usage: '团队费用申请与审批', category: 'team' },
 ];
 
-// 表格方案类型
+// 表格方案类型（兼容前后端两种字段命名：后端 name / 前端 key+title）
 interface TableScheme {
   tableName: string;
-  purpose: string;
+  purpose?: string;
   columns: Array<{
-    name: string;
+    name?: string;
+    key?: string;
+    title?: string;
     type: 'text' | 'number' | 'date' | 'select';
-    description: string;
-    required: boolean;
+    description?: string;
+    required?: boolean;
     selectOptions?: string[];
     formula?: string;
   }>;
   sampleRows: Record<string, unknown>[];
-  formulas: Array<{
+  formulas?: Array<{
     cell: string;
     formula: string;
     description: string;
   }>;
-  designNotes: string;
+  designNotes?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -68,12 +70,15 @@ export async function POST(request: NextRequest) {
       [key: string]: unknown;
     };
 
-    // 模板列表不需要模型配置
+    // 模板列表和确认生成不需要模型配置
     if (action === 'list-templates') {
       return Response.json({ success: true, data: SCENE_TEMPLATES });
     }
+    if (action === 'confirm') {
+      return handleConfirm(body);
+    }
 
-    // 其他操作需要验证模型配置
+    // generate 和 iterate 需要验证模型配置
     const validation = validateModelConfig(modelConfig);
     if (!validation.valid) {
       return Response.json({ success: false, error: validation.error }, { status: 400 });
@@ -84,8 +89,6 @@ export async function POST(request: NextRequest) {
         return handleGenerate(body, modelConfig!);
       case 'iterate':
         return handleIterate(body, modelConfig!);
-      case 'confirm':
-        return handleConfirm(body);
       default:
         return Response.json({ success: false, error: '未知操作' }, { status: 400 });
     }
@@ -277,8 +280,14 @@ ${JSON.stringify(currentScheme, null, 2)}
 async function handleConfirm(body: Record<string, unknown>) {
   const { scheme } = body as { scheme: TableScheme };
 
-  if (!scheme || !scheme.tableName || !scheme.columns) {
-    return Response.json({ success: false, error: '表格方案不完整' }, { status: 400 });
+  if (!scheme || typeof scheme !== 'object') {
+    return Response.json({ success: false, error: '表格方案格式错误' }, { status: 400 });
+  }
+  if (!scheme.tableName || typeof scheme.tableName !== 'string') {
+    return Response.json({ success: false, error: '表格方案缺少名称' }, { status: 400 });
+  }
+  if (!Array.isArray(scheme.columns) || scheme.columns.length === 0) {
+    return Response.json({ success: false, error: '表格方案缺少字段定义' }, { status: 400 });
   }
 
   try {
@@ -288,11 +297,12 @@ async function handleConfirm(body: Record<string, unknown>) {
     // 创建工作簿
     const wb = XLSX.utils.book_new();
 
-    // 构建表头行
-    const headers = scheme.columns.map(c => c.name);
-    // 构建数据行
+    // 构建表头行（兼容前端 scheme 格式：优先 name，其次 title，最后 key）
+    const headers = scheme.columns.map(c => c.name ?? c.title ?? c.key ?? '');
+    // 构建数据行（用 key 作为字段名访问 sampleRows）
+    const colKeys = scheme.columns.map(c => c.key ?? c.name ?? c.title ?? '');
     const dataRows = (scheme.sampleRows || []).map(row =>
-      headers.map(h => row[h] ?? '')
+      colKeys.map(k => row[k] ?? '')
     );
 
     // 合并表头和数据

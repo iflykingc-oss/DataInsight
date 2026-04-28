@@ -224,9 +224,36 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     setStep('generate');
   };
 
+  // 检查需求描述质量
+  const validateRequirement = (text: string): { valid: boolean; error?: string } => {
+    const trimmed = text.trim();
+    if (trimmed.length < 5) {
+      return { valid: false, error: '需求描述太短了，请至少输入5个字，描述清楚需要什么表格。例如："月度销售跟踪表，包含日期、产品、销售额、客户"' };
+    }
+    // 检查是否包含建表相关意图
+    const tableKeywords = /表|台账|sheet|表格|excel|字段|列|记录|跟踪|统计|汇总|明细|登记|管理|清单|目录/i;
+    if (!tableKeywords.test(trimmed)) {
+      return { valid: false, error: '您的描述似乎没有明确指向建表需求。请补充说明需要什么类型的表格，比如："创建一个客户信息登记表，包含姓名、电话、地址"' };
+    }
+    return { valid: true };
+  };
+
   // AI生成表格方案
   const handleGenerate = useCallback(async () => {
     if (!userRequirement.trim() || !modelConfig) return;
+
+    // 输入质量校验
+    const qualityCheck = validateRequirement(userRequirement);
+    if (!qualityCheck.valid) {
+      const assistantMsg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: `⚠️ ${qualityCheck.error}`,
+        timestamp: new Date(),
+      };
+      setChatMessages(prev => [...prev, assistantMsg]);
+      return;
+    }
 
     setIsGenerating(true);
     const userMsg: ChatMessage = {
@@ -249,6 +276,18 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           modelConfig,
         }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const assistantMsg: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: `⚠️ 生成失败：${errorData.error || `服务器错误 (${response.status})`}，请检查模型配置或稍后重试。`,
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, assistantMsg]);
+        return;
+      }
 
       const data = await response.json();
 
@@ -316,6 +355,18 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const assistantMsg: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: `⚠️ 修改失败：${errorData.error || `服务器错误 (${response.status})`}，请稍后重试。`,
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, assistantMsg]);
+        return;
+      }
+
       const data = await response.json();
 
       if (data.success && data.data) {
@@ -363,6 +414,11 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'confirm', scheme: currentScheme }),
       });
+
+      if (!response.ok) {
+        alert(`服务器错误 (${response.status})，请稍后重试`);
+        return;
+      }
 
       const data = await response.json();
 
@@ -623,6 +679,25 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                   <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm text-left max-w-md mx-auto">
                     <p className="font-medium mb-1">已选择场景：{selectedScene.name}</p>
                     <p className="text-muted-foreground">{selectedScene.usage}</p>
+                  </div>
+                )}
+                {!selectedScene && (
+                  <div className="mt-4 space-y-2 text-sm text-left max-w-md mx-auto">
+                    <p className="text-muted-foreground">你可以这样描述：</p>
+                    {[
+                      '我需要一个客户信息登记表，包含姓名、电话、地址和备注',
+                      '创建一个月度销售跟踪表，记录每天的产品销售数量和金额',
+                      '设计一个库存管理台账，包含商品名称、入库数量、出库数量和当前库存',
+                      '做一个员工考勤表，包含日期、姓名、上下班时间和出勤状态',
+                    ].map((example, i) => (
+                      <button
+                        key={i}
+                        className="block w-full text-left p-2 rounded bg-muted/50 hover:bg-muted transition-colors text-muted-foreground"
+                        onClick={() => setUserRequirement(example)}
+                      >
+                        💡 {example}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>

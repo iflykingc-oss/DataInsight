@@ -67,10 +67,13 @@ export async function request<T = unknown>(
     const timeoutController = new AbortController();
     const timeoutId = setTimeout(() => timeoutController.abort(), timeout);
 
-    // 合并外部 signal 和超时 signal
-    const combinedSignal = externalSignal
-      ? AbortSignal.any([externalSignal, timeoutController.signal])
-      : timeoutController.signal;
+    // 合并外部 signal 和超时 signal（兼容未实现 AbortSignal.any 的环境）
+    const combinedController = new AbortController();
+    const combinedSignal = combinedController.signal;
+    if (externalSignal) {
+      externalSignal.addEventListener('abort', () => combinedController.abort(), { once: true });
+    }
+    timeoutController.signal.addEventListener('abort', () => combinedController.abort(), { once: true });
 
     try {
       const response = await fetch(url, {
@@ -166,15 +169,18 @@ export async function streamRequest(
   const timeoutController = new AbortController();
   const timeoutId = setTimeout(() => timeoutController.abort(), timeout);
 
-  const combinedSignal = externalSignal
-    ? AbortSignal.any([externalSignal, timeoutController.signal])
-    : timeoutController.signal;
+  // 合并外部 signal 和超时 signal（兼容未实现 AbortSignal.any 的环境）
+  const combinedController = new AbortController();
+  if (externalSignal) {
+    externalSignal.addEventListener('abort', () => combinedController.abort(), { once: true });
+  }
+  timeoutController.signal.addEventListener('abort', () => combinedController.abort(), { once: true });
 
   const response = await fetch(url, {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal: combinedSignal,
+    signal: combinedController.signal,
   });
 
   clearTimeout(timeoutId);

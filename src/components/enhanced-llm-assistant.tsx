@@ -222,7 +222,7 @@ export function EnhancedLLMAssistant({
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [data, analysis]);
+  }, [data, analysis, messages, modelConfig]);
 
   // 从响应中提取推荐追问
   const extractSuggestions = (content: string): string[] => {

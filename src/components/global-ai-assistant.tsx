@@ -174,7 +174,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
       setStreamedContent('');
       return null;
     }
-  }, [data, fieldStats]);
+  }, [data, fieldStats, modelConfig, messages]);
 
   // 无数据时的模板回复
   const generateTemplateResponse = useCallback((userMessage: string): { content: string; suggestions: string[] } => {
@@ -215,36 +215,18 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
     setInputValue('');
     setIsTyping(true);
 
-    // 有模型配置时：调用真实LLM（即使没有数据，API也会返回提示）
+    // 有模型配置时：调用真实LLM
     if (modelConfig) {
       await callLLMStream(content);
-    } else if (hasData && data && fieldStats) {
-      // 有数据无模型：也调用LLM（API会返回"请先配置模型"）
-      await callLLMStream(content);
     } else {
-      // 无数据也无模型：使用模板回复
-      const response = generateTemplateResponse(content);
-      const fullContent = response.content;
-      let currentIndex = 0;
-
-      const typeInterval = setInterval(() => {
-        if (currentIndex < fullContent.length) {
-          setStreamedContent(fullContent.slice(0, currentIndex + 8));
-          currentIndex += 8;
-        } else {
-          clearInterval(typeInterval);
-          setStreamedContent('');
-
-          const assistantMessage: ChatMessage = {
-            id: `assistant-${Date.now()}`,
-            role: 'assistant',
-            content: fullContent,
-            timestamp: new Date(),
-            suggestions: response.suggestions,
-          };
-          setMessages(prev => [...prev, assistantMessage]);
-        }
-      }, 30);
+      // 无模型配置：直接前端提示，避免无效网络请求
+      const hintMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: '⚠️ 尚未配置AI模型。请在「AI模型配置」中设置您的OpenAI兼容API（API Key + Base URL + 模型名称），即可启用智能分析功能。',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, hintMessage]);
     }
 
     setIsTyping(false);

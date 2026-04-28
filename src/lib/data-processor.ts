@@ -1199,8 +1199,6 @@ export function cleanData(data: ParsedData, options: {
   outlierAction?: 'remove' | 'mark' | 'replace';
 }): ParsedData {
   let { rows } = data;
-  let removedOutliers = 0;
-  let filledNulls = 0;
   
   // 1. 去重
   if (options.removeDuplicates) {
@@ -1220,7 +1218,6 @@ export function cleanData(data: ParsedData, options: {
       const newRow = { ...row };
       data.headers.forEach(header => {
         if (newRow[header] === null || newRow[header] === undefined || newRow[header] === '') {
-          filledNulls++;
           switch (strategy) {
             case 'value':
               newRow[header] = options.nullFillValue ?? '';
@@ -1290,7 +1287,6 @@ export function cleanData(data: ParsedData, options: {
         const val = Number(row[header]);
         if (isNaN(val) || !isOutlier(val)) return row;
         
-        removedOutliers++;
         const newRow = { ...row };
         switch (action) {
           case 'mark':
@@ -1506,7 +1502,7 @@ function analyzeAttribution(
   fieldStats: FieldStat[],
   correlations: DeepAnalysis['correlations']
 ): AttributionAnalysis | undefined {
-  const { headers, rows } = data;
+  const { rows } = data;
   if (rows.length < 5) return undefined;
 
   // 识别数值字段和分类字段

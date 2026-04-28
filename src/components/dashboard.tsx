@@ -63,7 +63,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
   const [linkedFilter, setLinkedFilter] = useState<{ field: string; value: string } | null>(null);
 
   // 仪表盘持久化
-  const [savedConfigs, setSavedConfigs] = useState<Array<{ id: string; name: string; chartType: string; filterValues: Record<string, string[]>; savedAt: string }>>([]);
+  const [savedConfigs, setSavedConfigs] = useState<Array<{ id: string; name: string; chartType: string; filterValues: Record<string, string[]>; linkedFilter: { field: string; value: string } | null; savedAt: string }>>([]);
   const [activeConfigId, setActiveConfigId] = useState<string | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveName, setSaveName] = useState('');
@@ -85,6 +85,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
       name,
       chartType,
       filterValues,
+      linkedFilter,
       savedAt: new Date().toLocaleString(),
     };
     const updated = [...savedConfigs, newConfig];
@@ -93,7 +94,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
     localStorage.setItem('datainsight-dashboard-configs', JSON.stringify(updated));
     setShowSaveDialog(false);
     setSaveName('');
-  }, [saveName, savedConfigs, chartType, filterValues]);
+  }, [saveName, savedConfigs, chartType, filterValues, linkedFilter]);
 
   // 加载配置
   const handleLoadConfig = useCallback((configId: string) => {
@@ -101,6 +102,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
     if (config) {
       setChartType(config.chartType);
       setFilterValues(config.filterValues);
+      setLinkedFilter(config.linkedFilter || null);
       setActiveConfigId(config.id);
       setShowLoadDialog(false);
     }
@@ -118,6 +120,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
   const handleResetConfig = useCallback(() => {
     setChartType('auto');
     setFilterValues({});
+    setLinkedFilter(null);
     setActiveConfigId(null);
   }, []);
 

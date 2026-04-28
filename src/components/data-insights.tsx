@@ -29,7 +29,7 @@ import {
   Crosshair,
   Flame
 } from 'lucide-react';
-import type { ParsedData, DataAnalysis, DeepAnalysis, AttributionAnalysis } from '@/lib/data-processor';
+import type { ParsedData, DataAnalysis, DeepAnalysis } from '@/lib/data-processor';
 import {
   BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
   ScatterChart as RechartsScatter, Scatter,
