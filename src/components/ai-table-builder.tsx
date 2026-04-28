@@ -92,6 +92,23 @@ const QUICK_PROMPTS: Record<string, string[]> = {
   team: ['增加加班时长字段', '添加绩效评分列', '按月汇总工时', '增加请假类型'],
 };
 
+// 智能需求引导：场景绑定的快速需求建议
+const SCENE_REQUIREMENTS: Record<string, string[]> = {
+  'general-ledger': ['按月度汇总收支', '区分收入和支出类别', '增加经手人字段'],
+  'retail-daily-sales': ['按商品类别分组统计', '增加毛利率计算', '添加同比/环比对比'],
+  'beauty-appointment': ['按技师统计服务量', '增加服务项目时长', '添加会员折扣列'],
+  'team-attendance': ['按月汇总工时', '区分正常/加班/请假', '增加迟到早退标记'],
+};
+
+// 历史记录类型
+interface HistoryRecord {
+  id: string;
+  sceneName: string;
+  requirement: string;
+  scheme: TableScheme;
+  createdAt: string;
+}
+
 export default function AITableBuilder({ modelConfig, className }: AITableBuilderProps) {
   // 步骤状态：template → generate → preview → confirm
   const [step, setStep] = useState<'template' | 'generate' | 'preview' | 'confirm'>('template');
@@ -101,6 +118,10 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
+  // 历史记录
+  const [history, setHistory] = useState<HistoryRecord[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   // 生成相关
   const [userRequirement, setUserRequirement] = useState('');
@@ -149,6 +170,30 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     } catch { /* ignore */ }
   }, [favorites]);
 
+  // 加载历史记录
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('datainsight-table-history');
+      if (saved) setHistory(JSON.parse(saved));
+    } catch { /* ignore */ }
+  }, []);
+
+  // 保存历史记录
+  const saveToHistory = useCallback((sceneName: string, requirement: string, scheme: TableScheme) => {
+    const record: HistoryRecord = {
+      id: `history-${Date.now()}`,
+      sceneName,
+      requirement,
+      scheme,
+      createdAt: new Date().toLocaleString(),
+    };
+    setHistory(prev => {
+      const updated = [record, ...prev].slice(0, 20); // 最多保存20条
+      localStorage.setItem('datainsight-table-history', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   // 滚动到底部
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -170,8 +215,13 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   // 选择场景并进入生成步骤
   const handleSelectScene = (scene: SceneTemplate) => {
     setSelectedScene(scene);
+    const suggestions = SCENE_REQUIREMENTS[scene.id];
+    if (suggestions && suggestions.length > 0) {
+      setUserRequirement(`请基于"${scene.name}"场景生成经营台账，${suggestions[0]}`);
+    } else {
+      setUserRequirement(`请基于"${scene.name}"场景生成经营台账`);
+    }
     setStep('generate');
-    setUserRequirement(`请基于"${scene.name}"场景生成经营台账`);
   };
 
   // AI生成表格方案
@@ -214,6 +264,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         };
         setChatMessages(prev => [...prev, assistantMsg]);
         setStep('preview');
+        saveToHistory(selectedScene?.name || '自定义', userRequirement, scheme);
       } else {
         const assistantMsg: ChatMessage = {
           id: `assistant-${Date.now()}`,
@@ -486,6 +537,46 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           </div>
         </CardContent>
       </Card>
+
+      {/* 历史记录 */}
+      {history.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-base">最近生成</h3>
+            <Button variant="ghost" size="sm" onClick={() => setShowHistory(!showHistory)}>
+              {showHistory ? '收起' : `查看全部 (${history.length})`}
+            </Button>
+          </div>
+          <div className={`grid gap-3 ${showHistory ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+            {(showHistory ? history : history.slice(0, 3)).map(record => (
+              <Card
+                key={record.id}
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => {
+                  setCurrentScheme(record.scheme);
+                  setChatMessages([{
+                    id: `history-${Date.now()}`,
+                    role: 'assistant' as const,
+                    content: `已加载历史方案「${record.scheme.tableName}」，包含 ${record.scheme.columns.length} 个字段。您可以继续修改或直接确认生成。`,
+                    timestamp: new Date(),
+                    scheme: record.scheme,
+                  }]);
+                  setStep('preview');
+                }}
+              >
+                <CardContent className="py-3 px-4">
+                  <div className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-primary" />
+                    <p className="font-medium text-sm truncate">{record.scheme.tableName}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">{record.requirement}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{record.createdAt}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 

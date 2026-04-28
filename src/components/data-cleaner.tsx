@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo} from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,7 +69,9 @@ import {
   Zap,
   MessageSquare,
   X,
-  Check
+  Check,
+  Save,
+  FolderOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
@@ -134,6 +136,48 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
   const [quickFilterField, setQuickFilterField] = useState('');
   const [quickFilterOp, setQuickFilterOp] = useState('equals');
   const [quickFilterValue, setQuickFilterValue] = useState('');
+
+  // 清洗模板保存/加载
+  const [savedTemplates, setSavedTemplates] = useState<Array<{ id: string; name: string; steps: CleaningStep[]; savedAt: string }>>([]);
+  const [templateName, setTemplateName] = useState('');
+  const [showTemplateSave, setShowTemplateSave] = useState(false);
+  const [showTemplateLoad, setShowTemplateLoad] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('datainsight-clean-templates');
+      if (saved) setSavedTemplates(JSON.parse(saved));
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleSaveTemplate = () => {
+    const name = templateName.trim() || `清洗模板 ${savedTemplates.length + 1}`;
+    const newTemplate = {
+      id: `tpl-${Date.now()}`,
+      name,
+      steps: cleaningSteps,
+      savedAt: new Date().toLocaleString(),
+    };
+    const updated = [...savedTemplates, newTemplate];
+    setSavedTemplates(updated);
+    localStorage.setItem('datainsight-clean-templates', JSON.stringify(updated));
+    setShowTemplateSave(false);
+    setTemplateName('');
+  };
+
+  const handleLoadTemplate = (templateId: string) => {
+    const tpl = savedTemplates.find(t => t.id === templateId);
+    if (tpl) {
+      setCleaningSteps(tpl.steps);
+      setShowTemplateLoad(false);
+    }
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    const updated = savedTemplates.filter(t => t.id !== templateId);
+    setSavedTemplates(updated);
+    localStorage.setItem('datainsight-clean-templates', JSON.stringify(updated));
+  };
   const [nullFillField, setNullFillField] = useState('');
   const [nullFillMethod, setNullFillMethod] = useState<'value' | 'mean' | 'median' | 'mode' | 'forward'>('value');
   const [nullFillValue, setNullFillValue] = useState('');
@@ -472,6 +516,20 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
             <Badge variant="secondary" className="ml-auto">
               {cleaningSteps.length} 个清洗步骤
             </Badge>
+            <div className="ml-2 flex gap-1">
+              {cleaningSteps.length > 0 && (
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowTemplateSave(true)}>
+                  <Save className="w-3 h-3" />
+                  保存模板
+                </Button>
+              )}
+              {savedTemplates.length > 0 && (
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowTemplateLoad(true)}>
+                  <FolderOpen className="w-3 h-3" />
+                  加载模板 ({savedTemplates.length})
+                </Button>
+              )}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -862,6 +920,65 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
           </div>
         </CardContent>
       </Card>
+
+      {/* 模板保存对话框 */}
+      {showTemplateSave && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowTemplateSave(false)}>
+          <Card className="w-80" onClick={e => e.stopPropagation()}>
+            <CardHeader><CardTitle className="text-base">保存清洗模板</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <Input
+                placeholder="模板名称（如：电商数据标准清洗）"
+                value={templateName}
+                onChange={e => setTemplateName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSaveTemplate(); }}
+              />
+              <p className="text-xs text-muted-foreground">将保存当前 {cleaningSteps.length} 个清洗步骤，可复用于同类数据</p>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={() => setShowTemplateSave(false)}>取消</Button>
+                <Button size="sm" onClick={handleSaveTemplate}>保存</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* 模板加载对话框 */}
+      {showTemplateLoad && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowTemplateLoad(false)}>
+          <Card className="w-96 max-h-80 overflow-auto" onClick={e => e.stopPropagation()}>
+            <CardHeader><CardTitle className="text-base">加载清洗模板</CardTitle></CardHeader>
+            <CardContent>
+              {savedTemplates.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">暂无已保存的模板</p>
+              ) : (
+                <div className="space-y-2">
+                  {savedTemplates.map(tpl => (
+                    <div
+                      key={tpl.id}
+                      className="flex items-center gap-2 p-2 rounded border cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleLoadTemplate(tpl.id)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{tpl.name}</p>
+                        <p className="text-xs text-muted-foreground">{tpl.steps.length} 步 · {tpl.savedAt}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-destructive"
+                        onClick={e => { e.stopPropagation(); handleDeleteTemplate(tpl.id); }}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
