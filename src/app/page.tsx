@@ -20,6 +20,7 @@ import { SmartChartRecommender } from '@/components/smart-chart-recommender';
 import { AIModelSettings } from '@/components/ai-model-settings';
 import AITableBuilder from '@/components/ai-table-builder';
 import { MetricSemanticLayer } from '@/components/metric-semantic-layer';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { DataQualityChecker } from '@/components/data-quality-checker';
 import { DataAlerting } from '@/components/data-alerting';
 import { NL2Dashboard } from '@/components/nl2-dashboard';
@@ -565,7 +566,11 @@ export default function HomePage() {
 
     // AI 智能建表（不需要数据）
     if (viewMode === 'ai-table-builder') {
-      return <AITableBuilder modelConfig={activeModelConfig} />;
+      return (
+        <ErrorBoundary moduleName="AI智能建表">
+          <AITableBuilder modelConfig={activeModelConfig} />
+        </ErrorBoundary>
+      );
     }
 
     // 数据表格
@@ -607,7 +612,11 @@ export default function HomePage() {
 
     // 仪表盘
     if (viewMode === 'dashboard' && analysis) {
-      return <Dashboard data={parsedData!} analysis={analysis} />;
+      return (
+        <ErrorBoundary moduleName="数据仪表盘">
+          <Dashboard data={parsedData!} analysis={analysis} />
+        </ErrorBoundary>
+      );
     }
 
     // NL2Dashboard
@@ -617,7 +626,11 @@ export default function HomePage() {
 
     // 指标语义层
     if (viewMode === 'metric' && parsedData && analysis) {
-      return <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />;
+      return (
+        <ErrorBoundary moduleName="指标语义层">
+          <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
+        </ErrorBoundary>
+      );
     }
 
     // 智能图表

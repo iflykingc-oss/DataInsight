@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import {
   BarChart3, LayoutGrid, Download,
   TrendingUp, LineChart, Activity, Layers,
   Table2, Filter, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
-  Search,
+  Search, Save, FolderOpen, RotateCcw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
@@ -58,6 +58,65 @@ export function Dashboard({ data, analysis }: DashboardProps) {
   const [detailPage, setDetailPage] = useState(0);
   const [detailSearch, setDetailSearch] = useState('');
   const DETAIL_PAGE_SIZE = 20;
+
+  // 仪表盘持久化
+  const [savedConfigs, setSavedConfigs] = useState<Array<{ id: string; name: string; chartType: string; filterValues: Record<string, string[]>; savedAt: string }>>([]);
+  const [activeConfigId, setActiveConfigId] = useState<string | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
+
+  // 加载已保存配置
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('datainsight-dashboard-configs');
+      if (saved) setSavedConfigs(JSON.parse(saved));
+    } catch { /* ignore */ }
+  }, []);
+
+  // 保存配置
+  const handleSaveConfig = useCallback(() => {
+    const name = saveName.trim() || `仪表盘 ${savedConfigs.length + 1}`;
+    const newConfig = {
+      id: `config-${Date.now()}`,
+      name,
+      chartType,
+      filterValues,
+      savedAt: new Date().toLocaleString(),
+    };
+    const updated = [...savedConfigs, newConfig];
+    setSavedConfigs(updated);
+    setActiveConfigId(newConfig.id);
+    localStorage.setItem('datainsight-dashboard-configs', JSON.stringify(updated));
+    setShowSaveDialog(false);
+    setSaveName('');
+  }, [saveName, savedConfigs, chartType, filterValues]);
+
+  // 加载配置
+  const handleLoadConfig = useCallback((configId: string) => {
+    const config = savedConfigs.find(c => c.id === configId);
+    if (config) {
+      setChartType(config.chartType);
+      setFilterValues(config.filterValues);
+      setActiveConfigId(config.id);
+      setShowLoadDialog(false);
+    }
+  }, [savedConfigs]);
+
+  // 删除配置
+  const handleDeleteConfig = useCallback((configId: string) => {
+    const updated = savedConfigs.filter(c => c.id !== configId);
+    setSavedConfigs(updated);
+    if (activeConfigId === configId) setActiveConfigId(null);
+    localStorage.setItem('datainsight-dashboard-configs', JSON.stringify(updated));
+  }, [savedConfigs, activeConfigId]);
+
+  // 重置
+  const handleResetConfig = useCallback(() => {
+    setChartType('auto');
+    setFilterValues({});
+    setActiveConfigId(null);
+  }, []);
 
   // 应用筛选器过滤数据
   const filteredData = useMemo(() => {
@@ -250,8 +309,97 @@ export function Dashboard({ data, analysis }: DashboardProps) {
             <Download className="w-3.5 h-3.5 mr-1" />
             导出图片
           </Button>
+          <div className="h-4 w-px bg-border mx-1" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1 text-xs"
+            onClick={() => setShowSaveDialog(true)}
+          >
+            <Save className="w-3.5 h-3.5" />
+            保存配置
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1 text-xs"
+            onClick={() => setShowLoadDialog(true)}
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            加载配置
+            {savedConfigs.length > 0 && (
+              <span className="ml-0.5 text-xs text-muted-foreground">({savedConfigs.length})</span>
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1 text-xs"
+            onClick={handleResetConfig}
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            重置
+          </Button>
         </div>
       </div>
+
+      {/* 保存对话框 */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowSaveDialog(false)}>
+          <Card className="w-96" onClick={e => e.stopPropagation()}>
+            <CardHeader><CardTitle className="text-base">保存仪表盘配置</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <Input
+                placeholder="配置名称（如：月度销售看板）"
+                value={saveName}
+                onChange={e => setSaveName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSaveConfig(); }}
+              />
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={() => setShowSaveDialog(false)}>取消</Button>
+                <Button size="sm" onClick={handleSaveConfig}>保存</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* 加载对话框 */}
+      {showLoadDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowLoadDialog(false)}>
+          <Card className="w-96 max-h-96 overflow-auto" onClick={e => e.stopPropagation()}>
+            <CardHeader><CardTitle className="text-base">加载仪表盘配置</CardTitle></CardHeader>
+            <CardContent>
+              {savedConfigs.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">暂无已保存的配置</p>
+              ) : (
+                <div className="space-y-2">
+                  {savedConfigs.map(config => (
+                    <div
+                      key={config.id}
+                      className={`flex items-center gap-2 p-2 rounded border cursor-pointer hover:bg-muted/50 ${activeConfigId === config.id ? 'border-primary bg-primary/5' : ''}`}
+                      onClick={() => handleLoadConfig(config.id)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{config.name}</p>
+                        <p className="text-xs text-muted-foreground">{config.savedAt}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-destructive"
+                        onClick={e => { e.stopPropagation(); handleDeleteConfig(config.id); }}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* 图表/表格网格 */}
       <div id="dashboard-chart-area" className="grid md:grid-cols-2 gap-4">
