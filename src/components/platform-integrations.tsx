@@ -286,6 +286,9 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<Array<{ id: string; name: string }>>([]);
 
   const handleConnect = useCallback(async () => {
     if (!corpId || !corpSecret) return;
@@ -306,6 +309,9 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
 
       if (result.success) {
         setIsConnected(true);
+        if (result.databases) {
+          setDepartments(result.databases);
+        }
       } else {
         setConnectionError(result.message || '连接失败');
       }
@@ -315,6 +321,35 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
       setIsConnecting(false);
     }
   }, [corpId, corpSecret, agentId]);
+
+  const handleSync = useCallback(async (departmentId?: string) => {
+    setIsSyncing(true);
+    setSyncMessage(null);
+
+    try {
+      const response = await fetch('/api/platform/wechat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sync',
+          credentials: { corpId, corpSecret, agentId },
+          departmentId: departmentId || (departments[0]?.id),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSyncMessage(result.message || '同步成功');
+      } else {
+        setConnectionError(result.message || '同步失败');
+      }
+    } catch (error) {
+      setConnectionError(error instanceof Error ? error.message : '同步失败');
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [corpId, corpSecret, agentId, departments]);
 
   const sampleData = {
     headers: ['部门', '成员数', '活跃度', '满意度'],
@@ -361,6 +396,34 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
                 <span className="font-medium">连接成功</span>
               </div>
               <p className="text-sm text-green-600 mt-2">已成功连接到微信企业版</p>
+              {departments.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500">选择部门：</p>
+                  <select
+                    className="w-full mt-1 p-2 border rounded"
+                    onChange={(e) => handleSync(e.target.value)}
+                  >
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>{dept.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <Button
+                className="mt-3 w-full"
+                variant="outline"
+                onClick={() => handleSync()}
+                disabled={isSyncing}
+              >
+                {isSyncing ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />同步中...</>
+                ) : (
+                  <><ArrowRight className="w-4 h-4 mr-2" />同步数据</>
+                )}
+              </Button>
+              {syncMessage && (
+                <p className="text-sm text-green-600 mt-2">{syncMessage}</p>
+              )}
             </div>
           )}
 
@@ -434,6 +497,8 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const handleConnect = useCallback(async () => {
     if (!appKey || !appSecret) return;
@@ -461,6 +526,40 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
       setConnectionError(error instanceof Error ? error.message : '连接失败');
     } finally {
       setIsConnecting(false);
+    }
+  }, [appKey, appSecret]);
+
+  const handleSync = useCallback(async () => {
+    setIsSyncing(true);
+    setSyncMessage(null);
+
+    try {
+      const today = new Date();
+      const workDateFrom = today.toISOString().split('T')[0];
+      const workDateTo = workDateFrom;
+
+      const response = await fetch('/api/platform/dingtalk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sync',
+          credentials: { appKey, appSecret },
+          workDateFrom,
+          workDateTo,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSyncMessage(result.message || '同步成功');
+      } else {
+        setConnectionError(result.message || '同步失败');
+      }
+    } catch (error) {
+      setConnectionError(error instanceof Error ? error.message : '同步失败');
+    } finally {
+      setIsSyncing(false);
     }
   }, [appKey, appSecret]);
 
@@ -508,6 +607,21 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
                 <span className="font-medium">连接成功</span>
               </div>
               <p className="text-sm text-green-600 mt-2">已成功连接到钉钉</p>
+              <Button
+                className="mt-3 w-full"
+                variant="outline"
+                onClick={handleSync}
+                disabled={isSyncing}
+              >
+                {isSyncing ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />同步中...</>
+                ) : (
+                  <><ArrowRight className="w-4 h-4 mr-2" />同步考勤数据</>
+                )}
+              </Button>
+              {syncMessage && (
+                <p className="text-sm text-green-600 mt-2">{syncMessage}</p>
+              )}
             </div>
           )}
 
@@ -581,6 +695,8 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const handleConnect = useCallback(async () => {
     if (!apiKey || !apiSecret) return;
@@ -610,6 +726,36 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
       setIsConnecting(false);
     }
   }, [apiKey, apiSecret]);
+
+  const handleSync = useCallback(async () => {
+    if (!docId) return;
+    setIsSyncing(true);
+    setSyncMessage(null);
+
+    try {
+      const response = await fetch('/api/platform/wps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sync',
+          credentials: { apiKey, apiSecret },
+          docId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSyncMessage(result.message || '同步成功');
+      } else {
+        setConnectionError(result.message || '同步失败');
+      }
+    } catch (error) {
+      setConnectionError(error instanceof Error ? error.message : '同步失败');
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [apiKey, apiSecret, docId]);
 
   const sampleData = {
     headers: ['文档名', '创建者', '修改时间', '共享状态'],
@@ -662,6 +808,30 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
                 <span className="font-medium">连接成功</span>
               </div>
               <p className="text-sm text-green-600 mt-2">已成功连接到金山文档</p>
+              <div className="mt-3">
+                <Label>文档 ID</Label>
+                <Input
+                  placeholder="输入文档 ID"
+                  value={docId}
+                  onChange={(e) => setDocId(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <Button
+                className="mt-3 w-full"
+                variant="outline"
+                onClick={handleSync}
+                disabled={isSyncing || !docId}
+              >
+                {isSyncing ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />同步中...</>
+                ) : (
+                  <><ArrowRight className="w-4 h-4 mr-2" />同步文档</>
+                )}
+              </Button>
+              {syncMessage && (
+                <p className="text-sm text-green-600 mt-2">{syncMessage}</p>
+              )}
             </div>
           )}
 

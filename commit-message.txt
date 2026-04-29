@@ -1,0 +1,8 @@
+feat: add platform integration and data processing APIs
+
+- Add platform integration APIs (Feishu/WeChat Work/DingTalk/WPS)
+- Add database connection API
+- Add data cleaning API (dedup/fillna/outlier/normalize)
+- Add data alerting API (rules/trigger/notifications)
+- Update platform-integrations.tsx to use real API calls
+- Fix TypeScript type errors
