@@ -92,13 +92,13 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
                       onClick={() => setSelectedChart(String(idx))}
                       className={`p-3 rounded-lg border text-left transition-all ${
                         isSelected 
-                          ? 'border-[#1890ff] bg-blue-50 shadow-sm' 
+                          ? 'border-primary bg-primary/5 shadow-sm' 
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <Icon className={`w-4 h-4 ${isSelected ? 'text-[#1890ff]' : 'text-gray-400'}`} />
-                        <span className={`text-xs font-medium ${isSelected ? 'text-[#1890ff]' : 'text-gray-600'}`}>
+                        <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-gray-400'}`} />
+                        <span className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-gray-600'}`}>
                           {rec.type === 'bar' ? '柱状图' :
                            rec.type === 'line' ? '折线图' :
                            rec.type === 'pie' ? '饼图' :
@@ -137,7 +137,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[#1890ff]" />
+            <BarChart3 className="w-5 h-5 text-primary" />
             自定义图表
           </CardTitle>
         </CardHeader>

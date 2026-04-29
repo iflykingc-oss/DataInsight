@@ -108,6 +108,24 @@ export function EnhancedLLMAssistant({
 
   // 调用真实的 LLM API，流式响应
   const callLLMInsight = useCallback(async (question: string) => {
+    // 前端拦截：无模型配置时直接提示
+    if (!modelConfig) {
+      const assistantMsgId = `msg-${Date.now()}-noconfig`;
+      const assistantMessage: ChatMessage = {
+        id: assistantMsgId,
+        role: 'assistant',
+        content: '⚠️ 尚未配置AI模型。请在「AI模型配置」中设置您的OpenAI兼容API（API Key + Base URL + 模型名称），即可启用智能分析功能。',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, {
+        id: `msg-${Date.now()}-user`,
+        role: 'user',
+        content: question,
+        timestamp: new Date(),
+      }, assistantMessage]);
+      return;
+    }
+
     const userMsgId = generateId();
     const assistantMsgId = generateId();
 
@@ -303,7 +321,7 @@ export function EnhancedLLMAssistant({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-500" />
+            <Brain className="w-5 h-5 text-primary" />
             AI 数据分析助手
             <Badge variant="secondary" className="text-xs">
               <Sparkles className="w-3 h-3 mr-1" />
@@ -333,7 +351,7 @@ export function EnhancedLLMAssistant({
                   size="sm"
                   onClick={() => handlePresetQuery(action.query)}
                   disabled={isLoading}
-                  className="text-xs h-7 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200"
+                  className="text-xs h-7 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
                 >
                   <Icon className="w-3 h-3 mr-1" />
                   {action.label}
@@ -376,8 +394,8 @@ export function EnhancedLLMAssistant({
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[90%] rounded-lg px-4 py-3 ${
                 msg.role === 'user'
-                  ? 'bg-[#1890ff] text-white'
-                  : 'bg-gray-50 text-gray-800 border border-gray-100'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground border border-border'
               }`}>
                 {/* 消息内容 */}
                 <div className="text-sm leading-relaxed">
@@ -403,7 +421,7 @@ export function EnhancedLLMAssistant({
                     <div className="whitespace-pre-wrap">{msg.content}</div>
                   )}
                   {msg.isStreaming && (
-                    <span className="inline-block w-1.5 h-4 bg-[#1890ff] animate-pulse ml-0.5 align-middle" />
+                    <span className="inline-block w-1.5 h-4 bg-primary animate-pulse ml-0.5 align-middle" />
                   )}
                 </div>
 
@@ -490,7 +508,7 @@ export function EnhancedLLMAssistant({
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
             size="icon"
-            className="bg-[#1890ff] hover:bg-[#006bb3]"
+            className="bg-primary hover:bg-primary/90"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

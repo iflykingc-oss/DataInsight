@@ -236,7 +236,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-500">{widget.title}</span>
-                  <Activity className="w-4 h-4 text-[#1890ff]" />
+                  <Activity className="w-4 h-4 text-primary" />
                 </div>
                 <div className="text-2xl font-bold text-gray-900">{widget.data[0]?.value as string || '-'}</div>
                 <p className="text-xs text-gray-400 mt-1">{widget.data[0]?.sub as string || ''}</p>

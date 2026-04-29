@@ -435,7 +435,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#1890ff]" />
+            <FileText className="w-5 h-5 text-primary" />
             报表配置
           </CardTitle>
         </CardHeader>
@@ -461,7 +461,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                   <div
                     key={template.id}
                     className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                      isSelected ? 'border-[#1890ff] bg-blue-50/50 shadow-sm' : 'border-gray-200 hover:border-gray-300'
+                      isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-muted-foreground'
                     }`}
                     onClick={() => setSelectedTemplate(template.id)}
                   >
@@ -470,7 +470,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                     </div>
                     <p className="font-medium text-sm">{template.name}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{template.description}</p>
-                    {isSelected && <CheckCircle className="w-4 h-4 text-[#1890ff] mt-1" />}
+                    {isSelected && <CheckCircle className="w-4 h-4 text-primary mt-1" />}
                   </div>
                 );
               })}
@@ -511,7 +511,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
-              <Printer className="w-5 h-5 text-[#1890ff]" />
+              <Printer className="w-5 h-5 text-primary" />
               报告预览
             </CardTitle>
             <Badge variant="outline">{getTemplateName()}</Badge>
@@ -535,7 +535,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
               return (
                 <div key={idx}>
                   <h2 className="text-lg font-semibold flex items-center gap-2 mb-3 text-gray-800">
-                    <Icon className="w-5 h-5 text-[#1890ff]" />
+                    <Icon className="w-5 h-5 text-primary" />
                     {idx + 1}. {section.title}
                   </h2>
                   {section.content}

@@ -122,13 +122,15 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
 
       const decoder = new TextDecoder();
       let fullContent = '';
+      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
@@ -145,10 +147,6 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
               fullContent += dataStr;
               setStreamedContent(fullContent);
             }
-          } else if (line.trim() && !line.startsWith('event:') && !line.startsWith('id:') && !line.startsWith('retry:')) {
-            // 非SSE格式，直接拼接
-            fullContent += line;
-            setStreamedContent(fullContent);
           }
         }
       }
@@ -246,15 +244,14 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
           className={cn(
             'fixed bottom-6 right-6 z-50',
             'w-14 h-14 rounded-full',
-            'bg-gradient-to-r from-purple-500 to-pink-500',
-            'shadow-lg shadow-purple-500/30',
+            'bg-primary shadow-lg shadow-primary/30',
             'flex items-center justify-center',
             'transition-all hover:scale-110 hover:shadow-xl',
             'group'
           )}
         >
-          <Sparkles className="w-6 h-6 text-white" />
-          <span className="absolute right-full mr-3 bg-gray-900 text-white text-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <Sparkles className="w-6 h-6 text-primary-foreground" />
+          <span className="absolute right-full mr-3 bg-foreground text-foreground-contrast text-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             AI 助手
           </span>
         </button>
@@ -274,14 +271,14 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
           style={{ maxWidth: 'calc(100vw - 48px)' }}
         >
           {/* 头部 */}
-          <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-purple-500 to-pink-500 rounded-t-2xl">
+          <div className="flex items-center justify-between p-4 border-b bg-primary rounded-t-2xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+                <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h3 className="font-medium text-white">AI 数据助手</h3>
-                <p className="text-xs text-white/70">
+                <h3 className="font-medium text-primary-foreground">AI 数据助手</h3>
+                <p className="text-xs text-primary-foreground/70">
                   {hasData ? `已加载 ${rowCount || 0} 条数据` : '上传数据后开启智能分析'}
                 </p>
               </div>
@@ -292,16 +289,16 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                 className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
               >
                 {isMinimized ? (
-                  <Maximize2 className="w-4 h-4 text-white" />
+                  <Maximize2 className="w-4 h-4 text-primary-foreground" />
                 ) : (
-                  <Minimize2 className="w-4 h-4 text-white" />
+                  <Minimize2 className="w-4 h-4 text-primary-foreground" />
                 )}
               </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
               >
-                <X className="w-4 h-4 text-white" />
+                <X className="w-4 h-4 text-primary-foreground" />
               </button>
             </div>
           </div>
@@ -322,7 +319,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                       className={cn(
                         'max-w-[85%] rounded-2xl px-4 py-3',
                         msg.role === 'user'
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-br-md'
+                          ? 'bg-primary text-primary-foreground rounded-br-md'
                           : 'bg-gray-100 text-gray-800 rounded-bl-md'
                       )}
                     >
@@ -345,7 +342,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
-                          <div className="whitespace-pre-wrap text-white/90">{msg.content}</div>
+                          <div className="whitespace-pre-wrap text-primary-foreground/90">{msg.content}</div>
                         )}
                       </div>
 
@@ -356,7 +353,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                       )}>
                         <span className={cn(
                           'text-xs',
-                          msg.role === 'user' ? 'text-white/60' : 'text-gray-400'
+                          msg.role === 'user' ? 'text-primary-foreground/60' : 'text-muted-foreground'
                         )}>
                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -365,7 +362,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                             onClick={() => copyMessage(msg.content)}
                             className={cn(
                               'p-1 rounded hover:bg-black/10 transition-colors',
-                              msg.role === 'user' ? 'text-white/60' : 'text-gray-400'
+                              msg.role === 'user' ? 'text-primary-foreground/60' : 'text-muted-foreground'
                             )}
                           >
                             <Copy className="w-3 h-3" />

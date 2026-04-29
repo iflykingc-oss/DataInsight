@@ -248,40 +248,6 @@ const EXAMPLE_PROMPTS = [
   { label: '渠道表现分析', prompt: '分析各分销渠道的表现，包含月度销量对比和渠道占比' },
 ];
 
-// 引导问题
-const _GUIDANCE_QUESTIONS = [
-  {
-    step: 'scenario',
-    question: '您的业务场景是？',
-    options: [
-      { label: '电商店铺', value: '电商', icon: <ShoppingBag className="w-4 h-4" /> },
-      { label: '线下门店', value: '线下', icon: <Store className="w-4 h-4" /> },
-      { label: '分销渠道', value: '分销', icon: <BarChart2 className="w-4 h-4" /> },
-      { label: '客户运营', value: '客户', icon: <Users className="w-4 h-4" /> },
-    ],
-  },
-  {
-    step: 'metrics',
-    question: '最关注哪些核心指标？',
-    options: [
-      { label: '销售额/订单量', value: '销售额', icon: <TrendingUp className="w-4 h-4" /> },
-      { label: '客单价', value: '客单价', icon: <CreditCard className="w-4 h-4" /> },
-      { label: '转化率', value: '转化率', icon: <Zap className="w-4 h-4" /> },
-      { label: '复购率', value: '复购率', icon: <RotateCcw className="w-4 h-4" /> },
-    ],
-  },
-  {
-    step: 'dimension',
-    question: '分析的时间维度？',
-    options: [
-      { label: '日度分析', value: '日', icon: <Clock className="w-4 h-4" /> },
-      { label: '月度分析', value: '月', icon: <BarChart3 className="w-4 h-4" /> },
-      { label: '季度分析', value: '季度', icon: <PieChart className="w-4 h-4" /> },
-      { label: '年度分析', value: '年', icon: <LineChart className="w-4 h-4" /> },
-    ],
-  },
-];
-
 // ============================================
 // 组件 Props
 // ============================================
@@ -367,6 +333,19 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
     setIsGenerating(true);
     setGenerationStep('正在分析数据字段和业务场景...');
 
+    if (!modelConfig) {
+      const errorMsg: ConversationMessage = {
+        id: `msg-${Date.now()}-error`,
+        role: 'assistant',
+        content: '⚠️ 尚未配置AI模型。请在「AI模型配置」中设置您的OpenAI兼容API，即可启用智能仪表盘生成功能。',
+        timestamp: Date.now(),
+      };
+      setConversations(prev => [...prev, errorMsg]);
+      setIsGenerating(false);
+      setGenerationStep('');
+      return;
+    }
+
     try {
       // 构建 context（如果是二次调整）
       const context = currentDashboard ? {
@@ -387,6 +366,10 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
           modelConfig,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`服务器错误 (${response.status})，请稍后重试`);
+      }
 
       const result = await response.json();
 
@@ -443,7 +426,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
       setGuidedStep(0);
       setGuidedAnswers({});
     }
-  }, [data, fieldStats, currentDashboard, guidedAnswers, conversations]);
+  }, [data, fieldStats, currentDashboard, guidedAnswers, conversations, modelConfig]);
 
   // ============================================
   // 二次调整：修改单个图表
@@ -451,11 +434,20 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
   const adjustChart = useCallback(async (chartId: string, instruction: string) => {
     if (!currentDashboard) return;
 
+    if (!modelConfig) {
+      setConversations(prev => [...prev, {
+        id: `msg-${Date.now()}-error`,
+        role: 'assistant',
+        content: '⚠️ 尚未配置AI模型，无法调整图表。',
+        timestamp: Date.now(),
+      }]);
+      return;
+    }
+
     setIsGenerating(true);
     setGenerationStep(`正在调整图表：${instruction}`);
 
     try {
-      const _chart = currentDashboard.charts.find(c => c.id === chartId);
       const response = await fetch('/api/nl2-dashboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -467,8 +459,13 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
             scenario: currentDashboard.scenario,
             charts: currentDashboard.charts,
           },
+          modelConfig,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`服务器错误 (${response.status})`);
+      }
 
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
@@ -500,13 +497,24 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
       setIsGenerating(false);
       setGenerationStep('');
     }
-  }, [currentDashboard, data, fieldStats]);
+  }, [currentDashboard, data, fieldStats, modelConfig]);
 
   // ============================================
   // 批量调整（整体主题、整体增加图表等）
   // ============================================
   const batchAdjust = useCallback(async (instruction: string) => {
     if (!currentDashboard) return;
+
+    if (!modelConfig) {
+      setConversations(prev => [...prev, {
+        id: `msg-${Date.now()}-error`,
+        role: 'assistant',
+        content: '⚠️ 尚未配置AI模型，无法调整仪表盘。',
+        timestamp: Date.now(),
+      }]);
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
@@ -521,8 +529,13 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
             scenario: currentDashboard.scenario,
             charts: currentDashboard.charts,
           },
+          modelConfig,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`服务器错误 (${response.status})`);
+      }
 
       const result = await response.json();
       if (!result.success) throw new Error(result.error);
@@ -537,10 +550,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
     } finally {
       setIsGenerating(false);
     }
-  }, [currentDashboard, data, fieldStats]);
-
-  // ============================================
-  // 渲染图表
+  }, [currentDashboard, data, fieldStats, modelConfig]);
   // ============================================
   const renderChart = useCallback((chart: ChartSpec, themeColor: string) => {
     const chartData = currentDashboard?.mockData?.[chart.id] || [];

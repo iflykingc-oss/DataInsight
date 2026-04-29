@@ -94,7 +94,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Target className="w-5 h-5 text-[#1890ff]" />
+              <Target className="w-5 h-5 text-primary" />
               数据画像
             </CardTitle>
           </CardHeader>
@@ -142,7 +142,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Shield className="w-5 h-5 text-[#1890ff]" />
+              <Shield className="w-5 h-5 text-primary" />
               数据健康评分
             </CardTitle>
           </CardHeader>
@@ -176,7 +176,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <LayoutTemplate className="w-5 h-5 text-[#1890ff]" />
+              <LayoutTemplate className="w-5 h-5 text-primary" />
               场景化分析
               <Badge variant="secondary">{deep.scenarioAnalysis.detectedScenario}</Badge>
               <Badge variant={deep.scenarioAnalysis.confidence === 'high' ? 'default' : 'outline'} className="text-xs">
@@ -261,7 +261,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-[#1890ff]" />
+            <Lightbulb className="w-5 h-5 text-primary" />
             关键发现
             <Badge variant="secondary">{deep.keyFindings.length}</Badge>
           </CardTitle>
@@ -341,7 +341,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[#1890ff]" />
+                <Activity className="w-5 h-5 text-primary" />
                 趋势分析
               </CardTitle>
             </CardHeader>
@@ -386,7 +386,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-[#1890ff]" />
+                <BarChart3 className="w-5 h-5 text-primary" />
                 分布分析
               </CardTitle>
             </CardHeader>
@@ -421,7 +421,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Crosshair className="w-5 h-5 text-[#1890ff]" />
+              <Crosshair className="w-5 h-5 text-primary" />
               自动归因分析
               <Badge variant="secondary">{deep.attribution.anomalyMetrics.length}</Badge>
             </CardTitle>
@@ -575,7 +575,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Zap className="w-5 h-5 text-[#1890ff]" />
+              <Zap className="w-5 h-5 text-primary" />
               字段相关性
               <Badge variant="secondary">{deep.correlations.length}</Badge>
             </CardTitle>
@@ -621,7 +621,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#1890ff]" />
+              <Sparkles className="w-5 h-5 text-primary" />
               智能图表推荐
             </CardTitle>
             <CardDescription>根据数据特征自动推荐最佳可视化方案</CardDescription>
@@ -635,7 +635,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
                 return (
                   <div key={idx} className={`p-4 bg-white border rounded-lg ${priorityColor} hover:shadow-md transition-shadow`}>
                     <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 className="w-5 h-5 text-[#1890ff]" />
+                      <BarChart3 className="w-5 h-5 text-primary" />
                       <span className="font-medium text-sm">{rec.title}</span>
                     </div>
                     <Badge variant="outline" className="text-xs mb-2">
@@ -664,7 +664,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-[#1890ff]" />
+              <CheckCircle className="w-5 h-5 text-primary" />
               行动建议
             </CardTitle>
             <CardDescription>按可落地时间分层的可执行方案</CardDescription>
@@ -743,7 +743,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[#1890ff]" />
+            <BarChart3 className="w-5 h-5 text-primary" />
             字段统计详情
           </CardTitle>
         </CardHeader>

@@ -150,6 +150,13 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
   // 使用 AI 生成指标
   const handleGenerateMetrics = useCallback(async () => {
     if (!data || data.rows.length === 0) return;
+    if (!modelConfig) {
+      setInsightMessages([{
+        role: 'assistant',
+        content: '⚠️ 尚未配置AI模型。请在「AI模型配置」中设置您的OpenAI兼容API（API Key + Base URL + 模型名称），即可启用智能指标生成功能。',
+      }]);
+      return;
+    }
     setIsGenerating(true);
 
     try {
@@ -164,6 +171,10 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
           modelConfig,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`服务器错误 (${response.status})，请稍后重试`);
+      }
 
       const result = await response.json();
       if (result.success && result.data) {
@@ -180,10 +191,14 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
       }
     } catch (error) {
       console.error('Failed to generate metrics:', error);
+      setInsightMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `指标生成失败：${error instanceof Error ? error.message : '未知错误'}`,
+      }]);
     } finally {
       setIsGenerating(false);
     }
-  }, [data, customDescription, fieldStats]);
+  }, [data, customDescription, fieldStats, modelConfig]);
 
   // 自动检测业务场景
   const autoDetectScenario = useCallback(() => {
@@ -232,6 +247,15 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
     setInsightInput('');
     setIsAnalyzing(true);
 
+    if (!modelConfig) {
+      setInsightMessages(prev => [...prev, {
+        role: 'assistant',
+        content: '⚠️ 尚未配置AI模型，无法进行指标解读。请在「AI模型配置」中设置。',
+      }]);
+      setIsAnalyzing(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/metric-ai', {
         method: 'POST',
@@ -242,8 +266,13 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
           userDescription: `请解读指标「${selectedMetric.name}」: ${selectedMetric.expression}\n\n用户问题: ${insightInput}`,
           fieldStats,
           mode: 'insight',
+          modelConfig,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error(`服务器错误 (${response.status})`);
+      }
 
       const result = await response.json();
       if (result.success && result.data?.summary) {
@@ -254,18 +283,18 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
       } else {
         setInsightMessages(prev => [...prev, {
           role: 'assistant',
-          content: '抱歉，我无法完成这次解读，请稍后重试。',
+          content: result.error || '抱歉，我无法完成这次解读，请稍后重试。',
         }]);
       }
-    } catch {
+    } catch (error) {
       setInsightMessages(prev => [...prev, {
         role: 'assistant',
-        content: '网络错误，请检查连接后重试。',
+        content: `解读失败：${error instanceof Error ? error.message : '网络错误，请检查连接后重试。'}`,
       }]);
     } finally {
       setIsAnalyzing(false);
     }
-  }, [insightInput, selectedMetric, data, fieldStats]);
+  }, [insightInput, selectedMetric, data, fieldStats, modelConfig]);
 
   // 保存指标
   const handleSaveMetric = (metric: MetricItem) => {
@@ -353,7 +382,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-500" />
+              <Sparkles className="w-5 h-5 text-primary" />
               AI 智能指标生成
             </CardTitle>
             {detectedScenario.length > 0 && (
@@ -408,7 +437,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
               <Button
                 disabled={isGenerating || data.rows.length === 0}
                 onClick={handleGenerateMetrics}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-primary hover:bg-primary/90"
               >
                 {isGenerating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -648,11 +677,11 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
 
           {/* 指标基本信息 */}
           {selectedMetric && (
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 space-y-2">
+            <div className="bg-gradient-to-r from-muted/50 to-muted rounded-lg p-4 space-y-2">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-500">计算公式：</span>
-                  <code className="ml-1 bg-white px-2 py-0.5 rounded text-purple-600">{selectedMetric.expression}</code>
+                  <code className="ml-1 bg-background px-2 py-0.5 rounded text-primary">{selectedMetric.expression}</code>
                 </div>
                 <div>
                   <span className="text-gray-500">类别：</span>
@@ -685,7 +714,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                   <div
                     className={`max-w-[85%] rounded-lg p-3 text-sm whitespace-pre-wrap ${
                       msg.role === 'user'
-                        ? 'bg-purple-600 text-white'
+                        ? 'bg-primary text-primary-foreground'
                         : 'bg-white border text-gray-800'
                     }`}
                   >
@@ -756,7 +785,7 @@ function MetricCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h4 className="font-medium text-sm">{metric.name}</h4>
-              <code className="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded font-mono">
+              <code className="text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded font-mono">
                 {metric.expression}
               </code>
             </div>
