@@ -29,6 +29,7 @@ import { TemplateManager } from '@/components/template-manager';
 import { ChartExporter } from '@/components/chart-exporter';
 import { AIFieldPanel } from '@/components/ai-field-panel';
 import { MetricManager } from '@/components/metric-manager';
+import { ExtendedChartGallery } from '@/components/extended-chart-gallery';
 import { AIFormulaGenerator } from '@/components/ai-formula-generator';
 import { InsightReportGenerator } from '@/components/insight-report-generator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -87,7 +88,7 @@ type ViewMode =
   | 'ai-table-builder'
   | 'table' | 'source' | 'clean' | 'quality'
   | 'insights' | 'dashboard' | 'nl2dash' | 'metric' | 'metric-manager' | 'aiChart'
-  | 'chat' | 'report' | 'ai-field'
+  | 'chat' | 'report' | 'ai-field' | 'extended-charts'
   | 'advanced' | 'designer'
   | 'alert' | 'version' | 'template' | 'export' | 'share'
   | 'ai-settings'
@@ -145,6 +146,7 @@ const NAV_GROUPS: Array<{
       { id: 'report', label: '报表生成', icon: FileText, needsData: true },
       { id: 'designer', label: '仪表盘设计', icon: Palette, needsData: true },
       { id: 'advanced', label: '高级图表', icon: TrendingUp, needsData: true },
+      { id: 'extended-charts', label: '扩展图表', icon: LayoutGrid, needsData: true, color: 'text-indigo-500', badge: 'NEW' },
       { id: 'alert', label: '数据预警', icon: AlertTriangle, needsData: true },
       { id: 'export', label: '图表导出', icon: Download, needsData: true },
       { id: 'share', label: '分享管理', icon: Share2, needsData: true },
@@ -185,6 +187,7 @@ const HOME_CARDS: HomeCard[] = [
   { id: 'quality', icon: Shield, label: '数据质量', desc: '完整性/一致性/质量/可用性评估', color: 'text-emerald-600', bgColor: 'bg-emerald-50', needsData: true },
   { id: 'source', icon: Database, label: '数据源管理', desc: '连接数据库、API、平台集成', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: false },
   { id: 'advanced', icon: TrendingUp, label: '高级图表', desc: '6种高级图表类型与数据映射', color: 'text-indigo-600', bgColor: 'bg-indigo-50', needsData: true },
+  { id: 'extended-charts' as ViewMode, icon: LayoutGrid, label: '扩展图表', desc: '10种ECharts高级图表：散点/箱线/热力/漏斗/桑基/瀑布/树图/词云', color: 'text-indigo-600', bgColor: 'bg-indigo-50', needsData: true, badge: 'NEW' },
   { id: 'designer', icon: Palette, label: '仪表盘设计', desc: '拖拽式自定义仪表盘布局', color: 'text-pink-600', bgColor: 'bg-pink-50', needsData: true },
   { id: 'alert', icon: AlertTriangle, label: '数据预警', desc: '阈值/趋势/异常预警与通知', color: 'text-amber-600', bgColor: 'bg-amber-50', needsData: true },
   { id: 'export', icon: Download, label: '图表导出', desc: 'PNG/PDF/Excel/复制导出', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: true },
@@ -756,6 +759,11 @@ export default function HomePage() {
     // 高级图表
     if (viewMode === 'advanced' && parsedData && analysis) {
       return <AdvancedCharts data={parsedData} fieldStats={analysis.fieldStats} />;
+    }
+
+    // 扩展图表库（ECharts）
+    if (viewMode === 'extended-charts' && parsedData) {
+      return <ExtendedChartGallery data={parsedData} />;
     }
 
     // 数据预警
