@@ -239,7 +239,19 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
 
   // AI生成表格方案
   const handleGenerate = useCallback(async () => {
-    if (!userRequirement.trim() || !modelConfig) return;
+    if (!userRequirement.trim()) return;
+    
+    // 检查模型配置
+    if (!modelConfig) {
+      const assistantMsg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: '⚠️ 请先配置 AI 模型后再生成表格。点击右上角「模型设置」添加并启用模型。',
+        timestamp: new Date(),
+      };
+      setChatMessages(prev => [...prev, assistantMsg]);
+      return;
+    }
 
     // 输入质量校验
     const qualityCheck = validateRequirement(userRequirement);
@@ -328,7 +340,19 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
 
   // AI迭代修改
   const handleIterate = useCallback(async () => {
-    if (!chatInput.trim() || !currentScheme || !modelConfig) return;
+    if (!chatInput.trim() || !currentScheme) return;
+    
+    // 检查模型配置
+    if (!modelConfig) {
+      const assistantMsg: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: '⚠️ 请先配置 AI 模型后再进行修改。点击右上角「模型设置」添加并启用模型。',
+        timestamp: new Date(),
+      };
+      setChatMessages(prev => [...prev, assistantMsg]);
+      return;
+    }
 
     const feedback = chatInput;
     setChatInput('');
