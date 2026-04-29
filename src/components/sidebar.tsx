@@ -1,212 +1,195 @@
 'use client';
 
-import React from 'react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
-  BarChart3,
-  Table2,
-  Home,
-  Database,
-  Filter,
-  LayoutGrid,
-  Settings,
-  Wand2,
-  Target,
-  Shield,
-  Bookmark,
-  Download,
-  History,
-  Bot,
-  Upload,
-  Trash2,
-  FileSpreadsheet,
-  FileText,
-  Brain,
-  Sparkles,
-  ChevronLeft,
-  ChevronRight,
-  MessageSquare,
-  PieChart,
-  AlertTriangle,
-  Share2,
-  Palette,
-  TrendingUp,
+  Home, Table2, Database, Brain, LayoutGrid, Target, PieChart, FileText,
+  MessageSquare, Wrench, ChevronLeft, ChevronRight, Settings, Sparkles,
+  AlertTriangle, Clock, BookTemplate,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import type { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
-export type ViewMode =
-  | 'home'
-  | 'ai-table-builder'
-  | 'table' | 'source' | 'clean' | 'quality'
-  | 'insights' | 'dashboard' | 'nl2dash' | 'metric' | 'aiChart'
-  | 'chat' | 'report'
-  | 'advanced' | 'designer'
-  | 'alert' | 'version' | 'template' | 'export' | 'share'
-  | 'ai-settings';
-
-interface NavItem {
-  id: ViewMode;
+export interface NavItem {
+  id: string;
   label: string;
-  icon: React.ElementType;
-  color?: string;
+  icon: LucideIcon;
+  group: 'data' | 'analysis' | 'tools';
   needsData?: boolean;
   badge?: string;
 }
 
-interface NavGroup {
-  label: string;
-  items: NavItem[];
-}
+const NAV_ITEMS: NavItem[] = [
+  { id: 'home', label: '工作台', icon: Home, group: 'data' },
+  { id: 'ai-table-builder', label: 'AI 建表', icon: Sparkles, group: 'data', badge: 'AI' },
+  { id: 'data-table', label: '数据表格', icon: Table2, group: 'data', needsData: true },
+  { id: 'data-prep', label: '数据准备', icon: Database, group: 'data', needsData: true },
+  { id: 'insights', label: '智能洞察', icon: Brain, group: 'analysis', needsData: true, badge: 'AI' },
+  { id: 'visualization', label: '可视化', icon: LayoutGrid, group: 'analysis', needsData: true },
+  { id: 'metrics', label: '指标体系', icon: Target, group: 'analysis', needsData: true },
+  { id: 'chart-center', label: '图表中心', icon: PieChart, group: 'analysis', needsData: true },
+  { id: 'chat', label: 'AI 问数', icon: MessageSquare, group: 'tools', needsData: true, badge: 'AI' },
+  { id: 'sql-lab', label: 'SQL 查询', icon: Wrench, group: 'tools', needsData: true, badge: 'NEW' },
+  { id: 'report-export', label: '报表导出', icon: FileText, group: 'tools', needsData: true },
+];
 
-const NAV_GROUPS: NavGroup[] = [
-  {
-    label: '总览',
-    items: [
-      { id: 'home', label: '工作台', icon: Home },
-    ],
-  },
-  {
-    label: '数据',
-    items: [
-      { id: 'ai-table-builder' as ViewMode, label: 'AI 智能建表', icon: Sparkles, color: 'text-primary', badge: 'NEW' },
-      { id: 'table' as ViewMode, label: '数据表格', icon: Table2, needsData: true },
-      { id: 'source' as ViewMode, label: '数据源管理', icon: Database },
-      { id: 'clean' as ViewMode, label: '数据清洗', icon: Filter, needsData: true },
-      { id: 'quality' as ViewMode, label: '数据质量', icon: Shield, needsData: true },
-    ],
-  },
-  {
-    label: '分析',
-    items: [
-      { id: 'insights', label: '智能分析', icon: Brain, needsData: true, color: 'text-orange-500' },
-      { id: 'dashboard', label: '仪表盘', icon: LayoutGrid, needsData: true },
-      { id: 'nl2dash', label: 'NL2Dashboard', icon: Wand2, needsData: true, color: 'text-violet-500', badge: 'AI' },
-      { id: 'metric', label: '指标语义层', icon: Target, needsData: true, color: 'text-orange-500', badge: 'AI' },
-      { id: 'aiChart', label: '智能图表', icon: PieChart, needsData: true },
-    ],
-  },
-  {
-    label: 'AI 助手',
-    items: [
-      { id: 'chat', label: 'AI 对话', icon: MessageSquare, needsData: true, color: 'text-blue-500' },
-      { id: 'ai-settings', label: 'AI 模型配置', icon: Bot },
-    ],
-  },
-  {
-    label: '工具',
-    items: [
-      { id: 'report', label: '报表生成', icon: FileText, needsData: true },
-      { id: 'designer', label: '仪表盘设计', icon: Palette, needsData: true },
-      { id: 'advanced', label: '高级图表', icon: TrendingUp, needsData: true },
-      { id: 'alert', label: '数据预警', icon: AlertTriangle, needsData: true },
-      { id: 'export', label: '图表导出', icon: Download, needsData: true },
-      { id: 'share', label: '分享管理', icon: Share2, needsData: true },
-      { id: 'version', label: '版本快照', icon: History },
-      { id: 'template', label: '模板管理', icon: Bookmark },
-    ],
-  },
+const NAV_GROUPS = [
+  { key: 'data' as const, label: '数据' },
+  { key: 'analysis' as const, label: '分析' },
+  { key: 'tools' as const, label: '工具' },
 ];
 
 interface SidebarProps {
-  viewMode: ViewMode;
-  onViewChange: (view: ViewMode) => void;
   collapsed: boolean;
-  onToggleCollapse: () => void;
-  hasData?: boolean;
-  className?: string;
+  onToggle: () => void;
+  activeView: string;
+  onViewChange: (view: string) => void;
+  hasData: boolean;
+  onSettingsOpen: () => void;
+  alertCount: number;
+  modelConfigured: boolean;
 }
 
-export function Sidebar({ viewMode, onViewChange, collapsed, onToggleCollapse, hasData, className }: SidebarProps) {
+export default function Sidebar({
+  collapsed,
+  onToggle,
+  activeView,
+  onViewChange,
+  hasData,
+  onSettingsOpen,
+  alertCount,
+  modelConfigured,
+}: SidebarProps) {
   return (
     <aside
-      className={cn(
-        'relative flex flex-col bg-white border-r transition-all duration-300',
-        collapsed ? 'w-16' : 'w-64',
-        className
-      )}
+      className={`${
+        collapsed ? 'w-16' : 'w-56'
+      } bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col transition-all duration-200 shrink-0`}
     >
-      <div className="flex items-center justify-between p-4 border-b">
+      {/* Header */}
+      <div className="h-14 flex items-center justify-between px-3 border-b border-sidebar-border">
         {!collapsed && (
-          <h1 className="font-bold text-lg bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+          <span className="text-base font-bold tracking-tight text-sidebar-primary">
             DataInsight
-          </h1>
+          </span>
         )}
-        <button
-          onClick={onToggleCollapse}
-          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          onClick={onToggle}
         >
-          {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-        </button>
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4">
-        {NAV_GROUPS.map((group) => (
-          <div key={group.label} className="mb-4">
-            {!collapsed && (
-              <div className="px-4 mb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">
-                {group.label}
-              </div>
-            )}
-            <div className="space-y-1 px-2">
-              {group.items.map((item) => {
-                const isActive = viewMode === item.id;
-                const isDisabled = item.needsData && !hasData;
-                const Icon = item.icon;
-
-                const button = (
+      {/* Navigation */}
+      <nav className="flex-1 py-2 overflow-y-auto">
+        {NAV_GROUPS.map((group) => {
+          const items = NAV_ITEMS.filter((item) => item.group === group.key);
+          return (
+            <div key={group.key} className="mb-1">
+              {!collapsed && (
+                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                  {group.label}
+                </div>
+              )}
+              {items.map((item) => {
+                const disabled = item.needsData && !hasData;
+                const isActive = activeView === item.id;
+                return (
                   <button
                     key={item.id}
-                    onClick={() => !isDisabled && onViewChange(item.id)}
-                    disabled={isDisabled}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all',
+                    onClick={() => !disabled && onViewChange(item.id)}
+                    disabled={disabled}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors relative ${
                       isActive
-                        ? 'bg-primary/10 text-primary'
-                        : isDisabled
-                        ? 'text-gray-300 cursor-not-allowed'
-                        : 'text-gray-600 hover:bg-gray-100',
-                      item.color
-                    )}
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                        : disabled
+                        ? 'text-sidebar-foreground/30 cursor-not-allowed'
+                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                    } ${collapsed ? 'justify-center' : ''}`}
+                    title={collapsed ? item.label : undefined}
                   >
-                    <Icon className={cn('w-5 h-5 flex-shrink-0', item.color)} />
+                    <item.icon className="h-4 w-4 shrink-0" />
                     {!collapsed && (
                       <>
-                        <span className="flex-1 text-left truncate">{item.label}</span>
+                        <span className="truncate">{item.label}</span>
                         {item.badge && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          <Badge
+                            variant="secondary"
+                            className="ml-auto text-[10px] px-1.5 py-0 h-4 bg-sidebar-primary text-sidebar-primary-foreground"
+                          >
                             {item.badge}
-                          </span>
+                          </Badge>
                         )}
                       </>
                     )}
+                    {collapsed && item.badge && (
+                      <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
+                    )}
                   </button>
                 );
-
-                if (collapsed) {
-                  return (
-                    <Tooltip key={item.id} delayDuration={0}>
-                      <TooltipTrigger asChild>{button}</TooltipTrigger>
-                      <TooltipContent side="right" className="flex items-center gap-2">
-                        {item.label}
-                        {item.badge && (
-                          <span className="text-[10px] px-1 py-0.5 rounded bg-primary/10 text-primary">
-                            {item.badge}
-                          </span>
-                        )}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                }
-
-                return button;
               })}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
+
+      {/* Footer */}
+      <div className="border-t border-sidebar-border p-2 space-y-1">
+        {alertCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            onClick={() => onViewChange('alerting')}
+          >
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            {!collapsed && (
+              <span>
+                告警 <Badge variant="destructive" className="ml-1 text-[10px] h-4 px-1">{alertCount}</Badge>
+              </span>
+            )}
+          </Button>
+        )}
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+          onClick={() => onViewChange('version-history')}
+        >
+          <Clock className="h-4 w-4" />
+          {!collapsed && <span>版本历史</span>}
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+          onClick={() => onViewChange('template-manager')}
+        >
+          <BookTemplate className="h-4 w-4" />
+          {!collapsed && <span>模板管理</span>}
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground"
+          onClick={onSettingsOpen}
+        >
+          <Settings className="h-4 w-4" />
+          {!collapsed && (
+            <span>
+              设置
+              {!modelConfigured && (
+                <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-amber-500" />
+              )}
+            </span>
+          )}
+        </Button>
+      </div>
     </aside>
   );
 }
-
-export { NAV_GROUPS };
-export type { NavGroup, NavItem };
