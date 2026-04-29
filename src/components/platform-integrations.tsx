@@ -49,16 +49,72 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
   const [tableId, setTableId] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const handleConnect = useCallback(async () => {
     if (!appId || !appSecret || !appToken) return;
     setIsConnecting(true);
-    // 模拟连接
-    await new Promise(r => setTimeout(r, 1500));
-    setIsConnecting(false);
-    setIsConnected(true);
-  }, [appId, appSecret, appToken]);
+    setConnectionError(null);
+
+    try {
+      const response = await fetch('/api/platform/feishu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'connect',
+          credentials: { appId, appSecret },
+          appToken,
+          tableId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsConnected(true);
+      } else {
+        setConnectionError(result.message || '连接失败');
+      }
+    } catch (error) {
+      setConnectionError(error instanceof Error ? error.message : '连接失败');
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [appId, appSecret, appToken, tableId]);
+
+  const handleSync = useCallback(async () => {
+    if (!appToken || !tableId) return;
+    setIsSyncing(true);
+    setSyncMessage(null);
+
+    try {
+      const response = await fetch('/api/platform/feishu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sync',
+          credentials: { appId, appSecret },
+          appToken,
+          tableId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSyncMessage(result.message || '同步成功');
+      } else {
+        setConnectionError(result.message || '同步失败');
+      }
+    } catch (error) {
+      setConnectionError(error instanceof Error ? error.message : '同步失败');
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [appId, appSecret, appToken, tableId]);
 
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -120,6 +176,31 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
                 <span className="font-medium">连接成功</span>
               </div>
               <p className="text-sm text-green-600 mt-2">已成功连接到飞书多维表格，可以开始导入数据</p>
+              <Button
+                className="mt-3 w-full"
+                variant="outline"
+                onClick={handleSync}
+                disabled={isSyncing || !tableId}
+              >
+                {isSyncing ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />同步中...</>
+                ) : (
+                  <><ArrowRight className="w-4 h-4 mr-2" />同步数据</>
+                )}
+              </Button>
+              {syncMessage && (
+                <p className="text-sm text-green-600 mt-2">{syncMessage}</p>
+              )}
+            </div>
+          )}
+
+          {connectionError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">连接失败</span>
+              </div>
+              <p className="text-sm text-red-600 mt-2">{connectionError}</p>
             </div>
           )}
         </div>
@@ -204,14 +285,36 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
   const [agentId, setAgentId] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const handleConnect = useCallback(async () => {
     if (!corpId || !corpSecret) return;
     setIsConnecting(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setIsConnecting(false);
-    setIsConnected(true);
-  }, [corpId, corpSecret]);
+    setConnectionError(null);
+
+    try {
+      const response = await fetch('/api/platform/wechat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'connect',
+          credentials: { corpId, corpSecret, agentId },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsConnected(true);
+      } else {
+        setConnectionError(result.message || '连接失败');
+      }
+    } catch (error) {
+      setConnectionError(error instanceof Error ? error.message : '连接失败');
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [corpId, corpSecret, agentId]);
 
   const sampleData = {
     headers: ['部门', '成员数', '活跃度', '满意度'],
@@ -258,6 +361,16 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
                 <span className="font-medium">连接成功</span>
               </div>
               <p className="text-sm text-green-600 mt-2">已成功连接到微信企业版</p>
+            </div>
+          )}
+
+          {connectionError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">连接失败</span>
+              </div>
+              <p className="text-sm text-red-600 mt-2">{connectionError}</p>
             </div>
           )}
         </div>
@@ -320,13 +433,35 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
   const [agentId, setAgentId] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const handleConnect = useCallback(async () => {
     if (!appKey || !appSecret) return;
     setIsConnecting(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setIsConnecting(false);
-    setIsConnected(true);
+    setConnectionError(null);
+
+    try {
+      const response = await fetch('/api/platform/dingtalk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'connect',
+          credentials: { appKey, appSecret },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsConnected(true);
+      } else {
+        setConnectionError(result.message || '连接失败');
+      }
+    } catch (error) {
+      setConnectionError(error instanceof Error ? error.message : '连接失败');
+    } finally {
+      setIsConnecting(false);
+    }
   }, [appKey, appSecret]);
 
   const sampleData = {
@@ -373,6 +508,16 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
                 <span className="font-medium">连接成功</span>
               </div>
               <p className="text-sm text-green-600 mt-2">已成功连接到钉钉</p>
+            </div>
+          )}
+
+          {connectionError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">连接失败</span>
+              </div>
+              <p className="text-sm text-red-600 mt-2">{connectionError}</p>
             </div>
           )}
         </div>
@@ -435,13 +580,35 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
   const [docId, setDocId] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const handleConnect = useCallback(async () => {
     if (!apiKey || !apiSecret) return;
     setIsConnecting(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setIsConnecting(false);
-    setIsConnected(true);
+    setConnectionError(null);
+
+    try {
+      const response = await fetch('/api/platform/wps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'connect',
+          credentials: { apiKey, apiSecret },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsConnected(true);
+      } else {
+        setConnectionError(result.message || '连接失败');
+      }
+    } catch (error) {
+      setConnectionError(error instanceof Error ? error.message : '连接失败');
+    } finally {
+      setIsConnecting(false);
+    }
   }, [apiKey, apiSecret]);
 
   const sampleData = {
@@ -495,6 +662,16 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
                 <span className="font-medium">连接成功</span>
               </div>
               <p className="text-sm text-green-600 mt-2">已成功连接到金山文档</p>
+            </div>
+          )}
+
+          {connectionError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">连接失败</span>
+              </div>
+              <p className="text-sm text-red-600 mt-2">{connectionError}</p>
             </div>
           )}
         </div>
