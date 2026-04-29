@@ -28,6 +28,7 @@ import { VersionHistory } from '@/components/version-history';
 import { TemplateManager } from '@/components/template-manager';
 import { ChartExporter } from '@/components/chart-exporter';
 import { AIFieldPanel } from '@/components/ai-field-panel';
+import { MetricManager } from '@/components/metric-manager';
 import { AIFormulaGenerator } from '@/components/ai-formula-generator';
 import { InsightReportGenerator } from '@/components/insight-report-generator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -73,6 +74,7 @@ import {
   Mail,
   Webhook,
   TestTube,
+  Gauge,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
@@ -84,8 +86,8 @@ type ViewMode =
   | 'home'
   | 'ai-table-builder'
   | 'table' | 'source' | 'clean' | 'quality'
-  | 'insights' | 'dashboard' | 'nl2dash' | 'metric' | 'aiChart'
-  | 'chat' | 'report'
+  | 'insights' | 'dashboard' | 'nl2dash' | 'metric' | 'metric-manager' | 'aiChart'
+  | 'chat' | 'report' | 'ai-field'
   | 'advanced' | 'designer'
   | 'alert' | 'version' | 'template' | 'export' | 'share'
   | 'ai-settings'
@@ -126,6 +128,7 @@ const NAV_GROUPS: Array<{
       { id: 'dashboard', label: '仪表盘', icon: LayoutGrid, needsData: true },
       { id: 'nl2dash', label: 'NL2Dashboard', icon: Wand2, needsData: true, color: 'text-violet-500', badge: 'AI' },
       { id: 'metric', label: '指标语义层', icon: Target, needsData: true, color: 'text-orange-500', badge: 'AI' },
+      { id: 'metric-manager', label: '指标管理', icon: Gauge, needsData: true, color: 'text-emerald-500' },
       { id: 'aiChart', label: '智能图表', icon: PieChart, needsData: true },
     ],
   },
@@ -173,6 +176,7 @@ const HOME_CARDS: HomeCard[] = [
   { id: 'nl2dash', icon: Wand2, label: 'NL2Dashboard', desc: '对话生成业务仪表盘', color: 'text-violet-600', bgColor: 'bg-violet-50', needsData: true, badge: 'AI', highlight: true },
   { id: 'chat', icon: MessageSquare, label: 'AI 问数', desc: '自然语言检索、统计、归因、预测', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI', highlight: true },
   { id: 'metric', icon: Target, label: '指标语义层', desc: 'AI 生成业务指标体系与解读', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI' },
+  { id: 'metric-manager' as ViewMode, icon: Gauge, label: '指标管理', desc: '预置指标库 + 自定义指标计算', color: 'text-emerald-600', bgColor: 'bg-emerald-50', needsData: true, badge: 'NEW' },
   { id: 'dashboard', icon: LayoutGrid, label: '自动仪表盘', desc: '一键生成可视化仪表盘', color: 'text-purple-600', bgColor: 'bg-purple-50', needsData: true },
   { id: 'aiChart', icon: PieChart, label: '智能图表', desc: 'AI 推荐最佳图表类型', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true },
   { id: 'report', icon: FileText, label: '报表生成', desc: '一键生成分析报表并导出', color: 'text-green-600', bgColor: 'bg-green-50', needsData: true },
@@ -687,6 +691,13 @@ export default function HomePage() {
         <ErrorBoundary moduleName="指标语义层">
           <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
         </ErrorBoundary>
+      );
+    }
+
+    // 指标管理（预置 + 自定义）
+    if (viewMode === 'metric-manager' && parsedData) {
+      return (
+        <MetricManager data={parsedData} />
       );
     }
 
