@@ -378,16 +378,52 @@ export function DataAlerting({
   };
 
   // 保存规则
-  const handleSaveRule = () => {
+  const handleSaveRule = async () => {
     if (!editingRule) return;
     if (!editingRule.name || !editingRule.field) return;
 
     const updated = { ...editingRule, updatedAt: Date.now() };
-    
-    if (isCreating) {
-      setRules(prev => [...prev, updated]);
-    } else {
-      setRules(prev => prev.map(r => r.id === editingRule.id ? updated : r));
+
+    try {
+      const response = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: isCreating ? 'create' : 'update',
+          rule: {
+            id: updated.id,
+            name: updated.name,
+            metric: { field: updated.field, aggregation: 'avg' },
+            condition: { operator: updated.condition, threshold: updated.threshold },
+            frequency: 'daily',
+            enabled: updated.enabled,
+          },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        if (isCreating) {
+          setRules(prev => [...prev, updated]);
+        } else {
+          setRules(prev => prev.map(r => r.id === editingRule.id ? updated : r));
+        }
+      } else {
+        console.error('保存规则失败:', result.message);
+        if (isCreating) {
+          setRules(prev => [...prev, updated]);
+        } else {
+          setRules(prev => prev.map(r => r.id === editingRule.id ? updated : r));
+        }
+      }
+    } catch (error) {
+      console.error('保存规则失败:', error);
+      if (isCreating) {
+        setRules(prev => [...prev, updated]);
+      } else {
+        setRules(prev => prev.map(r => r.id === editingRule.id ? updated : r));
+      }
     }
 
     setIsDialogOpen(false);
@@ -395,8 +431,60 @@ export function DataAlerting({
   };
 
   // 删除规则
-  const handleDeleteRule = (id: string) => {
+  const handleDeleteRule = async (id: string) => {
+    try {
+      await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', ruleId: id }),
+      });
+    } catch (error) {
+      console.error('删除规则失败:', error);
+    }
     setRules(prev => prev.filter(r => r.id !== id));
+  };
+
+  // 检查所有预警规则
+  const handleCheckAlerts = async () => {
+    if (!data?.headers || !data?.rows || data.rows.length === 0) return;
+
+    setIsTesting(true);
+
+    try {
+      const response = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'checkAll',
+          data: { headers: data.headers, rows: data.rows },
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.results) {
+        for (const r of result.results) {
+          if (r.triggered) {
+            const historyEntry: AlertHistory = {
+              id: `alert_${Date.now()}_${r.ruleId}`,
+              ruleId: r.ruleId,
+              ruleName: r.ruleName,
+              triggeredAt: Date.now(),
+              value: r.metricValue,
+              threshold: r.threshold,
+              severity: 'warning',
+              status: 'firing',
+              notificationSent: false,
+            };
+            setHistory(prev => [historyEntry, ...prev].slice(0, 100));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('检查预警失败:', error);
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   // 切换启用状态
