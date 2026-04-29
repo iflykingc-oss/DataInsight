@@ -177,6 +177,124 @@ const CONFIG_STORAGE_KEY = 'datainsight_alert_config';
 const ALERTS_STORAGE_KEY = 'datainsight_alerts';
 const HISTORY_STORAGE_KEY = 'datainsight_alert_history';
 
+// ============================================
+// 预置告警模板
+// ============================================
+interface AlertTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: 'sales' | 'inventory' | 'user' | 'finance' | 'general';
+  rule: Omit<AlertRule, 'id' | 'createdAt' | 'updatedAt' | 'lastTriggered' | 'triggerCount'>;
+}
+
+const ALERT_TEMPLATES: AlertTemplate[] = [
+  {
+    id: 'sales-spike',
+    name: '销售额异常飙升',
+    description: '日销售额环比上涨超过50%时触发',
+    category: 'sales',
+    rule: {
+      name: '销售额异常飙升',
+      description: '检测销售额是否出现异常增长',
+      field: '销售额',
+      condition: 'change_up',
+      threshold: 50,
+      severity: 'info',
+      channels: ['in_app'],
+      enabled: true,
+    }
+  },
+  {
+    id: 'sales-drop',
+    name: '销售额大幅下滑',
+    description: '日销售额环比下降超过30%时触发',
+    category: 'sales',
+    rule: {
+      name: '销售额大幅下滑',
+      description: '检测销售额是否出现大幅下滑',
+      field: '销售额',
+      condition: 'change_down',
+      threshold: 30,
+      severity: 'warning',
+      channels: ['in_app'],
+      enabled: true,
+    }
+  },
+  {
+    id: 'inventory-low',
+    name: '库存不足预警',
+    description: '库存数量低于安全阈值时触发',
+    category: 'inventory',
+    rule: {
+      name: '库存不足预警',
+      description: '库存数量低于安全线',
+      field: '库存',
+      condition: 'lt',
+      threshold: 10,
+      severity: 'critical',
+      channels: ['in_app', 'email'],
+      enabled: true,
+    }
+  },
+  {
+    id: 'conversion-drop',
+    name: '转化率下降',
+    description: '转化率低于行业平均水平',
+    category: 'user',
+    rule: {
+      name: '转化率下降',
+      description: '转化率低于预期值',
+      field: '转化率',
+      condition: 'lt',
+      threshold: 2,
+      severity: 'warning',
+      channels: ['in_app'],
+      enabled: true,
+    }
+  },
+  {
+    id: 'cost-overrun',
+    name: '成本超支',
+    description: '成本超过预算阈值',
+    category: 'finance',
+    rule: {
+      name: '成本超支预警',
+      description: '成本超过预算',
+      field: '成本',
+      condition: 'gt',
+      threshold: 100000,
+      severity: 'critical',
+      channels: ['in_app', 'email'],
+      enabled: true,
+    }
+  },
+  {
+    id: 'data-missing',
+    name: '数据缺失检测',
+    description: '关键字段出现空值时触发',
+    category: 'general',
+    rule: {
+      name: '数据缺失检测',
+      description: '检测关键字段是否有空值',
+      field: 'ID',
+      condition: 'null',
+      threshold: 0,
+      severity: 'warning',
+      channels: ['in_app'],
+      enabled: true,
+    }
+  },
+];
+
+const TEMPLATE_CATEGORIES: Record<string, { label: string; color: string }> = {
+  sales: { label: '销售', color: 'bg-blue-100 text-blue-700' },
+  inventory: { label: '库存', color: 'bg-orange-100 text-orange-700' },
+  user: { label: '用户', color: 'bg-green-100 text-green-700' },
+  finance: { label: '财务', color: 'bg-purple-100 text-purple-700' },
+  general: { label: '通用', color: 'bg-gray-100 text-gray-700' },
+};
+
 interface DataAlertingProps {
   data: ParsedData;
   fieldStats: FieldStat[];
@@ -201,6 +319,8 @@ export function DataAlerting({
   const [previewResult, setPreviewResult] = useState<{ triggered: boolean; value: number } | null>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<string>('all');
 
   // 通知渠道配置
   const [channelConfig, setChannelConfig] = useState<NotificationConfig>({
@@ -375,6 +495,33 @@ export function DataAlerting({
     setEditingRule({ ...rule });
     setIsCreating(false);
     setIsDialogOpen(true);
+  };
+
+  // 从模板创建规则
+  const handleCreateFromTemplate = (template: AlertTemplate) => {
+    // 尝试匹配数据中的字段
+    const matchedField = fieldStats.find(f => 
+      f.field.toLowerCase().includes(template.rule.field.toLowerCase()) ||
+      template.rule.field.toLowerCase().includes(f.field.toLowerCase())
+    );
+
+    const newRule: AlertRule = {
+      id: `alert-${Date.now()}`,
+      name: template.rule.name,
+      description: template.rule.description,
+      field: matchedField?.field || fieldStats.find(f => f.type === 'number')?.field || '',
+      condition: template.rule.condition,
+      threshold: template.rule.threshold,
+      severity: template.rule.severity,
+      channels: [...template.rule.channels],
+      enabled: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      triggerCount: 0
+    };
+
+    setRules(prev => [...prev, newRule]);
+    setShowTemplates(false);
   };
 
   // 保存规则
@@ -637,13 +784,18 @@ export function DataAlerting({
             </Badge>
           )}
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={handleCreateRule}>
-              <Plus className="w-4 h-4 mr-1" />
-              新建告警
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowTemplates(true)}>
+            <Zap className="w-4 h-4 mr-1" />
+            模板
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" onClick={handleCreateRule}>
+                <Plus className="w-4 h-4 mr-1" />
+                新建告警
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
@@ -854,6 +1006,7 @@ export function DataAlerting({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
       </div>
 
       {/* Tabs */}
@@ -1451,6 +1604,85 @@ export function DataAlerting({
           </Tabs>
         </TabsContent>
       </Tabs>
+
+      {/* 模板选择面板 */}
+      {showTemplates && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-[600px] max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">从模板创建告警</h3>
+                <p className="text-xs text-gray-500 mt-0.5">选择预置模板快速创建告警规则</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowTemplates(false)}>
+                关闭
+              </Button>
+            </div>
+            
+            <div className="p-4 border-b">
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={selectedTemplateCategory === 'all' ? 'default' : 'outline'}
+                  onClick={() => setSelectedTemplateCategory('all')}
+                >
+                  全部
+                </Button>
+                {Object.entries(TEMPLATE_CATEGORIES).map(([key, config]) => (
+                  <Button
+                    key={key}
+                    size="sm"
+                    variant={selectedTemplateCategory === key ? 'default' : 'outline'}
+                    onClick={() => setSelectedTemplateCategory(key)}
+                  >
+                    {config.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-4 space-y-3">
+              {ALERT_TEMPLATES
+                .filter(t => selectedTemplateCategory === 'all' || t.category === selectedTemplateCategory)
+                .map(template => {
+                  const category = TEMPLATE_CATEGORIES[template.category];
+                  return (
+                    <Card key={template.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => handleCreateFromTemplate(template)}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium text-sm">{template.name}</h4>
+                              <Badge className={cn('text-xs', category?.color || 'bg-gray-100')}>
+                                {category?.label || template.category}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">{template.description}</p>
+                            <div className="flex items-center gap-4 text-xs text-gray-400">
+                              <span>字段: {template.rule.field}</span>
+                              <span>条件: {CONDITION_CONFIG.find(c => c.value === template.rule.condition)?.label} {template.rule.threshold}{template.rule.condition.includes('change') ? '%' : ''}</span>
+                              <span className={cn(
+                                template.rule.severity === 'critical' && 'text-red-500',
+                                template.rule.severity === 'warning' && 'text-yellow-500',
+                                template.rule.severity === 'info' && 'text-blue-500',
+                              )}>
+                                {SEVERITY_CONFIG[template.rule.severity].label}
+                              </span>
+                            </div>
+                          </div>
+                          <Button size="sm" className="ml-4" onClick={(e) => { e.stopPropagation(); handleCreateFromTemplate(template); }}>
+                            使用
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
