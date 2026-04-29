@@ -314,10 +314,28 @@ export function ChartExporter({
           blob = exportToExcel();
           break;
           
-        case 'pdf':
-          // PDF 导出需要后端支持或使用 jsPDF 库
-          blob = await exportToPNG(); // 暂时用 PNG 代替
+        case 'pdf': {
+          task.progress = 30;
+          setExportHistory(prev => prev.map(t => t.id === task.id ? task : t));
+          try {
+            const response = await fetch('/api/export/pdf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                title: chartName,
+              }),
+            });
+
+            if (response.ok) {
+              blob = await response.blob();
+            } else {
+              blob = await exportToPNG();
+            }
+          } catch {
+            blob = await exportToPNG();
+          }
           break;
+        }
           
         case 'word':
         case 'powerpoint':

@@ -313,14 +313,46 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
 
     try {
       if (format === 'pdf') {
-        // 打开打印对话框
         clearInterval(progressInterval);
-        setExportProgress(100);
-        setTimeout(() => {
+        setExportProgress(30);
+
+        try {
+          const response = await fetch('/api/export/pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: reportTitle,
+              subtitle: `${reportAuthor} • ${new Date().toLocaleDateString()}`,
+              tableData: {
+                headers: data.headers,
+                rows: data.rows.slice(0, 50).map(row =>
+                  data.headers.map(h => row[h] ?? '')
+                ),
+              },
+            }),
+          });
+
+          if (response.ok) {
+            setExportProgress(70);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${reportTitle.replace(/\s+/g, '_')}.pdf`;
+            link.click();
+            URL.revokeObjectURL(url);
+            setExportProgress(100);
+          } else {
+            window.print();
+            setExportProgress(100);
+          }
+        } catch {
           window.print();
-          setIsExporting(false);
-          setExportProgress(0);
-        }, 500);
+          setExportProgress(100);
+        }
+
+        setIsExporting(false);
+        setExportProgress(0);
         return;
       }
 
