@@ -27,6 +27,9 @@ import { NL2Dashboard } from '@/components/nl2-dashboard';
 import { VersionHistory } from '@/components/version-history';
 import { TemplateManager } from '@/components/template-manager';
 import { ChartExporter } from '@/components/chart-exporter';
+import { AIFieldPanel } from '@/components/ai-field-panel';
+import { AIFormulaGenerator } from '@/components/ai-formula-generator';
+import { InsightReportGenerator } from '@/components/insight-report-generator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -85,7 +88,8 @@ type ViewMode =
   | 'chat' | 'report'
   | 'advanced' | 'designer'
   | 'alert' | 'version' | 'template' | 'export' | 'share'
-  | 'ai-settings';
+  | 'ai-settings'
+  | 'ai-field';
 
 const NAV_GROUPS: Array<{
   label: string;
@@ -108,6 +112,7 @@ const NAV_GROUPS: Array<{
     label: '数据',
     items: [
       { id: 'ai-table-builder' as ViewMode, label: 'AI 智能建表', icon: Sparkles, color: 'text-primary', badge: 'NEW' },
+      { id: 'ai-field' as ViewMode, label: 'AI 字段', icon: Wand2, needsData: true, color: 'text-violet-500', badge: 'AI' },
       { id: 'table' as ViewMode, label: '数据表格', icon: Table2, needsData: true },
       { id: 'source' as ViewMode, label: '数据源管理', icon: Database },
       { id: 'clean' as ViewMode, label: '数据清洗', icon: Filter, needsData: true },
@@ -163,6 +168,7 @@ interface HomeCard {
 
 const HOME_CARDS: HomeCard[] = [
   { id: 'ai-table-builder' as ViewMode, icon: Sparkles, label: 'AI 智能建表', desc: 'AI 一键生成标准化经营台账', color: 'text-primary', bgColor: 'bg-primary/5', needsData: false, badge: 'NEW', highlight: true },
+  { id: 'ai-field' as ViewMode, icon: Wand2, label: 'AI 字段', desc: '可视化配置AI字段，整列智能处理', color: 'text-violet-600', bgColor: 'bg-violet-50', needsData: true, badge: 'AI', highlight: true },
   { id: 'insights', icon: Brain, label: '智能分析', desc: 'AI 自动洞察数据规律与健康评分', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, highlight: true },
   { id: 'nl2dash', icon: Wand2, label: 'NL2Dashboard', desc: '对话生成业务仪表盘', color: 'text-violet-600', bgColor: 'bg-violet-50', needsData: true, badge: 'AI', highlight: true },
   { id: 'chat', icon: MessageSquare, label: 'AI 问数', desc: '自然语言检索、统计、归因、预测', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI', highlight: true },
@@ -583,6 +589,33 @@ export default function HomePage() {
       );
     }
 
+    // AI字段
+    if (viewMode === 'ai-field' && parsedData) {
+      return (
+        <ErrorBoundary moduleName="AI字段">
+          <Tabs defaultValue="fields" className="space-y-4">
+            <TabsList className="w-full">
+              <TabsTrigger value="fields" className="flex-1">AI 字段捷径</TabsTrigger>
+              <TabsTrigger value="formula" className="flex-1">AI 生成公式</TabsTrigger>
+            </TabsList>
+            <TabsContent value="fields">
+              <AIFieldPanel
+                data={parsedData}
+                dataId={parsedData.fileName || 'default'}
+                modelConfig={activeModelConfig}
+              />
+            </TabsContent>
+            <TabsContent value="formula">
+              <AIFormulaGenerator
+                data={parsedData}
+                modelConfig={activeModelConfig}
+              />
+            </TabsContent>
+          </Tabs>
+        </ErrorBoundary>
+      );
+    }
+
     // 数据表格
     if (viewMode === 'table' && parsedData) {
       return (
@@ -612,7 +645,21 @@ export default function HomePage() {
     // 智能分析
     if (viewMode === 'insights') {
       return analysis ? (
-        <DataInsights data={parsedData!} analysis={analysis} onAnalyze={handleAnalyze} />
+        <Tabs defaultValue="insights" className="space-y-4">
+          <TabsList className="w-full">
+            <TabsTrigger value="insights" className="flex-1">智能分析</TabsTrigger>
+            <TabsTrigger value="report" className="flex-1">
+              <FileText className="w-3.5 h-3.5 mr-1" />
+              洞察报告
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="insights">
+            <DataInsights data={parsedData!} analysis={analysis} onAnalyze={handleAnalyze} />
+          </TabsContent>
+          <TabsContent value="report">
+            <InsightReportGenerator analysis={analysis} fileName={parsedData?.fileName} />
+          </TabsContent>
+        </Tabs>
       ) : (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />

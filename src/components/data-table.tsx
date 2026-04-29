@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -19,21 +19,34 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles } from 'lucide-react';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
+import type { AIField } from '@/lib/ai-field-engine';
+import { getAIFieldTypeIcon } from '@/lib/ai-field-engine';
+import { AICellToolbar } from '@/components/ai-cell-toolbar';
+import { cn } from '@/lib/utils';
 
 interface DataTableProps {
   data: ParsedData;
   fieldStats?: FieldStat[];
+  aiFields?: AIField[];
+  modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
   onFieldClick?: (field: string, value: import('@/types').CellValue) => void;
+  onCellChange?: (rowIndex: number, field: string, value: import('@/types').CellValue) => void;
 }
 
-export function DataTable({ data, fieldStats, onFieldClick }: DataTableProps) {
+export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFieldClick, onCellChange }: DataTableProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // AI单元格工具栏状态
+  const [toolbarVisible, setToolbarVisible] = useState(false);
+  const [toolbarPos, setToolbarPos] = useState({ x: 0, y: 0 });
+  const [selectedText, setSelectedText] = useState('');
+  const [selectedCell, setSelectedCell] = useState<{ rowIndex: number; field: string; value: string } | null>(null);
   
   const pageCount = Math.ceil(data.rows.length / pageSize);
   
@@ -89,7 +102,42 @@ export function DataTable({ data, fieldStats, onFieldClick }: DataTableProps) {
       setSortDirection('asc');
     }
   };
-  
+
+  // 文本选择检测
+  const handleTextSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim().length > 0) {
+      const text = selection.toString().trim();
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setSelectedText(text);
+      setToolbarPos({ x: rect.left + rect.width / 2, y: rect.top - 10 });
+      setToolbarVisible(true);
+
+      // 尝试获取单元格信息
+      const cell = range.startContainer.parentElement?.closest('td');
+      if (cell) {
+        const row = cell.closest('tr');
+        const table = row?.closest('table');
+        if (row && table) {
+          const rowIndex = Array.from(table.querySelectorAll('tbody tr')).indexOf(row);
+          const cellIndex = Array.from(row.querySelectorAll('td')).indexOf(cell);
+          if (rowIndex >= 0 && cellIndex > 0) {
+            const field = data.headers[cellIndex - 1];
+            setSelectedCell({ rowIndex: (page - 1) * pageSize + rowIndex, field, value: text });
+          }
+        }
+      }
+    } else {
+      setToolbarVisible(false);
+    }
+  }, [data.headers, page, pageSize]);
+
+  useEffect(() => {
+    document.addEventListener('mouseup', handleTextSelection);
+    return () => document.removeEventListener('mouseup', handleTextSelection);
+  }, [handleTextSelection]);
+
   const getFieldType = (field: string) => {
     return fieldStats?.find(f => f.field === field)?.type || 'string';
   };
@@ -183,6 +231,24 @@ export function DataTable({ data, fieldStats, onFieldClick }: DataTableProps) {
                     </div>
                   </TableHead>
                 ))}
+                {/* AI字段列 */}
+                {aiFields.map(field => (
+                  <TableHead
+                    key={field.id}
+                    className="bg-primary/5 border-l-2 border-primary/20"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">{getAIFieldTypeIcon(field.type)}</span>
+                      <span className="truncate font-medium text-primary">{field.name}</span>
+                      {field.status === 'running' && (
+                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                      )}
+                      {field.status === 'completed' && (
+                        <span className="w-2 h-2 rounded-full bg-green-400" />
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -193,28 +259,75 @@ export function DataTable({ data, fieldStats, onFieldClick }: DataTableProps) {
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedData.map((row, rowIndex) => (
-                  <TableRow key={`row-${rowIndex}`}>
-                    <TableCell className="text-center text-gray-400">
-                      {(page - 1) * pageSize + rowIndex + 1}
-                    </TableCell>
-                    {data.headers.map(header => (
-                      <TableCell
-                        key={header}
-                        className="max-w-xs truncate"
-                        onClick={() => onFieldClick?.(header, row[header])}
-                      >
-                        {formatValue(row[header], getFieldType(header))}
+                paginatedData.map((row, rowIndex) => {
+                  const actualRowIndex = (page - 1) * pageSize + rowIndex;
+                  return (
+                    <TableRow key={`row-${rowIndex}`}>
+                      <TableCell className="text-center text-gray-400">
+                        {actualRowIndex + 1}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                      {data.headers.map(header => (
+                        <TableCell
+                          key={header}
+                          className="max-w-xs truncate"
+                          onClick={() => onFieldClick?.(header, row[header])}
+                        >
+                          {formatValue(row[header], getFieldType(header))}
+                        </TableCell>
+                      ))}
+                      {/* AI字段值 */}
+                      {aiFields.map(field => (
+                        <TableCell
+                          key={field.id}
+                          className={cn(
+                            'max-w-xs truncate border-l-2 border-primary/10',
+                            field.results[actualRowIndex] ? 'bg-primary/5' : 'bg-gray-50'
+                          )}
+                        >
+                          {field.status === 'running' && !field.results[actualRowIndex] ? (
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                              处理中...
+                            </span>
+                          ) : field.results[actualRowIndex] ? (
+                            <span className="text-sm">{String(field.results[actualRowIndex])}</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">未处理</span>
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
         </div>
       </div>
       
+      {/* AI单元格工具栏 */}
+      {toolbarVisible && selectedCell && (
+        <div
+          className="fixed z-50"
+          style={{
+            left: `${toolbarPos.x}px`,
+            top: `${toolbarPos.y}px`,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          <AICellToolbar
+            selectedText={selectedText}
+            cellValue={String(data.rows[selectedCell.rowIndex]?.[selectedCell.field] ?? '')}
+            modelConfig={modelConfig}
+            onApply={(newValue) => {
+              onCellChange?.(selectedCell.rowIndex, selectedCell.field, newValue);
+              setToolbarVisible(false);
+            }}
+            onClose={() => setToolbarVisible(false)}
+          />
+        </div>
+      )}
+
       {/* 分页 */}
       {pageCount > 1 && (
         <div className="flex items-center justify-between">
