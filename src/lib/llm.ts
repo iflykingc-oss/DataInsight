@@ -3,6 +3,79 @@
  * 支持流式和非流式两种模式
  */
 
+/**
+ * LLM 调用日志
+ */
+interface LLMCallLog {
+  timestamp: string;
+  model: string;
+  baseUrl: string;
+  messageCount: number;
+  duration: number;
+  status: 'success' | 'error';
+  error?: string;
+  tokenUsage?: {
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
+  };
+}
+
+const LLM_CALL_LOGS: LLMCallLog[] = [];
+const MAX_LOG_SIZE = 100;
+
+function logLLMCall(log: LLMCallLog) {
+  LLM_CALL_LOGS.push(log);
+  if (LLM_CALL_LOGS.length > MAX_LOG_SIZE) {
+    LLM_CALL_LOGS.shift();
+  }
+  if (log.status === 'error') {
+    console.error(`[LLM Error] ${log.model} @ ${log.timestamp}:`, log.error);
+  } else {
+    console.log(`[LLM] ${log.model} - ${log.duration}ms`);
+  }
+}
+
+export function getLLMCallLogs(): LLMCallLog[] {
+  return [...LLM_CALL_LOGS];
+}
+
+export function clearLLMCallLogs(): void {
+  LLM_CALL_LOGS.length = 0;
+}
+
+export function getLLMCallStats(): {
+  totalCalls: number;
+  successCalls: number;
+  errorCalls: number;
+  avgDuration: number;
+  lastCall?: LLMCallLog;
+} {
+  const stats = {
+    totalCalls: LLM_CALL_LOGS.length,
+    successCalls: 0,
+    errorCalls: 0,
+    avgDuration: 0,
+    lastCall: LLM_CALL_LOGS[LLM_CALL_LOGS.length - 1],
+  };
+
+  let totalDuration = 0;
+  for (const log of LLM_CALL_LOGS) {
+    if (log.status === 'success') {
+      stats.successCalls++;
+    } else {
+      stats.errorCalls++;
+    }
+    totalDuration += log.duration;
+  }
+
+  if (stats.totalCalls > 0) {
+    stats.avgDuration = Math.round(totalDuration / stats.totalCalls);
+  }
+
+  return stats;
+}
+
 export interface LLMModelConfig {
   apiKey: string;
   baseUrl: string;
@@ -53,6 +126,7 @@ export async function callLLM(
     maxRetries?: number;
   }
 ): Promise<string> {
+  const startTime = Date.now();
   const validation = validateModelConfig(config);
   if (!validation.valid) {
     throw new Error(validation.error);
@@ -71,6 +145,7 @@ export async function callLLM(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const attemptStart = Date.now();
 
     try {
       const response = await fetch(endpoint, {
@@ -89,6 +164,7 @@ export async function callLLM(
       });
 
       clearTimeout(timeoutId);
+      const duration = Date.now() - attemptStart;
 
       if (!response.ok) {
         let errorBody: { error?: { message?: string }; message?: string } = {};
@@ -101,7 +177,17 @@ export async function callLLM(
         else if (response.status === 404) hint = '（模型名称不正确或端点不可用，请检查 Base URL 和模型名称）';
         else if (response.status === 429) hint = '（请求频率超限，请稍后重试）';
 
-        throw new Error(`模型调用失败 (HTTP ${response.status}): ${errorMsg} ${hint}`.trim());
+        const finalError = new Error(`模型调用失败 (HTTP ${response.status}): ${errorMsg} ${hint}`.trim());
+        logLLMCall({
+          timestamp: new Date().toISOString(),
+          model: config.model,
+          baseUrl: cleanBaseUrl,
+          messageCount: messages.length,
+          duration,
+          status: 'error',
+          error: finalError.message,
+        });
+        throw finalError;
       }
 
       const data = await response.json();
@@ -111,10 +197,25 @@ export async function callLLM(
         throw new Error('模型返回内容为空');
       }
 
+      logLLMCall({
+        timestamp: new Date().toISOString(),
+        model: config.model,
+        baseUrl: cleanBaseUrl,
+        messageCount: messages.length,
+        duration,
+        status: 'success',
+        tokenUsage: data.usage ? {
+          promptTokens: data.usage.prompt_tokens,
+          completionTokens: data.usage.completion_tokens,
+          totalTokens: data.usage.total_tokens,
+        } : undefined,
+      });
+
       return content;
     } catch (error: unknown) {
       clearTimeout(timeoutId);
-      
+      const duration = Date.now() - attemptStart;
+
       if (error instanceof Error && error.name === 'AbortError') {
         const isNetworkError = lastError === null && attempt === 0;
         if (attempt < maxRetries) {
@@ -129,29 +230,75 @@ export async function callLLM(
           '检查 Base URL 是否正确（确保包含完整路径，如 https://api.openai.com/v1）',
           '确认 API Key 有足够的调用额度',
         ];
-        throw new Error(`模型调用超时（${Math.round(timeout/1000)}秒），请稍后重试或优化网络环境。\n\n可能原因：\n${suggestions.map((s, i) => `${i+1}. ${s}`).join('\n')}`);
+        const finalError = new Error(`模型调用超时（${Math.round(timeout/1000)}秒），请稍后重试或优化网络环境。\n\n可能原因：\n${suggestions.map((s, i) => `${i+1}. ${s}`).join('\n')}`);
+        logLLMCall({
+          timestamp: new Date().toISOString(),
+          model: config.model,
+          baseUrl: cleanBaseUrl,
+          messageCount: messages.length,
+          duration,
+          status: 'error',
+          error: finalError.message,
+        });
+        throw finalError;
       }
-      
+
       if (error instanceof Error) {
         // 401/404/429 等 HTTP 错误不重试
-        if (error.message.includes('HTTP 401') || error.message.includes('HTTP 403') || 
+        if (error.message.includes('HTTP 401') || error.message.includes('HTTP 403') ||
             error.message.includes('HTTP 404') || error.message.includes('HTTP 429')) {
+          logLLMCall({
+            timestamp: new Date().toISOString(),
+            model: config.model,
+            baseUrl: cleanBaseUrl,
+            messageCount: messages.length,
+            duration,
+            status: 'error',
+            error: error.message,
+          });
           throw error;
         }
-        
+
         // 其他错误可以重试
         lastError = error;
         if (attempt < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, 1000));
           continue;
         }
+        logLLMCall({
+          timestamp: new Date().toISOString(),
+          model: config.model,
+          baseUrl: cleanBaseUrl,
+          messageCount: messages.length,
+          duration,
+          status: 'error',
+          error: error.message,
+        });
         throw error;
       }
-      
+
+      logLLMCall({
+        timestamp: new Date().toISOString(),
+        model: config.model,
+        baseUrl: cleanBaseUrl,
+        messageCount: messages.length,
+        duration,
+        status: 'error',
+        error: String(error),
+      });
       throw error;
     }
   }
 
+  logLLMCall({
+    timestamp: new Date().toISOString(),
+    model: config.model,
+    baseUrl: cleanBaseUrl,
+    messageCount: messages.length,
+    duration: Date.now() - startTime,
+    status: 'error',
+    error: lastError?.message || '模型调用失败',
+  });
   throw lastError || new Error('模型调用失败');
 }
 

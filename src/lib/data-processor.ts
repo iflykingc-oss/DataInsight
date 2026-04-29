@@ -1,8 +1,7 @@
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type CellValue = any;
+type CellValue = string | number | boolean | null | undefined | Date;
 
 export interface ParsedData {
   headers: string[];
@@ -215,9 +214,8 @@ async function parseCSV(file: File): Promise<ParsedData> {
       skipEmptyLines: true,
       complete: (results: Papa.ParseResult<Record<string, CellValue>>) => {
         const headers = results.meta.fields || [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rows = results.data as any[];
-        
+        const rows: Record<string, CellValue>[] = results.data as Record<string, CellValue>[];
+
         resolve({
           headers,
           rows,
@@ -236,28 +234,27 @@ async function parseCSV(file: File): Promise<ParsedData> {
 async function parseExcel(file: File): Promise<ParsedData> {
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array' });
-  
+
   const sheetNames = workbook.SheetNames;
   const firstSheetName = sheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
-  
+
   const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-  
+
   if (jsonData.length === 0) {
     throw new Error('Excel文件为空');
   }
-  
+
   const headers = (jsonData[0] as CellValue[]).map(h => String(h || ''));
   const rows = jsonData.slice(1).map(row => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const obj: Record<string, any> = {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (row as any[]).forEach((value: CellValue, index: number) => {
+    const rowArray = row as CellValue[];
+    const obj: Record<string, CellValue> = {};
+    rowArray.forEach((value: CellValue, index: number) => {
       obj[headers[index]] = value;
     });
     return obj;
   });
-  
+
   return {
     headers,
     rows,
