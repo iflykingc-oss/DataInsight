@@ -1,5 +1,8 @@
 export type CellValue = string | number | boolean | null | undefined | Date;
 
+/** 兼容旧组件的行数据类型，用于 Recharts 等只接受 string|number 的场景 */
+export type ChartRow = Record<string, string | number>;
+
 export interface ParsedData {
   headers: string[];
   rows: Record<string, CellValue>[];

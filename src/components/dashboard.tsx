@@ -612,7 +612,7 @@ function PivotTableView({
   valField,
   aggFunc,
 }: {
-  rows: Record<string, string | number>[];
+  rows: Record<string, import('@/types').CellValue>[];
   rowField: string;
   colField: string;
   valField: string;
@@ -1051,7 +1051,7 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
 // ============================================
 // 工具函数
 // ============================================
-function groupByField(rows: Record<string, string | number>[], groupField: string, valueField: string): Record<string, number> {
+function groupByField(rows: Record<string, import('@/types').CellValue>[], groupField: string, valueField: string): Record<string, number> {
   const grouped: Record<string, number> = {};
   rows.forEach(r => {
     const key = String(r[groupField]);

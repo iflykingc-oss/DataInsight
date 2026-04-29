@@ -1307,7 +1307,7 @@ export function cleanData(data: ParsedData, options: {
         const val = Number(row[header]);
         if (isNaN(val) || !isOutlier(val)) return row;
         
-        const newRow = { ...row };
+        const newRow: Record<string, CellValue> = { ...row };
         switch (action) {
           case 'mark':
             newRow[header] = `⚠${val}`;
@@ -1326,7 +1326,7 @@ export function cleanData(data: ParsedData, options: {
             return null; // 标记为删除
         }
         return row;
-      }).filter((row): row is Record<string, unknown> => row !== null);
+      }).filter((row): row is Record<string, CellValue> => row !== null);
     });
   }
   

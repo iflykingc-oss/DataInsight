@@ -150,7 +150,7 @@ export class PromptEngine {
   }
 
   selectTemplate(intent: IntentDetection): PromptTemplate {
-    const applicableTemplates = this.templates.values()
+    const applicableTemplates = Array.from(this.templates.values())
       .filter(t => t.适用于.includes(intent.intent as 'query' | 'analysis' | 'visualization' | 'report' | 'command'))
       .sort((a, b) => b.优先级 - a.优先级);
 
@@ -212,8 +212,8 @@ export class PromptEngine {
       base.system += '\n\n注意：字段较多，请聚焦于与分析相关的字段。';
     }
 
-    const nullRatio = fieldStats =>
-      fieldStats.reduce((acc, s) => acc + s.nullCount, 0) / (s.count * fieldStats.length);
+    const nullRatio = (stats: FieldStats[]) =>
+      stats.reduce((acc, s) => acc + s.nullCount, 0) / (stats.reduce((acc, s) => acc + s.count, 0) || 1);
     const overallNullRatio = context.fieldStats.length > 0
       ? nullRatio(context.fieldStats)
       : 0;

@@ -160,9 +160,10 @@ taskQueue.registerHandler('clean', async (payload: unknown) => {
 
 taskQueue.registerHandler('aggregate', async (payload: unknown) => {
   const { aggregateData } = await import('@/lib/data-processor');
-  const { data, options } = payload as {
+  const { data, groupBy, aggregations } = payload as {
     data: import('@/types').ParsedData;
-    options: import('@/types').AggregateOptions;
+    groupBy: string[];
+    aggregations: { field: string; operation: 'sum' | 'avg' | 'count' | 'min' | 'max' }[];
   };
-  return aggregateData(data, options);
+  return aggregateData(data, groupBy, aggregations);
 });

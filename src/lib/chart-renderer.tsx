@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Chart as RechartsChart,
   BarChart,
   LineChart,
   PieChart,
@@ -77,7 +76,7 @@ export function createChartConfig(
     series: [
       {
         field: yField,
-        type: type === 'area' ? 'area' : type,
+        type: (type === 'area' ? 'area' : type) as SeriesConfig['type'],
       },
     ],
     legend: { show: true },

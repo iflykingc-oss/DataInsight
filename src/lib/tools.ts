@@ -6,7 +6,7 @@ export interface ToolContext {
   fieldStats: FieldStats[];
 }
 
-export class BaseTool {
+export abstract class BaseTool {
   public name: string;
   public description: string;
   public parameters: Array<{

@@ -25,7 +25,7 @@ import type { ParsedData, FieldStat } from '@/lib/data-processor';
 interface DataTableProps {
   data: ParsedData;
   fieldStats?: FieldStat[];
-  onFieldClick?: (field: string, value: string | number | null) => void;
+  onFieldClick?: (field: string, value: import('@/types').CellValue) => void;
 }
 
 export function DataTable({ data, fieldStats, onFieldClick }: DataTableProps) {
@@ -94,9 +94,15 @@ export function DataTable({ data, fieldStats, onFieldClick }: DataTableProps) {
     return fieldStats?.find(f => f.field === field)?.type || 'string';
   };
   
-  const formatValue = (value: string | number | null | undefined, type: string) => {
+  const formatValue = (value: import('@/types').CellValue, type: string) => {
     if (value === null || value === undefined || value === '') {
       return <span className="text-gray-400 italic">空</span>;
+    }
+    if (value instanceof Date) {
+      return value.toLocaleDateString();
+    }
+    if (typeof value === 'boolean') {
+      return value ? '是' : '否';
     }
     
     if (type === 'number' && !isNaN(Number(value))) {

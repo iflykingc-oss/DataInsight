@@ -40,7 +40,7 @@ export function withErrorHandling<T = unknown>(
           const contentType = request.headers.get('content-type') || '';
           if (contentType.includes('application/json')) {
             const rawBody = await request.json();
-            const validated = options.schema.parse(rawBody);
+            const validated: T = options.schema.parse(rawBody) as T;
             body = validated;
           } else if (contentType.includes('multipart/form-data')) {
             const formData = await request.formData();
@@ -48,15 +48,15 @@ export function withErrorHandling<T = unknown>(
             formData.forEach((value, key) => {
               rawObject[key] = value;
             });
-            const validated = options.schema.parse(rawObject);
+            const validated: T = options.schema.parse(rawObject) as T;
             body = validated;
           }
         } catch (error) {
           if (error instanceof ZodError) {
             const details: Record<string, string> = {};
-            error.errors.forEach(err => {
-              const path = err.path.join('.');
-              details[path] = err.message;
+            error.issues.forEach((issue) => {
+              const path = issue.path.join('.');
+              details[path] = issue.message;
             });
             return NextResponse.json(
               createErrorResponse('VALIDATION_ERROR', '请求参数验证失败', details),

@@ -1,19 +1,30 @@
 export type PlatformType = 'feishu' | 'dingtalk' | 'wechat' | 'wps' | 'database';
 
-export interface PlatformConfig {
-  type: PlatformType;
-  name: string;
-  enabled: boolean;
-  credentials: PlatformCredentials;
-  settings?: Record<string, unknown>;
-}
-
 export interface PlatformCredentials {
   appId?: string;
   appSecret?: string;
+  appKey?: string;
   token?: string;
   webhookUrl?: string;
   apiKey?: string;
+  apiSecret?: string;
+  host?: string;
+  port?: number;
+  database?: string;
+  username?: string;
+  password?: string;
+  corpId?: string;
+  agentId?: string;
+  corpSecret?: string;
+  ssl?: boolean;
+}
+
+export interface PlatformConfig<T extends PlatformCredentials = PlatformCredentials> {
+  type: PlatformType;
+  name: string;
+  enabled: boolean;
+  credentials: T;
+  settings?: Record<string, unknown>;
 }
 
 export interface PlatformConnectionTest {
@@ -23,82 +34,53 @@ export interface PlatformConnectionTest {
   error?: string;
 }
 
-export interface FeishuConfig extends PlatformConfig {
+export interface FeishuConfig extends PlatformConfig<{
+  appId: string;
+  appSecret: string;
+  webhookUrl?: string;
+}> {
   type: 'feishu';
-  credentials: {
-    appId: string;
-    appSecret: string;
-    webhookUrl?: string;
-  };
   settings?: {
     defaultTableId?: string;
     syncInterval?: number;
   };
 }
 
-export interface DingtalkConfig extends PlatformConfig {
+export interface DingtalkConfig extends PlatformConfig<{
+  appKey: string;
+  appSecret: string;
+  webhookUrl?: string;
+}> {
   type: 'dingtalk';
-  credentials: {
-    appKey: string;
-    appSecret: string;
-    webhookUrl?: string;
-  };
 }
 
-export interface WechatConfig extends PlatformConfig {
+export interface WechatConfig extends PlatformConfig<{
+  corpId: string;
+  agentId: string;
+  corpSecret: string;
+  webhookUrl?: string;
+}> {
   type: 'wechat';
-  credentials: {
-    corpId: string;
-    agentId: string;
-    corpSecret: string;
-    webhookUrl?: string;
-  };
 }
 
-export interface WPSConfig extends PlatformConfig {
+export interface WPSConfig extends PlatformConfig<{
+  apiKey: string;
+  apiSecret?: string;
+}> {
   type: 'wps';
-  credentials: {
-    apiKey: string;
-    apiSecret?: string;
-  };
 }
 
-export interface DatabaseConfig extends PlatformConfig {
+export interface DatabaseConfig extends PlatformConfig<{
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
+  ssl?: boolean;
+}> {
   type: 'database';
-  credentials: {
-    host: string;
-    port: number;
-    database: string;
-    username: string;
-    password: string;
-    ssl?: boolean;
-  };
   settings?: {
     queryTimeout?: number;
     maxConnections?: number;
   };
-}
-
-export interface DataSource {
-  id: string;
-  name: string;
-  type: PlatformType | 'file';
-  config: PlatformConfig | FileDataSource;
-  lastSyncAt?: string;
-  status: 'active' | 'inactive' | 'error';
-}
-
-export interface FileDataSource {
-  type: 'file';
-  supportedFormats: string[];
-  maxFileSize: number;
-}
-
-export interface SyncResult {
-  success: boolean;
-  recordsImported: number;
-  recordsUpdated: number;
-  recordsFailed: number;
-  errors?: string[];
-  duration: number;
 }
