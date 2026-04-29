@@ -1,6 +1,6 @@
 # DataInsight Pro
 
-企业级智能表格数据处理与可视化平台。基于 [Next.js 16](https://nextjs.org) + [shadcn/ui](https://ui.shadcn.com) 构建，支持多端表格上传、自动数据分析、交互式仪表盘和 AI 智能洞察。
+智能表格数据处理与可视化平台。基于 [Next.js 16](https://nextjs.org) + [shadcn/ui](https://ui.shadcn.com) 构建，支持多端表格上传、自动数据分析、交互式仪表盘和 AI 智能洞察。
 
 ## 快速开始
 
