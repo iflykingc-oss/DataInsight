@@ -55,6 +55,88 @@ interface GlobalAIAssistantProps {
 export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats, modelConfig }: GlobalAIAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  
+  // 位置状态：支持拖拽和预设位置
+  const [position, setPosition] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ai-assistant-position');
+      if (saved) return saved;
+    }
+    return 'bottom-right';
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isExpanded, setIsExpanded] = useState(false); // 展开位置选择菜单
+  
+  // 预设位置映射
+  const positionClasses: Record<string, { btn: string; panel: string }> = {
+    'bottom-right': { btn: 'bottom-6 right-6', panel: 'bottom-24 right-6' },
+    'bottom-center': { btn: 'bottom-6 right-1/2 translate-x-1/2', panel: 'bottom-24 right-1/2 translate-x-1/2' },
+    'bottom-left': { btn: 'bottom-6 left-6', panel: 'bottom-24 left-6' },
+    'top-right': { btn: 'top-6 right-6', panel: 'top-20 right-6' },
+    'top-left': { btn: 'top-6 left-6', panel: 'top-20 left-6' },
+  };
+  
+  // 保存位置到 localStorage
+  const savePosition = (pos: string) => {
+    setPosition(pos);
+    localStorage.setItem('ai-assistant-position', pos);
+    setIsExpanded(false);
+  };
+  
+  // 处理拖拽开始
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (isMinimized) return;
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragOffset({ x: clientX, y: clientY });
+  };
+  
+  // 处理拖拽
+  useEffect(() => {
+    if (!isDragging) return;
+    
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      
+      // 根据拖拽位置自动切换预设位置
+      const screenCenterX = window.innerWidth / 2;
+      const screenCenterY = window.innerHeight / 2;
+      
+      let newPos = position;
+      if (clientX < screenCenterX && clientY < screenCenterY) {
+        newPos = 'top-left';
+      } else if (clientX >= screenCenterX && clientY < screenCenterY) {
+        newPos = 'top-right';
+      } else if (clientX < screenCenterX && clientY >= screenCenterY) {
+        newPos = 'bottom-left';
+      } else {
+        newPos = 'bottom-right';
+      }
+      
+      if (newPos !== position) {
+        savePosition(newPos);
+      }
+    };
+    
+    const handleEnd = () => {
+      setIsDragging(false);
+    };
+    
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchmove', handleMove);
+    document.addEventListener('touchend', handleEnd);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging, position]);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -237,21 +319,54 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
 
   return (
     <>
+      {/* 位置选择菜单 */}
+      {isExpanded && (
+        <div
+          className={cn(
+            'fixed z-[60] bg-white rounded-xl shadow-xl border p-2 space-y-1',
+            positionClasses[position]?.panel || 'bottom-24 right-6'
+          )}
+        >
+          <div className="text-xs text-muted-foreground px-2 py-1 mb-1">选择位置</div>
+          {[
+            { key: 'bottom-right', label: '右下角' },
+            { key: 'bottom-center', label: '底部居中' },
+            { key: 'bottom-left', label: '左下角' },
+            { key: 'top-right', label: '右上角' },
+            { key: 'top-left', label: '左上角' },
+          ].map((pos) => (
+            <button
+              key={pos.key}
+              onClick={() => savePosition(pos.key)}
+              className={cn(
+                'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
+                position === pos.key
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-muted'
+              )}
+            >
+              {pos.label}
+            </button>
+          ))}
+        </div>
+      )}
+      
       {/* 悬浮按钮 */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className={cn(
-            'fixed bottom-6 right-6 z-50',
+            'fixed z-50',
             'w-14 h-14 rounded-full',
             'bg-primary shadow-lg shadow-primary/30',
             'flex items-center justify-center',
             'transition-all hover:scale-110 hover:shadow-xl',
-            'group'
+            'group',
+            positionClasses[position]?.btn || 'bottom-6 right-6'
           )}
         >
           <Sparkles className="w-6 h-6 text-primary-foreground" />
-          <span className="absolute right-full mr-3 bg-foreground text-foreground-contrast text-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <span className="absolute bg-foreground text-foreground-contrast text-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             AI 助手
           </span>
         </button>
@@ -260,18 +375,23 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
       {/* 聊天窗口 */}
       {isOpen && (
         <div
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
           className={cn(
-            'fixed bottom-6 right-6 z-50',
+            'fixed z-50',
             'bg-white rounded-2xl shadow-2xl',
             'transition-all duration-300',
+            'cursor-move select-none',
+            isDragging && 'opacity-90 shadow-3xl',
             isMinimized
               ? 'w-80 h-14'
-              : 'w-96 h-[600px] max-h-[80vh]'
+              : 'w-96 h-[600px] max-h-[80vh]',
+            positionClasses[position]?.panel || 'bottom-24 right-6'
           )}
           style={{ maxWidth: 'calc(100vw - 48px)' }}
         >
           {/* 头部 */}
-          <div className="flex items-center justify-between p-4 border-b bg-primary rounded-t-2xl">
+          <div className="flex items-center justify-between p-4 border-b bg-primary rounded-t-2xl cursor-move" onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
@@ -283,7 +403,17 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {/* 位置切换按钮 */}
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                title="调整位置"
+              >
+                <svg className="w-4 h-4 text-primary-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+                </svg>
+              </button>
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
                 className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
