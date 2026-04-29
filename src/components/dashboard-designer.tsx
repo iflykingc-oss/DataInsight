@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -586,6 +587,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>添加仪表盘组件</DialogTitle>
+            <DialogDescription>为仪表盘添加新的可视化组件，支持多种图表类型</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

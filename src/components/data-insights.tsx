@@ -5,8 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import {
   AlertTriangle,
   CheckCircle,
@@ -31,7 +29,7 @@ import {
   LayoutTemplate,
   Layers
 } from 'lucide-react';
-import type { ParsedData, DataAnalysis, DeepAnalysis, ScenarioAnalysis } from '@/lib/data-processor';
+import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import {
   BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
   ScatterChart as RechartsScatter, Scatter,
@@ -53,7 +51,7 @@ const SEVERITY_CONFIG = {
   positive: { icon: ThumbsUp, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', label: '正面' }
 };
 
-const _CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
+const CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
 
 export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
@@ -61,6 +59,7 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
 
   useEffect(() => {
     if (!analysis) onAnalyze();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!analysis) {

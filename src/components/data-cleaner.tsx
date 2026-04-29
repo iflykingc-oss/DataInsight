@@ -12,14 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
   Table,
   TableBody,
   TableCell,
@@ -45,12 +37,9 @@ import {
   ArrowRight,
   Filter,
   RefreshCw,
-  Search,
   CheckCircle,
-  AlertTriangle,
   Copy,
   Merge,
-  Split,
   Calculator,
   Type,
   Hash,
@@ -58,14 +47,10 @@ import {
   Sparkles,
   Wand2,
   Undo2,
-  Redo2,
   Eye,
   Loader2,
-  ChevronDown,
-  ChevronRight,
   GripVertical,
   Settings,
-  Info,
   Zap,
   MessageSquare,
   X,

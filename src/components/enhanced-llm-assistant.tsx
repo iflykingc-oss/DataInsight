@@ -11,8 +11,6 @@ import {
   Loader2,
   Sparkles,
   MessageSquare,
-  Wand2,
-  BarChart3,
   TrendingUp,
   AlertTriangle,
   Lightbulb,

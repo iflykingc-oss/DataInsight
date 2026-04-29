@@ -10,14 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlatformIntegrations } from '@/components/platform-integrations';
 import {
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -27,14 +19,12 @@ import {
   FileJson,
   Link2,
   Table2,
-  Plus,
   RefreshCw,
   Trash2,
   CheckCircle,
   AlertCircle,
   Settings,
   Cloud,
-  Server,
   Loader2,
   ChevronDown,
   ChevronRight,
@@ -44,7 +34,6 @@ import {
   EyeOff,
   Clock,
   History,
-  Copy,
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

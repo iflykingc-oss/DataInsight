@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { ConnectResult, PlatformCredentials, PlatformType } from '@/lib/platform-types';
+import type { ConnectResult, PlatformType } from '@/lib/platform-types';
 
 export async function POST(request: Request) {
   try {

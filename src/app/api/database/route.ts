@@ -1,14 +1,5 @@
 import { NextResponse } from 'next/server';
 
-interface DatabaseCredentials {
-  type: 'postgresql' | 'mysql';
-  host: string;
-  port: number;
-  database: string;
-  username: string;
-  password: string;
-}
-
 interface ConnectResult {
   success: boolean;
   message: string;

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { callLLM, callLLMStream, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
+import { callLLM, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
 
 /**
  * AI 智能建表 API
