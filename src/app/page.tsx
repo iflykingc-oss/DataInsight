@@ -204,12 +204,15 @@ const DEFAULT_NOTIFICATION_CONFIG: NotificationChannelConfig = {
 // ============================================
 export default function HomePage() {
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
-  const [darkMode, setDarkMode] = useState(() => {
+  // 深色模式 - 初始为false避免SSR不一致
+  const [darkMode, setDarkMode] = useState(false);
+  // 客户端挂载后从localStorage加载深色模式设置
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('datainsight-darkmode') === 'true';
+      const saved = localStorage.getItem('datainsight-darkmode');
+      if (saved === 'true') setDarkMode(true);
     }
-    return false;
-  });
+  }, []);
   const [showSettings, setShowSettings] = useState(false);
   const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -220,32 +223,39 @@ export default function HomePage() {
   const [notifTestResult, setNotifTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isTestingNotif, setIsTestingNotif] = useState(false);
 
-  // 模型配置状态 - 从localStorage加载
+  // 模型配置状态 - 初始为null避免SSR不一致
   const [activeModelConfig, setActiveModelConfig] = useState<{
     apiKey: string;
     baseUrl: string;
     model: string;
-  } | null>(() => {
+  } | null>(null);
+
+  // 客户端挂载后从localStorage加载模型配置 - 避免Hydration错误
+  useEffect(() => {
     if (typeof window !== 'undefined') {
-      // 优先从模型列表中找当前活动模型
       const modelsJson = localStorage.getItem('datainsight_ai_models');
       if (modelsJson) {
         try {
           const models = JSON.parse(modelsJson);
           const active = models.find((c: { isDefault: boolean; enabled: boolean }) => c.isDefault && c.enabled) || models.find((c: { enabled: boolean }) => c.enabled);
           if (active?.apiKey && active?.baseUrl && active?.model) {
-            return { apiKey: active.apiKey, baseUrl: active.baseUrl, model: active.model };
+            setActiveModelConfig({ apiKey: active.apiKey, baseUrl: active.baseUrl, model: active.model });
+            return;
           }
         } catch { /* ignore */ }
       }
       // 回退到简化配置
       const saved = localStorage.getItem('datainsight-model-config');
       if (saved) {
-        try { return JSON.parse(saved); } catch { /* ignore */ }
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.apiKey && parsed.baseUrl && parsed.model) {
+            setActiveModelConfig(parsed);
+          }
+        } catch { /* ignore */ }
       }
     }
-    return null;
-  });
+  }, []);
 
   const handleModelChange = useCallback((model: { apiKey: string; baseUrl: string; model: string; isDefault?: boolean; enabled?: boolean } | null) => {
     if (model && model.apiKey && model.baseUrl && model.model) {
