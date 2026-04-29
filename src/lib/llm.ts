@@ -35,11 +35,23 @@ export function validateModelConfig(config: LLMModelConfig | null | undefined): 
 
 /**
  * 非流式调用 LLM（用于指标生成、仪表盘生成等场景）
+ * @param config 模型配置
+ * @param messages 消息列表
+ * @param options 可选参数
+ * @param options.timeout 超时时间（毫秒），默认 120000（2分钟）
+ * @param options.maxRetries 最大重试次数，默认 1
+ * @param options.temperature 温度参数
+ * @param options.max_tokens 最大 token 数
  */
 export async function callLLM(
   config: LLMModelConfig,
   messages: LLMMessage[],
-  options?: { temperature?: number; max_tokens?: number }
+  options?: {
+    temperature?: number;
+    max_tokens?: number;
+    timeout?: number;
+    maxRetries?: number;
+  }
 ): Promise<string> {
   const validation = validateModelConfig(config);
   if (!validation.valid) {
@@ -49,11 +61,134 @@ export async function callLLM(
   const cleanBaseUrl = config.baseUrl.replace(/\/$/, '');
   const endpoint = `${cleanBaseUrl}/chat/completions`;
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  const timeout = options?.timeout ?? 120000; // 默认 2 分钟
+  const maxRetries = options?.maxRetries ?? 1; // 默认重试 1 次
+  const temperature = options?.temperature ?? 0.7;
+  const maxTokens = options?.max_tokens ?? 4096;
 
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${config.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages,
+          temperature,
+          max_tokens: maxTokens,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        let errorBody: { error?: { message?: string }; message?: string } = {};
+        try { errorBody = await response.json(); } catch { /* ignore */ }
+
+        const errorMsg = errorBody?.error?.message || errorBody?.message || response.statusText;
+        let hint = '';
+        if (response.status === 401) hint = '（API Key 无效或已过期）';
+        else if (response.status === 403) hint = '（权限不足或 IP 限制）';
+        else if (response.status === 404) hint = '（模型名称不正确或端点不可用，请检查 Base URL 和模型名称）';
+        else if (response.status === 429) hint = '（请求频率超限，请稍后重试）';
+
+        throw new Error(`模型调用失败 (HTTP ${response.status}): ${errorMsg} ${hint}`.trim());
+      }
+
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content;
+
+      if (!content) {
+        throw new Error('模型返回内容为空');
+      }
+
+      return content;
+    } catch (error: unknown) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        const isNetworkError = lastError === null && attempt === 0;
+        if (attempt < maxRetries) {
+          lastError = new Error(`模型响应较慢，正在重试...（${Math.round(timeout/1000)}秒）`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // 重试前等待 1 秒
+          continue;
+        }
+        // 所有重试都失败
+        const suggestions = [
+          '检查网络连接是否稳定',
+          '尝试更换为响应更快的模型（如 GPT-3.5-Turbo、Qwen-Turbo 等）',
+          '检查 Base URL 是否正确（确保包含完整路径，如 https://api.openai.com/v1）',
+          '确认 API Key 有足够的调用额度',
+        ];
+        throw new Error(`模型调用超时（${Math.round(timeout/1000)}秒），请稍后重试或优化网络环境。\n\n可能原因：\n${suggestions.map((s, i) => `${i+1}. ${s}`).join('\n')}`);
+      }
+      
+      if (error instanceof Error) {
+        // 401/404/429 等 HTTP 错误不重试
+        if (error.message.includes('HTTP 401') || error.message.includes('HTTP 403') || 
+            error.message.includes('HTTP 404') || error.message.includes('HTTP 429')) {
+          throw error;
+        }
+        
+        // 其他错误可以重试
+        lastError = error;
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        throw error;
+      }
+      
+      throw error;
+    }
+  }
+
+  throw lastError || new Error('模型调用失败');
+}
+
+/**
+ * 流式调用 LLM（用于 AI 智能分析等场景）
+ * 返回 ReadableStream，适配 SSE 协议
+ * @param config 模型配置
+ * @param messages 消息列表
+ * @param options 可选参数
+ * @param options.timeout 超时时间（毫秒），默认 120000（2分钟）
+ * @param options.temperature 温度参数
+ * @param options.max_tokens 最大 token 数
+ */
+export async function callLLMStream(
+  config: LLMModelConfig,
+  messages: LLMMessage[],
+  options?: {
+    temperature?: number;
+    max_tokens?: number;
+    timeout?: number;
+  }
+): Promise<ReadableStream<Uint8Array>> {
+  const validation = validateModelConfig(config);
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+
+  const cleanBaseUrl = config.baseUrl.replace(/\/$/, '');
+  const endpoint = `${cleanBaseUrl}/chat/completions`;
+  const timeout = options?.timeout ?? 120000; // 默认 2 分钟
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  let response: Response;
   try {
-    const response = await fetch(endpoint, {
+    response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,74 +199,24 @@ export async function callLLM(
         messages,
         temperature: options?.temperature ?? 0.7,
         max_tokens: options?.max_tokens ?? 4096,
+        stream: true,
       }),
       signal: controller.signal,
     });
-
+  } catch (fetchError) {
     clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      let errorBody: { error?: { message?: string }; message?: string } = {};
-      try { errorBody = await response.json(); } catch { /* ignore */ }
-
-      const errorMsg = errorBody?.error?.message || errorBody?.message || response.statusText;
-      let hint = '';
-      if (response.status === 401) hint = '（API Key 无效或已过期）';
-      else if (response.status === 403) hint = '（权限不足或 IP 限制）';
-      else if (response.status === 404) hint = '（模型名称不正确或端点不可用）';
-      else if (response.status === 429) hint = '（请求频率超限，请稍后重试）';
-
-      throw new Error(`模型调用失败 (HTTP ${response.status}): ${errorMsg} ${hint}`.trim());
+    if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+      const suggestions = [
+        '检查网络连接是否稳定',
+        '尝试更换为响应更快的模型',
+        '检查 Base URL 是否正确',
+      ];
+      throw new Error(`模型调用超时（${Math.round(timeout/1000)}秒），请稍后重试。\n\n可能原因：\n${suggestions.map((s, i) => `${i+1}. ${s}`).join('\n')}`);
     }
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-
-    if (!content) {
-      throw new Error('模型返回内容为空');
-    }
-
-    return content;
-  } catch (error: unknown) {
-    clearTimeout(timeoutId);
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('模型调用超时（60秒），请检查网络或更换模型');
-    }
-    throw error;
-  }
-}
-
-/**
- * 流式调用 LLM（用于 AI 智能分析等场景）
- * 返回 ReadableStream，适配 SSE 协议
- */
-export async function callLLMStream(
-  config: LLMModelConfig,
-  messages: LLMMessage[],
-  options?: { temperature?: number; max_tokens?: number }
-): Promise<ReadableStream<Uint8Array>> {
-  const validation = validateModelConfig(config);
-  if (!validation.valid) {
-    throw new Error(validation.error);
+    throw fetchError;
   }
 
-  const cleanBaseUrl = config.baseUrl.replace(/\/$/, '');
-  const endpoint = `${cleanBaseUrl}/chat/completions`;
-
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: config.model,
-      messages,
-      temperature: options?.temperature ?? 0.7,
-      max_tokens: options?.max_tokens ?? 4096,
-      stream: true,
-    }),
-  });
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     let errorBody: { error?: { message?: string }; message?: string } = {};
@@ -141,7 +226,7 @@ export async function callLLMStream(
     let hint = '';
     if (response.status === 401) hint = '（API Key 无效或已过期）';
     else if (response.status === 403) hint = '（权限不足或 IP 限制）';
-    else if (response.status === 404) hint = '（模型名称不正确或端点不可用）';
+    else if (response.status === 404) hint = '（模型名称不正确或端点不可用，请检查 Base URL 和模型名称）';
     else if (response.status === 429) hint = '（请求频率超限，请稍后重试）';
 
     throw new Error(`模型调用失败 (HTTP ${response.status}): ${errorMsg} ${hint}`.trim());
@@ -203,4 +288,5 @@ export async function callLLMStream(
   })();
 
   return transformStream.readable;
+
 }
