@@ -30,6 +30,7 @@ import { ChartExporter } from '@/components/chart-exporter';
 import { AIFieldPanel } from '@/components/ai-field-panel';
 import { MetricManager } from '@/components/metric-manager';
 import { ExtendedChartGallery } from '@/components/extended-chart-gallery';
+import { SqlLab } from '@/components/sql-lab';
 import { AIFormulaGenerator } from '@/components/ai-formula-generator';
 import { InsightReportGenerator } from '@/components/insight-report-generator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -89,7 +90,7 @@ type ViewMode =
   | 'table' | 'source' | 'clean' | 'quality'
   | 'insights' | 'dashboard' | 'nl2dash' | 'metric' | 'metric-manager' | 'aiChart'
   | 'chat' | 'report' | 'ai-field' | 'extended-charts'
-  | 'advanced' | 'designer'
+  | 'advanced' | 'designer' | 'sql-lab'
   | 'alert' | 'version' | 'template' | 'export' | 'share'
   | 'ai-settings'
   | 'ai-field';
@@ -148,6 +149,7 @@ const NAV_GROUPS: Array<{
       { id: 'advanced', label: '高级图表', icon: TrendingUp, needsData: true },
       { id: 'extended-charts', label: '扩展图表', icon: LayoutGrid, needsData: true, color: 'text-indigo-500', badge: 'NEW' },
       { id: 'alert', label: '数据预警', icon: AlertTriangle, needsData: true },
+      { id: 'sql-lab', label: 'SQL Lab', icon: Database, needsData: true, color: 'text-blue-500', badge: 'NEW' },
       { id: 'export', label: '图表导出', icon: Download, needsData: true },
       { id: 'share', label: '分享管理', icon: Share2, needsData: true },
       { id: 'version', label: '版本快照', icon: History },
@@ -190,6 +192,7 @@ const HOME_CARDS: HomeCard[] = [
   { id: 'extended-charts' as ViewMode, icon: LayoutGrid, label: '扩展图表', desc: '10种ECharts高级图表：散点/箱线/热力/漏斗/桑基/瀑布/树图/词云', color: 'text-indigo-600', bgColor: 'bg-indigo-50', needsData: true, badge: 'NEW' },
   { id: 'designer', icon: Palette, label: '仪表盘设计', desc: '拖拽式自定义仪表盘布局', color: 'text-pink-600', bgColor: 'bg-pink-50', needsData: true },
   { id: 'alert', icon: AlertTriangle, label: '数据预警', desc: '阈值/趋势/异常预警与通知', color: 'text-amber-600', bgColor: 'bg-amber-50', needsData: true },
+  { id: 'sql-lab' as ViewMode, icon: Database, label: 'SQL Lab', desc: 'SQL查询表格数据，结果直接可视化', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'NEW' },
   { id: 'export', icon: Download, label: '图表导出', desc: 'PNG/PDF/Excel/复制导出', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: true },
   { id: 'share', icon: Share2, label: '分享管理', desc: '生成分享链接与权限控制', color: 'text-sky-600', bgColor: 'bg-sky-50', needsData: true },
   { id: 'version', icon: History, label: '版本快照', desc: '创建/恢复/导出数据快照', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: false },
@@ -769,6 +772,11 @@ export default function HomePage() {
     // 数据预警
     if (viewMode === 'alert' && parsedData) {
       return <DataAlerting data={parsedData} fieldStats={analysis?.fieldStats || []} />;
+    }
+
+    // SQL Lab
+    if (viewMode === 'sql-lab' && parsedData) {
+      return <SqlLab data={parsedData} />;
     }
 
     // 图表导出
