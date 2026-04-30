@@ -996,7 +996,7 @@ export function DataAlerting({
                         {previewResult.triggered ? '将会触发告警' : '不会触发告警'}
                       </p>
                       <p className="text-sm text-gray-500">
-                        当前值: {previewResult.value.toLocaleString()}
+                        当前值: {(previewResult.value ?? 0).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -1184,7 +1184,7 @@ export function DataAlerting({
                         <div>
                           <p className="font-medium">{item.ruleName}</p>
                           <p className="text-sm text-gray-500">
-                            触发值: {item.value.toLocaleString()} | 阈值: {item.threshold}
+                            触发值: {(item.value ?? 0).toLocaleString()} | 阈值: {item.threshold}
                           </p>
                         </div>
                       </div>

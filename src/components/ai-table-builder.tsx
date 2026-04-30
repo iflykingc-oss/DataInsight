@@ -147,7 +147,10 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'list-templates' }),
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`请求失败: ${res.status}`);
+        return res.json();
+      })
       .then(data => {
         if (data.success) setTemplates(data.data);
       })

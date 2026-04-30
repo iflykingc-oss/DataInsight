@@ -1,88 +1,10 @@
-export type CellValue = string | number | boolean | null | undefined | Date;
+// 统一从 lib/data-processor 重导出核心数据类型，避免类型定义冲突
+export type { CellValue, ParsedData, DataAnalysis, FieldStat, Summary, Anomaly, DeepAnalysis } from '@/lib/data-processor';
 
 /** 兼容旧组件的行数据类型，用于 Recharts 等只接受 string|number 的场景 */
 export type ChartRow = Record<string, string | number>;
 
-export interface ParsedData {
-  headers: string[];
-  rows: Record<string, CellValue>[];
-  fileName: string;
-  sheetNames?: string[];
-  rowCount: number;
-  columnCount: number;
-}
-
-export interface DataAnalysis {
-  fieldStats: FieldStats[];
-  summary: DataSummary;
-  qualityScore: number;
-  dataHealth: DataHealth;
-  correlations?: FieldCorrelation[];
-  trends?: DataTrend[];
-  outliers?: DataOutlier[];
-  anomalies?: DataAnomaly[];
-}
-
-export interface FieldStats {
-  field: string;
-  type: FieldType;
-  count: number;
-  nullCount: number;
-  uniqueCount: number;
-  sampleValues: CellValue[];
-  numericStats?: NumericStats;
-  stringStats?: StringStats;
-  dateStats?: DateStats;
-}
-
-export type FieldType = 'string' | 'number' | 'boolean' | 'date' | 'mixed' | 'empty';
-
-export interface NumericStats {
-  min: number;
-  max: number;
-  mean: number;
-  median: number;
-  sum: number;
-  std: number;
-  percentile25?: number;
-  percentile75?: number;
-  zeroCount: number;
-  negativeCount: number;
-}
-
-export interface StringStats {
-  minLength: number;
-  maxLength: number;
-  avgLength: number;
-  topValues: Array<{ value: string; count: number }>;
-}
-
-export interface DateStats {
-  minDate: string;
-  maxDate: string;
-  range: string;
-  format: string;
-}
-
-export interface DataSummary {
-  totalRows: number;
-  totalColumns: number;
-  totalCells: number;
-  emptyCells: number;
-  duplicateRows: number;
-  dataCompleteness: number;
-  dataConsistency: number;
-}
-
-export interface DataHealth {
-  hasEmptyRows: boolean;
-  hasDuplicateRows: boolean;
-  hasOutliers: boolean;
-  hasInconsistentTypes: boolean;
-  nullValueRatio: number;
-  overallStatus: 'excellent' | 'good' | 'warning' | 'critical';
-}
-
+// 以下为 types/data.ts 独有的扩展类型，未在 data-processor 中定义
 export interface FieldCorrelation {
   field1: string;
   field2: string;
@@ -100,7 +22,7 @@ export interface DataTrend {
 export interface DataOutlier {
   field: string;
   rowIndex: number;
-  value: CellValue;
+  value: import('@/lib/data-processor').CellValue;
   type: 'high' | 'low' | 'invalid';
   zScore?: number;
 }
@@ -113,9 +35,9 @@ export interface DataAnomaly {
 }
 
 export interface CleanResult {
-  data: ParsedData;
+  data: import('@/lib/data-processor').ParsedData;
   removedRows: number[];
-  modifiedCells: Array<{ row: number; field: string; oldValue: CellValue; newValue: CellValue }>;
+  modifiedCells: Array<{ row: number; field: string; oldValue: import('@/lib/data-processor').CellValue; newValue: import('@/lib/data-processor').CellValue }>;
   removedDuplicates: number;
   filledNulls: number;
 }
@@ -133,8 +55,8 @@ export interface AggregateMeasure {
 
 export interface GroupedData {
   groups: Array<{
-    key: Record<string, CellValue>;
-    rows: Record<string, CellValue>[];
+    key: Record<string, import('@/lib/data-processor').CellValue>;
+    rows: Record<string, import('@/lib/data-processor').CellValue>[];
     aggregations: Record<string, number>;
   }>;
 }

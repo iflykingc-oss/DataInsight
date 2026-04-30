@@ -196,11 +196,18 @@ export default function HomePage() {
 
         if (analyzeResponse.ok) {
           const analyzeResult = await analyzeResponse.json();
-          setAnalysis(analyzeResult.analysis);
+          if (analyzeResult.success && analyzeResult.analysis) {
+            setAnalysis(analyzeResult.analysis);
 
-          if (parsedData && analyzeResult.analysis) {
-            tripleCache.cacheAnalysis(dataHash, analyzeResult.analysis, parsedData.columnCount);
+            if (parsedData) {
+              tripleCache.cacheAnalysis(dataHash, analyzeResult.analysis, parsedData.columnCount);
+            }
+          } else {
+            console.error('分析结果无效:', analyzeResult.error || 'unknown');
           }
+        } else {
+          console.error('分析请求失败:', analyzeResponse.status);
+          // 即使分析失败，数据已加载成功，不阻断用户
         }
       }
 
@@ -242,7 +249,13 @@ export default function HomePage() {
         if (!res.ok) throw new Error('分析请求失败');
         return res.json();
       })
-      .then(result => setAnalysis(result.analysis))
+      .then(result => {
+        if (result.success && result.analysis) {
+          setAnalysis(result.analysis);
+        } else {
+          throw new Error(result.error || '分析结果无效');
+        }
+      })
       .catch(err => {
         console.error('分析失败:', err);
         setError(err.message);

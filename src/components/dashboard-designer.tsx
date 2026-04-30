@@ -192,7 +192,7 @@ function SortableWidget({ widget, onSelect, isSelected, onDelete }: SortableWidg
                 {widget.data?.slice(0, 5).map((row, i) => (
                   <tr key={i} className="border-b">
                     <td className="p-2">{row.name}</td>
-                    <td className="p-2 text-right">{Number(row.value).toLocaleString()}</td>
+                    <td className="p-2 text-right">{(row.value != null && !isNaN(Number(row.value))) ? Number(row.value).toLocaleString() : '-'}</td>
                   </tr>
                 ))}
               </tbody>

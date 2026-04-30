@@ -39,7 +39,7 @@ interface ExtendedChartGalleryProps {
 
 export function ExtendedChartGallery({ data }: ExtendedChartGalleryProps) {
   const [selectedChart, setSelectedChart] = useState<ExtendedChartType>('scatter');
-  const [xField, setXField] = useState(data.headers[0] || '');
+  const [xField, setXField] = useState(data.headers?.[0] || '');
   const [yField, setYField] = useState('');
   const [yFields, setYFields] = useState<string[]>([]);
   const [wordField, setWordField] = useState('');

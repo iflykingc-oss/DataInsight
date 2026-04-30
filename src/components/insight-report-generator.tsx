@@ -238,6 +238,10 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
 
           <ScrollArea className="flex-1">
             <div ref={reportRef} className="p-6 space-y-6">
+              {!analysis ? (
+                <div className="text-center py-10 text-muted-foreground">暂无分析数据</div>
+              ) : (
+              <>
               {/* 报告标题 */}
               <div className="text-center pb-6 border-b">
                 <h1 className="text-2xl font-bold">数据洞察报告</h1>
@@ -513,6 +517,8 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                 <p>本报告由 DataInsight AI 自动生成</p>
                 <p className="mt-1">报告内容基于数据分析结果，仅供参考</p>
               </div>
+              </>
+              )}
             </div>
           </ScrollArea>
         </DialogContent>

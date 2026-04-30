@@ -115,6 +115,19 @@ export function FileUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const pendingParseRef = useRef<Map<string, (data: ParsedData) => void>>(new Map());
+  // 追踪已上报的文件ID，防止重复调用 onFileUpload
+  const reportedFileIdsRef = useRef<Set<string>>(new Set());
+  // 使用ref保存最新的回调，避免useEffect依赖导致重复创建Worker
+  const onFileUploadRef = useRef(onFileUpload);
+  const onParseProgressRef = useRef(onParseProgress);
+
+  useEffect(() => {
+    onFileUploadRef.current = onFileUpload;
+  }, [onFileUpload]);
+
+  useEffect(() => {
+    onParseProgressRef.current = onParseProgress;
+  }, [onParseProgress]);
 
   const acceptedExtensions = ['xlsx', 'xls', 'csv', 'txt'];
 
@@ -135,10 +148,9 @@ export function FileUploader({
         setFiles(prev => prev.map(f =>
           f.id === id ? { ...f, progress } : f
         ));
-        onParseProgress?.(id, progress);
+        onParseProgressRef.current?.(id, progress);
       } else if (type === 'success') {
         const parsedData = result as ParsedData;
-        // 使用 filesRef 获取当前文件列表，避免闭包问题
         const fileName = filesRef.current.find(f => f.id === id)?.file.name || 'unknown';
         parsedData.fileName = fileName;
 
@@ -147,6 +159,15 @@ export function FileUploader({
         setFiles(prev => prev.map(f =>
           f.id === id ? { ...f, status: 'completed' as const, progress: 100, parsedData } : f
         ));
+
+        // 仅对本次新完成的文件调用 onFileUpload，避免重复上报
+        if (!reportedFileIdsRef.current.has(id)) {
+          reportedFileIdsRef.current.add(id);
+          const file = filesRef.current.find(f => f.id === id);
+          if (file) {
+            onFileUploadRef.current([{ ...file, status: 'completed' as const, progress: 100, parsedData }]);
+          }
+        }
 
         const resolver = pendingParseRef.current.get(id);
         if (resolver) {
@@ -173,15 +194,7 @@ export function FileUploader({
     return () => {
       workerRef.current?.terminate();
     };
-  }, [onParseProgress]); // 移除 onFileUpload 依赖
-
-  // 监听 files 变化，在渲染阶段之外触发 onFileUpload
-  useEffect(() => {
-    const completedFiles = files.filter(f => f.status === 'completed' || f.status === 'cached');
-    if (completedFiles.length > 0) {
-      onFileUpload(completedFiles);
-    }
-  }, [files, onFileUpload]);
+  }, []); // 空依赖：Worker只创建一次，通过ref访问最新回调
 
   const generateId = () => `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -346,7 +359,7 @@ export function FileUploader({
       progress: 0
     }));
 
-    setFiles(prev => multiple ? [...prev, ...uploadFiles] : [...prev.slice(0, 0), ...uploadFiles]);
+    setFiles(prev => multiple ? [...prev, ...uploadFiles] : [...uploadFiles]);
 
     for (const uploadFile of uploadFiles) {
       if (enablePreCheck) {
@@ -360,36 +373,24 @@ export function FileUploader({
       const cachedData = checkCache(uploadFile.file);
       if (cachedData) {
         cachedData.fileName = uploadFile.file.name;
-        updateFileStatus(uploadFile.id, {
-          status: 'cached',
-          progress: 100,
-          parsedData: cachedData,
-          cacheHit: true
-        });
 
-        // 使用 setFiles updater 确保状态一致性
-        setFiles(prev => {
-          const updatedFiles = prev.map(f =>
-            f.id === uploadFile.id ? { ...f, status: 'cached' as const, progress: 100, parsedData: cachedData, cacheHit: true } : f
-          );
-          const completedFiles = updatedFiles.filter(f => f.status === 'completed' || f.status === 'cached');
-          onFileUpload(completedFiles);
-          return updatedFiles;
-        });
+        setFiles(prev => prev.map(f =>
+          f.id === uploadFile.id ? { ...f, status: 'cached' as const, progress: 100, parsedData: cachedData, cacheHit: true } : f
+        ));
+
+        // 缓存命中也需上报，使用ref避免依赖
+        if (!reportedFileIdsRef.current.has(uploadFile.id)) {
+          reportedFileIdsRef.current.add(uploadFile.id);
+          onFileUploadRef.current([{ ...uploadFile, status: 'cached' as const, progress: 100, parsedData: cachedData, cacheHit: true }]);
+        }
         continue;
       }
 
       updateFileStatus(uploadFile.id, { status: 'parsing', progress: 0 });
       await parseFileAsync(uploadFile.file, uploadFile.id);
     }
-
-    // 使用 setFiles 确保最终状态一致
-    setFiles(prev => {
-      const completedFiles = prev.filter(f => f.status === 'completed' || f.status === 'cached');
-      onFileUpload(completedFiles);
-      return prev;
-    });
-  }, [multiple, enablePreCheck, handlePreCheck, updateFileStatus, checkCache, parseFileAsync, onFileUpload]);
+    // 不需要额外在for结束后调用onFileUpload，Worker回调中已经处理了
+  }, [multiple, enablePreCheck, handlePreCheck, updateFileStatus, checkCache, parseFileAsync]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -421,10 +422,10 @@ export function FileUploader({
     if (file && file.status === 'parsing') {
       cancelParse(id);
     }
-    const newFiles = files.filter(f => f.id !== id);
-    setFiles(newFiles);
-    onFileUpload(newFiles);
-  }, [files, cancelParse, onFileUpload]);
+    reportedFileIdsRef.current.delete(id);
+    setFiles(prev => prev.filter(f => f.id !== id));
+    // removeFile 不需要调用 onFileUpload，父组件只关心新增的完成文件
+  }, [cancelParse]);
 
   const openPreCheckDetails = (file: UploadFile) => {
     setSelectedFileForCheck(file);

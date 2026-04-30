@@ -3,7 +3,7 @@
 import React from 'react';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
-import { CellValue } from '@/types';
+import type { CellValue } from '@/types';
 
 interface ChartProps {
   data: {

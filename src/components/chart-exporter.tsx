@@ -367,6 +367,7 @@ export function ChartExporter({
     
     try {
       const response = await fetch(exportedUrl);
+      if (!response.ok) throw new Error('获取图片失败');
       const blob = await response.blob();
       await navigator.clipboard.writeText(await blobToBase64(blob));
     } catch {

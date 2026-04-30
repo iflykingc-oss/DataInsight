@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 
-type CellValue = string | number | boolean | null | undefined | Date;
+export type CellValue = string | number | boolean | null | undefined | Date;
 
 export interface ParsedData {
   headers: string[];

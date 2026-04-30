@@ -532,7 +532,7 @@ export function EnhancedLLMAssistant({
           <div className="mt-2 p-3 bg-gray-50 rounded-lg text-xs space-y-1">
             <p className="font-medium">数据概况：</p>
             <p>文件: {data.fileName}</p>
-            <p>行数: {data.rowCount.toLocaleString()} | 列数: {data.columnCount}</p>
+            <p>行数: {(data.rowCount ?? 0).toLocaleString()} | 列数: {data.columnCount ?? 0}</p>
             <p>字段: {data.headers.join(', ')}</p>
             {analysis.deepAnalysis && (
               <>
