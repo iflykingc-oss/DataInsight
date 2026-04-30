@@ -26,9 +26,8 @@ export interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   // 数据组：用户第一步，准备和处理数据
   { id: 'home', label: '工作台', desc: '首页概览', icon: Home, group: 'data' },
-  { id: 'ai-table-builder', label: '数据建模', desc: '用AI快速搭建分析模型', icon: Sparkles, group: 'data', badge: 'AI' },
-  { id: 'data-table', label: '数据预览', desc: '查看、清洗、计算数据', icon: Table2, group: 'data', needsData: true },
-  { id: 'data-prep', label: '数据工作台', desc: '连接数据源、清洗、质量检测', icon: Database, group: 'data', needsData: true },
+  { id: 'data-table', label: '数据预览', desc: '查看数据，用AI处理字段和计算', icon: Table2, group: 'data', needsData: true },
+  { id: 'data-prep', label: '数据处理', desc: '清洗脏数据、检测数据质量', icon: Database, group: 'data', needsData: true },
   // 分析组：核心分析能力
   { id: 'insights', label: '自动分析', desc: 'AI自动分析数据，找问题出报告', icon: Brain, group: 'analysis', needsData: true, badge: 'AI' },
   { id: 'chat', label: '问答数据', desc: '用自然语言问数据问题', icon: MessageSquare, group: 'analysis', needsData: true, badge: 'AI' },

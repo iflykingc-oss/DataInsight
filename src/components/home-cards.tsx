@@ -26,18 +26,17 @@ interface HomeCard {
  * 首页卡片 — 业务语言描述，按用户工作流分组
  */
 const HOME_CARDS: HomeCard[] = [
-  // 数据组：第一步
-  { id: 'ai-table-builder', icon: Sparkles, label: '数据建模', desc: '用AI快速搭建销售、用户等场景的分析模型', color: 'text-violet-600', bgColor: 'bg-violet-50', needsData: false, badge: 'AI', highlight: true, group: '数据', groupStep: '1' },
-  { id: 'data-prep', icon: Database, label: '数据工作台', desc: '连接数据源、清洗脏数据、检测数据质量', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true, group: '数据', groupStep: '1' },
-  { id: 'data-table', icon: Table2, label: '数据预览', desc: '查看数据，用AI快速处理字段和计算公式', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: true, group: '数据', groupStep: '1' },
-  // 分析组：核心
-  { id: 'insights', icon: Brain, label: '自动分析', desc: '上传数据，AI自动分析、找问题、出报告', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, highlight: true, group: '分析', groupStep: '2' },
-  { id: 'chat', icon: MessageSquare, label: '问答数据', desc: '直接用自然语言问数据问题，AI给你答案', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI', group: '分析', groupStep: '2' },
-  { id: 'metrics', icon: Target, label: '指标中心', desc: '自动生成和管理销售额、转化率等业务指标', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI', group: '分析', groupStep: '2' },
-  // 可视化组：看结果
+  // 数据处理：第一步（有数据后才能用）
+  { id: 'data-table', icon: Table2, label: '数据预览', desc: '查看数据，用AI快速处理字段和计算公式', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: true, group: '处理', groupStep: '1' },
+  { id: 'data-prep', icon: Database, label: '数据处理', desc: '清洗脏数据、检测数据质量', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true, group: '处理', groupStep: '1' },
+  // 分析：核心
+  { id: 'insights', icon: Brain, label: '自动分析', desc: 'AI自动分析、找问题、出报告', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, highlight: true, group: '分析', groupStep: '2' },
+  { id: 'chat', icon: MessageSquare, label: '问答数据', desc: '用自然语言问数据问题，AI给答案', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI', group: '分析', groupStep: '2' },
+  { id: 'metrics', icon: Target, label: '指标中心', desc: '自动生成销售额、转化率等业务指标', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI', group: '分析', groupStep: '2' },
+  // 可视化：看结果
   { id: 'visualization', icon: LayoutGrid, label: '仪表盘', desc: '拖拽搭建销售看板、运营大屏', color: 'text-purple-600', bgColor: 'bg-purple-50', needsData: true, highlight: true, group: '可视化', groupStep: '3' },
-  { id: 'chart-center', icon: PieChart, label: '图表库', desc: '快速选图表，做柱状图、折线图等分析图', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true, group: '可视化', groupStep: '3' },
-  // 工具组：辅助
+  { id: 'chart-center', icon: PieChart, label: '图表库', desc: '快速选图表做柱状图、折线图等', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true, group: '可视化', groupStep: '3' },
+  // 工具：辅助
   { id: 'sql-lab', icon: Wrench, label: 'SQL 查询', desc: '用SQL查数据，结果直接可视化', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, group: '工具', groupStep: '4' },
   { id: 'report-export', icon: FileText, label: '导出分享', desc: '导出PDF/图片报告，分享给团队', color: 'text-green-600', bgColor: 'bg-green-50', needsData: true, group: '工具', groupStep: '4' },
 ];

@@ -51,6 +51,7 @@ import {
   TrendingUp,
   BarChart3,
   Settings,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
@@ -67,7 +68,8 @@ type ViewMode =
   | 'insights' | 'visualization' | 'metrics' | 'chart-center'
   | 'chat'
   | 'sql-lab' | 'report-export'
-  | 'alerting' | 'version-history' | 'template-manager';
+  | 'alerting' | 'version-history' | 'template-manager'
+  | 'data-source';
 
 
 // ============================================
@@ -358,50 +360,63 @@ export default function HomePage() {
       const hasData = !!parsedData;
       return (
         <div className="max-w-6xl mx-auto space-y-6">
-          {/* 数据状态栏 */}
-          <Card className={cn(
-            'border transition-colors',
-            hasData ? 'border-l-4 border-l-green-500 bg-green-50/30' : 'border-dashed border-gray-300'
-          )}>
-            <CardContent className="py-4">
-              {hasData ? (
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <FileSpreadsheet className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-800">{parsedData.fileName}</h3>
-                        <Badge className="bg-green-100 text-green-700 border-green-200 text-[10px]">已加载</Badge>
+          {/* 数据获取入口：3种平行的数据接入方式 */}
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-muted-foreground">获取数据</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* 上传文件 */}
+              <Card className={cn('border transition-colors hover:border-primary/50 cursor-pointer', hasData ? 'bg-green-50/30 border-green-200' : 'border-dashed border-gray-300')}>
+                <CardContent className="py-4">
+                  {hasData ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-green-100 rounded-lg"><FileSpreadsheet className="w-5 h-5 text-green-600" /></div>
+                        <div>
+                          <p className="font-medium text-sm">{parsedData.fileName}</p>
+                          <p className="text-xs text-muted-foreground">{parsedData?.rowCount?.toLocaleString() ?? '0'} 行 &middot; {parsedData?.columnCount ?? 0} 列</p>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-500">{parsedData?.rowCount?.toLocaleString() ?? '0'} 行 &times; {parsedData?.columnCount ?? 0} 列</p>
+                      <Button variant="ghost" size="sm" onClick={handleGoHome} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Upload className="w-4 h-4 text-primary" />
+                        <span className="font-medium text-sm">上传文件</span>
+                      </div>
+                      <div className="w-full"><AsyncFileUploader onFileUpload={handleFileUpload} /></div>
+                      <p className="text-xs text-muted-foreground">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 连接数据源 */}
+              <Card className="border border-dashed border-gray-300 hover:border-primary/50 cursor-pointer transition-colors" onClick={() => setViewMode('data-source')}>
+                <CardContent className="py-4 flex flex-col justify-center h-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Database className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium text-sm">连接数据源</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setViewMode('data-prep')}>
-                      <Database className="w-3.5 h-3.5 mr-1" />
-                      数据源
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleGoHome} className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                      <Trash2 className="w-3.5 h-3.5 mr-1" />
-                      清除数据
-                    </Button>
+                  <p className="text-xs text-muted-foreground">连接数据库或API，实时同步数据</p>
+                </CardContent>
+              </Card>
+
+              {/* 数据建模 */}
+              <Card className="border border-dashed border-gray-300 hover:border-primary/50 cursor-pointer transition-colors" onClick={() => setViewMode('ai-table-builder')}>
+                <CardContent className="py-4 flex flex-col justify-center h-full">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-violet-600" />
+                    <span className="font-medium text-sm">数据建模</span>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1">AI</Badge>
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-4 py-2">
-                  <div className="text-center">
-                    <h3 className="font-medium text-gray-700 mb-1">上传数据开始分析</h3>
-                    <p className="text-sm text-gray-400">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
-                  </div>
-                  <div className="w-full max-w-lg">
-                    <AsyncFileUploader onFileUpload={handleFileUpload} />
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  <p className="text-xs text-muted-foreground">用AI生成销售、库存等场景的分析表格</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
           <OnboardingGuide />
           <HomeCards
@@ -432,8 +447,17 @@ export default function HomePage() {
     // AI 智能建表（不需要数据）
     if (viewMode === 'ai-table-builder') {
       return (
-        <ErrorBoundary moduleName="AI智能建表">
+        <ErrorBoundary moduleName="数据建模">
           <AITableBuilder modelConfig={activeModelConfig} />
+        </ErrorBoundary>
+      );
+    }
+
+    // 数据源管理（不需要数据）
+    if (viewMode === 'data-source') {
+      return (
+        <ErrorBoundary moduleName="连接数据源">
+          <DataSourceManager />
         </ErrorBoundary>
       );
     }
@@ -467,19 +491,15 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 数据工作台（整合：数据源 + 清洗 + 质量）
+    // 数据处理（清洗 + 质量）
     // ========================================
     if (viewMode === 'data-prep') {
       return (
-        <Tabs defaultValue="source" className="space-y-4">
+        <Tabs defaultValue="clean" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="source">数据源</TabsTrigger>
             <TabsTrigger value="clean" disabled={!parsedData}>数据清洗</TabsTrigger>
-            <TabsTrigger value="quality" disabled={!parsedData || !analysis}>数据质量</TabsTrigger>
+            <TabsTrigger value="quality" disabled={!parsedData || !analysis}>质量检测</TabsTrigger>
           </TabsList>
-          <TabsContent value="source">
-            <DataSourceManager onDataSourceChange={setParsedData} currentData={parsedData ?? undefined} />
-          </TabsContent>
           <TabsContent value="clean">
             {parsedData && analysis ? (
               <DataCleaner data={parsedData} fieldStats={analysis.fieldStats} onDataChange={handleDataCleaned} />
