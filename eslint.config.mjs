@@ -46,6 +46,8 @@ const eslintConfig = defineConfig([
     'dist/**',
     // Script files (CommonJS):
     'scripts/**/*.js',
+    // Third-party vendor files:
+    'public/sql-wasm.js',
   ]),
 ]);
 

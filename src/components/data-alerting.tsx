@@ -436,6 +436,10 @@ export function DataAlerting({
         body: JSON.stringify(payload),
       });
 
+      if (!response.ok) {
+        throw new Error(`请求失败 (${response.status})`);
+      }
+
       const result = await response.json();
       setTestResult({
         success: result.success,
@@ -548,6 +552,10 @@ export function DataAlerting({
         }),
       });
 
+      if (!response.ok) {
+        throw new Error(`请求失败 (${response.status})`);
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -556,21 +564,14 @@ export function DataAlerting({
         } else {
           setRules(prev => prev.map(r => r.id === editingRule.id ? updated : r));
         }
+        setEditingRule(null);
+        setIsCreating(false);
       } else {
-        console.error('保存规则失败:', result.message);
-        if (isCreating) {
-          setRules(prev => [...prev, updated]);
-        } else {
-          setRules(prev => prev.map(r => r.id === editingRule.id ? updated : r));
-        }
+        alert(`保存规则失败: ${result.message || '未知错误'}`);
       }
     } catch (error) {
       console.error('保存规则失败:', error);
-      if (isCreating) {
-        setRules(prev => [...prev, updated]);
-      } else {
-        setRules(prev => prev.map(r => r.id === editingRule.id ? updated : r));
-      }
+      alert('保存规则失败，请检查网络连接后重试');
     }
 
     setIsDialogOpen(false);
@@ -580,15 +581,24 @@ export function DataAlerting({
   // 删除规则
   const handleDeleteRule = async (id: string) => {
     try {
-      await fetch('/api/alerts', {
+      const response = await fetch('/api/alerts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', ruleId: id }),
       });
+      if (!response.ok) {
+        throw new Error(`请求失败 (${response.status})`);
+      }
+      const result = await response.json();
+      if (result.success) {
+        setRules(prev => prev.filter(r => r.id !== id));
+      } else {
+        alert('删除规则失败，请重试');
+      }
     } catch (error) {
       console.error('删除规则失败:', error);
+      alert('删除规则失败，请检查网络连接');
     }
-    setRules(prev => prev.filter(r => r.id !== id));
   };
 
   // 检查所有预警规则
@@ -608,6 +618,10 @@ export function DataAlerting({
       });
 
       const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `请求失败 (${response.status})`);
+      }
 
       if (result.success && result.results) {
         for (const r of result.results) {
@@ -639,6 +653,15 @@ export function DataAlerting({
     setRules(prev => prev.map(r => 
       r.id === id ? { ...r, enabled: !r.enabled, updatedAt: Date.now() } : r
     ));
+    // 同步到后端
+    const target = rules.find(r => r.id === id);
+    if (target) {
+      fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update', ruleId: id, updates: { enabled: !target.enabled } }),
+      }).catch(() => { /* 后端同步失败不影响本地状态 */ });
+    }
   };
 
   // 预览规则

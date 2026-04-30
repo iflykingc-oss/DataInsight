@@ -1,16 +1,18 @@
-# DataInsight - 智能表格数据处理与可视化工具
+# DataInsight - AI原生智能表格数据分析可视化平台
 
 ## 项目概述
 
 轻量化智能表格数据处理与可视化工具，依托自动数据分析能力，支持多端上传表格文件，自动生成标准化报表 + 交互式仪表盘，满足个人/企业数据统计、业务复盘、数据可视化展示需求。
 
 核心差异化优势（对标飞书多维表格 AI）：
-- **AI 智能建表**：场景化模板 + AI生成表格方案 + 对话式迭代修改 + 一键生成Excel
-- **AI 问数**：自然语言完成数据检索/统计计算/归因分析/趋势预测/分析报告（意图识别 + 多轮上下文）
+- **AI 单元格系统**：字段捷径（6种AI字段类型）+ AI生成公式 + 单元格智能工具栏，比飞书更强的自然语言指令+多列联合+整表上下文
+- **AI 问数**：自然语言完成数据检索/统计计算/归因分析/趋势预测/分析报告（意图识别 + 多轮上下文 + 流式兜底）
 - **深度数据分析引擎**：7大分析模块 + 数据健康评分 + Pearson 相关性 + 分布分析
-- **指标语义层**：AI 生成业务指标体系 + 深度解读 + 行业场景自动识别
+- **指标语义层**：18个预置指标（6大场景）+ 自定义指标 + AI生成业务指标体系
 - **NL2Dashboard**：对话生成业务驱动的智能仪表盘（领域知识库注入）
-- **统一工作台**：首页始终展示所有功能卡片，无数据时灰化而非隐藏
+- **10种ECharts高级图表**：散点/箱线/热力/漏斗/桑基/瀑布/树图/仪表盘/词云/组合
+- **SQL Lab**：浏览器端SQLite引擎，即席SQL查询
+- **统一工作台**：3组10项精简导航，功能全部通过子Tab展开，无数据时灰化而非隐藏
 
 ## 技术栈
 
@@ -18,84 +20,28 @@
 - **Core**: React 19
 - **Language**: TypeScript 5
 - **UI 组件**: shadcn/ui (基于 Radix UI)
-- **Styling**: Tailwind CSS 4
-- **数据可视化**: Recharts
+- **Styling**: Tailwind CSS 4 + CSS Variables 主题
+- **数据可视化**: Recharts + ECharts (echarts-for-react)
 - **文件解析**: xlsx (Excel), papaparse (CSV)
+- **SQL引擎**: sql.js (浏览器端WASM)
 - **AI 集成**: 用户自定义 OpenAI 兼容模型（通过 API Key + Base URL + Model Name）
+- **状态持久化**: localStorage (仪表盘配置/清洗模板/建表历史/自定义指标/告警规则)
 
-## 核心功能
+## 导航结构（3组10项）
 
-### 1. 多端表格上传能力
-- Web 端网页上传
-- 支持文件格式：Excel（.xlsx/.xls）、CSV
-- 支持单文件/批量文件上传
-- 自动校验文件格式、数据完整性
-
-### 2. 自动数据处理与分析能力
-- 自动数据清洗：去重、5种缺失值策略（指定值/均值/中位数/众数/前向填充）、IQR/Z-score异常检测、标准化
-- 清洗模板保存/加载：保存清洗步骤到localStorage，可复用于同类数据
-- 自动数据分析：基础统计（求和/均值/计数/占比）+ 深度分析
-- 数据质量报告：完整性/一致性/质量/可用性四维评分（0-100），字段级问题诊断
-- 自动归因分析：异常指标检测（IQR+变异系数）→ 维度拆解（贡献度排名）→ 根因定位（相关性+证据链），生成置信度评估
-- 深度分析引擎：
-  - 业务场景识别（中英文关键词匹配，识别零售/电商/用户运营/库存/财务/人力/教育/生产等8大行业）
-  - 细分场景推断（日销跟踪/商品分析/客户分析/区域分析/留存分析/转化漏斗等）
-  - 数据特征识别（数据规模/周期特征/特殊事件检测）
-  - 数据健康评分（完整性/一致性/质量/可用性，0-100分）
-  - 关键发现（严重/警告/提示/正面，含影响+建议）
-  - Pearson 相关性分析
-  - 分布分析（偏度/峰度/正态性检验）
-  - 趋势分析（上升/下降/波动/稳定）
-  - 智能图表推荐（6种图表类型+推荐理由+优先级）
-  - 行业化行动建议（按本周/本月/本季度分层，含预期收益）
-  - 数据画像（自动推测数据类型/行业/细分场景/成熟度/分析潜力）
-- 自动字段识别：智能识别表格表头、数据维度、指标字段、业务指标语义
-
-### 2.5. AI 智能指标生成与解读
-- **对话式指标生成**：基于 LLM 根据数据特征 + 用户业务描述生成指标体系
-- **业务场景识别**：自动识别 8 大行业（零售/电商/用户运营/财务/人力/营销/供应链/教育）
-- **多维度指标分类**：核心 KPI / 过程指标 / 复合指标 / 趋势指标
-- **指标深度解读**：点击任意指标打开 AI 对话窗口，支持追问业务含义、趋势变化、影响因素、提升建议
-- **指标保存与管理**：用户可将指标保存到"我的指标库"
-- **数据质量评估**：每个指标附带数据质量评估（高/中/低）及原因
-
-### 3. 交互式仪表盘视图能力
-- 自动生成可视化仪表盘（KPI卡片、柱状图、折线图、饼图、面积图、雷达图）
-- 智能字段类型识别（数值/文本/日期自动分类）
-- 数据自动聚合（按分类字段聚合统计）
-- 维度筛选、图表类型切换
-- 仪表盘配置持久化（保存/加载/重置，localStorage）
-- 全图表联动筛选（点击任意图表数据点，所有图表同步更新，支持清除联动）
-- 支持仪表盘自定义配置
-
-### 4. 智能报表生成能力
-- 一键生成标准化统计报表（含深度分析内容）
-- 支持报表模板选择（汇总/业务/财务/运营）
-- 报表实时预览（7大分析模块）
-- 打印/PDF导出
-- Excel导出（含数据+统计摘要两个Sheet）
-
-### 5. AI 智能分析（业务导向）
-- 基于 LLM 的自然语言数据问答（SSE 流式输出）
-- 接入用户自定义 OpenAI 兼容模型 API
-- **意图识别**：6种业务意图（查询/归因/预测/对比/建议/诊断）+ 问候/闲聊，正则前置识别
-- **差异化Prompt**：每种意图匹配专项指令（归因→交叉验证、预测→置信度标注、建议→时间分层）
-- **多轮对话上下文**：最近10条消息注入，支持追问和迭代分析
-- **流式兜底**：callLLMStreamWithFallback — 1次自动重试，4xx不重试，5xx可重试
-- **分级错误提示**：401/404/429/超时分别给出明确指引
-- **业务锚点优先**：Prompt工程让AI先识别业务场景再做分析
-- **分层分析框架**：原始数据结论 + 清洗后结论 + 置信度标注
-- **场景定制化**：根据数据特征（小样本/短周期/大促窗口期）调整分析策略
-- **短期可落地方案**：按本周/本月/本季度分层，优先低成本方案
-- **价值挖掘导向**：20%数据现状 → 30%业务洞察 → 50%可执行建议
-- 预设6种业务化分析维度：趋势与机会/业务洞察/优化方案/风险与预警/数据诊断/全面诊断
-
-### 6. 多平台数据源集成（Beta）
-- 飞书多维表格：App ID + Secret + App Token 配置，4步集成指南，数据实时同步
-- 企业微信：Corp ID + Agent ID + Secret，对接组织成员和业务数据
-- 钉钉：App Key + App Secret，支持考勤/审批/任务数据导入
-- 金山文档（WPS）：API Key + Secret，导入云文档表格数据
-- 各平台均有连接配置、集成指南、数据预览三个子标签
+| 分组 | 入口 | 内部子Tab |
+|------|------|-----------|
+| 数据 | AI建表 | — |
+| 数据 | 数据表格 | 表格 / AI字段 / AI公式 |
+| 数据 | 数据准备 | 数据源 / 清洗 / 质量 |
+| 分析 | 智能洞察 | 分析 / 报告 |
+| 分析 | 可视化 | 仪表盘 / AI生成 / 设计器 |
+| 分析 | 指标体系 | AI指标 / 指标管理 |
+| 分析 | 图表中心 | AI推荐 / 高级 / ECharts |
+| 工具 | AI问数 | — |
+| 工具 | SQL查询 | — |
+| 工具 | 报表导出 | 报表 / 导出 / 分享 |
+| 设置弹窗 | — | AI模型 / 数据预警 / 版本快照 / 模板管理 |
 
 ## 项目结构
 
@@ -108,41 +54,63 @@ src/
 │   │   ├── metric-ai/         # AI 指标生成 API（调用 LLM 生成业务指标体系）
 │   │   ├── llm-insight/       # LLM 智能洞察 API（SSE流式，意图识别+多轮上下文+流式兜底）
 │   │   ├── ai-table-builder/  # AI 智能建表 API（场景模板+AI生成+迭代修改+Excel导出）
-│   │   └── nl2-dashboard/     # NL2Dashboard 智能仪表盘生成 API
+│   │   ├── nl2-dashboard/     # NL2Dashboard 智能仪表盘生成 API
+│   │   ├── ai-field/          # AI 单元格字段 API（6种AI字段类型执行）
+│   │   ├── ai-formula/        # AI 生成公式 API（自然语言→标准公式）
+│   │   ├── database/          # 数据库连接 API（外部数据库查询）
+│   │   ├── test-connection/   # AI 模型连接测试 API
+│   │   └── alerts/            # 数据告警 API（CRUD+模板）
 │   ├── globals.css
 │   ├── layout.tsx
-│   └── page.tsx               # 主页面（统一侧边栏布局，分组导航）
+│   └── page.tsx               # 主页面（精简侧边栏布局，3组10项导航）
 ├── components/
 │   ├── ui/                    # shadcn/ui 组件库
-│   ├── error-boundary.tsx     # 错误边界组件（ErrorBoundary + InlineErrorBoundary）
-│   ├── file-uploader.tsx      # 文件上传组件
-│   ├── data-table.tsx         # 数据表格组件
+│   ├── sidebar.tsx            # 侧边栏组件（导航定义+渲染）
+│   ├── home-cards.tsx         # 首页功能卡片
+│   ├── settings-dialog.tsx    # 设置弹窗（AI模型/预警/版本/模板）
+│   ├── async-file-uploader.tsx # 异步文件上传组件（Web Worker解析）
+│   ├── data-table.tsx         # 数据表格组件（含AI字段列渲染）
 │   ├── data-insights.tsx      # 深度数据分析组件（7大模块）
-│   ├── dashboard.tsx          # 自动生成交互式仪表盘（含配置持久化）
-│   ├── enhanced-llm-assistant.tsx  # AI助手（真实流式API，多轮上下文）
+│   ├── dashboard.tsx          # 自动生成交互式仪表盘（含配置持久化+联动筛选）
+│   ├── enhanced-llm-assistant.tsx  # AI分析助手（真实流式API，多轮上下文）
+│   ├── global-ai-assistant.tsx     # 全局AI助手（SSE流式+拖拽移动）
+│   ├── ai-field-panel.tsx     # AI字段配置面板（6种AI字段类型）
+│   ├── ai-formula-generator.tsx # AI公式生成器（自然语言→公式+解释+采纳）
+│   ├── ai-cell-toolbar.tsx    # 单元格智能工具栏（8种AI操作）
 │   ├── smart-chart-recommender.tsx # AI智能图表推荐
 │   ├── report-generator.tsx   # 报表生成组件（4模板+导出）
+│   ├── insight-report-generator.tsx # 一键洞察报告（9模块勾选+聚合生成）
 │   ├── data-cleaner.tsx       # 数据清洗组件（IQR/Z-score/模板保存）
-│   ├── ai-model-settings.tsx        # AI模型配置
-│   ├── ai-table-builder.tsx         # AI智能建表（场景模板+对话生成+迭代+历史记录）
-│   ├── metric-semantic-layer.tsx    # AI 指标语义层（对话式指标生成 + 解读分析）
-│   ├── data-quality-checker.tsx     # 数据质量检测
-│   ├── data-alerting.tsx            # 数据预警
-│   ├── nl2-dashboard.tsx            # NL2Dashboard
-│   ├── version-history.tsx          # 版本快照
-│   ├── template-manager.tsx         # 模板管理
-│   ├── chart-exporter.tsx           # 图表导出
-│   ├── dashboard-designer.tsx       # 仪表盘设计器
-│   ├── advanced-charts.tsx          # 高级图表
-│   ├── share-manager.tsx            # 分享管理
-│   ├── feishu-integration.tsx       # 飞书集成（已整合到 platform-integrations）
-│   ├── platform-integrations.tsx    # 多平台集成面板（飞书/企微/钉钉/WPS）
-│   ├── data-source-manager.tsx      # 数据源管理（含平台集成 Tab）
-│   └── global-ai-assistant.tsx      # 全局AI助手
+│   ├── ai-model-settings.tsx  # AI模型配置
+│   ├── ai-table-builder.tsx   # AI智能建表（场景模板+对话生成+迭代+历史）
+│   ├── metric-semantic-layer.tsx  # AI 指标语义层（对话式指标生成 + 解读）
+│   ├── metric-manager.tsx     # 指标管理面板（预置18指标+自定义指标）
+│   ├── data-quality-checker.tsx # 数据质量检测
+│   ├── data-alerting.tsx      # 数据预警（6个预置模板+自定义规则+统计面板）
+│   ├── nl2-dashboard.tsx      # NL2Dashboard
+│   ├── echarts-extensions.tsx # ECharts高级图表（10种）
+│   ├── extended-chart-gallery.tsx # 扩展图表面板
+│   ├── sql-lab.tsx            # SQL Lab（浏览器端SQLite）
+│   ├── version-history.tsx    # 版本快照
+│   ├── template-manager.tsx   # 模板管理
+│   ├── chart-exporter.tsx     # 图表导出
+│   ├── dashboard-designer.tsx # 仪表盘设计器
+│   ├── advanced-charts.tsx    # 高级图表
+│   ├── share-manager.tsx      # 分享管理
+│   ├── platform-integrations.tsx # 多平台集成面板（飞书/企微/钉钉/WPS）
+│   ├── data-source-manager.tsx   # 数据源管理（含平台集成 Tab）
+│   └── error-boundary.tsx     # 错误边界组件
 └── lib/
-    ├── utils.ts               # 通用工具函数
+    ├── utils.ts               # 通用工具函数（cn合并className等）
     ├── request.ts             # 统一请求工具（request + streamRequest，重试/超时/取消）
-    └── data-processor.ts      # 数据处理+深度分析引擎+数据质量报告
+    ├── llm.ts                 # LLM调用核心（callLLM + callLLMStream + callLLMStreamWithFallback）
+    ├── data-processor.ts      # 数据处理+深度分析引擎+数据质量报告
+    ├── ai-field-engine.ts     # AI字段引擎（6种AI字段类型检测+Prompt生成）
+    ├── metric-engine.ts       # 指标计算引擎（18预置+自定义+阈值检查）
+    ├── cache-manager.ts       # 缓存管理（LRU+TTL+容量控制）
+    ├── session-store.ts       # 会话存储（多Tab数据共享+事件通知）
+    ├── file-parser.worker.ts  # 文件解析Web Worker
+    └── platform-types.ts      # 平台集成类型定义
 ```
 
 ## 开发命令
@@ -179,7 +147,7 @@ src/
 **请求**:
 ```json
 {
-  "data": { /* ParsedData */ }
+  "data": { "headers": [...], "rows": [...] }
 }
 ```
 
@@ -229,107 +197,60 @@ AI 智能建表（场景模板 + AI 生成 + 对话迭代 + Excel 导出）
 ```
 
 **action=iterate**: 对话式迭代修改方案
-```json
-{
-  "action": "iterate",
-  "currentScheme": { "tableName": "...", "fields": [...], "sampleData": [...] },
-  "userFeedback": "增加一列毛利率",
-  "modelConfig": { ... }
-}
-```
 
 **action=confirm**: 确认生成 Excel 文件（.xlsx，含表头+示例数据+SUM公式+自适应列宽）
+
+### POST /api/ai-field
+AI 单元格字段执行
+
+**请求**:
 ```json
 {
-  "action": "confirm",
-  "scheme": { "tableName": "...", "fields": [...], "sampleData": [...] }
+  "action": "execute",
+  "field": {
+    "id": "field-1", "name": "摘要", "type": "summarize",
+    "sourceColumns": ["备注"], "config": { "summarizeLength": 50 }
+  },
+  "context": { "rows": [...], "headers": [...], "rowIndices": [0,1,2,3,4] },
+  "modelConfig": { "apiKey": "...", "baseUrl": "...", "modelName": "..." }
 }
 ```
 
-**响应**: base64 编码的 .xlsx 文件内容
+**AI字段类型**: extract / classify / summarize / translate / generate / image-understand
+
+### POST /api/ai-formula
+AI 生成公式
+
+**请求**:
+```json
+{
+  "text": "统计A列中状态为已完成的记录数",
+  "modelConfig": { "apiKey": "...", "baseUrl": "...", "modelName": "..." }
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": { "formula": "COUNTIF(A:A,\"已完成\")", "explanation": "..." }
+}
+```
 
 ### POST /api/metric-ai
 AI 智能生成指标体系
 
-**请求**:
-```json
-{
-  "headers": ["字段1", "字段2"],
-  "rows": [{ "字段1": "值1", "字段2": 100 }],
-  "userDescription": "分析销售业绩，包括收入、毛利率等",
-  "fieldStats": [{ "field": "字段1", "type": "number", ... }]
-}
-```
-
-**响应**:
-```json
-{
-  "success": true,
-  "data": {
-    "scenario": "零售/销售",
-    "detectedScenario": ["零售/销售", "财务/成本"],
-    "metrics": [
-      {
-        "name": "总销售额",
-        "expression": "SUM(销售额)",
-        "category": "kpi",
-        "description": "统计周期内所有销售订单的总金额",
-        "businessValue": "衡量整体销售规模的核心指标",
-        "businessMeaning": "...",
-        "dataQuality": "高",
-        "dataQualityReason": "数据完整，无缺失值",
-        "usageSuggestion": "..."
-      }
-    ],
-    "summary": "整体指标体系设计思路..."
-  }
-}
-```
-
 ### POST /api/nl2-dashboard
 NL2Dashboard 智能仪表盘生成（业务驱动）
 
-**请求**:
-```json
-{
-  "userMessage": "生成电商店铺月度销售仪表盘",
-  "data": { "headers": [...], "rows": [...] },
-  "fieldStats": [{ "field": "...", "type": "number" }],
-  "context": { "scenario": "...", "charts": [...] }
-}
-```
+### GET /api/alerts
+获取告警模板列表（20个预置模板 + 6大分类）
 
-**响应**:
-```json
-{
-  "success": true,
-  "data": {
-    "name": "2024年电商店铺月度销售仪表盘",
-    "scenario": "零售/电商/销售",
-    "scenarioDescription": "...",
-    "detectedMetrics": ["销售额", "订单量", "客单价", ...],
-    "kpis": [
-      { "label": "本月总销售额", "value": "89.6万元", "change": "+18.5%", "changeType": "up", "icon": "💰" }
-    ],
-    "charts": [
-      {
-        "id": "chart-1",
-        "type": "line",
-        "title": "2024年1-12月月度销售额趋势",
-        "xAxis": "月份",
-        "yAxis": "销售额（元）",
-        "insight": "全年销售额符合Q4大促峰值规律，11月双11大促销售额156万元，同比增长22.5%",
-        "recommendation": "折线图适合展示销售额随时间的变化趋势",
-        "dataDescription": "覆盖2024年全年12个月数据，Q4含双11峰值",
-        "order": 1
-      }
-    ],
-    "layout": "grid",
-    "mockData": { "chart-1": [{ "month": "1月", "sales": 720000 }] },
-    "aiSummary": "本仪表盘覆盖2024年电商店铺全月度销售经营数据..."
-  }
-}
-```
+### POST /api/database
+数据库连接与查询
+
+### POST /api/test-connection
+AI 模型连接测试
 
 ## 注意事项
 
@@ -337,6 +258,9 @@ NL2Dashboard 智能仪表盘生成（业务驱动）
 2. **支持的格式**: .xlsx, .xls, .csv
 3. **数据类型推断**: 自动识别数值、文本、日期字段
 4. **AI 模型**: 用户通过设置页面配置 OpenAI 兼容 API（apiKey + baseUrl + modelName），所有 AI 功能共用此配置
-5. **错误边界**: 关键组件（Dashboard、MetricSemanticLayer、AITableBuilder）已包裹 ErrorBoundary
+5. **错误边界**: 关键组件已包裹 ErrorBoundary
 6. **统一请求**: 使用 `src/lib/request.ts` 的 `request<T>()` 和 `streamRequest()` 进行 HTTP 请求
-7. **持久化**: 仪表盘配置、清洗模板、建表历史均存储在 localStorage
+7. **LLM 调用**: 使用 `src/lib/llm.ts` 的 `callLLM()` / `callLLMStream()` / `callLLMStreamWithFallback()`，统一超时120秒+自动重试
+8. **持久化**: 仪表盘配置、清洗模板、建表历史、自定义指标、告警规则均存储在 localStorage
+9. **WASM 依赖**: SQL Lab 使用 sql.js，WASM 文件位于 `public/sql-wasm.wasm`
+10. **主题**: 使用 CSS Variables + Tailwind 语义化类名，禁止硬编码颜色

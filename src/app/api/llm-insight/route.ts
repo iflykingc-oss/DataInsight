@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { callLLMStream, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
+import { callLLMStreamWithFallback, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
 
 /**
  * AI 智能洞察 API（SSE 流式响应）
@@ -242,32 +242,7 @@ export async function POST(request: NextRequest) {
  * - 超时后降级为 1 次重试（30s 超时）
  * - 重试仍失败则抛出异常
  */
-async function callLLMStreamWithFallback(
-  modelConfig: LLMModelConfig,
-  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
-  maxRetries = 1
-): Promise<ReadableStream> {
-  let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const stream = await callLLMStream(modelConfig, messages, {
-        temperature: 0.7,
-        max_tokens: 4096,
-      });
-      return stream;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      // 4xx 错误不重试（API Key 无效等）
-      if (lastError.message.includes('401') || lastError.message.includes('404')) {
-        throw lastError;
-      }
-      console.warn(`LLM stream attempt ${attempt + 1} failed:`, lastError.message);
-    }
-  }
-
-  throw lastError || new Error('AI 模型调用失败');
-}
 
 /**
  * 构建差异化系统提示词（根据意图）

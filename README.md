@@ -1,380 +1,128 @@
-# DataInsight Pro
+# DataInsight - AI原生智能表格数据分析可视化平台
 
-智能表格数据处理与可视化平台。基于 [Next.js 16](https://nextjs.org) + [shadcn/ui](https://ui.shadcn.com) 构建，支持多端表格上传、自动数据分析、交互式仪表盘和 AI 智能洞察。
+基于 [Next.js 16](https://nextjs.org) + [shadcn/ui](https://ui.shadcn.com) + [ECharts](https://echarts.apache.org) 构建，支持多端表格上传、AI单元格操作、自动数据分析、交互式仪表盘和 AI 智能洞察。
 
 ## 快速开始
 
-### 安装依赖
-
 ```bash
-pnpm install
-```
-
-### 启动开发服务器
-
-```bash
-pnpm dev
-# 或使用 coze dev
-```
-
-启动后，在浏览器中打开 [http://localhost:5000](http://localhost:5000) 查看应用。
-
-### 构建生产版本
-
-```bash
-pnpm build
-```
-
-### 启动生产服务器
-
-```bash
-pnpm start
+pnpm install       # 安装依赖
+pnpm dev           # 启动开发服务器 (端口 5000)
+pnpm build         # 构建生产版本
+pnpm start         # 启动生产服务器
+pnpm ts-check      # TypeScript 类型检查
+pnpm lint          # ESLint 代码检查
 ```
 
 ## 核心功能
 
-- **智能报表生成**：一键生成标准化统计报表，支持 PDF/Excel/图片导出
-- **多端表格上传**：支持 Excel（.xlsx/.xls）和 CSV 文件，单文件/批量上传
-- **自动数据分析**：数据清洗、基础统计、深度分析（含业务场景识别、相关性分析、趋势分析）
-- **交互式仪表盘**：自动生成 KPI 卡片、柱状图、折线图、饼图、面积图、雷达图
-- **AI 智能洞察**：基于大语言模型的自然语言数据问答，流式输出
-- **AI 模型配置**：支持豆包、DeepSeek、Kimi、通义千问等多种大模型
-- **多平台集成**：支持飞书多维表格、企业微信、钉钉、金山文档（WPS）数据接入
+### AI 单元格系统（比飞书更强）
+- **AI 字段捷径**：6种AI字段类型（信息提取/智能分类/内容总结/智能翻译/内容生成/图片理解），可视化配置+预览5行+全列生效+联动更新
+- **AI 生成公式**：自然语言→标准Excel公式+逻辑解释+一键采纳
+- **单元格智能工具栏**：8种AI操作（填充/润色/翻译/总结/扩写/纠错/简化/转列表）
+- **差异化**：自然语言指令+多列联合+整表上下文+AI公式混合
+
+### 深度数据分析
+- 自动数据清洗：去重、5种缺失值策略、IQR/Z-score异常检测、标准化
+- 深度分析引擎：7大模块（健康评分/关键发现/相关性/分布/趋势/图表推荐/行动建议）
+- 一键洞察报告：9大模块自由勾选→聚合生成完整报告
+
+### 指标体系
+- 18个预置指标（零售/电商/用户运营/财务/人力/通用6大场景）
+- 自定义指标：公式编辑+字段依赖+阈值告警
+- AI指标语义层：对话式指标生成+深度解读
+
+### 可视化
+- 交互式仪表盘：KPI卡片+6种Recharts图表+全图表联动筛选+配置持久化
+- NL2Dashboard：对话生成业务驱动的智能仪表盘
+- 10种ECharts高级图表：散点/箱线/热力/漏斗/桑基/瀑布/树图/仪表盘/词云/组合
+
+### AI 智能分析
+- 基于LLM的自然语言数据问答（SSE流式输出）
+- 6种意图识别：查询/归因/预测/对比/建议/诊断
+- 多轮对话上下文 + 流式兜底重试
+- 预设6种业务化分析维度
+
+### 其他
+- AI 智能建表：20套场景模板+对话生成+迭代修改+Excel导出
+- SQL Lab：浏览器端SQLite引擎，即席SQL查询
+- 智能告警：6个预置模板+自定义规则+统计面板
+- 报表导出：4种模板+PDF/Excel/打印
+- 多平台集成：飞书/企微/钉钉/WPS
+
+## 技术栈
+
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Next.js | 16 | App Router 全栈框架 |
+| React | 19 | UI 框架 |
+| TypeScript | 5 | 类型安全 |
+| shadcn/ui | - | 组件库 (基于 Radix UI) |
+| Tailwind CSS | 4 | 样式 |
+| Recharts | - | 基础图表 |
+| ECharts | 5 | 高级图表 |
+| sql.js | - | 浏览器端 SQLite |
+| xlsx | - | Excel 解析/生成 |
+| papaparse | - | CSV 解析 |
 
 ## 项目结构
 
 ```
 src/
-├── app/                      # Next.js App Router 目录
-│   ├── layout.tsx           # 根布局组件
-│   ├── page.tsx             # 首页（主应用入口）
-│   ├── globals.css          # 全局样式（包含 shadcn 主题变量）
-│   └── api/                 # API 路由
-│       ├── upload/          # 文件上传接口
-│       ├── analyze/         # 数据分析接口
-│       └── llm-insight/     # LLM 智能洞察接口（SSE 流式）
-├── components/              # 业务组件
-│   ├── ui/                  # shadcn/ui 基础组件（优先使用）
-│   ├── data-table.tsx       # 数据表格
-│   ├── data-insights.tsx    # 深度数据分析
-│   ├── dashboard.tsx        # 交互式仪表盘
-│   ├── enhanced-llm-assistant.tsx  # AI 助手（SSE 流式）
-│   ├── ai-model-settings.tsx      # AI 模型配置
-│   ├── report-generator.tsx # 报表生成
-│   └── ...                  # 其他业务组件
-└── lib/                     # 工具函数库
-    ├── utils.ts            # cn() 等工具函数
-    └── data-processor.ts  # 数据处理与深度分析引擎
+├── app/
+│   ├── api/               # 11个API路由
+│   │   ├── upload/         # 文件上传
+│   │   ├── analyze/        # 数据分析
+│   │   ├── llm-insight/    # AI洞察 (SSE流式)
+│   │   ├── ai-field/       # AI单元格字段
+│   │   ├── ai-formula/     # AI生成公式
+│   │   ├── ai-table-builder/ # AI建表
+│   │   ├── metric-ai/      # AI指标生成
+│   │   ├── nl2-dashboard/  # AI仪表盘生成
+│   │   ├── database/       # 数据库连接
+│   │   ├── test-connection/ # 模型连接测试
+│   │   └── alerts/         # 数据告警
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── ui/                # shadcn/ui 组件
+│   ├── sidebar.tsx        # 侧边栏
+│   ├── home-cards.tsx     # 首页卡片
+│   ├── settings-dialog.tsx # 设置弹窗
+│   └── ...                # 30+业务组件
+├── lib/
+│   ├── utils.ts           # 通用工具
+│   ├── request.ts         # 统一请求
+│   ├── llm.ts             # LLM调用核心
+│   ├── data-processor.ts  # 数据处理引擎
+│   ├── ai-field-engine.ts # AI字段引擎
+│   ├── metric-engine.ts   # 指标计算引擎
+│   ├── cache-manager.ts   # 缓存管理
+│   ├── session-store.ts   # 会话存储
+│   ├── file-parser.worker.ts # 文件解析Worker
+│   └── platform-types.ts  # 平台集成类型
+└── types/
+    └── index.ts           # 全局类型定义
 ```
 
-## 核心开发规范
+## AI 模型配置
 
-### 1. 组件开发
+所有AI功能共用一套模型配置，通过设置页面配置：
+- **API Key**: 你的模型服务密钥
+- **Base URL**: OpenAI兼容API地址
+- **Model Name**: 模型名称（如 gpt-4o、deepseek-chat 等）
 
-**优先使用 shadcn/ui 基础组件**
+支持的模型服务：豆包、DeepSeek、Kimi、通义千问、OpenAI、以及所有OpenAI兼容API。
 
-本项目已预装完整的 shadcn/ui 组件库，位于 `src/components/ui/` 目录。开发时应优先使用这些组件作为基础：
+## 开发规范
 
-```tsx
-// ✅ 推荐：使用 shadcn 基础组件
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+- **包管理器**: 必须使用 pnpm，禁止 npm/yarn
+- **样式**: 使用 Tailwind CSS 语义化类名 (bg-background/text-foreground)，禁止硬编码颜色
+- **组件**: 优先使用 shadcn/ui 组件
+- **请求**: 使用 `src/lib/request.ts` 的 request/streamRequest
+- **LLM**: 使用 `src/lib/llm.ts` 的 callLLM/callLLMStream/callLLMStreamWithFallback
+- **类型**: 禁止 any，所有函数参数必须标注类型
 
-export default function MyComponent() {
-  return (
-    <Card>
-      <CardHeader>标题</CardHeader>
-      <CardContent>
-        <Input placeholder="输入内容" />
-        <Button>提交</Button>
-      </CardContent>
-    </Card>
-  );
-}
-```
+## License
 
-**可用的 shadcn 组件清单**
-
-- 表单：`button`, `input`, `textarea`, `select`, `checkbox`, `radio-group`, `switch`, `slider`
-- 布局：`card`, `separator`, `tabs`, `accordion`, `collapsible`, `scroll-area`
-- 反馈：`alert`, `alert-dialog`, `dialog`, `toast`, `sonner`, `progress`
-- 导航：`dropdown-menu`, `menubar`, `navigation-menu`, `context-menu`
-- 数据展示：`table`, `avatar`, `badge`, `hover-card`, `tooltip`, `popover`
-- 其他：`calendar`, `command`, `carousel`, `resizable`, `sidebar`
-
-详见 `src/components/ui/` 目录下的具体组件实现。
-
-### 2. 路由开发
-
-Next.js 使用文件系统路由，在 `src/app/` 目录下创建文件夹即可添加路由：
-
-```bash
-# 创建新路由 /about
-src/app/about/page.tsx
-
-# 创建动态路由 /posts/[id]
-src/app/posts/[id]/page.tsx
-
-# 创建路由组（不影响 URL）
-src/app/(marketing)/about/page.tsx
-
-# 创建 API 路由
-src/app/api/users/route.ts
-```
-
-**页面组件示例**
-
-```tsx
-// src/app/about/page.tsx
-import { Button } from '@/components/ui/button';
-
-export const metadata = {
-  title: '关于我们',
-  description: '关于页面描述',
-};
-
-export default function AboutPage() {
-  return (
-    <div>
-      <h1>关于我们</h1>
-      <Button>了解更多</Button>
-    </div>
-  );
-}
-```
-
-**动态路由示例**
-
-```tsx
-// src/app/posts/[id]/page.tsx
-export default async function PostPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-
-  return <div>文章 ID: {id}</div>;
-}
-```
-
-**API 路由示例**
-
-```tsx
-// src/app/api/users/route.ts
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-  return NextResponse.json({ users: [] });
-}
-
-export async function POST(request: Request) {
-  const body = await request.json();
-  return NextResponse.json({ success: true });
-}
-```
-
-### 3. 依赖管理
-
-**必须使用 pnpm 管理依赖**
-
-```bash
-# ✅ 安装依赖
-pnpm install
-
-# ✅ 添加新依赖
-pnpm add package-name
-
-# ✅ 添加开发依赖
-pnpm add -D package-name
-
-# ❌ 禁止使用 npm 或 yarn
-# npm install  # 错误！
-# yarn add     # 错误！
-```
-
-项目已配置 `preinstall` 脚本，使用其他包管理器会报错。
-
-### 4. 样式开发
-
-**使用 Tailwind CSS v4**
-
-本项目使用 Tailwind CSS v4 进行样式开发，并已配置 shadcn 主题变量。
-
-```tsx
-// 使用 Tailwind 类名
-<div className="flex items-center gap-4 p-4 rounded-lg bg-background">
-  <Button className="bg-primary text-primary-foreground">
-    主要按钮
-  </Button>
-</div>
-
-// 使用 cn() 工具函数合并类名
-import { cn } from '@/lib/utils';
-
-<div className={cn(
-  "base-class",
-  condition && "conditional-class",
-  className
-)}>
-  内容
-</div>
-```
-
-**主题变量**
-
-主题变量定义在 `src/app/globals.css` 中，支持亮色/暗色模式：
-
-- `--background`, `--foreground`
-- `--primary`, `--primary-foreground`
-- `--secondary`, `--secondary-foreground`
-- `--muted`, `--muted-foreground`
-- `--accent`, `--accent-foreground`
-- `--destructive`, `--destructive-foreground`
-- `--border`, `--input`, `--ring`
-
-### 5. 表单开发
-
-推荐使用 `react-hook-form` + `zod` 进行表单开发：
-
-```tsx
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-
-const formSchema = z.object({
-  username: z.string().min(2, '用户名至少 2 个字符'),
-  email: z.string().email('请输入有效的邮箱'),
-});
-
-export default function MyForm() {
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: { username: '', email: '' },
-  });
-
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log(data);
-  };
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <Input {...form.register('username')} />
-      <Input {...form.register('email')} />
-      <Button type="submit">提交</Button>
-    </form>
-  );
-}
-```
-
-### 6. 数据获取
-
-**服务端组件（推荐）**
-
-```tsx
-// src/app/posts/page.tsx
-async function getPosts() {
-  const res = await fetch('https://api.example.com/posts', {
-    cache: 'no-store', // 或 'force-cache'
-  });
-  return res.json();
-}
-
-export default async function PostsPage() {
-  const posts = await getPosts();
-
-  return (
-    <div>
-      {posts.map(post => (
-        <div key={post.id}>{post.title}</div>
-      ))}
-    </div>
-  );
-}
-```
-
-**客户端组件**
-
-```tsx
-'use client';
-
-import { useEffect, useState } from 'react';
-
-export default function ClientComponent() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/data')
-      .then(res => res.json())
-      .then(setData);
-  }, []);
-
-  return <div>{JSON.stringify(data)}</div>;
-}
-```
-
-## 常见开发场景
-
-### 添加新页面
-
-1. 在 `src/app/` 下创建文件夹和 `page.tsx`
-2. 使用 shadcn 组件构建 UI
-3. 根据需要添加 `layout.tsx` 和 `loading.tsx`
-
-### 创建业务组件
-
-1. 在 `src/components/` 下创建组件文件（非 UI 组件）
-2. 优先组合使用 `src/components/ui/` 中的基础组件
-3. 使用 TypeScript 定义 Props 类型
-
-### 添加全局状态
-
-推荐使用 React Context 或 Zustand：
-
-```tsx
-// src/lib/store.ts
-import { create } from 'zustand';
-
-interface Store {
-  count: number;
-  increment: () => void;
-}
-
-export const useStore = create<Store>((set) => ({
-  count: 0,
-  increment: () => set((state) => ({ count: state.count + 1 })),
-}));
-```
-
-### 集成数据库
-
-推荐使用 Prisma 或 Drizzle ORM，在 `src/lib/db.ts` 中配置。
-
-## 技术栈
-
-- **框架**: Next.js 16.1.1 (App Router)
-- **UI 组件**: shadcn/ui (基于 Radix UI)
-- **样式**: Tailwind CSS v4
-- **表单**: React Hook Form + Zod
-- **图标**: Lucide React
-- **字体**: Geist Sans & Geist Mono
-- **包管理器**: pnpm 9+
-- **TypeScript**: 5.x
-
-## 参考文档
-
-- [Next.js 官方文档](https://nextjs.org/docs)
-- [shadcn/ui 组件文档](https://ui.shadcn.com)
-- [Tailwind CSS 文档](https://tailwindcss.com/docs)
-- [React Hook Form](https://react-hook-form.com)
-
-## 重要提示
-
-1. **必须使用 pnpm** 作为包管理器
-2. **优先使用 shadcn/ui 组件** 而不是从零开发基础组件
-3. **遵循 Next.js App Router 规范**，正确区分服务端/客户端组件
-4. **使用 TypeScript** 进行类型安全开发
-5. **使用 `@/` 路径别名** 导入模块（已配置）
+MIT

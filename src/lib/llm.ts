@@ -437,3 +437,36 @@ export async function callLLMStream(
   return transformStream.readable;
 
 }
+
+/**
+ * 带兜底的 LLM 流式调用
+ * - 首次调用失败后自动重试1次
+ * - 4xx 错误（401/404）不重试（API Key 无效等）
+ * - 5xx 和网络错误可重试
+ */
+export async function callLLMStreamWithFallback(
+  modelConfig: LLMModelConfig,
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
+  maxRetries = 1
+): Promise<ReadableStream> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const stream = await callLLMStream(modelConfig, messages, {
+        temperature: 0.7,
+        max_tokens: 4096,
+      });
+      return stream;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      // 4xx 错误不重试（API Key 无效等）
+      if (lastError.message.includes('401') || lastError.message.includes('404')) {
+        throw lastError;
+      }
+      console.warn(`LLM stream attempt ${attempt + 1} failed:`, lastError.message);
+    }
+  }
+
+  throw lastError || new Error('AI 模型调用失败');
+}

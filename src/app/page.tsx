@@ -174,7 +174,7 @@ export default function HomePage() {
       }
 
       const firstFile = completedFiles[0];
-      let parsedData = firstFile.parsedData;
+      const parsedData = firstFile.parsedData;
 
       if (!parsedData) {
         throw new Error('文件解析失败');
