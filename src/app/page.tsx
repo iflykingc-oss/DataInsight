@@ -32,6 +32,7 @@ import { ExtendedChartGallery } from '@/components/extended-chart-gallery';
 import { SqlLab } from '@/components/sql-lab';
 import { AIFormulaGenerator } from '@/components/ai-formula-generator';
 import { InsightReportGenerator } from '@/components/insight-report-generator';
+import { PivotTable } from '@/components/pivot-table';
 import Sidebar from '@/components/sidebar';
 import HomeCards from '@/components/home-cards';
 import SettingsDialog from '@/components/settings-dialog';
@@ -69,7 +70,8 @@ type ViewMode =
   | 'chat'
   | 'sql-lab' | 'report-export'
   | 'alerting' | 'version-history' | 'template-manager'
-  | 'data-source';
+  | 'data-source'
+  | 'pivot-table';
 
 
 // ============================================
@@ -661,6 +663,15 @@ export default function HomePage() {
     }
 
     // ========================================
+    // 透视表
+    // ========================================
+    if (viewMode === 'pivot-table' && parsedData) {
+      return (
+        <PivotTable data={parsedData} analysis={analysis} />
+      );
+    }
+
+    // ========================================
     // 导出分享（整合：生成报告 + 导出图表 + 分享管理）
     // ========================================
     if (viewMode === 'report-export' && parsedData) {
@@ -703,6 +714,7 @@ export default function HomePage() {
       'chat': '问答数据', 'sql-lab': 'SQL 查询',
       'report-export': '导出分享',
       'alerting': '数据预警', 'version-history': '版本快照', 'template-manager': '模板管理',
+      'pivot-table': '透视表',
     };
     return titles[viewMode] || '';
   };

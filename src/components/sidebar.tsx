@@ -3,7 +3,7 @@
 import {
   Home, Table2, Database, Brain, LayoutGrid, Target, PieChart, FileText,
   MessageSquare, Wrench, ChevronLeft, ChevronRight, Settings, Sparkles,
-  AlertTriangle, Clock, BookTemplate,
+  AlertTriangle, Clock, BookTemplate, Grid3x3,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'insights', label: '自动分析', desc: 'AI自动分析数据，找问题出报告', icon: Brain, group: 'analysis', needsData: true, badge: 'AI' },
   { id: 'chat', label: '问答数据', desc: '用自然语言问数据问题', icon: MessageSquare, group: 'analysis', needsData: true, badge: 'AI' },
   { id: 'metrics', label: '指标中心', desc: '管理销售额、转化率等业务指标', icon: Target, group: 'analysis', needsData: true },
+  { id: 'pivot-table', label: '透视表', desc: '拖拽字段做交叉分析', icon: Grid3x3, group: 'analysis', needsData: true },
   // 可视化组：看结果
   { id: 'visualization', label: '仪表盘', desc: '搭建销售看板、运营大屏', icon: LayoutGrid, group: 'visual', needsData: true },
   { id: 'chart-center', label: '图表库', desc: '快速做柱状图、折线图等分析图', icon: PieChart, group: 'visual', needsData: true },
