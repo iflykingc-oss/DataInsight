@@ -44,34 +44,49 @@ function buildSystemPrompt(businessScenario: string[], fieldInfo: string) {
 ## 数据字段信息
 ${fieldInfo}
 
+## 【关键】数据精确性规范
+
+❌ 禁止的模糊表达：
+- "根据业务需求设计" → ✅ 具体场景："电商场景需关注转化率漏斗"
+- "包含多个维度" → ✅ 具体维度："包含用户维度（DAU/MAU）、订单维度（GMV/客单价）、商品维度（SKU动销率）"
+- "提升运营效率" → ✅ 具体动作："优化详情页加载速度，目标将跳出率从65%降至50%"
+
+✅ 正确的指标解读：
+- businessMeaning：用业务语言，如"客单价=每单平均消费金额，反映用户购买力"
+- dataQuality：说明数据来源和覆盖率，如"数据覆盖率98%，缺失值集中在新上线渠道"
+- usageSuggestion：明确使用场景，如"周同比监控、周环比波动超过10%需预警"
+
 ## 输出要求（严格遵循JSON格式）
-请生成一个完整的指标体系，包含以下维度：
 
-### 1. 核心KPI（必选，3-5个）
-- 每个指标包含：name（中文名称）、expression（计算表达式）、category（kpi）、description（业务含义）、businessValue（业务价值）
-
-### 2. 过程指标（可选，3-6个）
-- 反映业务过程的关键节点
-
-### 3. 复合指标（可选，2-4个）
-- 由多个基础指标计算得出
-
-### 4. 同比/环比指标（可选，2-3个）
-- 反映趋势变化
-
-## 指标解读要求
-每个指标都要提供：
-- businessMeaning：业务含义（用业务语言解释，而非技术语言）
-- dataQuality：数据质量评估（高/中/低）及原因
-- usageSuggestion：使用建议（如何解读、何时关注）
-- alertThreshold：预警阈值（如有）
-
-## 严格返回纯JSON，不要有任何额外文本：
+\`\`\`json
 {
-  "scenario": "识别的业务场景",
-  "metrics": [...],
-  "summary": "整体指标体系的设计思路和核心关注点"
-}`;
+  "scenario": "识别的业务场景（如：线下门店销售分析）",
+  "metrics": [
+    {
+      "name": "指标中文名",
+      "expression": "计算表达式（如：SUM(销售额)/COUNT(DISTINCT 订单号)）",
+      "category": "kpi|process|composite|comparison",
+      "description": "业务含义（1-2句话，用业务语言而非技术语言）",
+      "businessValue": "这个指标解决什么业务问题",
+      "businessMeaning": "用业务语言解释（如：客单价反映用户的购买力水平）",
+      "dataQuality": {
+        "level": "high|medium|low",
+        "reason": "数据质量说明（如：覆盖率98%，新门店数据从8月开始）"
+      },
+      "usageSuggestion": "使用建议（如：周同比监控，环比波动超10%需关注）",
+      "alertThreshold": "预警阈值（如：客单价<100元触发预警）"
+    }
+  ],
+  "summary": {
+    "overview": "整体设计思路（1句话：场景+核心关注点）",
+    "keyMetrics": ["核心指标1（含计算逻辑）", "核心指标2"],
+    "dataGaps": ["数据缺口1（如：缺少用户ID，无法计算复购率）", "数据缺口2"],
+    "recommendations": ["建议1（如：建议补充用户ID字段以支持RFM分析）", "建议2"]
+  }
+}
+\`\`\`
+
+## 严格返回纯JSON，不要有任何额外文本`;
 }
 
 export async function POST(request: NextRequest) {
@@ -126,11 +141,18 @@ export async function POST(request: NextRequest) {
       const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : trimmed;
       parsedMetrics = JSON.parse(jsonStr);
     } catch {
+      // Fallback: 确保 summary 是结构化的
       parsedMetrics = {
         scenario: businessScenario.join("、"),
         metrics: [],
-        summary: content,
+        summary: {
+          overview: "指标体系生成中...",
+          keyMetrics: [],
+          dataGaps: ["数据解析失败，请重试"],
+          recommendations: [],
+        },
         rawResponse: true,
+        rawContent: content.substring(0, 500),
       };
     }
 

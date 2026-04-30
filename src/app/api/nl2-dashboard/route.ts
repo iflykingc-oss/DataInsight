@@ -66,18 +66,91 @@ const DOMAIN_KNOWLEDGE = `【销售分析领域知识库 v1.0】
 - 品类分析："2024年8月商品销量排行榜 Top5"
 - 区域占比："2024年8月各省份销量占比"
 - 渠道对比："2024年各渠道月度销量对比"
-- 客户分层："客户RFM分层画像分布"`;
+- 客户分层："客户RFM分层画像分布"
+
+六、【关键】数据精确性规范（2024-11-12 升级）：
+
+❌ 禁止的模糊表达：
+- "近千人" → ✅ 精确值："986人"
+- "环比增长显著" → ✅ 精确值："环比+23.5%"
+- "同比增长明显" → ✅ 精确值："同比+15.2%"
+- "XX品类" → ✅ 精确品类名："数码配件"
+- "表现亮眼" → ✅ 精确描述："环比+23.5%，高于均值15个百分点"
+- "需要关注" → ✅ 精确描述："客流环比-8.2%，连续2周下降"
+- "头部效应明显" → ✅ 精确描述："Top3门店占比68.5%，较上月+3.2pp"
+
+✅ 正确的数值表达：
+- 金额："85.6万元"（非"约86万"）
+- 百分比："23.5%"（非"接近四分之一"）
+- 人数："986人"（非"近千人"）
+- 排名："第2名"（非"名列前茅"）
+- 增长："环比+23.5%（上周801人→本周986人）"
+
+✅ 正确的归因表达：
+- ❌ "因为管理好" → ✅ "科技园店位于科技园区，工作日客流量稳定（占全天客流68%），周末略降"
+- ❌ "受XX带动" → ✅ "受'手机'品类增长带动（该品类销售额+45.3%，贡献整体增长的62%）"
+- ❌ "头部效应" → ✅ "科技园店+城南店销售额占比58.3%，较上月+5.1pp"
+
+七、【强制】insight 字段输出规范（必须严格遵循）：
+
+每个图表的 insight 字段必须包含以下全部元素，缺一不可：
+
+\`\`\`json
+{
+  "insight": {
+    "summary": "一句话核心结论（≤20字，不含数据）",
+    "metrics": [
+      {
+        "name": "指标名",
+        "value": "精确值+单位",
+        "change": "变化值+方向（如'+23.5%↑'或'-8.2%↓'）",
+        "basis": "数据来源（如'科技园店日均客流'）"
+      }
+    ],
+    "cause": {
+      "text": "归因说明（1句话，如果不确定写'待验证'）",
+      "confidence": "high|medium|low",
+      "verify": "需要什么数据验证（如果 confidence 不是 high）"
+    },
+    "dimension": "涉及维度（如'门店维度'/'区域维度'）"
+  }
+}
+\`\`\`
+
+示例对比：
+❌ 错误："城南店销售额环比增长显著，主要受促销活动带动"
+✅ 正确："城南店销售额12.3万元，环比+18.5%（上月10.4万），归因：周年庆促销（11月1-7日）带动客流+26%，转化率+3.2pp"`;
+
+
 
 // ============================================
 // 类型定义
 // ============================================
+interface ChartInsightMetrics {
+  name: string;
+  value: string;
+  change?: string;
+  basis: string;
+}
+
+interface ChartInsight {
+  summary: string;  // 一句话核心结论（≤20字）
+  metrics: ChartInsightMetrics[];
+  cause: {
+    text: string;
+    confidence: 'high' | 'medium' | 'low';
+    verify?: string;
+  };
+  dimension: string;
+}
+
 interface ChartSpec {
   id: string;
   type: 'line' | 'bar' | 'pie' | 'area' | 'radar' | 'donut';
   title: string;
   xAxis: string;
   yAxis: string;
-  insight: string;          // 业务解读
+  insight: ChartInsight;  // 结构化洞察
   recommendation: string;   // 推荐理由
   dataDescription: string;  // 数据描述
   color?: string;
@@ -92,6 +165,13 @@ interface KPISpec {
   icon?: string;
 }
 
+interface DashboardSummary {
+  overview: string;      // 整体概况
+  highlights: string[];  // 亮点（精确数据）
+  concerns: string[];    // 关注点（精确数据）
+  suggestions: string[]; // 建议（动作+收益）
+}
+
 interface GeneratedDashboardSpec {
   id: string;
   name: string;
@@ -102,7 +182,7 @@ interface GeneratedDashboardSpec {
   charts: ChartSpec[];
   layout: string;           // 布局建议
   mockData: Record<string, Array<{ [key: string]: string | number }>>;
-  aiSummary: string;         // AI 生成摘要
+  aiSummary: DashboardSummary;  // 结构化摘要
 }
 
 // ============================================
@@ -177,27 +257,44 @@ function buildPrompt(
 - 日期字段：${dateFields.length > 0 ? dateFields.join('、') : '无'}
 - 数据行数：${data.rows.length}
 
-四、你的任务（严格按JSON格式输出，禁止额外文字）：
-根据用户需求和领域知识库，生成一个业务化的仪表盘配置。输出JSON：
+四、【强制】JSON 输出格式（必须严格遵循，禁止额外文字）
+
+根据用户需求和领域知识库，生成业务化仪表盘配置。严格输出以下 JSON 结构：
 
 {
-  "name": "仪表盘名称（如：2024年Q3电商店铺销售仪表盘）",
+  "name": "仪表盘名称（如：2024年Q3线下门店销售仪表盘）",
   "scenario": "${detectedScenario}",
-  "scenarioDescription": "场景说明（2-3句话描述这个场景的核心关注点）",
-  "detectedMetrics": ["检测到的核心指标1", "核心指标2", "..."],
+  "scenarioDescription": "场景说明（2-3句话描述核心关注点）",
+  "detectedMetrics": ["核心指标1", "核心指标2"],
   "kpis": [
-    {"label": "指标名", "value": "示例值", "change": "+12%", "changeType": "up"}
+    {"label": "指标名", "value": "精确值+单位", "change": "+12%", "changeType": "up"}
   ],
   "charts": [
     {
       "id": "chart-1",
       "type": "line|bar|pie|area|radar|donut",
-      "title": "业务化标题（如：2024年Q3月度销售额趋势）",
+      "title": "业务化标题（含年份/月份/指标）",
       "xAxis": "X轴字段名",
       "yAxis": "Y轴字段名",
-      "insight": "这条数据的业务解读（如：本月销售额12万，同比增长15%，主要受XX品类促销带动）",
+      "insight": {
+        "summary": "一句话核心结论（≤20字，不含数据）",
+        "metrics": [
+          {
+            "name": "指标名",
+            "value": "精确值+单位（如'85.6万元'）",
+            "change": "变化值+方向（如'+23.5%↑'）",
+            "basis": "数据来源（如'科技园店日均客流'）"
+          }
+        ],
+        "cause": {
+          "text": "归因说明（1句话，不确定写'待验证'）",
+          "confidence": "high|medium|low",
+          "verify": "需要什么数据验证（confidence 不是 high 时必填）"
+        },
+        "dimension": "涉及维度（如'门店维度'）"
+      },
       "recommendation": "推荐理由（如：趋势分析用折线图展示月度变化规律）",
-      "dataDescription": "数据描述（如：10-12月含双11峰值）",
+      "dataDescription": "数据描述（如：Q4含双11峰值，11月是其他月份的1.8倍）",
       "order": 1
     }
   ],
@@ -209,15 +306,21 @@ function buildPrompt(
       {"month": "12月", "sales": 128000}
     ]
   },
-  "aiSummary": "仪表盘整体业务摘要（3-5句话，帮助用户快速理解仪表盘价值）"
+  "aiSummary": {
+    "overview": "整体业务概况（1句话：行业+核心指标+同比）",
+    "highlights": ["亮点1（精确数据+门店名）", "亮点2"],
+    "concerns": ["关注点1（精确数据+变化）", "关注点2"],
+    "suggestions": ["建议1（动作+预期收益）", "建议2"]
+  }
 }
 
 规则：
-1. charts 数量控制在 4-8 个，覆盖 KPI总览 → 趋势分析 → 维度对比 → 占比分析 的逻辑顺序
-2. 每个 chart 必须有 insight（业务解读）和 recommendation（推荐理由）
-3. mockData 每个 chart 对应一个数据数组，数据要符合销售业务逻辑（不要纯序号递增）
-4. title 必须包含年份/月份/指标，禁止"序号总览"这类通用标题
-5. 只输出 JSON，不要任何其他文字`;
+1. charts 数量控制在 4-8 个，覆盖 KPI总览 → 趋势分析 → 维度对比 → 占比分析
+2. insight.metrics 必须包含精确数值，禁止"XX品类"、"近千人"等模糊表达
+3. aiSummary 必须包含精确数据，每项都要有具体数值
+4. mockData 数据要符合业务逻辑（Q4含双11峰值、Top1占比≥30%等）
+5. title 必须包含年份/月份/指标，禁止"数据总览"等通用标题
+6. 只输出 JSON，禁止任何其他文字`;
 
   return prompt;
 }
