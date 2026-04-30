@@ -138,29 +138,27 @@ export function FileUploader({
         onParseProgress?.(id, progress);
       } else if (type === 'success') {
         const parsedData = result as ParsedData;
-        parsedData.fileName = filesRef.current.find(f => f.id === id)?.file.name || 'unknown';
+        const fileName = files.find(f => f.id === id)?.file.name || 'unknown';
+        parsedData.fileName = fileName;
 
         const cacheKey = tripleCache.hashData(parsedData);
         tripleCache.cacheData(parsedData);
 
-        setFiles(prev => prev.map(f =>
-          f.id === id ? { ...f, status: 'completed', progress: 100, parsedData } : f
-        ));
+        setFiles(prev => {
+          const updatedFiles = prev.map(f =>
+            f.id === id ? { ...f, status: 'completed' as const, progress: 100, parsedData } : f
+          );
+          // 使用 updater 函数获取最新状态，确保 onFileUpload 调用时数据一致
+          const completedFiles = updatedFiles.filter(f => f.status === 'completed' || f.status === 'cached');
+          onFileUpload(completedFiles);
+          return updatedFiles;
+        });
 
         const resolver = pendingParseRef.current.get(id);
         if (resolver) {
           resolver(parsedData);
           pendingParseRef.current.delete(id);
         }
-
-        const currentFiles = filesRef.current.filter(f => f.status === 'completed' || f.cacheHit);
-        const newCompletedFiles = [...currentFiles, {
-          ...filesRef.current.find(f => f.id === id)!,
-          status: 'completed' as const,
-          progress: 100,
-          parsedData
-        }];
-        onFileUpload(newCompletedFiles);
       } else if (type === 'error') {
         setFiles(prev => prev.map(f =>
           f.id === id ? { ...f, status: 'error', errorMessage: error } : f
@@ -367,10 +365,15 @@ export function FileUploader({
           cacheHit: true
         });
 
-        const allFiles = filesRef.current.map(f =>
-          f.id === uploadFile.id ? { ...f, status: 'cached' as const, progress: 100, parsedData: cachedData, cacheHit: true } : f
-        );
-        onFileUpload(allFiles.filter(f => f.status === 'completed' || f.status === 'cached'));
+        // 使用 setFiles updater 确保状态一致性
+        setFiles(prev => {
+          const updatedFiles = prev.map(f =>
+            f.id === uploadFile.id ? { ...f, status: 'cached' as const, progress: 100, parsedData: cachedData, cacheHit: true } : f
+          );
+          const completedFiles = updatedFiles.filter(f => f.status === 'completed' || f.status === 'cached');
+          onFileUpload(completedFiles);
+          return updatedFiles;
+        });
         continue;
       }
 
@@ -378,8 +381,12 @@ export function FileUploader({
       await parseFileAsync(uploadFile.file, uploadFile.id);
     }
 
-    const completedFiles = filesRef.current.filter(f => f.status === 'completed' || f.status === 'cached');
-    onFileUpload(completedFiles);
+    // 使用 setFiles 确保最终状态一致
+    setFiles(prev => {
+      const completedFiles = prev.filter(f => f.status === 'completed' || f.status === 'cached');
+      onFileUpload(completedFiles);
+      return prev;
+    });
   }, [multiple, enablePreCheck, handlePreCheck, updateFileStatus, checkCache, parseFileAsync, onFileUpload]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
