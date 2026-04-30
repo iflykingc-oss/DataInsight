@@ -227,12 +227,12 @@ export function Dashboard({ data, analysis }: DashboardProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* KPI 指标卡片 */}
       {kpiWidgets.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {kpiWidgets.map(widget => (
-            <Card key={widget.id} className="hover:shadow-md transition-shadow">
+            <Card key={widget.id} className="hover:shadow-md transition-shadow border-l-4 border-l-primary">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-500">{widget.title}</span>
@@ -248,44 +248,50 @@ export function Dashboard({ data, analysis }: DashboardProps) {
 
       {/* 筛选器栏 */}
       {filterWidgets.length > 0 && (
-        <Card>
-          <CardContent className="py-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <span className="text-xs text-gray-500 font-medium">数据筛选</span>
-              {filterWidgets.map(fw => {
-                const values = fw.data.map(d => String(d.value));
-                const selected = filterValues[fw.filterField || ''] || [];
-                return (
-                  <div key={fw.id} className="flex items-center gap-1 flex-wrap">
-                    <span className="text-xs text-gray-600 font-medium">{fw.filterField}:</span>
-                    {values.slice(0, 8).map(v => (
-                      <button
-                        key={v}
-                        onClick={() => toggleFilterValue(fw.filterField || '', v)}
-                        className={cn(
-                          'px-2 py-0.5 rounded text-[11px] border transition-colors',
-                          selected.includes(v)
-                            ? 'bg-blue-500 text-white border-blue-500'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
-                        )}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                    {values.length > 8 && <span className="text-[10px] text-gray-400">+{values.length - 8}</span>}
-                    {selected.length > 0 && (
-                      <button onClick={() => clearFilter(fw.filterField || '')} className="text-[10px] text-red-400 hover:text-red-600 ml-1">
-                        清除
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+        <Card className="border-dashed bg-muted/20">
+          <CardContent className="py-4 px-5">
+            <div className="flex items-start gap-4">
+              <div className="flex items-center gap-2 min-w-fit pt-1">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">数据筛选</span>
+              </div>
+              <div className="flex-1 flex flex-wrap gap-4">
+                {filterWidgets.map(fw => {
+                  const values = fw.data.map(d => String(d.value));
+                  const selected = filterValues[fw.filterField || ''] || [];
+                  return (
+                    <div key={fw.id} className="space-y-2">
+                      <span className="text-xs font-medium bg-background px-2 py-0.5 rounded border">{fw.filterField}</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {values.slice(0, 6).map(v => (
+                          <button
+                            key={v}
+                            onClick={() => toggleFilterValue(fw.filterField || '', v)}
+                            className={cn(
+                              'px-2.5 py-1 rounded-md text-xs border transition-all',
+                              selected.includes(v)
+                                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                                : 'bg-background text-muted-foreground border-border hover:border-primary/50'
+                            )}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                        {values.length > 6 && <span className="text-[10px] text-muted-foreground self-center">+{values.length - 6}</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
               {Object.keys(filterValues).some(k => filterValues[k].length > 0) && (
-                <Badge variant="secondary" className="text-[10px]">
-                  {filteredData.length}/{data.rows.length} 行
-                </Badge>
+                <div className="flex items-center gap-2 min-w-fit pt-1">
+                  <Badge variant="secondary" className="text-xs">
+                    筛选 {filteredData.length}/{data.rows.length} 行
+                  </Badge>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground" onClick={() => setFilterValues({})}>
+                    清除全部
+                  </Button>
+                </div>
               )}
             </div>
           </CardContent>
@@ -293,8 +299,8 @@ export function Dashboard({ data, analysis }: DashboardProps) {
       )}
 
       {/* 工具栏 */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-4 py-3 px-4 -mx-4 bg-muted/30 border-y">
+        <div className="flex items-center gap-3">
           <Select value={chartType} onValueChange={setChartType}>
             <SelectTrigger className="w-[140px] h-8 text-xs">
               <SelectValue placeholder="图表类型" />
@@ -314,11 +320,11 @@ export function Dashboard({ data, analysis }: DashboardProps) {
             {chartWidgets.length} 个组件
           </Badge>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 text-xs"
+            className="h-8 text-xs gap-1.5"
             onClick={() => {
               const el = document.getElementById('dashboard-chart-area');
               if (el) {
@@ -333,35 +339,32 @@ export function Dashboard({ data, analysis }: DashboardProps) {
               }
             }}
           >
-            <Download className="w-3.5 h-3.5 mr-1" />
-            导出图片
+            <Download className="w-3.5 h-3.5" />
+            导出
           </Button>
-          <div className="h-4 w-px bg-border mx-1" />
+          <div className="h-4 w-px bg-border" />
           <Button
             variant="outline"
             size="sm"
-            className="gap-1 text-xs"
+            className="gap-1.5 text-xs"
             onClick={() => setShowSaveDialog(true)}
           >
             <Save className="w-3.5 h-3.5" />
-            保存配置
+            保存
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="gap-1 text-xs"
+            className="gap-1.5 text-xs"
             onClick={() => setShowLoadDialog(true)}
           >
             <FolderOpen className="w-3.5 h-3.5" />
-            加载配置
-            {savedConfigs.length > 0 && (
-              <span className="ml-0.5 text-xs text-muted-foreground">({savedConfigs.length})</span>
-            )}
+            加载{savedConfigs.length > 0 && <span className="text-muted-foreground">({savedConfigs.length})</span>}
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1 text-xs"
+            className="gap-1.5 text-xs text-muted-foreground"
             onClick={handleResetConfig}
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -456,7 +459,12 @@ export function Dashboard({ data, analysis }: DashboardProps) {
       )}
 
       {/* 图表/表格网格 */}
-      <div id="dashboard-chart-area" className="grid md:grid-cols-2 gap-4">
+      <div id="dashboard-chart-area" className="space-y-6">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wide">
+          <BarChart3 className="w-3.5 h-3.5" />
+          <span>数据可视化</span>
+        </div>
+        <div className="grid md:grid-cols-2 gap-5">
         {chartWidgets.map(widget => {
           // 透视表渲染
           if (widget.type === 'pivot' && widget.pivotConfig) {
@@ -597,6 +605,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
             </Card>
           );
         })}
+      </div>
       </div>
     </div>
   );
