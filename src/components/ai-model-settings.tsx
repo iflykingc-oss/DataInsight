@@ -299,6 +299,11 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
         }),
       });
 
+      if (!response.ok) {
+        setTestResult({ success: false, message: '连接失败，请检查配置' });
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {

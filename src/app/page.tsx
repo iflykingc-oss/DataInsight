@@ -238,9 +238,15 @@ export default function HomePage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data }),
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('分析请求失败');
+        return res.json();
+      })
       .then(result => setAnalysis(result.analysis))
-      .catch(console.error);
+      .catch(err => {
+        console.error('分析失败:', err);
+        setError(err.message);
+      });
   };
 
   const handleGoHome = () => {

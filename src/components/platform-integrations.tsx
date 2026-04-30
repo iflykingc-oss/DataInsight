@@ -71,6 +71,11 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
         }),
       });
 
+      if (!response.ok) {
+        setConnectionError('连接失败，请检查配置');
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -101,6 +106,11 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           tableId,
         }),
       });
+
+      if (!response.ok) {
+        setSyncMessage('同步失败，请重试');
+        return;
+      }
 
       const result = await response.json();
 
@@ -305,6 +315,11 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
         }),
       });
 
+      if (!response.ok) {
+        setConnectionError('连接失败，请检查配置');
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -336,6 +351,11 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           departmentId: departmentId || (departments[0]?.id),
         }),
       });
+
+      if (!response.ok) {
+        setConnectionError('同步失败，请重试');
+        return;
+      }
 
       const result = await response.json();
 
@@ -515,6 +535,11 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
         }),
       });
 
+      if (!response.ok) {
+        setConnectionError('连接失败，请检查配置');
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -548,6 +573,11 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
           workDateTo,
         }),
       });
+
+      if (!response.ok) {
+        setConnectionError('同步失败，请重试');
+        return;
+      }
 
       const result = await response.json();
 
@@ -713,6 +743,11 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
         }),
       });
 
+      if (!response.ok) {
+        setConnectionError('连接失败，请检查配置');
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -742,6 +777,11 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
           docId,
         }),
       });
+
+      if (!response.ok) {
+        setConnectionError('同步失败，请重试');
+        return;
+      }
 
       const result = await response.json();
 
