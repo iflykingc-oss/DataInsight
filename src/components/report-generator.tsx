@@ -284,7 +284,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                   <td className="py-2 px-3 font-medium">{stat.field}</td>
                   <td className="py-2 px-3">
                     <Badge variant="outline" className="text-xs">
-                      {stat.type === 'number' ? '数值' : stat.type === 'date' ? '日期' : '文本'}
+                      {stat.type === 'id' ? 'ID' : stat.type === 'number' ? '数值' : stat.type === 'date' ? '日期' : '文本'}
                     </Badge>
                   </td>
                   <td className="py-2 px-3 text-right">{stat.count - stat.nullCount}/{stat.count}</td>

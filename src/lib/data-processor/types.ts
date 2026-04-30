@@ -143,7 +143,7 @@ export interface AttributionAnalysis {
 
 export interface FieldStat {
   field: string;
-  type: 'string' | 'number' | 'date' | 'mixed';
+  type: 'string' | 'number' | 'date' | 'mixed' | 'id';
   count: number;
   nullCount: number;
   uniqueCount: number;
@@ -169,6 +169,7 @@ export interface Summary {
   numericColumns: number;
   textColumns: number;
   dateColumns: number;
+  idColumns: number;
   nullValues: number;
   duplicateRows: number;
 }

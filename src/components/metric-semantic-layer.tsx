@@ -647,7 +647,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                   <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
                     <span className="font-mono font-medium">{header}</span>
                     <Badge variant="outline" className="text-xs">
-                      {stats?.type === 'number' ? '数值' : stats?.type === 'date' ? '日期' : '文本'}
+                      {stats?.type === 'id' ? 'ID' : stats?.type === 'number' ? '数值' : stats?.type === 'date' ? '日期' : '文本'}
                     </Badge>
                   </div>
                 );

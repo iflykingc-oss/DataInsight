@@ -273,7 +273,7 @@ export function EnhancedLLMAssistant({
     // 如果LLM没有输出推荐追问章节，基于数据上下文生成追问
     if (suggestions.length === 0) {
       const numericFields = analysis.fieldStats.filter(f => f.type === 'number').map(f => f.field);
-      const textFields = analysis.fieldStats.filter(f => f.type === 'string').map(f => f.field);
+      const textFields = analysis.fieldStats.filter(f => f.type === 'string' || f.type === 'id').map(f => f.field);
       
       if (numericFields.length > 0 && textFields.length > 0) {
         suggestions.push(`按${textFields[0]}拆分，各组的${numericFields[0]}差异有多大，哪个组贡献最大`);

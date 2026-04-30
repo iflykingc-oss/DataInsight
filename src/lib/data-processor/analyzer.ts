@@ -43,11 +43,14 @@ function analyzeFields(data: ParsedData): FieldStat[] {
     const highCardinality = nonNullValues.length >= 10 && uniqueValues.size > nonNullValues.length * 0.9;
     const fieldIsId = nameMatchesId || highCardinality;
 
-    let type: 'string' | 'number' | 'date' | 'mixed' = 'string';
+    let type: 'string' | 'number' | 'date' | 'mixed' | 'id' = 'string';
     const numericCount = nonNullValues.filter(v => !isNaN(Number(v))).length;
     const dateCount = nonNullValues.filter(v => isDate(v)).length;
 
-    if (numericCount > nonNullValues.length * 0.8) {
+    // ID类字段：优先标记为 'id' 类型，彻底排除在数值分析之外
+    if (fieldIsId) {
+      type = 'id';
+    } else if (numericCount > nonNullValues.length * 0.8) {
       type = 'number';
     } else if (dateCount > nonNullValues.length * 0.8) {
       type = 'date';
@@ -56,7 +59,7 @@ function analyzeFields(data: ParsedData): FieldStat[] {
     }
 
     let numericStats: FieldStat['numericStats'] = undefined;
-    if (type === 'number' && !fieldIsId) {
+    if (type === 'number') {
       const nums = nonNullValues.map(v => Number(v)).filter(n => !isNaN(n));
       if (nums.length > 0) {
         nums.sort((a, b) => a - b);
@@ -111,8 +114,9 @@ export function generateSummary(data: ParsedData): Summary {
 
   const fieldStats = analyzeFields(data);
   const numericColumns = fieldStats.filter(f => f.type === 'number').length;
-  const textColumns = fieldStats.filter(f => f.type === 'string').length;
+  const textColumns = fieldStats.filter(f => f.type === 'string' || f.type === 'id').length;
   const dateColumns = fieldStats.filter(f => f.type === 'date').length;
+  const idColumns = fieldStats.filter(f => f.type === 'id').length;
 
   let nullValues = 0;
   rows.forEach(row => {
@@ -132,6 +136,7 @@ export function generateSummary(data: ParsedData): Summary {
     numericColumns,
     textColumns,
     dateColumns,
+    idColumns,
     nullValues,
     duplicateRows: rows.length - uniqueRows.size
   };
@@ -147,6 +152,8 @@ function detectAnomalies(data: ParsedData, fieldStats: FieldStat[]): Anomaly[] {
       const stat = fieldStats.find(s => s.field === field);
 
       if (!stat) return;
+
+      if (stat.type === 'id') return;
 
       if (value === null || value === undefined || value === '') {
         anomalies.push({

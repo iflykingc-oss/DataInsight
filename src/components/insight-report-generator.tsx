@@ -261,7 +261,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                     <MetricCard label="总行数" value={analysis.summary.totalRows.toLocaleString()} />
                     <MetricCard label="总列数" value={analysis.summary.totalColumns.toString()} />
                     <MetricCard label="数值列" value={analysis.fieldStats.filter(f => f.type === 'number').length.toString()} />
-                    <MetricCard label="文本列" value={analysis.fieldStats.filter(f => f.type === 'string').length.toString()} />
+                    <MetricCard label="文本列" value={analysis.fieldStats.filter(f => f.type === 'string' || f.type === 'id').length.toString()} />
                   </div>
                   <div className="mt-4">
                     <h4 className="text-sm font-medium mb-2">字段概览</h4>

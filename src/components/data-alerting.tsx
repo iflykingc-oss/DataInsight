@@ -869,7 +869,7 @@ export function DataAlerting({
                       {fieldStats.map(f => (
                         <SelectItem key={f.field} value={f.field}>
                           {f.field}
-                          {f.type === 'number' && ' (数值)'}
+                          {f.type === 'id' ? ' (ID)' : f.type === 'number' && ' (数值)'}
                         </SelectItem>
                       ))}
                     </SelectContent>
