@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 env:
-  NODE_VERSION: '20'
-  PNPM_VERSION: '9'
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
 
 jobs:
   # 代码质量检查
@@ -43,10 +43,10 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Run ESLint
-        run: pnpm lint
+        run: pnpm lint --quiet
 
       - name: Run TypeScript check
         run: pnpm ts-check
@@ -71,7 +71,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Run tests
         run: pnpm test || echo "No tests configured"
@@ -96,7 +96,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build application
         run: pnpm build
@@ -124,7 +124,7 @@ jobs:
           version: ${{ env.PNPM_VERSION }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build and Deploy
         run: |

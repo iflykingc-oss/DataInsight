@@ -145,30 +145,32 @@ export function FileUploader({
       const { type, id, progress, result, error } = e.data;
 
       if (type === 'progress') {
-        setFiles(prev => prev.map(f =>
-          f.id === id ? { ...f, progress } : f
-        ));
         onParseProgressRef.current?.(id, progress);
       } else if (type === 'success') {
         const parsedData = result as ParsedData;
-        const fileName = filesRef.current.find(f => f.id === id)?.file.name || 'unknown';
-        parsedData.fileName = fileName;
+        // 直接从pendingParseRef获取文件名，不依赖filesRef（可能未同步）
+        const pendingFile = files.find(f => f.id === id);
+        parsedData.fileName = pendingFile?.file.name || 'unknown';
         parsedData.rowCount = parsedData.rows?.length ?? 0;
         parsedData.columnCount = parsedData.headers?.length ?? 0;
 
         tripleCache.cacheData(parsedData);
 
+        const completedFile: UploadFile = {
+          ...(pendingFile || { id, file: new File([], 'unknown'), status: 'pending' as const, progress: 0 }),
+          status: 'completed' as const,
+          progress: 100,
+          parsedData,
+        };
+
         setFiles(prev => prev.map(f =>
-          f.id === id ? { ...f, status: 'completed' as const, progress: 100, parsedData } : f
+          f.id === id ? completedFile : f
         ));
 
         // 仅对本次新完成的文件调用 onFileUpload，避免重复上报
         if (!reportedFileIdsRef.current.has(id)) {
           reportedFileIdsRef.current.add(id);
-          const file = filesRef.current.find(f => f.id === id);
-          if (file) {
-            onFileUploadRef.current([{ ...file, status: 'completed' as const, progress: 100, parsedData }]);
-          }
+          onFileUploadRef.current([completedFile]);
         }
 
         const resolver = pendingParseRef.current.get(id);
