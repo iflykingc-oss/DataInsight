@@ -22,8 +22,10 @@ import {
   MessageSquare,
   Webhook,
   TestTube,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { privacyMode } from '@/lib/security/privacy-mode';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 
 // ============================================
@@ -179,6 +181,52 @@ export default function SettingsDialog({
               </div>
               <Switch defaultChecked />
             </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
+                <div>
+                  <p className="font-medium text-sm">隐私模式</p>
+                  <p className="text-xs text-muted-foreground">数据仅存于内存，关闭页面后自动销毁，不留任何痕迹</p>
+                </div>
+              </div>
+              <Switch
+                checked={privacyMode.enabled}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    privacyMode.enable();
+                  } else {
+                    privacyMode.disable();
+                  }
+                  // Force re-render
+                  setNotificationConfig(prev => ({ ...prev }));
+                }}
+              />
+            </div>
+            {privacyMode.enabled && (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="pt-3 pb-3">
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <div className="text-xs space-y-1">
+                      <p className="font-medium text-primary">隐私模式已开启</p>
+                      <p className="text-muted-foreground">所有数据仅存储在浏览器内存中，页面关闭后将彻底销毁。API密钥等敏感信息不会写入本地存储。</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-1 h-6 text-xs"
+                        onClick={() => {
+                          privacyMode.destroyAll();
+                          setNotificationConfig(prev => ({ ...prev }));
+                        }}
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        立即销毁所有数据
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* 通知渠道设置 */}

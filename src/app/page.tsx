@@ -455,7 +455,7 @@ export default function HomePage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="insights">
-            <DataInsights data={parsedData!} analysis={analysis} onAnalyze={handleAnalyze} />
+            <DataInsights data={parsedData!} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
           </TabsContent>
           <TabsContent value="report">
             <InsightReportGenerator analysis={analysis} fileName={parsedData?.fileName} />

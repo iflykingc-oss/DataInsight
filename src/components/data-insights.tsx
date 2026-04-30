@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -27,9 +27,13 @@ import {
   Crosshair,
   Flame,
   LayoutTemplate,
-  Layers
+  Layers,
+  Loader2,
+  Brain
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
+import { quickDetectScene, enhanceAnalysisWithAI, SCENE_DISPLAY, AnalysisScene } from '@/lib/analysis';
+import type { AIEnhancedResult, StepResult } from '@/lib/analysis';
 import {
   BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
   ScatterChart as RechartsScatter, Scatter,
@@ -42,6 +46,7 @@ interface DataInsightsProps {
   data: ParsedData;
   analysis: DataAnalysis | null;
   onAnalyze: () => void;
+  modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
 }
 
 const SEVERITY_CONFIG = {
@@ -53,14 +58,46 @@ const SEVERITY_CONFIG = {
 
 const CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
 
-export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
+export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataInsightsProps) {
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
+  const [aiResult, setAiResult] = useState<AIEnhancedResult | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiProgress, setAiProgress] = useState({ step: 0, total: 0, name: '' });
+  const [expandedAiStep, setExpandedAiStep] = useState<string | null>(null);
   const deep = analysis?.deepAnalysis;
 
   useEffect(() => {
     if (!analysis) onAnalyze();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleAIEnhance = useCallback(async () => {
+    if (!modelConfig || !analysis) return;
+    setAiLoading(true);
+    setAiError(null);
+    setAiResult(null);
+    try {
+      const result = await enhanceAnalysisWithAI(
+        data.headers,
+        analysis.fieldStats,
+        analysis.deepAnalysis,
+        data.rowCount,
+        modelConfig,
+        (stepIndex, totalSteps, stepName) => {
+          setAiProgress({ step: stepIndex + 1, total: totalSteps, name: stepName });
+        }
+      );
+      setAiResult(result);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : 'AI 增强分析失败');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [modelConfig, analysis, data]);
+
+  // 场景快速识别
+  const sceneInfo = analysis ? quickDetectScene(data.headers) : null;
 
   if (!analysis) {
     return (
@@ -252,6 +289,130 @@ export function DataInsights({ data, analysis, onAnalyze }: DataInsightsProps) {
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 2.5 AI 增强深度分析 */}
+      {sceneInfo && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Brain className="w-5 h-5 text-primary" />
+              AI 增强深度分析
+              {sceneInfo.template && (
+                <Badge variant="secondary" className="ml-1">
+                  {sceneInfo.displayName}
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {sceneInfo.template
+                ? `识别为${sceneInfo.displayName}场景，AI 将基于统计算法结果给出业务级深度解读`
+                : 'AI 将基于统计算法结果给出专业的业务洞察与建议'
+              }
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!modelConfig ? (
+              <div className="text-center py-6">
+                <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">请先在设置中配置 AI 模型，即可使用 AI 增强分析</p>
+              </div>
+            ) : aiLoading ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">AI 分析中...</p>
+                    <p className="text-xs text-muted-foreground">
+                      步骤 {aiProgress.step}/{aiProgress.total}：{aiProgress.name}
+                    </p>
+                  </div>
+                </div>
+                <Progress value={(aiProgress.step / Math.max(aiProgress.total, 1)) * 100} className="h-2" />
+              </div>
+            ) : aiError ? (
+              <div className="text-center py-6">
+                <AlertTriangle className="w-8 h-8 text-destructive mx-auto mb-2" />
+                <p className="text-sm text-destructive mb-3">{aiError}</p>
+                <Button variant="outline" size="sm" onClick={handleAIEnhance}>重试</Button>
+              </div>
+            ) : aiResult ? (
+              <div className="space-y-4">
+                {/* 场景标签 */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="default">{SCENE_DISPLAY[aiResult.scene].icon} {SCENE_DISPLAY[aiResult.scene].name}</Badge>
+                  {aiResult.template && (
+                    <Badge variant="outline">{aiResult.template.name}</Badge>
+                  )}
+                  <Badge variant="secondary">{aiResult.stepResults.length} 个分析步骤</Badge>
+                </div>
+
+                {/* 各步骤结果 */}
+                {aiResult.stepResults.map((step: StepResult) => (
+                  <div key={step.stepId} className="border rounded-lg">
+                    <button
+                      className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+                      onClick={() => setExpandedAiStep(expandedAiStep === step.stepId ? null : step.stepId)}
+                    >
+                      <div className="flex items-center gap-2">
+                        {step.content.startsWith('❌') ? (
+                          <AlertCircle className="w-4 h-4 text-destructive" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        )}
+                        <span className="text-sm font-medium">{step.stepName}</span>
+                        {step.isRequired && <Badge variant="outline" className="text-xs py-0">必选</Badge>}
+                      </div>
+                      {expandedAiStep === step.stepId ? (
+                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </button>
+                    {expandedAiStep === step.stepId && (
+                      <div className="px-3 pb-3 border-t">
+                        <div className="prose prose-sm max-w-none mt-3 whitespace-pre-wrap text-sm leading-relaxed">
+                          {step.content}
+                        </div>
+                        {step.recommendedChartTypes.length > 0 && (
+                          <div className="mt-3 flex items-center gap-1">
+                            <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">推荐图表：</span>
+                            {step.recommendedChartTypes.map((ct: string) => (
+                              <Badge key={ct} variant="secondary" className="text-xs py-0">{ct}</Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* 重新分析按钮 */}
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={handleAIEnhance}>
+                    <Sparkles className="w-3.5 h-3.5 mr-1" />
+                    重新分析
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <Brain className="w-8 h-8 text-primary/60 mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground mb-4">
+                  {sceneInfo.template
+                    ? `识别为${sceneInfo.displayName}场景，包含 ${sceneInfo.template.steps.length} 个分析步骤`
+                    : '让 AI 基于统计数据给出业务级深度解读'
+                  }
+                </p>
+                <Button onClick={handleAIEnhance} size="sm">
+                  <Sparkles className="w-3.5 h-3.5 mr-1" />
+                  开始 AI 深度分析
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
