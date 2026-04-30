@@ -185,6 +185,8 @@ export default function HomePage() {
       }
 
       setParsedData(parsedData);
+      // 上传成功后自动跳转到数据表格视图
+      setViewMode('data-table');
 
       const dataHash = tripleCache.hashData(parsedData);
       const cachedAnalysis = tripleCache.getAnalysis(dataHash);
