@@ -465,7 +465,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                         <SelectItem value="pie">饼图</SelectItem>
                         <SelectItem value="area">面积图</SelectItem>
                         <SelectItem value="kpi">KPI指标卡</SelectItem>
-                        <SelectItem value="table">数据表格</SelectItem>
+                        <SelectItem value="table">数据预览</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

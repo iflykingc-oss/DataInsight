@@ -47,10 +47,10 @@ const GUIDE_STEPS: GuideStep[] = [
   },
   {
     id: 'insight',
-    title: 'AI 智能洞察',
+    title: 'AI 自动分析',
     description: '用自然语言与数据对话，获取洞察',
     icon: <MessageSquare className="w-12 h-12 text-orange-500" />,
-    tips: ['问任何关于数据的问题', '多轮对话持续分析', '支持趋势预测与归因']
+    tips: ['问任何关于数据的问题', '多轮对话持续分析', '支持趋势预测与原因分析']
   },
   {
     id: 'complete',
@@ -304,7 +304,7 @@ export function QuickStartTip({ onDismiss }: QuickStartTipProps) {
             </Button>
             <Button size="sm" variant="outline" className="h-7 text-xs">
               <Wand2 className="w-3 h-3 mr-1" />
-              AI 建表
+              数据建模
             </Button>
           </div>
         </div>

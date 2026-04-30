@@ -137,7 +137,7 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Calculator className="w-5 h-5 text-primary" />
-            AI 生成公式
+            智能公式
           </h3>
           <p className="text-sm text-muted-foreground">
             用自然语言描述需求，AI自动生成标准表格公式

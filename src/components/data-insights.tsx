@@ -172,7 +172,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Brain className="w-5 h-5 text-primary" />
-              AI 智能解读
+              AI 业务解读
               {sceneInfo.template && (
                 <Badge variant="secondary" className="ml-1">
                   {sceneInfo.displayName}
@@ -190,7 +190,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
             {!modelConfig ? (
               <div className="text-center py-4">
                 <AlertCircle className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">请先在设置中配置 AI 模型，即可使用 AI 智能解读</p>
+                <p className="text-sm text-muted-foreground">请先在设置中配置 AI 模型，即可使用 AI 业务解读</p>
               </div>
             ) : aiLoading ? (
               <div className="space-y-3">
@@ -283,7 +283,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
                 <div className="flex gap-2 justify-center">
                   <Button onClick={handleAIEnhance}>
                     <Sparkles className="w-4 h-4 mr-1.5" />
-                    开始 AI 智能解读
+                    开始 AI 业务解读
                   </Button>
                   {modelConfig && (
                     <Button variant="outline" onClick={handlePlanAnalysis} disabled={planLoading}>
@@ -292,7 +292,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
                       ) : (
                         <Compass className="w-4 h-4 mr-1.5" />
                       )}
-                      智能分析规划
+                      定制分析方案
                     </Button>
                   )}
                 </div>
@@ -661,13 +661,13 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
         )}
       </div>
 
-      {/* 4. 自动归因分析 */}
+      {/* 4. 异常原因分析 */}
       {deep.attribution && deep.attribution.anomalyMetrics.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Crosshair className="w-5 h-5 text-primary" />
-              自动归因分析
+              异常原因分析
               <Badge variant="secondary">{deep.attribution.anomalyMetrics.length}</Badge>
             </CardTitle>
             <CardDescription>{deep.attribution.summary}</CardDescription>

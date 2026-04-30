@@ -382,15 +382,15 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 数据表格（整合：表格 + AI字段捷径 + AI生成公式）
+    // 数据预览（整合：表格 + 智能处理 + 智能公式）
     // ========================================
     if (viewMode === 'data-table' && parsedData) {
       return (
         <Tabs defaultValue="table" className="space-y-4">
           <TabsList>
             <TabsTrigger value="table">数据视图</TabsTrigger>
-            <TabsTrigger value="ai-field">AI 字段捷径</TabsTrigger>
-            <TabsTrigger value="ai-formula">AI 生成公式</TabsTrigger>
+            <TabsTrigger value="ai-field">智能处理</TabsTrigger>
+            <TabsTrigger value="ai-formula">智能公式</TabsTrigger>
           </TabsList>
           <TabsContent value="table">
             <Card>
@@ -410,7 +410,7 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 数据准备（整合：数据源 + 清洗 + 质量）
+    // 数据工作台（整合：数据源 + 清洗 + 质量）
     // ========================================
     if (viewMode === 'data-prep') {
       return (
@@ -442,16 +442,16 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 智能洞察（整合：智能分析 + 洞察报告）
+    // 自动分析（整合：深度分析 + 分析报告）
     // ========================================
     if (viewMode === 'insights') {
       return analysis ? (
         <Tabs defaultValue="insights" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="insights">智能分析</TabsTrigger>
+            <TabsTrigger value="insights">深度分析</TabsTrigger>
             <TabsTrigger value="report">
               <FileText className="w-3.5 h-3.5 mr-1" />
-              洞察报告
+              分析报告
             </TabsTrigger>
           </TabsList>
           <TabsContent value="insights">
@@ -469,16 +469,16 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 可视化（整合：仪表盘 + NL2Dashboard + 设计器）
+    // 仪表盘（整合：快速看板 + AI建看板 + 看板设计）
     // ========================================
     if (viewMode === 'visualization' && parsedData && analysis) {
       return (
-        <ErrorBoundary moduleName="可视化">
+        <ErrorBoundary moduleName="仪表盘">
           <Tabs defaultValue="dashboard" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="dashboard">自动仪表盘</TabsTrigger>
-              <TabsTrigger value="nl2dash">AI 生成仪表盘</TabsTrigger>
-              <TabsTrigger value="designer">自定义设计</TabsTrigger>
+              <TabsTrigger value="dashboard">快速看板</TabsTrigger>
+              <TabsTrigger value="nl2dash">AI 建看板</TabsTrigger>
+              <TabsTrigger value="designer">看板设计</TabsTrigger>
             </TabsList>
             <TabsContent value="dashboard">
               <Dashboard data={parsedData} analysis={analysis} />
@@ -495,15 +495,15 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 指标体系（整合：AI指标 + 指标管理）
+    // 指标中心（整合：AI建指标 + 指标列表）
     // ========================================
     if (viewMode === 'metrics' && parsedData && analysis) {
       return (
-        <ErrorBoundary moduleName="指标体系">
+        <ErrorBoundary moduleName="指标中心">
           <Tabs defaultValue="ai-metric" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="ai-metric">AI 指标生成</TabsTrigger>
-              <TabsTrigger value="metric-lib">指标管理库</TabsTrigger>
+              <TabsTrigger value="ai-metric">AI 建指标</TabsTrigger>
+              <TabsTrigger value="metric-lib">指标列表</TabsTrigger>
             </TabsList>
             <TabsContent value="ai-metric">
               <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
@@ -517,15 +517,15 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 图表中心（整合：AI推荐 + 高级图表 + ECharts扩展）
+    // 图表库（整合：AI选图 + 高级图表 + 专业图表）
     // ========================================
     if (viewMode === 'chart-center' && parsedData && analysis) {
       return (
         <Tabs defaultValue="ai-chart" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="ai-chart">AI 推荐</TabsTrigger>
+            <TabsTrigger value="ai-chart">AI 选图</TabsTrigger>
             <TabsTrigger value="advanced">高级图表</TabsTrigger>
-            <TabsTrigger value="echarts">ECharts 扩展</TabsTrigger>
+            <TabsTrigger value="echarts">专业图表</TabsTrigger>
           </TabsList>
           <TabsContent value="ai-chart">
             <SmartChartRecommender data={parsedData} analysis={analysis} />
@@ -541,7 +541,7 @@ export default function HomePage() {
     }
 
     // ========================================
-    // AI 问数
+    // 问答数据
     // ========================================
     if (viewMode === 'chat' && analysis) {
       return (
@@ -550,22 +550,22 @@ export default function HomePage() {
           <Card>
             <CardContent className="pt-6 space-y-4">
               <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-800 mb-2">AI 问数 - 五大能力</h4>
+                <h4 className="font-medium text-blue-800 mb-2">你能问什么？</h4>
                 <ul className="text-sm text-blue-600 space-y-1.5">
-                  <li className="flex items-start gap-2"><Search className="w-4 h-4 mt-0.5 shrink-0" />数据检索 - &ldquo;查找销售额超过10万的订单&rdquo;</li>
-                  <li className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 shrink-0" />统计计算 - &ldquo;按区域计算平均绩效得分&rdquo;</li>
-                  <li className="flex items-start gap-2"><TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />归因分析 - &ldquo;分析本月销售额下降15%的原因&rdquo;</li>
-                  <li className="flex items-start gap-2"><BarChart3 className="w-4 h-4 mt-0.5 shrink-0" />趋势预测 - &ldquo;预测下月新增用户数&rdquo;</li>
-                  <li className="flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />分析报告 - &ldquo;生成本周项目进展周报&rdquo;</li>
+                  <li className="flex items-start gap-2"><Search className="w-4 h-4 mt-0.5 shrink-0" />查找数据 - &ldquo;销售额超过10万的订单有哪些？&rdquo;</li>
+                  <li className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 shrink-0" />统计计算 - &ldquo;各区域平均绩效得分是多少？&rdquo;</li>
+                  <li className="flex items-start gap-2"><TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />原因分析 - &ldquo;为什么本月销售额下降了15%？&rdquo;</li>
+                  <li className="flex items-start gap-2"><BarChart3 className="w-4 h-4 mt-0.5 shrink-0" />趋势预测 - &ldquo;下月新增用户数预计多少？&rdquo;</li>
+                  <li className="flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />分析报告 - &ldquo;帮我生成本周项目进展周报&rdquo;</li>
                 </ul>
               </div>
               <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-medium text-green-800 mb-2">使用示例</h4>
+                <h4 className="font-medium text-green-800 mb-2">试试这些问题</h4>
                 <div className="space-y-2 text-sm text-green-600">
-                  <p>&ldquo;哪些产品销量最高&rdquo;</p>
-                  <p>&ldquo;月度收入变化趋势&rdquo;</p>
-                  <p>&ldquo;分析用户年龄分布&rdquo;</p>
-                  <p>&ldquo;找出异常数据并归因&rdquo;</p>
+                  <p>&ldquo;哪些产品销量最高？&rdquo;</p>
+                  <p>&ldquo;月度收入变化趋势如何？&rdquo;</p>
+                  <p>&ldquo;用户年龄分布是什么样的？&rdquo;</p>
+                  <p>&ldquo;帮我找出异常数据并分析原因&rdquo;</p>
                 </div>
               </div>
             </CardContent>
@@ -582,14 +582,14 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 报表导出（整合：报表 + 导出 + 分享）
+    // 导出分享（整合：生成报告 + 导出图表 + 分享管理）
     // ========================================
     if (viewMode === 'report-export' && parsedData) {
       return (
         <Tabs defaultValue="report" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="report" disabled={!analysis}>报表生成</TabsTrigger>
-            <TabsTrigger value="export">图表导出</TabsTrigger>
+            <TabsTrigger value="report" disabled={!analysis}>生成报告</TabsTrigger>
+            <TabsTrigger value="export">导出图表</TabsTrigger>
             <TabsTrigger value="share">分享管理</TabsTrigger>
           </TabsList>
           <TabsContent value="report">
@@ -617,12 +617,12 @@ export default function HomePage() {
   // ============================================
   const getCurrentViewTitle = () => {
     const titles: Record<string, string> = {
-      'home': '工作台', 'ai-table-builder': 'AI 建表',
-      'data-table': '数据表格', 'data-prep': '数据准备',
-      'insights': '智能洞察', 'visualization': '可视化',
-      'metrics': '指标体系', 'chart-center': '图表中心',
-      'chat': 'AI 问数', 'sql-lab': 'SQL 查询',
-      'report-export': '报表导出',
+      'home': '工作台', 'ai-table-builder': '数据建模',
+      'data-table': '数据预览', 'data-prep': '数据工作台',
+      'insights': '自动分析', 'visualization': '仪表盘',
+      'metrics': '指标中心', 'chart-center': '图表库',
+      'chat': '问答数据', 'sql-lab': 'SQL 查询',
+      'report-export': '导出分享',
       'alerting': '数据预警', 'version-history': '版本快照', 'template-manager': '模板管理',
     };
     return titles[viewMode] || '';

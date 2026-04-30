@@ -185,7 +185,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
         if (result.data.summary) {
           setInsightMessages([{
             role: 'assistant',
-            content: `已识别您的业务场景：${(result.data.detectedScenario || []).join('、')}。\n\n这是为您设计的指标体系总览：\n${result.data.summary}`,
+            content: `已识别您的业务场景：${(result.data.detectedScenario || []).join('、')}。\n\n这是为您设计的业务指标总览：\n${result.data.summary}`,
           }]);
         }
       }
@@ -469,16 +469,16 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
         </CardContent>
       </Card>
 
-      {/* 生成的指标体系 */}
+      {/* 生成的业务指标 */}
       {generatedMetrics.length > 0 && (
         <>
-          {/* 指标体系总览 */}
+          {/* 业务指标总览 */}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Layers className="w-5 h-5 text-blue-500" />
-                  指标体系 — {scenarioConfig.icon} {scenarioConfig.label}
+                  业务指标 — {scenarioConfig.icon} {scenarioConfig.label}
                 </CardTitle>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={handleGenerateMetrics} disabled={isGenerating}>

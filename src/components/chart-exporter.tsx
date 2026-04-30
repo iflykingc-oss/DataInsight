@@ -100,7 +100,7 @@ const FORMAT_PRESETS: Array<{
     format: 'excel',
     label: 'Excel 数据',
     icon: FileSpreadsheet,
-    description: '原始数据表格，可编辑（支持公式）',
+    description: '原始数据预览，可编辑（支持公式）',
     extensions: ['.xlsx']
   },
   {
