@@ -153,6 +153,8 @@ export function FileUploader({
         const parsedData = result as ParsedData;
         const fileName = filesRef.current.find(f => f.id === id)?.file.name || 'unknown';
         parsedData.fileName = fileName;
+        parsedData.rowCount = parsedData.rows?.length ?? 0;
+        parsedData.columnCount = parsedData.headers?.length ?? 0;
 
         tripleCache.cacheData(parsedData);
 
