@@ -32,13 +32,16 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import type { ParsedData } from '@/lib/data-processor';
 
 // ============================================
 // 类型定义
 // ============================================
 
 // 导出格式
-type ExportFormat = 'png' | 'svg' | 'pdf' | 'excel' | 'word' | 'powerpoint';
+type ExportFormat = 'png' | 'svg' | 'pdf' | 'excel' | 'csv' | 'word' | 'powerpoint';
 
 // 导出配置
 interface ExportConfig {
@@ -97,8 +100,15 @@ const FORMAT_PRESETS: Array<{
     format: 'excel',
     label: 'Excel 数据',
     icon: FileSpreadsheet,
-    description: '原始数据表格，可编辑',
+    description: '原始数据表格，可编辑（支持公式）',
     extensions: ['.xlsx']
+  },
+  {
+    format: 'csv',
+    label: 'CSV 文件',
+    icon: FileText,
+    description: '通用数据格式，兼容所有表格软件',
+    extensions: ['.csv']
   },
   {
     format: 'word',
@@ -137,6 +147,7 @@ const SIZE_PRESETS = [
 interface ChartExporterProps {
   chartRef?: React.RefObject<HTMLElement | null>;
   chartName?: string;
+  data?: ParsedData; // 表格数据，用于导出Excel/CSV
   onExport?: (format: ExportFormat, blob: Blob) => void;
   className?: string;
 }
@@ -144,6 +155,7 @@ interface ChartExporterProps {
 export function ChartExporter({
   chartRef,
   chartName = '图表',
+  data,
   onExport,
   className
 }: ChartExporterProps) {
@@ -252,10 +264,24 @@ export function ChartExporter({
     return new Blob([svg], { type: 'image/svg+xml' });
   }, [chartName, config]);
 
-  // 导出为 Excel
+  // 导出为真正的 Excel (.xlsx)
   const exportToExcel = useCallback((): Blob => {
-    // 简单的 CSV 格式（可以被 Excel 打开）
-    // 实际项目可以使用 xlsx 库生成真正的 xlsx
+    if (data?.headers && data?.rows) {
+      // 使用 xlsx 库生成真正的 Excel 文件
+      const wsData = [data.headers, ...data.rows.map(row => data.headers.map(h => row[h] ?? ''))];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // 设置列宽
+      ws['!cols'] = data.headers.map(() => ({ wch: 15 }));
+      
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '数据表');
+      
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      return new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    }
+    
+    // 回退：使用 CSV 格式
     const csv = [
       ['数据项', '数值'],
       ['项目 A', '1000'],
@@ -263,8 +289,84 @@ export function ChartExporter({
       ['项目 C', '1500']
     ].map(row => row.join(',')).join('\n');
     
-    return new Blob([csv], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  }, []);
+    return new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  }, [data]);
+
+  // 导出为 CSV
+  const exportToCSV = useCallback((): Blob => {
+    if (data?.headers && data?.rows) {
+      const rows = [
+        data.headers.join(','),
+        ...data.rows.map(row => data.headers.map(h => {
+          const val = row[h] ?? '';
+          // 处理含逗号或引号的值
+          if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
+            return `"${val.replace(/"/g, '""')}"`;
+          }
+          return val;
+        }).join(','))
+      ];
+      return new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+    }
+    return new Blob([['数据项,数值', '项目 A,1000', '项目 B,2000', '项目 C,1500'].join('\n')], { type: 'text/csv;charset=utf-8' });
+  }, [data]);
+
+  // 导出为 PDF
+  const exportToPDF = useCallback(async (): Promise<Blob> => {
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // 添加标题
+    pdf.setFontSize(18);
+    pdf.text(chartName, 20, 20);
+    
+    // 添加生成时间
+    pdf.setFontSize(10);
+    pdf.setTextColor(128);
+    pdf.text(`生成时间: ${new Date().toLocaleString()}`, 20, 28);
+    
+    // 如果有数据，添加数据表格
+    if (data?.headers && data?.rows) {
+      pdf.addPage();
+      pdf.setFontSize(14);
+      pdf.setTextColor(0);
+      pdf.text('数据内容', 20, 20);
+      
+      const startY = 30;
+      const colWidth = 45;
+      const rowHeight = 8;
+      
+      // 表头
+      pdf.setFillColor(66, 66, 66);
+      pdf.setTextColor(255, 255, 255);
+      data.headers.forEach((header, i) => {
+        pdf.rect(20 + i * colWidth, startY, colWidth, rowHeight, 'F');
+        pdf.text(String(header).substring(0, 12), 22 + i * colWidth, startY + 6);
+      });
+      
+      // 数据行
+      pdf.setTextColor(0);
+      data.rows.slice(0, 20).forEach((row, rowIndex) => {
+        const y = startY + (rowIndex + 1) * rowHeight;
+        if (y > 180) return; // 避免超出页面
+        
+        data.headers.forEach((header, colIndex) => {
+          const val = String(row[header] ?? '');
+          pdf.text(val.substring(0, 12), 22 + colIndex * colWidth, y + 5);
+        });
+      });
+      
+      if (data.rows.length > 20) {
+        pdf.setTextColor(128);
+        pdf.text(`... 共 ${data.rows.length} 行数据`, 20, startY + 22 * rowHeight);
+      }
+    }
+    
+    return pdf.output('blob');
+  }, [chartName, data]);
 
   // 导出
   const handleExport = async () => {
@@ -303,26 +405,16 @@ export function ChartExporter({
           blob = exportToExcel();
           break;
           
+        case 'csv':
+          task.progress = 50;
+          setExportHistory(prev => prev.map(t => t.id === task.id ? task : t));
+          blob = exportToCSV();
+          break;
+          
         case 'pdf': {
           task.progress = 30;
           setExportHistory(prev => prev.map(t => t.id === task.id ? task : t));
-          try {
-            const response = await fetch('/api/export/pdf', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                title: chartName,
-              }),
-            });
-
-            if (response.ok) {
-              blob = await response.blob();
-            } else {
-              blob = await exportToPNG();
-            }
-          } catch {
-            blob = await exportToPNG();
-          }
+          blob = await exportToPDF();
           break;
         }
           

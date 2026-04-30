@@ -11,11 +11,14 @@ import {
   Minimize2,
   Lightbulb,
   Copy,
+  AlertTriangle,
+  RotateCcw,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
+import { toUserFriendlyError, type UserFriendlyError } from '@/lib/error-handler';
 
 // 对话消息
 interface ChatMessage {
@@ -25,6 +28,8 @@ interface ChatMessage {
   timestamp: Date;
   isStreaming?: boolean;
   suggestions?: string[];
+  isError?: boolean;
+  friendlyError?: UserFriendlyError;
 }
 
 // 从AI回复中提取推荐追问
@@ -246,9 +251,17 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
     } catch (error) {
       if ((error as Error).name === 'AbortError') return null;
       console.error('LLM stream failed:', error);
+      const friendlyError = toUserFriendlyError(error as Error);
       setMessages(prev => prev.map(m =>
         m.id === assistantId
-          ? { ...m, content: '抱歉，AI 分析服务暂时不可用，请稍后再试。', isStreaming: false }
+          ? {
+              ...m,
+              isError: true,
+              friendlyError,
+              content: friendlyError.message,
+              isStreaming: false,
+              suggestions: friendlyError.suggestions?.length ? [`重试`, ...friendlyError.suggestions.slice(0, 2)] : ['重试', '查看帮助文档']
+            }
           : m
       ));
       setStreamedContent('');
@@ -450,9 +463,18 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                         'max-w-[85%] rounded-2xl px-4 py-3',
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground rounded-br-md'
+                          : msg.isError
+                          ? 'bg-red-50 text-red-800 rounded-bl-md border border-red-200'
                           : 'bg-gray-100 text-gray-800 rounded-bl-md'
                       )}
                     >
+                      {/* 错误提示头部 */}
+                      {msg.isError && msg.friendlyError && (
+                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-red-200">
+                          <AlertTriangle className="w-4 h-4 text-red-500" />
+                          <span className="text-sm font-medium text-red-700">{msg.friendlyError.title}</span>
+                        </div>
+                      )}
                       {/* 消息内容 */}
                       <div className="text-sm leading-relaxed">
                         {msg.role === 'assistant' ? (

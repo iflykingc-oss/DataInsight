@@ -34,6 +34,7 @@ import { InsightReportGenerator } from '@/components/insight-report-generator';
 import Sidebar from '@/components/sidebar';
 import HomeCards from '@/components/home-cards';
 import SettingsDialog from '@/components/settings-dialog';
+import { OnboardingGuide } from '@/components/onboarding-guide';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Loader2,
@@ -345,6 +346,7 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
+          <OnboardingGuide />
           <HomeCards
             hasData={!!parsedData}
             onViewChange={(v) => setViewMode(v as ViewMode)}

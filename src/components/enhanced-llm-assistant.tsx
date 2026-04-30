@@ -28,6 +28,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
+import { toUserFriendlyError, type UserFriendlyError } from '@/lib/error-handler';
 
 interface ChatMessage {
   id: string;
@@ -38,6 +39,7 @@ interface ChatMessage {
   suggestions?: string[];
   chartType?: string;
   sql?: string;
+  error?: UserFriendlyError;
 }
 
 interface EnhancedLLMAssistantProps {
@@ -225,12 +227,21 @@ export function EnhancedLLMAssistant({
     } catch (err) {
       if ((err as Error).name === 'AbortError') return;
       console.error('LLM调用错误:', err);
+      const errorMsg = err instanceof Error ? err.message : '未知错误';
+      const friendlyError = toUserFriendlyError(err as Error);
+      
       setMessages(prev => prev.map(m =>
         m.id === assistantMsgId
           ? {
             ...m,
             isStreaming: false,
-            content: '抱歉，AI分析服务暂时不可用。请稍后重试，或尝试使用本地NL2SQL分析功能。\n\n错误信息: ' + (err instanceof Error ? err.message : '未知错误')
+            error: {
+              type: friendlyError.type,
+              title: friendlyError.title,
+              message: friendlyError.message,
+              suggestions: friendlyError.suggestions,
+              canRetry: friendlyError.canRetry,
+            }
           }
           : m
       ));
@@ -395,6 +406,36 @@ export function EnhancedLLMAssistant({
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground border border-border'
               }`}>
+                {/* 错误提示 */}
+                {msg.role === 'assistant' && msg.error && (
+                  <div className="mb-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <div className="flex items-center gap-2 text-destructive font-medium text-sm mb-1">
+                      <AlertTriangle className="w-4 h-4" />
+                      {msg.error.title}
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">{msg.error.message}</p>
+                    <div className="text-xs text-muted-foreground">
+                      <p className="font-medium mb-1">排查建议：</p>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {msg.error.suggestions.map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    {msg.error.canRetry && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRetry(idx)}
+                        className="mt-2 text-xs h-7"
+                      >
+                        <RotateCcw className="w-3 h-3 mr-1" />
+                        重试
+                      </Button>
+                    )}
+                  </div>
+                )}
+
                 {/* 消息内容 */}
                 <div className="text-sm leading-relaxed">
                   {msg.role === 'assistant' ? (

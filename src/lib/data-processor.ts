@@ -267,6 +267,247 @@ async function parseExcel(file: File): Promise<ParsedData> {
   };
 }
 
+// ==================== 智能数据采样 ====================
+
+export interface SamplingOptions {
+  maxRows?: number;          // 最大采样行数，默认1000
+  strategy?: 'head' | 'random' | 'stratified';  // 采样策略
+  seed?: number;             // 随机种子（保证可复现）
+  labelColumn?: string;      // 分层采样的标签列
+}
+
+export interface SamplingResult {
+  data: ParsedData;
+  wasSampled: boolean;
+  originalRowCount: number;
+  sampledRowCount: number;
+  samplingRatio: number;
+  method: string;
+}
+
+// 智能采样主函数
+export function smartSample(
+  data: ParsedData,
+  options: SamplingOptions = {}
+): SamplingResult {
+  const {
+    maxRows = 1000,
+    strategy = 'stratified',
+    seed = 42,
+    labelColumn
+  } = options;
+
+  const originalRowCount = data.rows.length;
+
+  // 如果数据量小于阈值，直接返回原数据
+  if (originalRowCount <= maxRows) {
+    return {
+      data,
+      wasSampled: false,
+      originalRowCount,
+      sampledRowCount: originalRowCount,
+      samplingRatio: 1,
+      method: 'none'
+    };
+  }
+
+  let sampledRows: Record<string, CellValue>[];
+  let method: string;
+
+  switch (strategy) {
+    case 'head':
+      // 头部采样：取前N行
+      sampledRows = data.rows.slice(0, maxRows);
+      method = 'head';
+      break;
+
+    case 'random':
+      // 随机采样
+      sampledRows = randomSample(data.rows, maxRows, seed);
+      method = 'random';
+      break;
+
+    case 'stratified':
+      // 分层采样：优先保证每个类别都有样本
+      if (labelColumn) {
+        sampledRows = stratifiedSample(data.rows, maxRows, labelColumn, seed);
+        method = 'stratified';
+      } else {
+        // 没有标签列时，使用尾部+随机混合采样
+        sampledRows = mixedSample(data.rows, maxRows, seed);
+        method = 'mixed';
+      }
+      break;
+
+    default:
+      sampledRows = data.rows.slice(0, maxRows);
+      method = 'head';
+  }
+
+  return {
+    data: {
+      ...data,
+      rows: sampledRows,
+      rowCount: sampledRows.length
+    },
+    wasSampled: true,
+    originalRowCount,
+    sampledRowCount: sampledRows.length,
+    samplingRatio: sampledRows.length / originalRowCount,
+    method
+  };
+}
+
+// 随机采样
+function randomSample(
+  rows: Record<string, CellValue>[],
+  count: number,
+  seed: number
+): Record<string, CellValue>[] {
+  const shuffled = [...rows];
+  // 简单的确定性随机洗牌
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(seed % (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count);
+}
+
+// 分层采样：确保每个类别都有样本
+function stratifiedSample(
+  rows: Record<string, CellValue>[],
+  count: number,
+  labelColumn: string,
+  seed: number
+): Record<string, CellValue>[] {
+  // 按标签列分组
+  const groups = new Map<string, Record<string, CellValue>[]>();
+  for (const row of rows) {
+    const label = String(row[labelColumn] ?? 'unknown');
+    if (!groups.has(label)) {
+      groups.set(label, []);
+    }
+    groups.get(label)!.push(row);
+  }
+
+  const result: Record<string, CellValue>[] = [];
+  const perGroupCount = Math.max(1, Math.floor(count / groups.size));
+
+  // 每个类别至少取1个，最多取perGroupCount个
+  for (const [, groupRows] of groups) {
+    if (groupRows.length <= perGroupCount) {
+      result.push(...groupRows);
+    } else {
+      const sampled = randomSample(groupRows, perGroupCount, seed);
+      result.push(...sampled);
+    }
+  }
+
+  // 如果还不够，随机补充
+  if (result.length < count) {
+    const remaining = count - result.length;
+    const notInResult = rows.filter(r => !result.includes(r));
+    result.push(...randomSample(notInResult, remaining, seed));
+  }
+
+  return result.slice(0, count);
+}
+
+// 混合采样：头部+尾部+随机
+function mixedSample(
+  rows: Record<string, CellValue>[],
+  count: number,
+  seed: number
+): Record<string, CellValue>[] {
+  const headCount = Math.floor(count * 0.4);
+  const tailCount = Math.floor(count * 0.4);
+  const randomCount = count - headCount - tailCount;
+
+  const result: Record<string, CellValue>[] = [
+    ...rows.slice(0, headCount),
+    ...rows.slice(-tailCount),
+    ...randomSample(rows.slice(headCount, -tailCount), randomCount, seed)
+  ];
+
+  return result;
+}
+
+// 计算Token估算（用于LLM调用）
+export function estimateTokenCount(data: ParsedData): number {
+  const { headers, rows } = data;
+  
+  // 估算表头token
+  let tokenCount = headers.join(' ').length / 4;
+  
+  // 估算数据token（平均每个单元格约5个token）
+  tokenCount += rows.length * headers.length * 5;
+  
+  return Math.ceil(tokenCount);
+}
+
+// Helper: 判断字段是否为ID类字段
+function isIdField(header: string, rows: ParsedData['rows'], rowCount: number): boolean {
+  const h = header.toLowerCase();
+  const nameMatchesId = /^(序号|no\.?|id|编号|code|编码|index|流水号|单号|订单号|user_?id|customer_?id|主键|外键)/.test(h);
+  if (nameMatchesId) return true;
+  if (rowCount < 10) return false;
+  const uniqueCount = new Set(rows.map(r => String(r[header]))).size;
+  return uniqueCount > rowCount * 0.8;
+}
+
+// 获取采样建议
+export function getSamplingRecommendation(data: ParsedData): {
+  shouldSample: boolean;
+  recommendedStrategy: 'head' | 'random' | 'stratified';
+  estimatedTokens: number;
+  maxTokens: number;
+  message: string;
+} {
+  const rowCount = data.rows.length;
+  const estimatedTokens = estimateTokenCount(data);
+  const maxTokens = 8000; // 大多数模型的上下文限制
+  
+  // 根据数据类型推荐采样策略
+  let recommendedStrategy: 'head' | 'random' | 'stratified' = 'head';
+  
+  // 检测是否有明显的分类列
+  const idFieldCount = data.headers.filter(h => 
+    isIdField(h, data.rows, rowCount)
+  ).length;
+  
+  const categoryColumns = data.headers.filter(h => {
+    if (idFieldCount > 0) return false;
+    const uniqueCount = new Set(data.rows.map(r => String(r[h]))).size;
+    return uniqueCount > 1 && uniqueCount < rowCount * 0.5;
+  });
+  
+  if (categoryColumns.length > 0) {
+    recommendedStrategy = 'stratified';
+  }
+  
+  const shouldSample = estimatedTokens > maxTokens || rowCount > 10000;
+  
+  let message = '';
+  if (shouldSample) {
+    if (rowCount > 10000) {
+      message = `数据量较大（${rowCount.toLocaleString()}行），建议采样以提升分析速度`;
+    } else {
+      message = `预估Token超过${maxTokens}，建议采样以避免超出模型上下文限制`;
+    }
+    if (recommendedStrategy === 'stratified') {
+      message += '，检测到分类列，将使用分层采样保持数据分布';
+    }
+  }
+  
+  return {
+    shouldSample,
+    recommendedStrategy,
+    estimatedTokens,
+    maxTokens,
+    message
+  };
+}
+
 export function analyzeData(data: ParsedData): DataAnalysis {
   const fieldStats = analyzeFields(data);
   const summary = generateSummary(data);

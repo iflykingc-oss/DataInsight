@@ -1,5 +1,5 @@
 // 统一从 lib/data-processor 重导出核心数据类型，避免类型定义冲突
-export type { CellValue, ParsedData, DataAnalysis, FieldStat, Summary, Anomaly, DeepAnalysis } from '@/lib/data-processor';
+export type { CellValue, ParsedData, DataAnalysis, FieldStat, Summary, Anomaly, DeepAnalysis, SamplingOptions, SamplingResult } from '@/lib/data-processor';
 
 /** 兼容旧组件的行数据类型，用于 Recharts 等只接受 string|number 的场景 */
 export type ChartRow = Record<string, string | number>;
