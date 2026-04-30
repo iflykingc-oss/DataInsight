@@ -33,6 +33,9 @@ import { SqlLab } from '@/components/sql-lab';
 import { AIFormulaGenerator } from '@/components/ai-formula-generator';
 import { InsightReportGenerator } from '@/components/insight-report-generator';
 import { PivotTable } from '@/components/pivot-table';
+import { KanbanView } from '@/components/view-kanban';
+import { CalendarView } from '@/components/view-calendar';
+import { GanttView } from '@/components/view-gantt';
 import Sidebar from '@/components/sidebar';
 import HomeCards from '@/components/home-cards';
 import SettingsDialog from '@/components/settings-dialog';
@@ -53,6 +56,10 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  Table2 as TableIcon,
+  LayoutTemplate as LayoutIcon,
+  Calendar as CalendarIcon,
+  GanttChart as GanttIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
@@ -100,6 +107,10 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [tableView, setTableView] = useState<'table' | 'kanban' | 'calendar' | 'gantt'>('table');
+  const [kanbanField, setKanbanField] = useState<string>('');
+  const [dateField, setDateField] = useState<string>('');
+  const [ganttConfig, setGanttConfig] = useState<{ nameField: string; startField: string; endField: string }>({ nameField: '', startField: '', endField: '' });
 
 
   // 模型配置状态 - 初始为null避免SSR不一致
@@ -479,8 +490,87 @@ export default function HomePage() {
           </TabsList>
           <TabsContent value="table">
             <Card>
-              <CardContent className="pt-6">
-                <DataTable data={parsedData} fieldStats={analysis?.fieldStats} />
+              <CardContent className="pt-6 space-y-4">
+                {/* 视图切换 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">视图:</span>
+                    <div className="flex bg-muted rounded-lg p-0.5">
+                      {([
+                        { key: 'table', label: '表格', icon: TableIcon },
+                        { key: 'kanban', label: '看板', icon: LayoutIcon },
+                        { key: 'calendar', label: '日历', icon: CalendarIcon },
+                        { key: 'gantt', label: '甘特图', icon: GanttIcon },
+                      ] as const).map(v => {
+                        const Icon = v.icon;
+                        return (
+                          <button
+                            key={v.key}
+                            onClick={() => setTableView(v.key)}
+                            className={cn(
+                              'flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors',
+                              tableView === v.key ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                            )}
+                          >
+                            <Icon className="h-3.5 w-3.5" />
+                            {v.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {tableView === 'kanban' && (
+                    <select
+                      className="text-sm border rounded px-2 py-1 bg-background"
+                      value={kanbanField}
+                      onChange={e => setKanbanField(e.target.value)}
+                    >
+                      <option value="">选择分组字段</option>
+                      {parsedData.headers.map(h => (
+                        <option key={h} value={h}>{h}</option>
+                      ))}
+                    </select>
+                  )}
+                  {tableView === 'calendar' && (
+                    <select
+                      className="text-sm border rounded px-2 py-1 bg-background"
+                      value={dateField}
+                      onChange={e => setDateField(e.target.value)}
+                    >
+                      <option value="">选择日期字段</option>
+                      {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => (
+                        <option key={f.field} value={f.field}>{f.field}</option>
+                      ))}
+                    </select>
+                  )}
+                  {tableView === 'gantt' && (
+                    <div className="flex gap-2">
+                      <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.nameField} onChange={e => setGanttConfig(p => ({ ...p, nameField: e.target.value }))}>
+                        <option value="">任务名称</option>
+                        {parsedData.headers.map(h => <option key={h} value={h}>{h}</option>)}
+                      </select>
+                      <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.startField} onChange={e => setGanttConfig(p => ({ ...p, startField: e.target.value }))}>
+                        <option value="">开始日期</option>
+                        {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => <option key={f.field} value={f.field}>{f.field}</option>)}
+                      </select>
+                      <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.endField} onChange={e => setGanttConfig(p => ({ ...p, endField: e.target.value }))}>
+                        <option value="">结束日期</option>
+                        {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => <option key={f.field} value={f.field}>{f.field}</option>)}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {tableView === 'table' && <DataTable data={parsedData} fieldStats={analysis?.fieldStats} />}
+                {tableView === 'kanban' && (
+                  <KanbanView data={parsedData} />
+                )}
+                {tableView === 'calendar' && (
+                  <CalendarView rows={parsedData.rows} headers={parsedData.headers} />
+                )}
+                {tableView === 'gantt' && (
+                  <GanttView rows={parsedData.rows} headers={parsedData.headers} />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
