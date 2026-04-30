@@ -304,7 +304,7 @@ export default function HomePage() {
                         <h3 className="font-semibold text-gray-800">{parsedData.fileName}</h3>
                         <Badge className="bg-green-100 text-green-700 border-green-200 text-[10px]">已加载</Badge>
                       </div>
-                      <p className="text-sm text-gray-500">{parsedData.rowCount.toLocaleString()} 行 &times; {parsedData.columnCount} 列</p>
+                      <p className="text-sm text-gray-500">{parsedData?.rowCount?.toLocaleString() ?? '0'} 行 &times; {parsedData?.columnCount ?? 0} 列</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -669,7 +669,7 @@ export default function HomePage() {
                   {parsedData.fileName}
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">
-                  {parsedData.rowCount.toLocaleString()} 行 &times; {parsedData.columnCount} 列
+                  {parsedData.rowCount?.toLocaleString() ?? '0'} 行 &times; {parsedData.columnCount ?? 0} 列
                 </Badge>
                 <Button
                   variant="ghost"

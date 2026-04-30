@@ -138,21 +138,15 @@ export function FileUploader({
         onParseProgress?.(id, progress);
       } else if (type === 'success') {
         const parsedData = result as ParsedData;
-        const fileName = files.find(f => f.id === id)?.file.name || 'unknown';
+        // 使用 filesRef 获取当前文件列表，避免闭包问题
+        const fileName = filesRef.current.find(f => f.id === id)?.file.name || 'unknown';
         parsedData.fileName = fileName;
 
-        const cacheKey = tripleCache.hashData(parsedData);
         tripleCache.cacheData(parsedData);
 
-        setFiles(prev => {
-          const updatedFiles = prev.map(f =>
-            f.id === id ? { ...f, status: 'completed' as const, progress: 100, parsedData } : f
-          );
-          // 使用 updater 函数获取最新状态，确保 onFileUpload 调用时数据一致
-          const completedFiles = updatedFiles.filter(f => f.status === 'completed' || f.status === 'cached');
-          onFileUpload(completedFiles);
-          return updatedFiles;
-        });
+        setFiles(prev => prev.map(f =>
+          f.id === id ? { ...f, status: 'completed' as const, progress: 100, parsedData } : f
+        ));
 
         const resolver = pendingParseRef.current.get(id);
         if (resolver) {
@@ -179,7 +173,15 @@ export function FileUploader({
     return () => {
       workerRef.current?.terminate();
     };
-  }, [onFileUpload, onParseProgress]);
+  }, [onParseProgress]); // 移除 onFileUpload 依赖
+
+  // 监听 files 变化，在渲染阶段之外触发 onFileUpload
+  useEffect(() => {
+    const completedFiles = files.filter(f => f.status === 'completed' || f.status === 'cached');
+    if (completedFiles.length > 0) {
+      onFileUpload(completedFiles);
+    }
+  }, [files, onFileUpload]);
 
   const generateId = () => `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 

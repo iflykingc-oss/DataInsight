@@ -636,14 +636,16 @@ function PivotTableView({
 
     // 聚合
     const aggregate = (vals: number[]): string => {
-      if (vals.length === 0) return '-';
+      // 过滤掉无效值，只保留有效数字
+      const validVals = vals.filter(v => typeof v === 'number' && !isNaN(v));
+      if (validVals.length === 0) return '-';
       switch (aggFunc) {
-        case 'sum': return vals.reduce((a, b) => a + b, 0).toLocaleString();
-        case 'avg': return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
-        case 'count': return vals.length.toString();
-        case 'max': return Math.max(...vals).toLocaleString();
-        case 'min': return Math.min(...vals).toLocaleString();
-        default: return vals.reduce((a, b) => a + b, 0).toLocaleString();
+        case 'sum': return validVals.reduce((a, b) => a + b, 0).toLocaleString();
+        case 'avg': return (validVals.reduce((a, b) => a + b, 0) / validVals.length).toFixed(2);
+        case 'count': return validVals.length.toString();
+        case 'max': return Math.max(...validVals).toLocaleString();
+        case 'min': return Math.min(...validVals).toLocaleString();
+        default: return validVals.reduce((a, b) => a + b, 0).toLocaleString();
       }
     };
 
@@ -832,17 +834,19 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
   // ===== 1. KPI 卡片 =====
   numericCols.slice(0, 4).forEach((col, i) => {
     const values = rows.map(r => Number(r[col.name])).filter(v => !isNaN(v));
-    const sum = values.reduce((a, b) => a + b, 0);
+    const sum = values.length > 0 ? values.reduce((a, b) => a + b, 0) : 0;
     const avg = values.length > 0 ? sum / values.length : 0;
-    const max = Math.max(...values);
-    const min = Math.min(...values);
-    const variance = calculateVariance(values);
+    const max = values.length > 0 ? Math.max(...values) : 0;
+    const min = values.length > 0 ? Math.min(...values) : 0;
+    const variance = values.length > 0 ? calculateVariance(values) : 0;
+
+    const safeToLocale = (num: number) => typeof num === 'number' && !isNaN(num) ? num.toLocaleString() : '0';
 
     const metrics = [
-      { label: `总 ${col.name}`, value: sum.toLocaleString(), sub: `共 ${values.length} 条数据` },
-      { label: `平均 ${col.name}`, value: avg.toLocaleString(undefined, { maximumFractionDigits: 2 }), sub: `范围: ${min.toLocaleString()} ~ ${max.toLocaleString()}` },
-      { label: `最大 ${col.name}`, value: max.toLocaleString(), sub: `最小: ${min.toLocaleString()}` },
-      { label: `${col.name} 方差`, value: variance.toLocaleString(undefined, { maximumFractionDigits: 2 }), sub: `标准差: ${Math.sqrt(variance).toLocaleString(undefined, { maximumFractionDigits: 2 })}` },
+      { label: `总 ${col.name}`, value: safeToLocale(sum), sub: `共 ${values.length} 条数据` },
+      { label: `平均 ${col.name}`, value: safeToLocale(avg), sub: `范围: ${safeToLocale(min)} ~ ${safeToLocale(max)}` },
+      { label: `最大 ${col.name}`, value: safeToLocale(max), sub: `最小: ${safeToLocale(min)}` },
+      { label: `${col.name} 方差`, value: safeToLocale(variance), sub: `标准差: ${safeToLocale(Math.sqrt(variance))}` },
     ];
 
     const metric = metrics[i % metrics.length];
