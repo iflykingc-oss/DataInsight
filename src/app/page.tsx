@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { FileUploader, UploadFile } from '@/components/file-uploader';
+import { FileUploader as AsyncFileUploader, UploadFile } from '@/components/async-file-uploader';
 import { DataTable } from '@/components/data-table';
 import { DataInsights } from '@/components/data-insights';
 import { Dashboard } from '@/components/dashboard';
@@ -52,6 +52,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
+import { tripleCache } from '@/lib/cache-manager';
+import { initSessionStore, sessionStore, createChatSession } from '@/lib/session-store';
 
 // ============================================
 // 视图模式类型（整合后：10个入口，功能零删除）
@@ -80,6 +82,12 @@ export default function HomePage() {
       if (saved === 'true') setDarkMode(true);
     }
   }, []);
+
+  // 初始化 SessionStore
+  useEffect(() => {
+    initSessionStore().catch(console.error);
+  }, []);
+
   const [showSettings, setShowSettings] = useState(false);
   const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -156,39 +164,57 @@ export default function HomePage() {
   const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
     setParsedData(null);
     setAnalysis(null);
+    setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      uploadedFiles.forEach(uploadFile => {
-        formData.append('files', uploadFile.file);
-      });
+      const completedFiles = uploadedFiles.filter(f => f.status === 'completed' || f.status === 'cached');
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('文件处理失败');
+      if (completedFiles.length === 0) {
+        throw new Error('没有成功解析的文件');
       }
 
-      const result = await response.json();
+      const firstFile = completedFiles[0];
+      let parsedData = firstFile.parsedData;
 
-      if (result.success && result.data.length > 0) {
-        const firstData = result.data[0];
-        setParsedData(firstData);
+      if (!parsedData) {
+        throw new Error('文件解析失败');
+      }
 
+      setParsedData(parsedData);
+
+      const dataHash = tripleCache.hashData(parsedData);
+      const cachedAnalysis = tripleCache.getAnalysis(dataHash);
+
+      if (cachedAnalysis) {
+        setAnalysis(cachedAnalysis);
+      } else {
         const analyzeResponse = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: firstData }),
+          body: JSON.stringify({ data: parsedData }),
         });
 
         if (analyzeResponse.ok) {
           const analyzeResult = await analyzeResponse.json();
           setAnalysis(analyzeResult.analysis);
+
+          if (parsedData && analyzeResult.analysis) {
+            tripleCache.cacheAnalysis(dataHash, analyzeResult.analysis, parsedData.columnCount);
+          }
         }
       }
+
+      const chatSession = createChatSession(
+        `分析-${parsedData.fileName}`,
+        dataHash,
+        {
+          fileName: parsedData.fileName,
+          rowCount: parsedData.rowCount,
+          columnCount: parsedData.columnCount
+        }
+      );
+      await sessionStore.saveChatSession(chatSession);
+
     } catch (err) {
       console.error('文件处理错误:', err);
       setError(err instanceof Error ? err.message : '处理失败');
@@ -293,7 +319,7 @@ export default function HomePage() {
                     <p className="text-sm text-gray-400">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
                   </div>
                   <div className="w-full max-w-lg">
-                    <FileUploader onFileUpload={handleFileUpload} />
+                    <AsyncFileUploader onFileUpload={handleFileUpload} />
                   </div>
                 </div>
               )}
