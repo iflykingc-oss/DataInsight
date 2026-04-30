@@ -280,7 +280,100 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
           break;
           
         case 'convert':
-          // 日期格式转换占位
+          // 日期格式转换
+          {
+            const targetFormat = String(step.config.targetFormat || 'YYYY-MM-DD');
+            // 找出所有日期类型的列
+            const dateFields = data.headers.filter(h => {
+              const stat = fieldStats.find(f => f.field === h);
+              return stat?.type === 'date' || stat?.type === 'string';
+            });
+            
+            // 常见日期格式的正则表达式
+            const datePatterns = [
+              { regex: /^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s|T|$)/, parse: (m: RegExpMatchArray) => ({ y: m[1], m: m[2], d: m[3] }) }, // YYYY-MM-DD
+              { regex: /^(\d{4})\/(\d{1,2})\/(\d{1,2})(?:\s|T|$)/, parse: (m: RegExpMatchArray) => ({ y: m[1], m: m[2], d: m[3] }) }, // YYYY/MM/DD
+              { regex: /^(\d{4})\.(\d{1,2})\.(\d{1,2})(?:\s|T|$)/, parse: (m: RegExpMatchArray) => ({ y: m[1], m: m[2], d: m[3] }) }, // YYYY.MM.DD
+              { regex: /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s|T|$)/, parse: (m: RegExpMatchArray) => ({ y: m[3], m: m[1], d: m[2] }) }, // MM/DD/YYYY
+              { regex: /^(\d{1,2})-(\d{1,2})-(\d{4})(?:\s|T|$)/, parse: (m: RegExpMatchArray) => ({ y: m[3], m: m[1], d: m[2] }) }, // MM-DD-YYYY
+              { regex: /^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s|T|$)/, parse: (m: RegExpMatchArray) => ({ y: m[3], m: m[1], d: m[2] }) }, // DD.MM.YYYY
+            ];
+            
+            // 格式化日期组件
+            const pad = (n: string | number) => String(n).padStart(2, '0');
+            
+            // 转换日期字符串
+            const convertDate = (dateStr: string): string => {
+              const trimmed = String(dateStr).trim();
+              
+              for (const pattern of datePatterns) {
+                const match = trimmed.match(pattern.regex);
+                if (match) {
+                  try {
+                    const { y, m, d } = pattern.parse(match);
+                    const year = y.length === 2 ? (parseInt(y) > 50 ? '19' + y : '20' + y) : y;
+                    const month = pad(parseInt(m));
+                    const day = pad(parseInt(d));
+                    
+                    // 根据目标格式进行格式化
+                    switch (targetFormat) {
+                      case 'YYYY-MM-DD': return `${year}-${month}-${day}`;
+                      case 'YYYY/MM/DD': return `${year}/${month}/${day}`;
+                      case 'YYYY.MM.DD': return `${year}.${month}.${day}`;
+                      case 'DD-MM-YYYY': return `${day}-${month}-${year}`;
+                      case 'DD/MM/YYYY': return `${day}/${month}/${year}`;
+                      case 'MM-DD-YYYY': return `${month}-${day}-${year}`;
+                      case 'DD.MM.YYYY': return `${day}.${month}.${year}`;
+                      default: return `${year}-${month}-${day}`;
+                    }
+                  } catch (e) {
+                    // 解析失败，尝试下一个格式
+                  }
+                }
+              }
+              
+              // 如果无法解析，尝试用 Date 对象
+              try {
+                const date = new Date(trimmed);
+                if (!isNaN(date.getTime())) {
+                  const year = date.getFullYear();
+                  const month = pad(date.getMonth() + 1);
+                  const day = pad(date.getDate());
+                  switch (targetFormat) {
+                    case 'YYYY-MM-DD': return `${year}-${month}-${day}`;
+                    case 'YYYY/MM/DD': return `${year}/${month}/${day}`;
+                    case 'YYYY.MM.DD': return `${year}.${month}.${day}`;
+                    case 'DD-MM-YYYY': return `${day}-${month}-${year}`;
+                    case 'DD/MM/YYYY': return `${day}/${month}/${year}`;
+                    case 'MM-DD-YYYY': return `${month}-${day}-${year}`;
+                    case 'DD.MM.YYYY': return `${day}.${month}.${year}`;
+                    default: return `${year}-${month}-${day}`;
+                  }
+                }
+              } catch (e) {
+                // 无法解析
+              }
+              
+              // 无法转换，返回原值
+              return trimmed;
+            };
+            
+            // 应用到所有日期字段
+            result.rows = result.rows.map(row => {
+              const newRow = { ...row };
+              dateFields.forEach(field => {
+                const value = row[field];
+                if (value !== null && value !== undefined && value !== '') {
+                  const strValue = String(value);
+                  // 只处理看起来像日期的值
+                  if (/\d/.test(strValue) && /[./-]/.test(strValue)) {
+                    newRow[field] = convertDate(strValue);
+                  }
+                }
+              });
+              return newRow;
+            });
+          }
           break;
       }
     });
