@@ -432,13 +432,20 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// 过滤 ID/序号类字段（用于指标/趋势分析）
+// 过滤 ID/序号类字段（用于指标/趋势分析）- 序号检测需要更宽泛
 const ID_FIELD_PATTERNS = [
-  /^id$/i, /^序号$/, /^编号$/, /^编码$/, /^no\.?$/i, /^no$/i,
+  /^id$/i, /^编号$/i, /^编码$/i, /^no\.?$/i, /^no$/i,
   /^index$/i, /^idx$/i, /^key$/i, /^code$/i, /^_id$/i
 ];
+// 序号类字段 - 使用更宽泛的匹配
+const SEQUENCE_FIELD_PATTERNS = [
+  /序号/, /^序号$/i, /序号$/
+];
+// 判断是否为ID/序号字段
 function isIdField(fieldName: string): boolean {
-  return ID_FIELD_PATTERNS.some(p => p.test(fieldName));
+  const name = fieldName.toLowerCase();
+  return ID_FIELD_PATTERNS.some(p => p.test(name)) || 
+         SEQUENCE_FIELD_PATTERNS.some(p => p.test(fieldName));
 }
 
 // 过滤掉 ID 字段后的数值字段
