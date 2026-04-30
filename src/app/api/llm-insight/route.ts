@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server';
 import { callLLMStreamWithFallback, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
+import { IndustryTemplateManager } from '@/lib/analysis/industry-templates';
+
+const templateManager = new IndustryTemplateManager();
 
 /**
  * AI 智能洞察 API（SSE 流式响应）
@@ -299,6 +302,18 @@ function buildSystemPrompt(
   const intentInstruction = intentInstructions[intent] || intentInstructions.query;
 
   return `你是专业数据洞察专家。用户意图识别：${intentLabel}。
+
+## 行业场景约束
+${(() => {
+  const fieldNames = data?.headers || [];
+  const tpl = templateManager.detectTemplate(fieldNames);
+  if (tpl.key === 'general_v1') return '（通用场景，无特殊行业约束）';
+  return `行业：${tpl.name}
+字段映射：${Object.entries(tpl.fieldMapping).map(([k, v]) => `${k}→${v}`).join('、') || '无'}
+核心关注点：${tpl.focusBusinessPoints.join('；')}
+禁止分析：${tpl.forbiddenRules.analysisTypes.join('；') || '无'}
+时间粒度：仅限${tpl.baseConfig.allowedTimeGranularities.join('/')}`;
+})()}
 
 ## 核心约束（铁律）
 1. **数据范围强约束**：仅基于当前数据集回答，禁止编造数据。如果数据不足以回答，必须明确说明

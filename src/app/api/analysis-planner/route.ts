@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callLLM } from '@/lib/llm';
+import { IndustryTemplateManager, BasicConstraint } from '@/lib/analysis/industry-templates';
+import type { LLMDecisionInstruction } from '@/lib/analysis/industry-templates';
+
+const templateManager = new IndustryTemplateManager();
+const basicConstraint = new BasicConstraint();
 
 export interface FieldStatSummary {
   field: string;
@@ -70,8 +75,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ===== 行业模板识别 =====
+    const fieldNames = body.fieldStats.map(f => f.field);
+    const industryTemplate = templateManager.detectTemplate(fieldNames);
+
+    // ===== 基础约束校验 =====
+    const validRate = 1 - (body.fieldStats.reduce((sum, f) => sum + f.nullRate, 0) / body.fieldStats.length / 100);
+    const constraintResult = basicConstraint.validate(
+      body.fieldStats[0]?.totalRows || 0,
+      validRate,
+      industryTemplate,
+      fieldNames,
+    );
+
+    // ===== 过滤黑名单字段 =====
+    const filteredStats = basicConstraint.filterFields(body.fieldStats, industryTemplate);
+
     // 构建轻量级数据概要（避免 token 爆炸）
-    const compactStats = body.fieldStats.map(f => ({
+    const compactStats = filteredStats.map(f => ({
       field: f.field,
       type: f.type,
       nullRate: `${f.nullRate.toFixed(1)}%`,
@@ -87,40 +108,53 @@ export async function POST(req: NextRequest) {
       ? `\n用户意图: "${body.userIntent}"`
       : '\n用户意图: 未指定，请根据数据特征推断通用分析目标';
 
-    const prompt = `你是数据分析规划专家。根据给定的表格字段统计信息，制定精准的分析计划。
+    // ===== 使用行业模板渲染 Prompt =====
+    const industryPrompt = templateManager.renderPrompt(industryTemplate, {
+      rowCount: body.fieldStats[0]?.totalRows || 0,
+      timeRange: undefined,
+      dataQuality: JSON.stringify({ validRate: (validRate * 100).toFixed(1) + '%' }),
+    });
+
+    const prompt = `${industryPrompt}
 
 【数据概要】
 ${JSON.stringify(compactStats, null, 2)}
 ${userIntentContext}
 
+【行业场景】${industryTemplate.name}（模板: ${industryTemplate.key}）
+【允许的时间粒度】${industryTemplate.baseConfig.allowedTimeGranularities.join('、')}
+【禁止的算法模块】${industryTemplate.forbiddenRules.modules.join('、') || '无'}
+【行业关注点】${industryTemplate.focusBusinessPoints.join('；')}
+【字段映射】${Object.entries(industryTemplate.fieldMapping).map(([k, v]) => `${k}→${v}`).join('、') || '无'}
+
 【可选分析模块】
-${ANALYSIS_MODULES.map(m => `- ${m}`).join('\n')}
+${ANALYSIS_MODULES.filter(m => !industryTemplate.forbiddenRules.modules.includes(m)).map(m => `- ${m}`).join('\n')}
 
 请输出以下JSON格式的分析计划（严格JSON，无Markdown包裹）：
 {
-  "goal": "一句话描述分析目标，如'分析X指标的变化原因'",
-  "businessContext": "推断的业务场景，如'电商销售数据'",
-  "relevantFields": ["需要重点分析的关键字段列表"],
+  "goal": "一句话描述分析目标",
+  "businessContext": "推断的业务场景（使用行业术语）",
+  "relevantFields": ["需要重点分析的关键字段列表（使用映射后的字段名）"],
   "recommendedDimensions": [
-    {"field": "字段名", "reason": "为什么选这个维度"}
+    {"field": "维度字段名", "reason": "为什么选这个维度"}
   ],
   "keyMetrics": [
-    {"name": "指标名", "calculation": "如何计算", "businessMeaning": "这个指标的的业务意义"}
+    {"name": "指标名", "calculation": "如何计算", "businessMeaning": "业务意义"}
   ],
   "analysisSequence": [
     {"module": "模块名", "priority": "high/medium/low", "expectedOutcome": "预期产出"}
   ],
-  "skipFields": [
-    {"field": "字段名", "reason": "为什么要跳过"}
-  ],
-  "warnings": ["数据层面的警告，如某字段缺失率过高等"]
+  "skipFields": ["跳过的字段（ID/高缺失/常量等）"],
+  "warnings": ["数据层面的警告"]
 }
 
 注意：
-1. 只选择与目标最相关的2-4个模块组成分析序列，不需要全部跑完
-2. relevantFields 应该包含数值字段 + 关键的分组维度
-3. skipFields 应包含ID字段、高缺失率字段、常量字段
-4. analysisSequence 的优先级要客观，重要结论用 high
+1. 只选择与目标最相关的2-4个模块，不需要全部跑完
+2. 禁止选择行业禁用的模块：${industryTemplate.forbiddenRules.modules.join('、') || '无'}
+3. 时间粒度只能在${industryTemplate.baseConfig.allowedTimeGranularities.join('/')}中选择
+4. relevantFields 应包含数值字段 + 关键分组维度
+5. skipFields 应包含ID字段、黑名单字段、高缺失率字段、常量字段
+6. 所有数值必须精确，禁止模糊表达
 
 请直接输出JSON，不要包含任何其他文字：`.trim();
 
@@ -155,17 +189,40 @@ ${ANALYSIS_MODULES.map(m => `- ${m}`).join('\n')}
       plan = JSON.parse(jsonStr);
     } catch {
       // JSON 解析失败，返回降级计划
-      plan = generateFallbackPlan(body.fieldStats);
+      plan = generateFallbackPlan(filteredStats, industryTemplate.key);
     }
 
     // 验证必需字段
     if (!plan.goal || !plan.relevantFields || !plan.analysisSequence) {
-      plan = generateFallbackPlan(body.fieldStats);
+      plan = generateFallbackPlan(filteredStats, industryTemplate.key);
     }
+
+    // ===== LLM 边界校验 =====
+    // 过滤掉行业禁止的模块
+    if (industryTemplate.forbiddenRules.modules.length > 0) {
+      plan.analysisSequence = plan.analysisSequence.filter(
+        item => !industryTemplate.forbiddenRules.modules.includes(item.module)
+      );
+    }
+
+    // 追加行业信息到响应
+    const responsePlan = {
+      ...plan,
+      industryTemplate: industryTemplate.key,
+      industryName: industryTemplate.name,
+    };
 
     return NextResponse.json({
       success: true,
-      plan,
+      plan: responsePlan,
+      constraintWarnings: constraintResult.warnings,
+      industry: {
+        key: industryTemplate.key,
+        name: industryTemplate.name,
+        fieldMapping: industryTemplate.fieldMapping,
+        focusBusinessPoints: industryTemplate.focusBusinessPoints,
+        forbiddenRules: industryTemplate.forbiddenRules,
+      },
     });
   } catch (error) {
     console.error('[analysis-planner] Error:', error);
@@ -177,17 +234,35 @@ ${ANALYSIS_MODULES.map(m => `- ${m}`).join('\n')}
 }
 
 /**
- * 降级计划：当模型调用失败时，使用规则生成分析计划
+ * 降级计划：当模型调用失败时，使用规则+行业模板生成分析计划
  */
-function generateFallbackPlan(fieldStats: FieldStatSummary[]): AnalysisPlanResponse['plan'] {
+function generateFallbackPlan(fieldStats: FieldStatSummary[], industryKey: string = 'general_v1'): AnalysisPlanResponse['plan'] {
   const numericFields = fieldStats.filter(f => f.type === 'number');
   const stringFields = fieldStats.filter(f => f.type === 'string');
   const topGroupField = stringFields.find(f => f.uniqueRate > 10 && f.uniqueRate < 80);
   const topMetricField = numericFields[0];
 
+  // 根据行业模板决定默认分析模块
+  const defaultModules = industryKey === 'hr_v1'
+    ? [
+        { module: 'distribution', priority: 'high' as const, expectedOutcome: '了解人员分布特征' },
+        { module: 'outlier', priority: 'medium' as const, expectedOutcome: '识别异常薪资/离职数据' },
+      ]
+    : industryKey === 'finance_v1'
+    ? [
+        { module: 'distribution', priority: 'high' as const, expectedOutcome: '了解收支分布' },
+        { module: 'trend', priority: 'high' as const, expectedOutcome: '识别营收/成本趋势' },
+        { module: 'outlier', priority: 'medium' as const, expectedOutcome: '识别异常财务数据' },
+      ]
+    : [
+        { module: 'distribution', priority: 'high' as const, expectedOutcome: '了解数据分布特征' },
+        { module: 'correlation', priority: 'medium' as const, expectedOutcome: '发现字段间关联关系' },
+        { module: 'outlier', priority: 'medium' as const, expectedOutcome: '识别异常数据点' },
+      ];
+
   return {
     goal: '对数据进行全面深度分析',
-    businessContext: '通用表格数据',
+    businessContext: industryKey !== 'general_v1' ? `${industryKey}场景数据` : '通用表格数据',
     relevantFields: numericFields.slice(0, 3).map(f => f.field),
     recommendedDimensions: topGroupField
       ? [{ field: topGroupField.field, reason: '适合作为分组维度' }]
@@ -199,11 +274,7 @@ function generateFallbackPlan(fieldStats: FieldStatSummary[]): AnalysisPlanRespo
           businessMeaning: '核心指标',
         }]
       : [],
-    analysisSequence: [
-      { module: 'distribution', priority: 'high', expectedOutcome: '了解数据分布特征' },
-      { module: 'correlation', priority: 'medium', expectedOutcome: '发现字段间关联关系' },
-      { module: 'outlier', priority: 'medium', expectedOutcome: '识别异常数据点' },
-    ],
+    analysisSequence: defaultModules,
     skipFields: fieldStats
       .filter(f => f.uniqueRate > 90 || f.nullRate > 50)
       .map(f => f.field),
