@@ -91,6 +91,7 @@ export function AIFieldPanel({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [runningFieldId, setRunningFieldId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('templates');
+  const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
 
   // 智能推荐
   const recommendations = useMemo(() => {
@@ -326,6 +327,19 @@ export function AIFieldPanel({
                       </div>
                       <div className="text-xs text-muted-foreground truncate">
                         源列: {field.sourceColumns.join(', ')} · {Object.keys(field.results).length} 行已处理
+                        {field.status === 'completed' && Object.keys(field.results).length > 0 && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="ml-2 h-auto p-0 text-xs text-primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedFieldId(expandedFieldId === field.id ? null : field.id);
+                            }}
+                          >
+                            {expandedFieldId === field.id ? '收起' : '查看结果'}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -376,6 +390,45 @@ export function AIFieldPanel({
                     </Tooltip>
                   </div>
                 </div>
+                {/* 展开的结果展示 */}
+                {expandedFieldId === field.id && field.status === 'completed' && Object.keys(field.results).length > 0 && (
+                  <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-2">
+                      处理结果（前10行）：
+                    </div>
+                    <div className="max-h-[200px] overflow-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-background/80 sticky top-0">
+                          <tr>
+                            <th className="px-2 py-1 text-left">行号</th>
+                            <th className="px-2 py-1 text-left">源数据</th>
+                            <th className="px-2 py-1 text-left">处理结果</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(field.results)
+                            .slice(0, 10)
+                            .map(([idx, value]) => (
+                              <tr key={idx} className="border-t">
+                                <td className="px-2 py-1 text-muted-foreground">{Number(idx) + 1}</td>
+                                <td className="px-2 py-1 max-w-[150px] truncate">
+                                  {selectedColumns.length > 0
+                                    ? String(data.rows[Number(idx)]?.[selectedColumns[0]] ?? '-')
+                                    : field.sourceColumns.map(col => `${col}: ${String(data.rows[Number(idx)]?.[col] ?? '-')}`).join(', ')}
+                                </td>
+                                <td className="px-2 py-1 font-medium text-primary">{String(value)}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                      {Object.keys(field.results).length > 10 && (
+                        <div className="text-xs text-muted-foreground text-center mt-2">
+                          ... 还有 {Object.keys(field.results).length - 10} 行结果
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

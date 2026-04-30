@@ -26,6 +26,7 @@ import { DataQualityChecker } from '@/components/data-quality-checker';
 import { NL2Dashboard } from '@/components/nl2-dashboard';
 import { ChartExporter } from '@/components/chart-exporter';
 import { AIFieldPanel } from '@/components/ai-field-panel';
+import type { AIField } from '@/lib/ai-field-engine';
 import { MetricManager } from '@/components/metric-manager';
 import { ExtendedChartGallery } from '@/components/extended-chart-gallery';
 import { SqlLab } from '@/components/sql-lab';
@@ -236,6 +237,62 @@ export default function HomePage() {
     handleAnalyzeWith(cleanedData);
   };
 
+  // 应用AI字段结果到数据（添加新列）
+  const handleApplyAIField = (field: AIField) => {
+    if (!parsedData || !field.results) return;
+    
+    // 将AI处理结果作为新列添加到数据中
+    const newHeader = field.name;
+    const newRows = parsedData.rows.map((row, idx) => ({
+      ...row,
+      [newHeader]: field.results[idx] ?? null,
+    }));
+    
+    const newData: ParsedData = {
+      headers: [...parsedData.headers, newHeader],
+      rows: newRows,
+      fileName: parsedData.fileName,
+      rowCount: newRows.length,
+      columnCount: parsedData.columnCount + 1,
+    };
+    
+    setParsedData(newData);
+    handleAnalyzeWith(newData);
+  };
+
+  // 应用AI公式到数据（计算新列）
+  const handleApplyFormula = (formula: string, targetColumn: string) => {
+    if (!parsedData) return;
+    
+    try {
+      // 使用简单公式引擎计算新列值
+      const newRows = parsedData.rows.map(row => {
+        try {
+          // 简单的公式计算（支持基本运算）
+          const evalFormula = formula
+            .replace(/\[([^\]]+)\]/g, (_, col) => JSON.stringify(row[col] ?? 0));
+          const value = Function(`"use strict"; return (${evalFormula})`)();
+          return { ...row, [targetColumn]: value };
+        } catch {
+          return { ...row, [targetColumn]: null };
+        }
+      });
+      
+      const newData: ParsedData = {
+        headers: [...parsedData.headers, targetColumn],
+        rows: newRows,
+        fileName: parsedData.fileName,
+        rowCount: newRows.length,
+        columnCount: parsedData.columnCount + 1,
+      };
+      
+      setParsedData(newData);
+      handleAnalyzeWith(newData);
+    } catch (err) {
+      console.error('公式应用失败:', err);
+    }
+  };
+
   const handleAnalyze = () => {
     if (parsedData) handleAnalyzeWith(parsedData);
   };
@@ -400,10 +457,10 @@ export default function HomePage() {
             </Card>
           </TabsContent>
           <TabsContent value="ai-field">
-            <AIFieldPanel data={parsedData} dataId={parsedData.fileName || 'default'} modelConfig={activeModelConfig} />
+            <AIFieldPanel data={parsedData} dataId={parsedData.fileName || 'default'} modelConfig={activeModelConfig} onApplyField={handleApplyAIField} />
           </TabsContent>
           <TabsContent value="ai-formula">
-            <AIFormulaGenerator data={parsedData} modelConfig={activeModelConfig} />
+            <AIFormulaGenerator data={parsedData} modelConfig={activeModelConfig} onApplyFormula={handleApplyFormula} />
           </TabsContent>
         </Tabs>
       );
