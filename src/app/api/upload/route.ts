@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseFile, type ParsedData } from '@/lib/data-processor';
+import * as xlsx from 'xlsx';
+import type { ParsedData } from '@/lib/data-processor';
 
 export const runtime = 'nodejs';
 
@@ -42,7 +43,19 @@ export async function POST(request: NextRequest) {
         continue;
       }
       try {
-        const parsedData = await parseFile(file);
+        const buffer = await file.arrayBuffer();
+        const workbook = xlsx.read(new Uint8Array(buffer), { type: 'array', cellDates: true });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = xlsx.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: null });
+        const headers = data.length > 0 ? Object.keys(data[0]) : [];
+        const parsedData: ParsedData = {
+          headers,
+          rows: data as ParsedData['rows'],
+          fileName: file.name,
+          rowCount: data.length,
+          columnCount: headers.length
+        };
         results.push(parsedData);
       } catch (error) {
         errors.push({
