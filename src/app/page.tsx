@@ -11,6 +11,7 @@ import { DataTable } from '@/components/data-table';
 import { DataInsights } from '@/components/data-insights';
 import { Dashboard } from '@/components/dashboard';
 import { ReportGenerator } from '@/components/report-generator';
+import { FormBuilder } from '@/components/form-builder';
 import { DataSourceManager } from '@/components/data-source-manager';
 import { DataCleaner } from '@/components/data-cleaner';
 import { AdvancedCharts } from '@/components/advanced-charts';
@@ -770,6 +771,7 @@ export default function HomePage() {
           <TabsList>
             <TabsTrigger value="report" disabled={!analysis}>生成报告</TabsTrigger>
             <TabsTrigger value="export">导出图表</TabsTrigger>
+            <TabsTrigger value="form">表单收集</TabsTrigger>
             <TabsTrigger value="share">分享管理</TabsTrigger>
           </TabsList>
           <TabsContent value="report">
@@ -781,6 +783,9 @@ export default function HomePage() {
           </TabsContent>
           <TabsContent value="export">
             <ChartExporter chartName={parsedData.fileName || '图表'} />
+          </TabsContent>
+          <TabsContent value="form">
+            <FormBuilder data={parsedData} onDataChange={setParsedData} />
           </TabsContent>
           <TabsContent value="share">
             <ShareManager dashboardName={parsedData.fileName} />
