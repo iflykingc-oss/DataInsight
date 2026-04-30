@@ -249,13 +249,10 @@ function buildPrompt(
   }
 
   prompt += `
+【重要】数值字段列表仅供参考，请务必排除以下 ID/序号类字段：
+${numericFields.filter(f => !isIdField(f)).join('、') || '无有效数值字段'}
 
-三、数据字段信息：
-- 字段总数：${headers.length}
-- 数值字段：${numericFields.length > 0 ? numericFields.join('、') : '无'}
-- 文本字段：${textFields.length > 0 ? textFields.join('、') : '无'}
-- 日期字段：${dateFields.length > 0 ? dateFields.join('、') : '无'}
-- 数据行数：${data.rows.length}
+禁止使用"序号"、"总序号"、"ID"、"编号"等作为图表的 xAxis 或 yAxis！
 
 四、【强制】JSON 输出格式（必须严格遵循，禁止额外文字）
 
@@ -462,11 +459,16 @@ function generateMockData(
   const result: Record<string, Array<Record<string, string | number>>> = {};
   const rows = data.rows.slice(0, 50);
 
+  const validNumericFields = getNumericFields(fieldStats);
+
   charts.forEach(chart => {
     if (chart.type === 'line' || chart.type === 'bar' || chart.type === 'area') {
       // 趋势类：取日期字段+数值字段
       const dateField = fieldStats.find(f => f.type === 'date')?.field || data.headers[0];
-      const numField = chart.yAxis || getNumericFields(fieldStats)[0]?.field || '';
+      // 强制过滤：yAxis 不能是 ID/序号字段
+      const numField = (!chart.yAxis || isIdField(chart.yAxis)) 
+        ? validNumericFields[0]?.field || ''
+        : chart.yAxis;
 
       // 聚合
       const grouped: Record<string, number> = {};
@@ -486,7 +488,10 @@ function generateMockData(
     } else if (chart.type === 'pie' || chart.type === 'donut') {
       // 占比类：取文本字段+数值字段
       const textField = fieldStats.find(f => f.type === 'string')?.field || data.headers[0];
-      const numField = chart.yAxis || getNumericFields(fieldStats)[0]?.field || '';
+      // 强制过滤：yAxis 不能是 ID/序号字段
+      const numField = (!chart.yAxis || isIdField(chart.yAxis)) 
+        ? validNumericFields[0]?.field || ''
+        : chart.yAxis;
 
       const grouped: Record<string, number> = {};
       rows.forEach(row => {
