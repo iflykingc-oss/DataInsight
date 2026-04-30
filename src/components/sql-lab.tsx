@@ -90,7 +90,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
     const initDb = async () => {
       try {
         const SQL = await initSqlJs({
-          locateFile: (file: string) => `https://sql.js.org/dist/${file}`
+          locateFile: (file: string) => `/${file}`
         });
         if (!isMounted) return;
         SQLRef.current = SQL;
