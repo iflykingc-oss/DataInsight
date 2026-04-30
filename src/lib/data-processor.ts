@@ -175,6 +175,8 @@ export interface FieldStat {
   mean?: number;
   sum?: number;
   topValues?: Array<{ value: string; count: number; percentage: number }>;
+  /** 是否为ID/序号类无分析价值字段 */
+  isIdField?: boolean;
 }
 
 export interface Summary {
@@ -284,9 +286,28 @@ export function analyzeData(data: ParsedData): DataAnalysis {
 function analyzeFields(data: ParsedData): FieldStat[] {
   const { headers, rows } = data;
   
+  // ID类字段名称模式
+  const idPatterns = [
+    /^id$/i, /^编号$/i, /^序号$/i, /^no\.?$/i, /^no$/i,
+    /^serial$/i, /^序列$/i, /^index$/i, /^idx$/i,
+    /^code$/i, /^编码$/i, /^code_?no\.?$/i,
+    /^num$/i, /^n_?o\.?$/i, /^order_?id$/i, /^order_?no$/i,
+    /^流水号$/i, /^单号$/i, /^订单号$/i, /^记录_?id$/i,
+    /^user_?id$/i, /^customer_?id$/i, /^product_?id$/i,
+    /^主键$/i, /^外键$/i, /^key$/i, /^pk$/i, /^fk$/i
+  ];
+  
   return headers.map(field => {
     const values = rows.map(row => row[field]);
     const nonNullValues = values.filter(v => v !== null && v !== undefined && v !== '');
+    const uniqueValues = new Set(nonNullValues.map(v => String(v)));
+    
+    // 判断是否为ID类字段
+    // 1. 名称匹配
+    // 2. 高基数（唯一值≈行数）且数据量>=10（避免小样本误判）
+    const nameMatchesId = idPatterns.some(p => p.test(field));
+    const highCardinality = nonNullValues.length >= 10 && uniqueValues.size > nonNullValues.length * 0.9;
+    const isIdField = nameMatchesId || highCardinality;
     
     // 判断字段类型
     let type: 'string' | 'number' | 'date' | 'mixed' = 'string';
@@ -301,11 +322,9 @@ function analyzeFields(data: ParsedData): FieldStat[] {
       type = 'mixed';
     }
     
-    const uniqueValues = new Set(nonNullValues.map(v => String(v)));
-    
-    // 数值统计
+    // 数值统计（ID字段跳过数值统计）
     let numericStats: FieldStat['numericStats'] = undefined;
-    if (type === 'number') {
+    if (type === 'number' && !isIdField) {
       const nums = nonNullValues.map(v => Number(v)).filter(n => !isNaN(n));
       if (nums.length > 0) {
         nums.sort((a, b) => a - b);
@@ -335,7 +354,8 @@ function analyzeFields(data: ParsedData): FieldStat[] {
         max: numericStats.max,
         mean: numericStats.mean,
         sum: numericStats.sum
-      } : {})
+      } : {}),
+      isIdField
     };
   });
 }
