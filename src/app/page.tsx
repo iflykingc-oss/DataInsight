@@ -37,6 +37,11 @@ import { PivotTable } from '@/components/pivot-table';
 import { KanbanView } from '@/components/view-kanban';
 import { CalendarView } from '@/components/view-calendar';
 import { GanttView } from '@/components/view-gantt';
+import { LinkedTablesManager } from '@/components/linked-tables';
+import { MultimodalFields } from '@/components/multimodal-fields';
+import { WorkflowAutomation } from '@/components/workflow-automation';
+import { AppBuilder } from '@/components/app-builder';
+import { RowComments } from '@/components/row-comments';
 import Sidebar from '@/components/sidebar';
 import HomeCards from '@/components/home-cards';
 import SettingsDialog from '@/components/settings-dialog';
@@ -112,6 +117,16 @@ export default function HomePage() {
   const [kanbanField, setKanbanField] = useState<string>('');
   const [dateField, setDateField] = useState<string>('');
   const [ganttConfig, setGanttConfig] = useState<{ nameField: string; startField: string; endField: string }>({ nameField: '', startField: '', endField: '' });
+  // 多表数据存储（用于关联表功能）
+  const [multiTableData, setMultiTableData] = useState<ParsedData[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('datainsight-tables');
+        return saved ? JSON.parse(saved) : [];
+      } catch { return []; }
+    }
+    return [];
+  });
 
 
   // 模型配置状态 - 初始为null避免SSR不一致
@@ -199,6 +214,13 @@ export default function HomePage() {
       }
 
       setParsedData(parsedData);
+      // 追加到多表存储（去重：同名表覆盖）
+      setMultiTableData(prev => {
+        const filtered = prev.filter(t => t.fileName !== parsedData.fileName);
+        const next = [...filtered, parsedData];
+        localStorage.setItem('datainsight-tables', JSON.stringify(next));
+        return next;
+      });
       // 上传成功后自动跳转到数据表格视图
       setViewMode('data-table');
 
@@ -486,6 +508,10 @@ export default function HomePage() {
         <Tabs defaultValue="table" className="space-y-4">
           <TabsList>
             <TabsTrigger value="table">数据视图</TabsTrigger>
+            <TabsTrigger value="linked">关联表</TabsTrigger>
+            <TabsTrigger value="multimodal">多模态</TabsTrigger>
+            <TabsTrigger value="workflow">自动化</TabsTrigger>
+            <TabsTrigger value="comments">评论</TabsTrigger>
             <TabsTrigger value="ai-field">智能处理</TabsTrigger>
             <TabsTrigger value="ai-formula">智能公式</TabsTrigger>
           </TabsList>
@@ -574,6 +600,23 @@ export default function HomePage() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+          <TabsContent value="linked">
+            <LinkedTablesManager
+              tables={multiTableData}
+              activeTable={parsedData}
+              onTablesChange={setMultiTableData}
+              onActiveTableChange={t => { setParsedData(t); setAnalysis(null); handleAnalyzeWith(t); }}
+            />
+          </TabsContent>
+          <TabsContent value="multimodal">
+            <MultimodalFields data={parsedData} modelConfig={activeModelConfig} />
+          </TabsContent>
+          <TabsContent value="workflow">
+            <WorkflowAutomation headers={parsedData.headers} />
+          </TabsContent>
+          <TabsContent value="comments">
+            <RowComments rows={parsedData.rows} rowKeyField={parsedData.headers[0]} />
           </TabsContent>
           <TabsContent value="ai-field">
             <AIFieldPanel data={parsedData} dataId={parsedData.fileName || 'default'} modelConfig={activeModelConfig} onApplyField={handleApplyAIField} />
@@ -772,6 +815,7 @@ export default function HomePage() {
             <TabsTrigger value="report" disabled={!analysis}>生成报告</TabsTrigger>
             <TabsTrigger value="export">导出图表</TabsTrigger>
             <TabsTrigger value="form">表单收集</TabsTrigger>
+            <TabsTrigger value="app">应用设计</TabsTrigger>
             <TabsTrigger value="share">分享管理</TabsTrigger>
           </TabsList>
           <TabsContent value="report">
@@ -786,6 +830,9 @@ export default function HomePage() {
           </TabsContent>
           <TabsContent value="form">
             <FormBuilder data={parsedData} onDataChange={setParsedData} />
+          </TabsContent>
+          <TabsContent value="app">
+            <AppBuilder />
           </TabsContent>
           <TabsContent value="share">
             <ShareManager dashboardName={parsedData.fileName} />
@@ -916,7 +963,21 @@ export default function HomePage() {
       />
 
       {/* 全局 AI 助手 */}
-      <GlobalAIAssistant hasData={!!parsedData} rowCount={parsedData?.rowCount} data={parsedData || undefined} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig} />
+      <GlobalAIAssistant
+        hasData={!!parsedData}
+        rowCount={parsedData?.rowCount}
+        data={parsedData || undefined}
+        fieldStats={analysis?.fieldStats}
+        modelConfig={activeModelConfig}
+        currentView={viewMode}
+        onAction={(action, params) => {
+          if (action === 'navigate' && params?.view) {
+            setViewMode(params.view as ViewMode);
+          } else if (action === 'open-settings') {
+            setShowSettings(true);
+          }
+        }}
+      />
     </div>
   );
 }

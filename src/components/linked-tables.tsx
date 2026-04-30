@@ -1,0 +1,301 @@
+'use client';
+
+import { useState, useMemo, useCallback } from 'react';
+import { Table, Database, Link2, Plus, Trash2, Eye, ArrowRightLeft } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { DataTable } from '@/components/data-table';
+import type { ParsedData } from '@/lib/data-processor';
+
+interface TableRelation {
+  id: string;
+  sourceTable: string;
+  sourceField: string;
+  targetTable: string;
+  targetField: string;
+  displayFields: string[];
+}
+
+export interface LinkedTablesProps {
+  tables: ParsedData[];
+  activeTable: ParsedData | null;
+  onTablesChange: (tables: ParsedData[]) => void;
+  onActiveTableChange: (table: ParsedData) => void;
+}
+
+function buildEnrichedTable(baseTable: ParsedData, relations: TableRelation[], allTables: ParsedData[]): ParsedData {
+  if (!baseTable || relations.length === 0) return baseTable;
+  
+  const newHeaders = [...baseTable.headers];
+  const lookupConfigs: { header: string; targetTable: ParsedData; targetField: string; displayField: string }[] = [];
+  
+  relations
+    .filter(r => r.sourceTable === baseTable.fileName)
+    .forEach(r => {
+      const target = allTables.find(t => t.fileName === r.targetTable);
+      if (!target) return;
+      r.displayFields.forEach(df => {
+        const lookupHeader = `${r.targetTable}.${df}`;
+        if (!newHeaders.includes(lookupHeader)) {
+          newHeaders.push(lookupHeader);
+          lookupConfigs.push({
+            header: lookupHeader,
+            targetTable: target,
+            targetField: r.targetField,
+            displayField: df,
+          });
+        }
+      });
+    });
+  
+  const newRows = baseTable.rows.map(row => {
+    const newRow = { ...row };
+    lookupConfigs.forEach(cfg => {
+      const sourceVal = row[relations.find(r => r.targetTable === cfg.targetTable.fileName)?.sourceField || ''];
+      const targetRow = cfg.targetTable.rows.find(tr => String(tr[cfg.targetField]) === String(sourceVal));
+      newRow[cfg.header] = targetRow ? targetRow[cfg.displayField] : null;
+    });
+    return newRow;
+  });
+  
+  return {
+    ...baseTable,
+    headers: newHeaders,
+    rows: newRows,
+    columnCount: newHeaders.length,
+  };
+}
+
+export function LinkedTablesManager({ tables, activeTable, onTablesChange, onActiveTableChange }: LinkedTablesProps) {
+  const [relations, setRelations] = useState<TableRelation[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('datainsight-relations') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [showAddRelation, setShowAddRelation] = useState(false);
+  const [newRelation, setNewRelation] = useState<Partial<TableRelation>>({});
+  const [viewMode, setViewMode] = useState<'tables' | 'relations' | 'preview'>('tables');
+
+  const saveRelations = useCallback((rels: TableRelation[]) => {
+    setRelations(rels);
+    localStorage.setItem('datainsight-relations', JSON.stringify(rels));
+  }, []);
+
+  const enrichedActiveTable = useMemo(() => {
+    if (!activeTable) return null;
+    return buildEnrichedTable(activeTable, relations, tables);
+  }, [activeTable, relations, tables]);
+
+  const handleAddRelation = () => {
+    if (!newRelation.sourceTable || !newRelation.sourceField || !newRelation.targetTable || !newRelation.targetField) return;
+    const relation: TableRelation = {
+      id: `rel-${Date.now()}`,
+      sourceTable: newRelation.sourceTable,
+      sourceField: newRelation.sourceField,
+      targetTable: newRelation.targetTable,
+      targetField: newRelation.targetField,
+      displayFields: newRelation.displayFields || [newRelation.targetField!],
+    };
+    saveRelations([...relations, relation]);
+    setShowAddRelation(false);
+    setNewRelation({});
+  };
+
+  const handleDeleteRelation = (id: string) => {
+    saveRelations(relations.filter(r => r.id !== id));
+  };
+
+  const sourceTable = tables.find(t => t.fileName === newRelation.sourceTable);
+  const targetTable = tables.find(t => t.fileName === newRelation.targetTable);
+
+  return (
+    <div className="space-y-4">
+      {/* 子导航 */}
+      <div className="flex items-center gap-2">
+        <Button variant={viewMode === 'tables' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('tables')}>
+          <Database className="w-4 h-4 mr-1" /> 数据表
+        </Button>
+        <Button variant={viewMode === 'relations' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('relations')}>
+          <Link2 className="w-4 h-4 mr-1" /> 关联关系
+          {relations.length > 0 && (
+            <Badge variant="secondary" className="ml-1">{relations.length}</Badge>
+          )}
+        </Button>
+        <Button variant={viewMode === 'preview' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('preview')} disabled={!activeTable}>
+          <Eye className="w-4 h-4 mr-1" /> 关联预览
+        </Button>
+      </div>
+
+      {viewMode === 'tables' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {tables.map(table => (
+            <Card
+              key={table.fileName}
+              className={`p-4 cursor-pointer transition-all hover:shadow-md ${
+                activeTable?.fileName === table.fileName ? 'ring-2 ring-primary' : ''
+              }`}
+              onClick={() => onActiveTableChange(table)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <Table className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-sm">{table.fileName}</p>
+                    <p className="text-xs text-muted-foreground">{table.rowCount} 行 &middot; {table.columnCount} 列</p>
+                  </div>
+                </div>
+                {activeTable?.fileName === table.fileName && (
+                  <Badge variant="default" className="text-[10px]">当前</Badge>
+                )}
+              </div>
+            </Card>
+          ))}
+          {tables.length === 0 && (
+            <div className="col-span-full text-center py-12 text-muted-foreground">
+              <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>暂无数据表，请先上传数据</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {viewMode === 'relations' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">表关联关系</h3>
+            <Button size="sm" onClick={() => setShowAddRelation(true)} disabled={tables.length < 2}>
+              <Plus className="w-4 h-4 mr-1" /> 新建关联
+            </Button>
+          </div>
+          {relations.length === 0 ? (
+            <Card className="p-8 text-center text-muted-foreground">
+              <Link2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>暂无关联关系</p>
+              <p className="text-xs mt-1">至少需要2张表才能建立关联</p>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {relations.map(rel => (
+                <Card key={rel.id} className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Badge variant="outline">{rel.sourceTable}</Badge>
+                      <span className="text-muted-foreground">.{rel.sourceField}</span>
+                      <ArrowRightLeft className="w-3 h-3 text-primary" />
+                      <Badge variant="outline">{rel.targetTable}</Badge>
+                      <span className="text-muted-foreground">.{rel.targetField}</span>
+                      <span className="text-xs text-muted-foreground">→ 显示: {rel.displayFields.join(', ')}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteRelation(rel.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {viewMode === 'preview' && enrichedActiveTable && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="default">{activeTable?.fileName}</Badge>
+            <span className="text-xs text-muted-foreground">已自动填充 {enrichedActiveTable.headers.length - (activeTable?.headers.length || 0)} 个Lookup字段</span>
+          </div>
+          <DataTable data={enrichedActiveTable} />
+        </div>
+      )}
+
+      {/* 新建关联弹窗 */}
+      <Dialog open={showAddRelation} onOpenChange={setShowAddRelation}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>新建表关联</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-medium">源表</label>
+              <Select value={newRelation.sourceTable} onValueChange={v => setNewRelation({ ...newRelation, sourceTable: v, sourceField: '' })}>
+                <SelectTrigger><SelectValue placeholder="选择源表" /></SelectTrigger>
+                <SelectContent>
+                  {tables.map(t => <SelectItem key={t.fileName} value={t.fileName}>{t.fileName}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {sourceTable && (
+              <div>
+                <label className="text-xs font-medium">源表关联字段</label>
+                <Select value={newRelation.sourceField} onValueChange={v => setNewRelation({ ...newRelation, sourceField: v })}>
+                  <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
+                  <SelectContent>
+                    {sourceTable.headers.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <label className="text-xs font-medium">目标表</label>
+              <Select value={newRelation.targetTable} onValueChange={v => setNewRelation({ ...newRelation, targetTable: v, targetField: '', displayFields: [] })}>
+                <SelectTrigger><SelectValue placeholder="选择目标表" /></SelectTrigger>
+                <SelectContent>
+                  {tables.filter(t => t.fileName !== newRelation.sourceTable).map(t => (
+                    <SelectItem key={t.fileName} value={t.fileName}>{t.fileName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {targetTable && (
+              <>
+                <div>
+                  <label className="text-xs font-medium">目标表关联字段</label>
+                  <Select value={newRelation.targetField} onValueChange={v => setNewRelation({ ...newRelation, targetField: v })}>
+                    <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
+                    <SelectContent>
+                      {targetTable.headers.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium">显示字段（可多选）</label>
+                  <ScrollArea className="h-24 border rounded-md p-2">
+                    <div className="space-y-1">
+                      {targetTable.headers.map(h => (
+                        <label key={h} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted rounded px-1">
+                          <input
+                            type="checkbox"
+                            checked={(newRelation.displayFields || []).includes(h)}
+                            onChange={e => {
+                              const current = newRelation.displayFields || [];
+                              setNewRelation({
+                                ...newRelation,
+                                displayFields: e.target.checked ? [...current, h] : current.filter(x => x !== h),
+                              });
+                            }}
+                          />
+                          <span className="text-xs">{h}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setShowAddRelation(false)}>取消</Button>
+            <Button size="sm" onClick={handleAddRelation} disabled={!newRelation.sourceField || !newRelation.targetField}>
+              创建关联
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

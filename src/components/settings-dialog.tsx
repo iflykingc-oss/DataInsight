@@ -11,6 +11,7 @@ import { AIModelSettings } from '@/components/ai-model-settings';
 import { DataAlerting } from '@/components/data-alerting';
 import { VersionHistory } from '@/components/version-history';
 import { TemplateManager } from '@/components/template-manager';
+import { RowPermissions } from '@/components/row-permissions';
 import {
   AlertTriangle,
   Loader2,
@@ -118,6 +119,7 @@ export default function SettingsDialog({
             <TabsTrigger value="general">通用</TabsTrigger>
             <TabsTrigger value="notifications">通知渠道</TabsTrigger>
             <TabsTrigger value="data">数据管理</TabsTrigger>
+            <TabsTrigger value="permissions">权限</TabsTrigger>
           </TabsList>
 
           {/* AI 模型配置 */}
@@ -336,6 +338,9 @@ export default function SettingsDialog({
           </TabsContent>
 
           {/* 数据管理 */}
+          <TabsContent value="permissions" className="py-4">
+            <RowPermissions headers={parsedData?.headers || []} />
+          </TabsContent>
           <TabsContent value="data" className="space-y-3 py-4">
             <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
               const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library', 'datainsight_notification_config'];
