@@ -181,7 +181,7 @@ interface GeneratedDashboardSpec {
   kpis: KPISpec[];
   charts: ChartSpec[];
   layout: string;           // 布局建议
-  mockData: Record<string, Array<{ [key: string]: string | number }>>;
+  chartData: Record<string, Array<{ [key: string]: string | number }>>; // 图表渲染数据（由真实数据聚合生成）
   aiSummary: DashboardSummary;  // 结构化摘要
 }
 
@@ -296,7 +296,7 @@ ${numericFields.filter(f => !isIdField(f)).join('、') || '无有效数值字段
     }
   ],
   "layout": "grid|single|business",
-  "mockData": {
+  "chartData": {
     "chart-1": [
       {"month": "10月", "sales": 85000},
       {"month": "11月", "sales": 156000},
@@ -315,7 +315,7 @@ ${numericFields.filter(f => !isIdField(f)).join('、') || '无有效数值字段
 1. charts 数量控制在 4-8 个，覆盖 KPI总览 → 趋势分析 → 维度对比 → 占比分析
 2. insight.metrics 必须包含精确数值，禁止"XX品类"、"近千人"等模糊表达
 3. aiSummary 必须包含精确数据，每项都要有具体数值
-4. mockData 数据要符合业务逻辑（Q4含双11峰值、Top1占比≥30%等）
+4. chartData 数据要符合业务逻辑（Q4含双11峰值、Top1占比≥30%等）
 5. title 必须包含年份/月份/指标，禁止"数据总览"等通用标题
 6. 只输出 JSON，禁止任何其他文字`;
 
@@ -410,9 +410,9 @@ export async function POST(req: NextRequest) {
       icon: kpi.icon || Object.entries(kpiIconMap).find(([k]) => kpi.label.includes(k))?.[1] || '📊',
     }));
 
-    // 补充默认 mockData（基于真实数据）
-    if (!dashboardSpec.mockData || Object.keys(dashboardSpec.mockData).length === 0) {
-      dashboardSpec.mockData = generateMockData(data, fieldStats, dashboardSpec.charts);
+    // 补充默认 chartData（基于真实数据聚合）
+    if (!dashboardSpec.chartData || Object.keys(dashboardSpec.chartData).length === 0) {
+      dashboardSpec.chartData = generateMockData(data, fieldStats, dashboardSpec.charts);
     }
 
     return NextResponse.json({

@@ -127,7 +127,7 @@ interface GeneratedDashboardSpec {
   kpis: KPISpec[];
   charts: ChartSpec[];
   layout: string;
-  mockData: Record<string, Array<Record<string, string | number>>>;
+  chartData: Record<string, Array<Record<string, string | number>>>;
   aiSummary: string;
 }
 
@@ -478,9 +478,9 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
       const updatedDashboard: GeneratedDashboardSpec = {
         ...currentDashboard,
         charts: newCharts,
-        mockData: {
-          ...currentDashboard.mockData,
-          ...result.data.mockData,
+        chartData: {
+          ...currentDashboard.chartData,
+          ...result.data.chartData,
         },
       };
 
@@ -553,7 +553,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
   }, [currentDashboard, data, fieldStats, modelConfig]);
   // ============================================
   const renderChart = useCallback((chart: ChartSpec, themeColor: string) => {
-    const chartData = currentDashboard?.mockData?.[chart.id] || [];
+    const chartData = currentDashboard?.chartData?.[chart.id] || [];
 
     if (chartData.length === 0) return null;
 
