@@ -29,9 +29,11 @@ import {
   LayoutTemplate,
   Layers,
   Loader2,
-  Brain
+  Brain,
+  Compass
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
+import type { AnalysisPlan } from '@/lib/data-processor/types';
 import { quickDetectScene, enhanceAnalysisWithAI, SCENE_DISPLAY, AnalysisScene } from '@/lib/analysis';
 import type { AIEnhancedResult, StepResult } from '@/lib/analysis';
 import {
@@ -65,6 +67,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiProgress, setAiProgress] = useState({ step: 0, total: 0, name: '' });
   const [expandedAiStep, setExpandedAiStep] = useState<string | null>(null);
+  const [analysisPlan, setAnalysisPlan] = useState<{ plan: AnalysisPlan; reasoning: string } | null>(null);
+  const [planLoading, setPlanLoading] = useState(false);
   const deep = analysis?.deepAnalysis;
 
   useEffect(() => {
@@ -93,6 +97,44 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
       setAiError(err instanceof Error ? err.message : 'AI 增强分析失败');
     } finally {
       setAiLoading(false);
+    }
+  }, [modelConfig, analysis, data]);
+
+  // 分析规划：调用模型做轻量决策
+  const handlePlanAnalysis = useCallback(async () => {
+    if (!modelConfig || !analysis) return;
+    setPlanLoading(true);
+    try {
+      const plan = await fetch('/api/analysis-planner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldStats: analysis.fieldStats.map(f => ({
+            field: f.field,
+            type: f.type,
+            uniqueCount: f.uniqueCount,
+            nullCount: f.nullCount,
+            numericStats: f.numericStats ? {
+              min: f.numericStats.min,
+              max: f.numericStats.max,
+              mean: f.numericStats.mean,
+            } : undefined,
+          })),
+          rowCount: data.rowCount || data.rows.length,
+          userIntent: '通用数据分析',
+          modelConfig,
+        }),
+      }).then(r => r.json());
+
+      if (plan.data?.plan) {
+        setAnalysisPlan({ plan: plan.data.plan, reasoning: plan.data.reasoning });
+        // 基于规划执行筛选后的分析（可选：调用带 plan 的分析函数）
+        // 当前版本只展示规划结果，后续版本可集成到深度分析执行流程
+      }
+    } catch (err) {
+      console.error('分析规划失败:', err);
+    } finally {
+      setPlanLoading(false);
     }
   }, [modelConfig, analysis, data]);
 
@@ -238,10 +280,53 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
                     : '让 AI 基于统计数据给出业务级深度解读'
                   }
                 </p>
-                <Button onClick={handleAIEnhance}>
-                  <Sparkles className="w-4 h-4 mr-1.5" />
-                  开始 AI 智能解读
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={handleAIEnhance}>
+                    <Sparkles className="w-4 h-4 mr-1.5" />
+                    开始 AI 智能解读
+                  </Button>
+                  {modelConfig && (
+                    <Button variant="outline" onClick={handlePlanAnalysis} disabled={planLoading}>
+                      {planLoading ? (
+                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                      ) : (
+                        <Compass className="w-4 h-4 mr-1.5" />
+                      )}
+                      智能分析规划
+                    </Button>
+                  )}
+                </div>
+                {/* 分析规划结果展示 */}
+                {analysisPlan && (
+                  <div className="mt-3 p-3 border rounded-lg bg-background text-left">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Compass className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium">分析规划</span>
+                      <Badge variant="secondary" className="text-xs">置信度 {analysisPlan.plan.confidence}%</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">{analysisPlan.reasoning}</p>
+                    {analysisPlan.plan && (
+                      <div className="space-y-1.5">
+                        <div className="text-xs">
+                          <span className="font-medium">相关字段：</span>
+                          {analysisPlan.plan.relevantFields.join('、') || '全量字段'}
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-medium">分析维度：</span>
+                          {analysisPlan.plan.recommendedDimensions.join('、') || '无'}
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-medium">核心指标：</span>
+                          {analysisPlan.plan.keyMetrics.join('、') || '无'}
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-medium">执行顺序：</span>
+                          {analysisPlan.plan.analysisSequence.join(' → ')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

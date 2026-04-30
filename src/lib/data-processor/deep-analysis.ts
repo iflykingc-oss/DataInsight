@@ -2,15 +2,86 @@
  * 数据分析引擎 - 深度分析
  * 包含：健康评分、关键发现、相关性、分布、趋势、图表推荐、行动建议、数据画像、归因分析、场景分析
  */
-import type { ParsedData, FieldStat, Summary, Anomaly, DeepAnalysis, AttributionAnalysis, ScenarioAnalysis } from './types';
+import type { ParsedData, FieldStat, Summary, Anomaly, DeepAnalysis, AttributionAnalysis, ScenarioAnalysis, AnalysisPlan, CellValue } from './types';
 import { calculateStdDev } from './analyzer';
 
 export function generateDeepAnalysis(
   data: ParsedData,
   fieldStats: FieldStat[],
   summary: Summary,
-  anomalies: Anomaly[]
+  anomalies: Anomaly[],
+  plan?: AnalysisPlan
 ): DeepAnalysis {
+  // 如果提供了分析计划，过滤字段并控制执行模块
+  let effectiveFieldStats = fieldStats;
+  let effectiveData = data;
+  let effectiveSummary = summary;
+
+  if (plan) {
+    // 1. 跳过计划指定的字段
+    if (plan.skipFields.length > 0) {
+      const skipSet = new Set(plan.skipFields);
+      effectiveFieldStats = fieldStats.filter(f => !skipSet.has(f.field));
+      // 重新过滤数据中的这些字段（保持数据结构完整，只是分析时忽略）
+      const keepHeaders = data.headers.filter(h => !skipSet.has(h));
+      effectiveData = {
+        headers: keepHeaders,
+        fileName: data.fileName || '数据文件',
+        rowCount: data.rowCount || data.rows.length,
+        columnCount: data.columnCount || keepHeaders.length,
+        rows: data.rows.map(row => {
+          const newRow: Record<string, CellValue> = {};
+          keepHeaders.forEach(h => { newRow[h] = row[h]; });
+          return newRow;
+        })
+      };
+      // 重新计算 summary（仅用于分析，不改原始数据）
+      const numericWithStats = effectiveFieldStats.filter(f => f.type === 'number' && f.numericStats).length;
+      effectiveSummary = {
+        ...summary,
+        totalColumns: effectiveFieldStats.length,
+        numericColumns: numericWithStats,
+        textColumns: effectiveFieldStats.filter(f => f.type === 'string' || f.type === 'id').length,
+        dateColumns: effectiveFieldStats.filter(f => f.type === 'date').length,
+      };
+    }
+
+    // 2. 按分析计划顺序和范围执行
+    const moduleSet = new Set(plan.analysisSequence);
+    const healthScore = moduleSet.has('health_score') ?
+      calculateHealthScore(effectiveData, effectiveFieldStats, effectiveSummary, anomalies) : { overall: 0, completeness: 0, consistency: 0, quality: 0, usability: 0 };
+    const keyFindings = moduleSet.has('key_findings') ?
+      generateKeyFindings(effectiveData, effectiveFieldStats, effectiveSummary, anomalies) : [];
+    const correlations = moduleSet.has('correlation') ?
+      calculateCorrelations(effectiveData, effectiveFieldStats) : [];
+    const distributions = moduleSet.has('distribution') ?
+      analyzeDistributions(effectiveData, effectiveFieldStats) : [];
+    const trends = moduleSet.has('trend') ?
+      analyzeTrends(effectiveData, effectiveFieldStats) : [];
+    const recommendedCharts = recommendCharts(effectiveData, effectiveFieldStats, effectiveSummary);
+    const dataProfile = generateDataProfile(effectiveData, effectiveFieldStats, effectiveSummary);
+    const actionItems = moduleSet.has('action_items') ?
+      generateActionItems(healthScore, keyFindings, effectiveFieldStats, effectiveSummary, dataProfile) : [];
+    const attribution = moduleSet.has('attribution') ?
+      analyzeAttribution(effectiveData, effectiveFieldStats, correlations) : undefined;
+    const scenarioAnalysis = moduleSet.has('scenario') ?
+      generateScenarioAnalysis(effectiveData, effectiveFieldStats, dataProfile) : undefined;    
+
+    return {
+      healthScore,
+      keyFindings,
+      correlations,
+      distributions,
+      trends,
+      recommendedCharts,
+      actionItems,
+      dataProfile,
+      attribution,
+      scenarioAnalysis
+    };
+  }
+
+  // 默认：执行全部模块（向后兼容）
   const healthScore = calculateHealthScore(data, fieldStats, summary, anomalies);
   const keyFindings = generateKeyFindings(data, fieldStats, summary, anomalies);
   const correlations = calculateCorrelations(data, fieldStats);

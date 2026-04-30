@@ -200,6 +200,18 @@ export interface SamplingResult {
   method: string;
 }
 
+// 分析计划（模型决策层输出）
+export interface AnalysisPlan {
+  goal: string;
+  relevantFields: string[];
+  skipFields: string[];
+  recommendedDimensions: string[];
+  keyMetrics: string[];
+  analysisSequence: string[];
+  businessContext: string;
+  confidence: number;
+}
+
 export interface QualityReport {
   overallScore: number;
   completeness: number;
