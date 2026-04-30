@@ -205,7 +205,7 @@ function buildPrompt(
   }
 ): string {
   const headers = data.headers;
-  const numericFields = fieldStats.filter(f => f.type === 'number').map(f => f.field);
+  const numericFields = getNumericFields(fieldStats).map(f => f.field);
   const textFields = fieldStats.filter(f => f.type === 'string').map(f => f.field);
   const dateFields = fieldStats.filter(f => f.type === 'date').map(f => f.field);
 
@@ -432,6 +432,20 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// 过滤 ID/序号类字段（用于指标/趋势分析）
+const ID_FIELD_PATTERNS = [
+  /^id$/i, /^序号$/, /^编号$/, /^编码$/, /^no\.?$/i, /^no$/i,
+  /^index$/i, /^idx$/i, /^key$/i, /^code$/i, /^_id$/i
+];
+function isIdField(fieldName: string): boolean {
+  return ID_FIELD_PATTERNS.some(p => p.test(fieldName));
+}
+
+// 过滤掉 ID 字段后的数值字段
+function getNumericFields(fieldStats: FieldStat[]): FieldStat[] {
+  return fieldStats.filter(f => f.type === 'number' && !isIdField(f.field));
+}
+
 // 根据真实数据生成 mock 数据
 function generateMockData(
   data: ParsedData,
@@ -445,7 +459,7 @@ function generateMockData(
     if (chart.type === 'line' || chart.type === 'bar' || chart.type === 'area') {
       // 趋势类：取日期字段+数值字段
       const dateField = fieldStats.find(f => f.type === 'date')?.field || data.headers[0];
-      const numField = chart.yAxis || fieldStats.find(f => f.type === 'number')?.field || '';
+      const numField = chart.yAxis || getNumericFields(fieldStats)[0]?.field || '';
 
       // 聚合
       const grouped: Record<string, number> = {};
@@ -465,7 +479,7 @@ function generateMockData(
     } else if (chart.type === 'pie' || chart.type === 'donut') {
       // 占比类：取文本字段+数值字段
       const textField = fieldStats.find(f => f.type === 'string')?.field || data.headers[0];
-      const numField = chart.yAxis || fieldStats.find(f => f.type === 'number')?.field || '';
+      const numField = chart.yAxis || getNumericFields(fieldStats)[0]?.field || '';
 
       const grouped: Record<string, number> = {};
       rows.forEach(row => {
