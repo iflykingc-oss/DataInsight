@@ -32,12 +32,14 @@ export interface DeepAnalysis {
   };
   keyFindings: Array<{
     severity: 'critical' | 'warning' | 'info' | 'positive';
-    category: 'quality' | 'distribution' | 'trend' | 'correlation' | 'anomaly' | 'insight';
+    category: 'quality' | 'distribution' | 'trend' | 'correlation' | 'anomaly' | 'insight' | 'business';
     title: string;
     detail: string;
     impact: string;
     suggestion: string;
     relatedFields: string[];
+    confidence: number; // 0-100，可信度评分
+    isBusinessInsight: boolean; // 是否为业务洞察（非数据质量问题）
   }>;
   correlations: Array<{
     field1: string;

@@ -59,6 +59,12 @@ function calculateHealthScore(
 
 // ==================== 关键发现 ====================
 
+// 置信度辅助：基于缺失率和数据量动态计算
+function calcConfidence(base: number, nullCount: number, total: number): number {
+  const nullPenalty = total > 0 ? Math.min(20, (nullCount / total) * 30) : 0;
+  return Math.max(30, Math.round(base - nullPenalty));
+}
+
 function generateKeyFindings(
   data: ParsedData,
   fieldStats: FieldStat[],
@@ -68,6 +74,7 @@ function generateKeyFindings(
   const findings: DeepAnalysis['keyFindings'] = [];
   const totalCells = summary.totalRows * summary.totalColumns;
 
+  // ===== 1. 数据质量发现（算法层，固定规则） =====
   if (summary.nullValues > 0) {
     const nullRatio = (summary.nullValues / totalCells) * 100;
     const worstFields = fieldStats
@@ -81,7 +88,9 @@ function generateKeyFindings(
       detail: `共 ${summary.nullValues} 个空值，最严重字段: ${worstFields.map(f => `${f.field}(${f.nullCount})`).join('、')}`,
       impact: nullRatio > 20 ? '严重影响分析结果准确性，可能导致统计偏差' : '可能影响部分统计指标的准确性',
       suggestion: worstFields.length > 0 ? `建议优先处理"${worstFields[0].field}"字段空值，可使用均值/中位数/众数填充` : '建议对空值进行填充或删除',
-      relatedFields: worstFields.map(f => f.field)
+      relatedFields: worstFields.map(f => f.field),
+      confidence: calcConfidence(90, summary.nullValues, totalCells),
+      isBusinessInsight: false,
     });
   }
 
@@ -94,84 +103,207 @@ function generateKeyFindings(
       detail: `数据集中存在 ${summary.duplicateRows} 行完全相同的数据记录`,
       impact: '重复数据会导致统计指标偏高，影响分析结论的可靠性',
       suggestion: '建议使用去重操作清除重复记录，去重前请确认是否为业务需要',
-      relatedFields: []
+      relatedFields: [],
+      confidence: 99,
+      isBusinessInsight: false,
     });
   }
 
+  // ===== 2. 业务洞察发现（算法精准计算 + 业务解读） =====
+
+  // 2.1 分类字段集中度洞察
+  const stringFields = fieldStats.filter(f => f.type === 'string' && f.topValues && f.topValues.length > 0);
+  for (const catField of stringFields) {
+    const stats = catField.topValues!;
+    const totalCat = stats.reduce((s: number, c: {count: number}) => s + c.count, 0);
+    if (totalCat === 0) continue;
+    const sorted = [...stats].sort((a, b) => b.count - a.count);
+    const top1Ratio = sorted[0].count / totalCat;
+    const top3Ratio = sorted.slice(0, 3).reduce((s, c) => s + c.count, 0) / totalCat;
+
+    if (top1Ratio > 0.8) {
+      findings.push({
+        severity: 'info',
+        category: 'business',
+        title: `"${catField.field}" 高度集中于"${sorted[0].value}"（占${(top1Ratio * 100).toFixed(0)}%）`,
+        detail: `TOP1 "${sorted[0].value}" 占比超过80%，呈现极度集中的分布，说明该分类下存在明显的主导力量`,
+        impact: '过度依赖单一类别可能带来业务风险，当该类别出现问题时整体将受到严重影响',
+        suggestion: `建议拆分"${sorted[0].value}"的下级维度，分析其内部结构；同时关注增长潜力大的长尾类别，分散风险`,
+        relatedFields: [catField.field],
+        confidence: calcConfidence(92, catField.nullCount, summary.totalRows),
+        isBusinessInsight: true,
+      });
+    } else if (top1Ratio < 0.25 && sorted.length >= 5) {
+      findings.push({
+        severity: 'info',
+        category: 'business',
+        title: `"${catField.field}" 分布均匀，TOP3合计仅占${(top3Ratio * 100).toFixed(0)}%`,
+        detail: `${sorted.length}个类别分布相对均衡，没有单一主导力量，需要精细化运营策略`,
+        impact: '均衡分布意味着没有明显的关键少数，需要找出真正影响分布的关键驱动因素',
+        suggestion: `建议按"${catField.field}"做交叉分析，结合数值指标，找出影响各类别差异的关键因素`,
+        relatedFields: [catField.field],
+        confidence: calcConfidence(85, catField.nullCount, summary.totalRows),
+        isBusinessInsight: true,
+      });
+    }
+  }
+
+  // 2.2 数值字段深度分布洞察
   fieldStats.filter(f => f.type === 'number' && f.numericStats).forEach(stat => {
     const ns = stat.numericStats!;
     const range = ns.max - ns.min;
+    const values = data.rows.map(r => Number(r[stat.field])).filter(v => !isNaN(v));
+
     if (range === 0) {
       findings.push({
         severity: 'warning',
         category: 'distribution',
-        title: `"${stat.field}" 字段值完全相同`,
-        detail: `所有值均为 ${ns.min}，无变化`,
+        title: `"${stat.field}" 字段无变化（所有值均为 ${ns.min}）`,
+        detail: `所有 ${values.length} 条数据值完全相同，无统计意义`,
         impact: '该字段无分析价值，建议检查数据源或排除此字段',
         suggestion: '检查数据采集是否正确，或在分析时排除此字段',
-        relatedFields: [stat.field]
+        relatedFields: [stat.field],
+        confidence: 99,
+        isBusinessInsight: false,
       });
+      return;
     }
-    const values = data.rows.map(r => Number(r[stat.field])).filter(v => !isNaN(v));
+
     if (values.length > 2) {
-      const mean = ns.mean;
-      const sorted = [...values].sort((a, b) => a - b);
-      const median = sorted.length % 2 === 0
-        ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
-        : sorted[Math.floor(sorted.length / 2)];
-      const skewRatio = (mean - median) / Math.max(range, 1);
-      if (Math.abs(skewRatio) > 0.3) {
+      const sortedVals = [...values].sort((a, b) => a - b);
+      const median = sortedVals.length % 2 === 0
+        ? (sortedVals[sortedVals.length / 2 - 1] + sortedVals[sortedVals.length / 2]) / 2
+        : sortedVals[Math.floor(sortedVals.length / 2)];
+      const skewRatio = range > 0 ? Math.abs(ns.mean - median) / range : 0;
+
+      if (skewRatio > 0.3) {
+        const direction = ns.mean > median ? '右偏（被高值拉高）' : '左偏（被低值拉低）';
         findings.push({
           severity: 'info',
           category: 'distribution',
-          title: `"${stat.field}" 数据分布偏斜`,
-          detail: `均值(${mean.toFixed(1)})与中位数(${median.toFixed(1)})差异较大，数据${skewRatio > 0 ? '右偏' : '左偏'}`,
-          impact: '偏态分布下，均值可能不能代表典型值，建议使用中位数',
-          suggestion: `分析时建议使用中位数 ${median.toFixed(1)} 替代均值 ${mean.toFixed(1)}`,
-          relatedFields: [stat.field]
+          title: `"${stat.field}" 分布${direction}，均值 ${ns.mean.toFixed(1)} vs 中位数 ${median.toFixed(1)}`,
+          detail: `均值与中位数偏差占全距的 ${(skewRatio * 100).toFixed(0)}%，说明存在极端值影响了整体均值`,
+          impact: '偏态分布下均值不能代表典型值，分析时应以中位数为准',
+          suggestion: `建议使用中位数 ${median.toFixed(1)} 作为核心指标，结合箱线图分析极端值来源`,
+          relatedFields: [stat.field],
+          confidence: calcConfidence(88, stat.nullCount, summary.totalRows),
+          isBusinessInsight: true,
         });
       }
     }
-    const stdDev = calculateStdDev(values, ns.mean);
-    const outlierCount = values.filter(v => Math.abs(v - ns.mean) > 2 * stdDev).length;
-    if (outlierCount > 0) {
-      findings.push({
-        severity: outlierCount > values.length * 0.05 ? 'warning' : 'info',
-        category: 'anomaly',
-        title: `"${stat.field}" 存在 ${outlierCount} 个离群值`,
-        detail: `超出2倍标准差范围，可能影响分析结果`,
-        impact: '离群值会拉偏均值，影响趋势判断的准确性',
-        suggestion: outlierCount <= 3 ? '建议逐一核实离群值，确认是否为数据录入错误' : '建议使用IQR方法检测并处理离群值',
-        relatedFields: [stat.field]
-      });
+
+    if (Math.abs(ns.mean) > 0.001 && values.length > 5) {
+      // 手动计算标准差
+      const variance = values.reduce((acc, v) => acc + Math.pow(v - ns.mean, 2), 0) / values.length;
+      const stdDev = Math.sqrt(variance);
+      const cv = Math.abs(stdDev) / Math.abs(ns.mean);
+      if (cv > 2) {
+        findings.push({
+          severity: 'warning',
+          category: 'business',
+          title: `"${stat.field}" 波动性极高（变异系数 CV=${cv.toFixed(1)}）`,
+          detail: `变异系数超过200%，数据极其不稳定，可能存在周期波动、季节性因素或异常干扰`,
+          impact: '高波动数据意味着结果难以预测，需要重点关注并拆解波动来源',
+          suggestion: `建议从时间维度拆解"${stat.field}"的波动，找出影响波动的关键因子（季节/渠道/产品等）`,
+          relatedFields: [stat.field],
+          confidence: calcConfidence(90, stat.nullCount, summary.totalRows),
+          isBusinessInsight: true,
+        });
+      } else if (cv < 0.1) {
+        findings.push({
+          severity: 'info',
+          category: 'business',
+          title: `"${stat.field}" 高度稳定（变异系数 CV=${cv.toFixed(2)}）`,
+          detail: `变异系数低于10%，数据非常稳定，适合建立基准线和预警机制`,
+          impact: '稳定数据适合建立基线基准，超出基线即为异常信号',
+          suggestion: `建议为"${stat.field}"建立 ±10% 的预警基线，持续监控以便及时发现异常`,
+          relatedFields: [stat.field],
+          confidence: calcConfidence(85, stat.nullCount, summary.totalRows),
+          isBusinessInsight: true,
+        });
+      }
     }
   });
 
-  const highCardFields = fieldStats.filter(f => f.uniqueCount > summary.totalRows * 0.9 && f.type === 'string');
-  if (highCardFields.length > 0) {
+  // 2.3 相关性洞察
+  const numericFields = fieldStats.filter(f => f.type === 'number' && f.numericStats);
+  if (numericFields.length >= 2) {
+    for (let i = 0; i < Math.min(numericFields.length, 5); i++) {
+      for (let j = i + 1; j < Math.min(numericFields.length, 5); j++) {
+        const f1 = numericFields[i];
+        const f2 = numericFields[j];
+        const pairs: Array<[number, number]> = [];
+        data.rows.forEach(row => {
+          const v1 = Number(row[f1.field]);
+          const v2 = Number(row[f2.field]);
+          if (!isNaN(v1) && !isNaN(v2)) pairs.push([v1, v2]);
+        });
+        if (pairs.length < 10) continue;
+        const coef = pearsonCorrelation(pairs);
+        const absCoef = Math.abs(coef);
+
+        if (absCoef > 0.7) {
+          findings.push({
+            severity: 'info',
+            category: 'business',
+            title: `"${f1.field}" 与 "${f2.field}" 存在强${coef > 0 ? '正' : '负'}相关（r=${coef.toFixed(2)}）`,
+            detail: `皮尔逊相关系数 ${coef.toFixed(3)}，两者${coef > 0 ? '同向变化' : '反向变化'}，一个指标变化时另一个倾向于同步变化`,
+            impact: coef > 0
+              ? '两者可互为预测指标，一个下跌时另一个可能同步下跌，存在联动风险'
+              : '可能存在替代或挤出效应，可利用负相关做对冲策略',
+            suggestion: coef > 0
+              ? `建议将两者之一作为核心监控指标，同时监控可以互相验证数据准确性`
+              : `建议深入分析因果关系，看是否存在真正的替代效应或对冲价值`,
+            relatedFields: [f1.field, f2.field],
+            confidence: Math.round(absCoef * 95),
+            isBusinessInsight: true,
+          });
+        }
+      }
+    }
+  }
+
+  // 2.4 显著异常数据点
+  const significantAnomalies = _anomalies
+    .filter(a => a.type !== 'duplicate')
+    .slice(0, 3);
+  if (significantAnomalies.length > 0) {
+    const contextLines = significantAnomalies.map(a => {
+      const row = data.rows[a.row];
+      const fields = data.headers.slice(0, 3).map(h => `${h}:${row?.[h]}`).join(', ');
+      return `第${a.row + 1}行 ${a.type === 'outlier' ? '离群' : a.type === 'null' ? '缺失' : '异常'}值"${a.value}"（${fields}）`;
+    }).join('；');
     findings.push({
-      severity: 'info',
-      category: 'insight',
-      title: '检测到可能的主键/ID字段',
-      detail: `${highCardFields.map(f => `"${f.field}"`).join('、')} 唯一值占比超90%`,
-      impact: '这些字段通常不适用于聚合分析，但可用于关联查询',
-      suggestion: '在做统计分析时建议排除ID类字段',
-      relatedFields: highCardFields.map(f => f.field)
+      severity: 'warning',
+      category: 'anomaly',
+      title: `发现 ${significantAnomalies.length} 个显著异常数据点`,
+      detail: contextLines,
+      impact: '异常数据可能代表业务极端事件（欺诈/故障/特殊机会），需要逐一核实',
+      suggestion: '建议打开原始数据定位异常记录，结合业务背景判断是数据错误还是真实异常',
+      relatedFields: significantAnomalies.flatMap(a =>
+        data.headers.filter(h => data.rows[a.row]?.[h] === a.value)
+      ),
+      confidence: 80,
+      isBusinessInsight: true,
     });
   }
 
+  // 2.5 分组分析建议
   const lowCardFields = fieldStats.filter(f =>
     f.type === 'string' && f.uniqueCount >= 2 && f.uniqueCount <= 20 && f.nullCount === 0
   );
-  if (lowCardFields.length > 0) {
+  if (lowCardFields.length > 0 && numericFields.length > 0) {
+    const topGroup = lowCardFields[0];
     findings.push({
       severity: 'positive',
       category: 'insight',
-      title: '发现适合分组分析的字段',
-      detail: `${lowCardFields.map(f => `"${f.field}"(${f.uniqueCount}个类别)`).join('、')}`,
-      impact: '这些字段可以作为分组维度，进行交叉分析',
-      suggestion: `建议按"${lowCardFields[0].field}"分组，分析各组的数值指标差异`,
-      relatedFields: lowCardFields.map(f => f.field)
+      title: `建议按"${topGroup.field}"分组分析（${topGroup.uniqueCount}个类别）`,
+      detail: `"${topGroup.field}" 是理想的分组维度，最适合做维度拆解，可揭示被总量掩盖的组间差异`,
+      impact: '分组分析是发现数据内部结构的最直接方式，往往能揭示关键业务差异',
+      suggestion: `建议使用透视表或分组柱状图，按"${topGroup.field}"拆解"${numericFields[0].field}"等指标`,
+      relatedFields: [topGroup.field, numericFields[0].field],
+      confidence: 78,
+      isBusinessInsight: true,
     });
   }
 
@@ -183,7 +315,9 @@ function generateKeyFindings(
       detail: '未发现空值和重复数据，数据可直接用于分析',
       impact: '高质量数据保证分析结果的可靠性',
       suggestion: '可以放心进行深度分析',
-      relatedFields: []
+      relatedFields: [],
+      confidence: 99,
+      isBusinessInsight: false,
     });
   }
 
