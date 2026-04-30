@@ -503,7 +503,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     <div className="space-y-6">
       {/* 标题区 */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">数据建模</h2>
+        <h2 className="text-2xl font-bold tracking-tight">AI生成表格</h2>
         <p className="text-muted-foreground">
           选择业务场景，AI 帮你设计标准化经营台账，一键生成 Excel 模板
         </p>
@@ -1005,7 +1005,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground/40" />
           <h3 className="font-semibold">请先配置 AI 模型</h3>
           <p className="text-sm text-muted-foreground">
-            数据建模需要配置大语言模型才能使用
+            AI生成表格需要配置大语言模型才能使用
           </p>
           <p className="text-xs text-muted-foreground">
             前往「AI 模型配置」页面添加模型

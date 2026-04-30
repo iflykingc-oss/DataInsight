@@ -404,15 +404,15 @@ export default function HomePage() {
                 </CardContent>
               </Card>
 
-              {/* 数据建模 */}
+              {/* AI生成表格 */}
               <Card className="border border-dashed border-gray-300 hover:border-primary/50 cursor-pointer transition-colors" onClick={() => setViewMode('ai-table-builder')}>
                 <CardContent className="py-4 flex flex-col justify-center h-full">
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-4 h-4 text-violet-600" />
-                    <span className="font-medium text-sm">数据建模</span>
+                    <span className="font-medium text-sm">AI生成表格</span>
                     <Badge variant="secondary" className="text-[10px] h-4 px-1">AI</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">用AI生成销售、库存等场景的分析表格</p>
+                  <p className="text-xs text-muted-foreground">描述你的需求，AI自动创建表格模板</p>
                 </CardContent>
               </Card>
             </div>
@@ -447,7 +447,7 @@ export default function HomePage() {
     // AI 智能建表（不需要数据）
     if (viewMode === 'ai-table-builder') {
       return (
-        <ErrorBoundary moduleName="数据建模">
+        <ErrorBoundary moduleName="AI生成表格">
           <AITableBuilder modelConfig={activeModelConfig} />
         </ErrorBoundary>
       );
@@ -694,7 +694,7 @@ export default function HomePage() {
   // ============================================
   const getCurrentViewTitle = () => {
     const titles: Record<string, string> = {
-      'home': '工作台', 'ai-table-builder': '数据建模',
+      'home': '工作台', 'ai-table-builder': 'AI生成表格',
       'data-table': '数据预览', 'data-prep': '数据工作台',
       'insights': '自动分析', 'visualization': '仪表盘',
       'metrics': '指标中心', 'chart-center': '图表库',

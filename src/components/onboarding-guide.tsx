@@ -304,7 +304,7 @@ export function QuickStartTip({ onDismiss }: QuickStartTipProps) {
             </Button>
             <Button size="sm" variant="outline" className="h-7 text-xs">
               <Wand2 className="w-3 h-3 mr-1" />
-              数据建模
+              AI生成表格
             </Button>
           </div>
         </div>
