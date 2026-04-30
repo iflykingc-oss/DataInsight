@@ -25,7 +25,7 @@ function analyzeFields(data: ParsedData): FieldStat[] {
   const { headers, rows } = data;
 
   const idPatterns = [
-    /^id$/i, /^编号$/i, /^序号$/i, /^no\.?$/i, /^no$/i,
+    /^id$/i, /^编号$/i, /序号/i, /^no\.?$/i, /^no$/i,
     /^serial$/i, /^序列$/i, /^index$/i, /^idx$/i,
     /^code$/i, /^编码$/i, /^code_?no\.?$/i,
     /^num$/i, /^n_?o\.?$/i, /^order_?id$/i, /^order_?no$/i,
@@ -34,6 +34,30 @@ function analyzeFields(data: ParsedData): FieldStat[] {
     /^主键$/i, /^外键$/i, /^key$/i, /^pk$/i, /^fk$/i
   ];
 
+  // 检测连续递增序号（如 1,2,3,...,100 或 0,1,2,...,99）
+  // 竞品通用规则：若数值字段是简单递增序号，应标记为 ID
+  function isAutoIncrementSequence(values: import('./types').CellValue[]): boolean {
+    const nums = values
+      .filter(v => v !== null && v !== undefined && v !== '')
+      .map(v => Number(v))
+      .filter(n => !isNaN(n));
+    if (nums.length < 5) return false;
+    // 检测：值是否为 1,2,3,...,N 或 0,1,2,...,N-1 的连续递增模式
+    const sorted = [...nums].sort((a, b) => a - b);
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    // 序号范围不应该太大（简单序号通常在0~N之间，N=行数）
+    if (max - min > nums.length * 2) return false;
+    // 检查是否大部分值是连续递增的（允许少量间隔）
+    let consecutiveCount = 0;
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] - sorted[i - 1] <= 2) consecutiveCount++;
+    }
+    const consecutiveRatio = consecutiveCount / (sorted.length - 1);
+    // 90%以上的值是连续的，且值域范围接近行数 → 大概率是自增序号
+    return consecutiveRatio > 0.9 && Math.abs(max - min - nums.length) < nums.length * 0.3;
+  }
+
   return headers.map(field => {
     const values = rows.map(row => row[field]);
     const nonNullValues = values.filter(v => v !== null && v !== undefined && v !== '');
@@ -41,7 +65,8 @@ function analyzeFields(data: ParsedData): FieldStat[] {
 
     const nameMatchesId = idPatterns.some(p => p.test(field));
     const highCardinality = nonNullValues.length >= 10 && uniqueValues.size > nonNullValues.length * 0.9;
-    const fieldIsId = nameMatchesId || highCardinality;
+    const isSequential = nameMatchesId ? false : isAutoIncrementSequence(values);
+    const fieldIsId = nameMatchesId || highCardinality || isSequential;
 
     let type: 'string' | 'number' | 'date' | 'mixed' | 'id' = 'string';
     const numericCount = nonNullValues.filter(v => !isNaN(Number(v))).length;

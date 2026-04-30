@@ -817,12 +817,50 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
   const headers = data.headers;
   const rows = data.rows;
 
-  // 识别字段类型
+  // 识别字段类型 - 优先使用 analysis 的字段类型信息（含ID/序号检测）
   const numericCols: Array<{ name: string; idx: number }> = [];
   const textCols: Array<{ name: string; idx: number; uniqueCount: number }> = [];
   const dateCols: Array<{ name: string; idx: number }> = [];
 
+  // ID/序号字段检测：名称匹配
+  const idNamePatterns = [
+    /^id$/i, /^编号$/i, /序号/i, /^no\.?$/i, /^no$/i,
+    /^serial$/i, /^序列$/i, /^index$/i, /^idx$/i,
+    /^code$/i, /^编码$/i, /^num$/i, /^key$/i, /^pk$/i
+  ];
+
+  // ID/序号字段检测：连续递增序号检测算法
+  function isAutoIncrement(fieldName: string, rows: Record<string, import('@/types').CellValue>[]): boolean {
+    const nums = rows.map(r => Number(r[fieldName])).filter(n => !isNaN(n));
+    if (nums.length < 5) return false;
+    const sorted = [...nums].sort((a, b) => a - b);
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    if (max - min > nums.length * 2) return false;
+    let consecutiveCount = 0;
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] - sorted[i - 1] <= 2) consecutiveCount++;
+    }
+    const consecutiveRatio = consecutiveCount / (sorted.length - 1);
+    return consecutiveRatio > 0.9 && Math.abs(max - min - nums.length) < nums.length * 0.3;
+  }
+
+  // 综合判断是否为ID/序号字段
+  function isIdOrSequenceField(fieldName: string): boolean {
+    // 1. 从 analysis 的 fieldStats 中获取类型
+    const fieldStat = analysis?.fieldStats?.find(f => f.field === fieldName);
+    if (fieldStat?.type === 'id') return true;
+    // 2. 名称匹配
+    if (idNamePatterns.some(p => p.test(fieldName))) return true;
+    // 3. 连续递增检测
+    if (isAutoIncrement(fieldName, rows)) return true;
+    return false;
+  }
+
   headers.forEach((h, idx) => {
+    // 先检查是否为ID/序号字段
+    if (isIdOrSequenceField(h)) return; // 跳过ID/序号字段
+
     const sampleValues = rows.slice(0, 10).map(r => r[h]);
     const numericCount = sampleValues.filter(v => !isNaN(Number(v)) && v !== '' && v !== null).length;
 
@@ -873,7 +911,20 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
   // ===== 2. 筛选器 =====
   const goodTextCols = textCols.filter(c => c.uniqueCount >= 2 && c.uniqueCount <= 20);
   goodTextCols.slice(0, 3).forEach(col => {
-    const uniqueValues = [...new Set(rows.map(r => String(r[col.name])))];
+    let uniqueValues = [...new Set(rows.map(r => String(r[col.name])))];
+    // 过滤掉无效筛选选项：空值、乱码、纯数字序号、过长值
+    uniqueValues = uniqueValues.filter(v => {
+      if (!v || v.trim() === '' || v === 'null' || v === 'undefined') return false;
+      // 过滤乱码：包含大量特殊字符或不可打印字符
+      const printableRatio = v.replace(/[^\u0020-\u007E\u4E00-\u9FFF\u3000-\u303F\uFF00-\uFFEF]/g, '').length / v.length;
+      if (printableRatio < 0.5) return false;
+      // 过滤纯数字递增（如1,2,3...），这些是序号不是分类
+      if (/^\d+$/.test(v.trim())) return false;
+      // 过滤过长的值（>30字符通常是描述文本，不适合筛选）
+      if (v.length > 30) return false;
+      return true;
+    });
+    if (uniqueValues.length < 2) return; // 过滤后不足2个选项，不生成筛选器
     widgets.push({
       id: `filter-${col.name}`,
       type: 'filter',
