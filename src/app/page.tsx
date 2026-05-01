@@ -14,6 +14,7 @@ import SettingsDialog from '@/components/settings-dialog';
 import { OnboardingGuide } from '@/components/onboarding-guide';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import {
   Loader2,
   Database,
@@ -33,6 +34,7 @@ import {
   LayoutTemplate as LayoutIcon,
   Calendar as CalendarIcon,
   GanttChart as GanttIcon,
+  Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
@@ -87,7 +89,8 @@ type ViewMode =
   | 'sql-lab' | 'report-export'
   | 'alerting' | 'version-history' | 'template-manager'
   | 'data-source'
-  | 'pivot-table';
+  | 'pivot-table'
+  | 'multimodal' | 'form-collection';
 
 
 // ============================================
@@ -113,6 +116,7 @@ export default function HomePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -193,6 +197,15 @@ export default function HomePage() {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // 自动分析：当切换到分析视图且analysis为空时，自动触发分析
+  useEffect(() => {
+    if (viewMode === 'insights' && parsedData && !analysis && !isAnalyzing) {
+      setIsAnalyzing(true);
+      handleAnalyzeWith(parsedData).finally(() => setIsAnalyzing(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode]);
 
   // ============================================
   // 事件处理
@@ -341,7 +354,7 @@ export default function HomePage() {
   };
 
   const handleAnalyzeWith = (data: ParsedData) => {
-    fetch('/api/analyze', {
+    return fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data }),
@@ -512,7 +525,6 @@ export default function HomePage() {
           <TabsList>
             <TabsTrigger value="table">数据视图</TabsTrigger>
             <TabsTrigger value="linked">关联表</TabsTrigger>
-            <TabsTrigger value="multimodal">多模态</TabsTrigger>
             <TabsTrigger value="workflow">自动化</TabsTrigger>
             <TabsTrigger value="comments">评论</TabsTrigger>
             <TabsTrigger value="ai-field">智能处理</TabsTrigger>
@@ -612,9 +624,6 @@ export default function HomePage() {
               onActiveTableChange={t => { setParsedData(t); setAnalysis(null); handleAnalyzeWith(t); }}
             />
           </TabsContent>
-          <TabsContent value="multimodal">
-            <MultimodalFields data={parsedData} modelConfig={activeModelConfig} />
-          </TabsContent>
           <TabsContent value="workflow">
             <WorkflowAutomation headers={parsedData.headers} />
           </TabsContent>
@@ -663,7 +672,30 @@ export default function HomePage() {
     // 自动分析（整合：深度分析 + 分析报告）
     // ========================================
     if (viewMode === 'insights') {
-      return analysis ? (
+      if (!parsedData) {
+        return (
+          <Card className="text-center py-16">
+            <CardContent>
+              <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">请先上传数据，即可使用自动分析</p>
+              <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+            </CardContent>
+          </Card>
+        );
+      }
+      if (!analysis) {
+        return (
+          <Card className="text-center py-16">
+            <CardContent className="space-y-4">
+              <Brain className="w-12 h-12 text-primary mx-auto mb-2 animate-pulse" />
+              <p className="text-lg font-medium">正在自动分析数据...</p>
+              <p className="text-sm text-muted-foreground">AI 正在扫描数据特征、识别模式、检测异常</p>
+              {isAnalyzing && <Progress value={45} className="w-64 mx-auto" />}
+            </CardContent>
+          </Card>
+        );
+      }
+      return (
         <Tabs defaultValue="insights" className="space-y-4">
           <TabsList>
             <TabsTrigger value="insights">深度分析</TabsTrigger>
@@ -673,16 +705,12 @@ export default function HomePage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="insights">
-            <DataInsights data={parsedData!} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
+            <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
           </TabsContent>
           <TabsContent value="report">
             <InsightReportGenerator analysis={analysis} fileName={parsedData?.fileName} />
           </TabsContent>
         </Tabs>
-      ) : (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-        </div>
       );
     }
 
@@ -817,7 +845,6 @@ export default function HomePage() {
           <TabsList>
             <TabsTrigger value="report" disabled={!analysis}>生成报告</TabsTrigger>
             <TabsTrigger value="export">导出图表</TabsTrigger>
-            <TabsTrigger value="form">表单收集</TabsTrigger>
             <TabsTrigger value="app">应用设计</TabsTrigger>
             <TabsTrigger value="share">分享管理</TabsTrigger>
           </TabsList>
@@ -831,9 +858,6 @@ export default function HomePage() {
           <TabsContent value="export">
             <ChartExporter chartName={parsedData.fileName || '图表'} />
           </TabsContent>
-          <TabsContent value="form">
-            <FormBuilder data={parsedData} onDataChange={setParsedData} />
-          </TabsContent>
           <TabsContent value="app">
             <AppBuilder />
           </TabsContent>
@@ -841,6 +865,24 @@ export default function HomePage() {
             <ShareManager dashboardName={parsedData.fileName} />
           </TabsContent>
         </Tabs>
+      );
+    }
+
+    // ========================================
+    // AI 多模态（独立功能，可不依赖数据）
+    // ========================================
+    if (viewMode === 'multimodal') {
+      return (
+        <MultimodalFields data={parsedData || undefined} modelConfig={activeModelConfig} />
+      );
+    }
+
+    // ========================================
+    // 表单收集（独立功能，可不依赖数据）
+    // ========================================
+    if (viewMode === 'form-collection') {
+      return (
+        <FormBuilder data={parsedData} onDataChange={setParsedData} />
       );
     }
 
@@ -860,6 +902,7 @@ export default function HomePage() {
       'report-export': '导出分享',
       'alerting': '数据预警', 'version-history': '版本快照', 'template-manager': '模板管理',
       'pivot-table': '透视表',
+      'multimodal': 'AI多模态', 'form-collection': '表单收集',
     };
     return titles[viewMode] || '';
   };

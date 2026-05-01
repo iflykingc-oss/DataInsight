@@ -126,8 +126,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
         }),
       }).then(r => r.json());
 
-      if (plan.data?.plan) {
-        setAnalysisPlan({ plan: plan.data.plan, reasoning: plan.data.reasoning });
+      if (plan.plan) {
+        setAnalysisPlan({ plan: plan.plan, reasoning: plan.reasoning || '基于数据特征自动规划分析路径' });
         // 基于规划执行筛选后的分析（可选：调用带 plan 的分析函数）
         // 当前版本只展示规划结果，后续版本可集成到深度分析执行流程
       }

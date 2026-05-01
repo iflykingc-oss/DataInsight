@@ -3,7 +3,7 @@
 import {
   Home, Table2, Database, Brain, LayoutGrid, Target, PieChart, FileText,
   MessageSquare, Wrench, ChevronLeft, ChevronRight, Settings, Sparkles,
-  AlertTriangle, Clock, BookTemplate, Grid3x3,
+  AlertTriangle, Clock, BookTemplate, Grid3x3, Image, ClipboardList,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,8 +36,10 @@ const NAV_ITEMS: NavItem[] = [
   // 可视化组：看结果
   { id: 'visualization', label: '仪表盘', desc: '搭建销售看板、运营大屏', icon: LayoutGrid, group: 'visual', needsData: true },
   { id: 'chart-center', label: '图表库', desc: '快速做柱状图、折线图等分析图', icon: PieChart, group: 'visual', needsData: true },
-  // 工具组：辅助工具
+  // 工具组：辅助工具（部分可不依赖数据）
   { id: 'sql-lab', label: 'SQL 查询', desc: '用SQL查数据，结果直接可视化', icon: Wrench, group: 'tools', needsData: true },
+  { id: 'multimodal', label: '多模态 AI', desc: 'AI生图、图生文、图片转表格', icon: Image, group: 'tools', badge: 'AI' },
+  { id: 'form-collection', label: '表单收集', desc: '创建表单、二维码分享、收集数据', icon: ClipboardList, group: 'tools' },
   { id: 'report-export', label: '导出分享', desc: '导出报告、图表，分享给团队', icon: FileText, group: 'tools', needsData: true },
 ];
 

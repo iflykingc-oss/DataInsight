@@ -15,7 +15,7 @@ interface ParsedData {
 }
 
 interface MultimodalFieldsProps {
-  data: ParsedData;
+  data?: ParsedData;
   modelConfig: { apiKey: string; baseUrl: string; model: string } | null;
   onImageToTable?: (result: ParsedData) => void;
 }
