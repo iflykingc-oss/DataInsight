@@ -917,15 +917,7 @@ export function FormBuilder({
         </Button>
       </div>
 
-      {!data && (
-        <Card className="border-dashed">
-          <CardContent className="py-8 text-center text-muted-foreground">
-            请先上传数据表，才能创建数据收集表单
-          </CardContent>
-        </Card>
-      )}
-
-      {configs.length === 0 && data && (
+      {configs.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="py-8 text-center text-muted-foreground">
             <ToggleLeft className="w-10 h-10 mx-auto mb-2 opacity-30" />
@@ -942,7 +934,7 @@ export function FormBuilder({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.theme?.primaryColor || '#3b82f6' }} />
-                  <CardTitle className="text-base">{config.title}</CardTitle>
+                  <CardTitle className="text-base">{config.title || '未命名表单'}</CardTitle>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => { setEditing(config); setEditTab("fields"); }}>
