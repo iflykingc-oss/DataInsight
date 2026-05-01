@@ -112,6 +112,7 @@ src/
 │   ├── dashboard-designer.tsx # 仪表盘设计器
 │   ├── advanced-charts.tsx    # 高级图表
 │   ├── share-manager.tsx      # 分享管理
+│   ├── record-share-manager.tsx # 单条记录分享（链接+权限+有效期+邮件邀请+二维码）
 │   ├── platform-integrations.tsx # 多平台集成面板（飞书/企微/钉钉/WPS）
 │   ├── data-source-manager.tsx   # 数据源管理（含平台集成 Tab）
 │   ├── form-builder.tsx        # 表单收集（15种字段+二维码+主题+规则）
