@@ -305,28 +305,47 @@ export async function callLLM(
 /**
  * 过滤思考内容
  * 移除 <think>...</think>、## 思考 等标记
+ * 处理跨chunk的不完整标签、reasoning_content字段
  */
 function filterThinkingContent(content: string): string {
   if (!content) return content;
-  
+
   let filtered = content;
-  
-  // 移除 <think>...</think> 标签
+
+  // 1. 移除 <think>...</think> 标签（支持多行和嵌套）
   filtered = filtered.replace(/<think>[\s\S]*?<\/think>/gi, '');
-  
-  // 移除 ## 思考、##思考 等标题（单独一行）
-  filtered = filtered.replace(/^#{1,3}\s*思考\s*$/gm, '');
-  
-  // 移除 **思考** 或 <思考> 等格式标记
-  filtered = filtered.replace(/\*\*思考\*\*/g, '');
-  filtered = filtered.replace(/<\/?思考>/g, '');
-  
-  // 移除分析过程等可能被用于思考的标记
-  filtered = filtered.replace(/^#{1,3}\s*分析过程\s*$/gm, '');
-  filtered = filtered.replace(/^#{1,3}\s*推理\s*$/gm, '');
-  filtered = filtered.replace(/^#{1,3}\s*分析\s*$/gm, '');
-  
-  return filtered;
+
+  // 2. 处理不完整的think标签（流式输出可能导致标签被截断）
+  // 如果内容以 <think> 开头但还没有 </think>，移除从开头到末尾的所有内容
+  if (filtered.includes('<think>') && !filtered.includes('</think>')) {
+    filtered = filtered.replace(/<think>[\s\S]*$/i, '');
+  }
+  // 如果内容以 </think> 开头，移除它
+  filtered = filtered.replace(/^<\/think>\s*/i, '');
+  // 移除孤立的 <think> 标签
+  filtered = filtered.replace(/<think>\s*/gi, '');
+
+  // 3. 移除 ## 思考、##思考 等标题（单独一行）
+  filtered = filtered.replace(/^#{1,3}\s*思考\s*$/gmi, '');
+
+  // 4. 移除 **思考** 或 <思考> 等格式标记
+  filtered = filtered.replace(/\*\*思考\*\*/gi, '');
+  filtered = filtered.replace(/<\/?思考>/gi, '');
+
+  // 5. 移除分析过程等可能被用于思考的标记
+  filtered = filtered.replace(/^#{1,3}\s*分析过程\s*$/gmi, '');
+  filtered = filtered.replace(/^#{1,3}\s*推理\s*$/gmi, '');
+  filtered = filtered.replace(/^#{1,3}\s*分析\s*$/gmi, '');
+  filtered = filtered.replace(/^#{1,3}\s*推理过程\s*$/gmi, '');
+  filtered = filtered.replace(/^#{1,3}\s*思维链\s*$/gmi, '');
+
+  // 6. 移除 reasoning_content 字段（某些API格式）
+  filtered = filtered.replace(/"reasoning_content"\s*:\s*"[^"]*"/gi, '');
+
+  // 7. 清理连续空行
+  filtered = filtered.replace(/\n{3,}/g, '\n\n');
+
+  return filtered.trim();
 }
 
 /**

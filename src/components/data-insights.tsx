@@ -1022,7 +1022,71 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
         </Card>
       )}
 
-      {/* 8. 基础统计 */}
+      {/* 8. 趋势预测 - 自动识别日期+数值字段 */}
+      {(() => {
+        const dateField = analysis.fieldStats.find(f => f.type === 'date');
+        const numField = analysis.fieldStats.find(f => f.type === 'number' && f.numericStats);
+        if (!dateField || !numField || data.rows.length < 5) return null;
+
+        const timeSeries = data.rows
+          .map(r => ({ date: String(r[dateField.field]), value: Number(r[numField.field]) || 0 }))
+          .filter(d => !isNaN(new Date(d.date).getTime()))
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          .slice(0, 30);
+
+        if (timeSeries.length < 5) return null;
+
+        const n = timeSeries.length;
+        const sumX = timeSeries.reduce((s, _, i) => s + i, 0);
+        const sumY = timeSeries.reduce((s, d) => s + d.value, 0);
+        const sumXY = timeSeries.reduce((s, d, i) => s + i * d.value, 0);
+        const sumXX = timeSeries.reduce((s, _, i) => s + i * i, 0);
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        const nextValue = Math.round(intercept + slope * n);
+        const lastValue = timeSeries[timeSeries.length - 1].value;
+        const changePct = lastValue > 0 ? ((nextValue - lastValue) / lastValue * 100).toFixed(1) : '0';
+        const trend = slope > 0 ? 'up' : slope < 0 ? 'down' : 'stable';
+
+        return (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                趋势预测
+                <Badge variant="secondary">{numField.field}</Badge>
+              </CardTitle>
+              <CardDescription>基于 {timeSeries.length} 个历史数据点，预测下一周期走势</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground mb-1">当前值</p>
+                  <p className="text-2xl font-bold">{lastValue.toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-primary/5 rounded-lg text-center">
+                  <p className="text-xs text-primary mb-1">下一周期预测</p>
+                  <p className="text-2xl font-bold text-primary">{nextValue.toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground mb-1">预计变化</p>
+                  <div className={`flex items-center justify-center gap-1 text-2xl font-bold ${
+                    trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                  }`}>
+                    {trend === 'up' ? <TrendingUp className="w-5 h-5" /> : trend === 'down' ? <TrendingDown className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
+                    {Number(changePct) > 0 ? '+' : ''}{changePct}%
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                预测方法：线性趋势分析 | 数据周期：{timeSeries[0].date} ~ {timeSeries[timeSeries.length - 1].date}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      {/* 9. 基础统计 */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">

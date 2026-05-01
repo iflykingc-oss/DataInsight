@@ -247,18 +247,29 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount }:
           {SCENE_TEMPLATES.slice(0, 3).map((scene) => (
             <Card
               key={scene.id}
-              className="group cursor-pointer transition-all hover:shadow-md hover:border-primary/30"
+              className="group cursor-pointer transition-all hover:shadow-md hover:border-primary/30 relative overflow-hidden"
               onClick={() => onViewChange('insights')}
             >
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary/20 group-hover:bg-primary transition-colors" />
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <scene.icon className="w-4 h-4 text-primary" />
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <scene.icon className="w-4 h-4 text-primary" />
+                  </div>
                   <h4 className="text-sm font-medium">{scene.label}</h4>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">{scene.desc}</p>
+                {/* KPI预览 */}
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {scene.kpis.slice(0, 3).map(kpi => (
+                    <Badge key={kpi} variant="secondary" className="text-[10px] h-5 px-1.5">
+                      {kpi}
+                    </Badge>
+                  ))}
+                </div>
                 {/* 推荐问题 - 可点击 */}
                 <div className="space-y-1.5">
-                  {scene.exampleQuestions.map((q, i) => (
+                  {scene.exampleQuestions.slice(0, 2).map((q, i) => (
                     <button
                       key={i}
                       className="w-full text-left text-xs px-2 py-1.5 rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors truncate"
@@ -272,7 +283,7 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount }:
                   ))}
                 </div>
                 <div className="mt-3 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                  开始分析 <ArrowRight className="w-3 h-3 ml-1" />
+                  一键分析 <ArrowRight className="w-3 h-3 ml-1" />
                 </div>
               </CardContent>
             </Card>

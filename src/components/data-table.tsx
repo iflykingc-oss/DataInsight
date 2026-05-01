@@ -95,6 +95,12 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
   const [toolbarPos, setToolbarPos] = useState({ x: 0, y: 0 });
   const [selectedText, setSelectedText] = useState('');
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number; field: string; value: string } | null>(null);
+
+  // 选中即分析状态
+  const [showAIAnalyzeDialog, setShowAIAnalyzeDialog] = useState(false);
+  const [aiAnalyzeQuery, setAIAnalyzeQuery] = useState('');
+  const [aiAnalyzeResult, setAIAnalyzeResult] = useState('');
+  const [isAIAnalyzing, setIsAIAnalyzing] = useState(false);
   
   const pageCount = Math.ceil(data.rows.length / pageSize);
   
@@ -297,6 +303,60 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
     }
   }, [modelConfig, data.rows, data.headers]);
 
+  // 选中即分析：对选中的记录进行AI分析
+  const handleAIAnalyzeSelection = useCallback(async () => {
+    if (!modelConfig?.apiKey) {
+      alert('请先在设置中配置AI模型');
+      return;
+    }
+    if (!aiAnalyzeQuery.trim()) return;
+
+    setIsAIAnalyzing(true);
+    setAIAnalyzeResult('');
+
+    const selectedIndices = Array.from(selectedRows);
+    const selectedData = selectedIndices.map(idx => data.rows[idx]);
+
+    try {
+      const response = await fetch('/api/llm-insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: aiAnalyzeQuery,
+          data: { headers: data.headers, rows: selectedData },
+          chatHistory: []
+        })
+      });
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let resultText = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                resultText += parsed.content || '';
+                setAIAnalyzeResult(resultText);
+              } catch {}
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('AI分析失败:', error);
+      setAIAnalyzeResult('分析失败，请稍后重试');
+    } finally {
+      setIsAIAnalyzing(false);
+    }
+  }, [modelConfig, selectedRows, data, aiAnalyzeQuery]);
+
   // 全选/取消全选
   const toggleSelectAll = useCallback(() => {
     if (selectedRows.size === paginatedData.length) {
@@ -363,6 +423,14 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
           <Badge variant="secondary">
             已选择 {selectedRows.size} 条记录
           </Badge>
+          <Button
+            size="sm"
+            variant="default"
+            onClick={() => setShowAIAnalyzeDialog(true)}
+          >
+            <Sparkles className="w-4 h-4 mr-1" />
+            选中即分析
+          </Button>
           <Button size="sm" variant="outline" onClick={handleBulkDelete}>
             <Trash2 className="w-4 h-4 mr-1" />
             批量删除
@@ -719,6 +787,64 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
           />
         </div>
       )}
+
+      {/* 选中即分析对话框 */}
+      <Dialog open={showAIAnalyzeDialog} onOpenChange={setShowAIAnalyzeDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              选中即分析
+              <Badge variant="secondary">已选 {selectedRows.size} 条</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm mb-2 block">你想对这些数据做什么分析？</Label>
+              <Textarea
+                placeholder="例如：总结这些记录的共同点、找出异常值、分析趋势..."
+                value={aiAnalyzeQuery}
+                onChange={e => setAIAnalyzeQuery(e.target.value)}
+                className="min-h-[80px]"
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {['总结关键信息', '找出异常值', '对比分析', '趋势预测'].map(q => (
+                  <Badge
+                    key={q}
+                    variant="outline"
+                    className="cursor-pointer hover:bg-primary/10"
+                    onClick={() => setAIAnalyzeQuery(q)}
+                  >
+                    {q}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <Button
+              onClick={handleAIAnalyzeSelection}
+              disabled={isAIAnalyzing || !aiAnalyzeQuery.trim()}
+              className="w-full"
+            >
+              {isAIAnalyzing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  分析中...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  开始分析
+                </>
+              )}
+            </Button>
+            {aiAnalyzeResult && (
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm whitespace-pre-wrap">{aiAnalyzeResult}</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* 分页 */}
       {pageCount > 1 && (

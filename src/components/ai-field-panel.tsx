@@ -402,7 +402,9 @@ export function AIFieldPanel({
                     <div className="text-xs text-muted-foreground mb-2 flex items-center justify-between">
                       <span>处理结果（共 {Object.keys(field.results).length} 行）：</span>
                       {field.previewMode && (
-                        <Badge variant="outline" className="text-xs">预览模式，仅处理前5行</Badge>
+                        <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
+                          预览模式（仅处理前5行，确认后应用到全表 {data.rows.length} 行）
+                        </Badge>
                       )}
                     </div>
                     <div className="max-h-[200px] overflow-auto">

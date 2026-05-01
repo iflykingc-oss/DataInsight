@@ -32,7 +32,7 @@ interface DashboardProps {
 
 const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16', '#2f54eb', '#a0d911'];
 
-type WidgetType = 'kpi' | 'bar' | 'line' | 'pie' | 'area' | 'radar' | 'pivot' | 'detail' | 'filter' | 'leaderboard' | 'countdown' | 'progress' | 'nps' | 'text';
+type WidgetType = 'kpi' | 'bar' | 'line' | 'pie' | 'area' | 'radar' | 'pivot' | 'detail' | 'filter' | 'leaderboard' | 'countdown' | 'progress' | 'nps' | 'forecast' | 'text';
 
 interface ChartWidget {
   id: string;
@@ -57,6 +57,12 @@ interface ChartWidget {
   promoterCount?: number;
   passiveCount?: number;
   detractorCount?: number;
+  npsScore?: number;
+  npsTotal?: number;
+  // 预测专用
+  forecastValue?: number;
+  forecastTrend?: 'up' | 'down' | 'stable';
+  forecastGrowth?: number;
   // 文本组件专用
   textContent?: string;
 }
@@ -326,6 +332,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
               <SelectItem value="pie">饼图</SelectItem>
               <SelectItem value="area">面积图</SelectItem>
               <SelectItem value="radar">雷达图</SelectItem>
+              <SelectItem value="forecast">趋势预测</SelectItem>
               <SelectItem value="pivot">透视表</SelectItem>
               <SelectItem value="detail">明细表</SelectItem>
             </SelectContent>
@@ -847,6 +854,48 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                   <div className="prose prose-sm max-w-none">
                     {widget.textContent || '点击编辑文本内容'}
                   </div>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // ==================== 预测分析组件 ====================
+          if (widget.type === 'forecast') {
+            const { forecastValue, forecastTrend, forecastGrowth } = widget;
+            const trendColor = forecastTrend === 'up' ? 'text-green-600' : forecastTrend === 'down' ? 'text-red-600' : 'text-gray-600';
+            const trendIcon = forecastTrend === 'up' ? <TrendingUp className="w-4 h-4" /> : forecastTrend === 'down' ? <TrendingDown className="w-4 h-4" /> : <Minus className="w-4 h-4" />;
+            const trendLabel = forecastTrend === 'up' ? '上升' : forecastTrend === 'down' ? '下降' : '平稳';
+
+            return (
+              <Card key={widget.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
+                    <Badge variant="outline" className="text-xs">预测</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">下一周期预测</p>
+                      <p className="text-2xl font-bold">{forecastValue?.toLocaleString() || '-'}</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">趋势方向</p>
+                      <div className={`flex items-center justify-center gap-1 ${trendColor}`}>
+                        {trendIcon}
+                        <span className="text-lg font-semibold">{trendLabel}</span>
+                      </div>
+                      {forecastGrowth !== undefined && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          平均变化 {forecastGrowth > 0 ? '+' : ''}{forecastGrowth}%
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center mt-3">
+                    基于历史 {widget.data.length} 个数据点的线性趋势预测
+                  </p>
                 </CardContent>
               </Card>
             );
@@ -1444,6 +1493,80 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
         progressValue: currentSum,
         progressMax: targetValue,
         data: [] as Record<string, string | number>[],
+        priority: 7,
+      });
+    }
+  }
+
+  // ===== 12. 预测分析组件（基于日期+数值字段） =====
+  if (dateCols.length > 0 && numericCols.length > 0) {
+    const dateCol = dateCols[0];
+    const numCol = numericCols[0];
+    const timeSeriesData = rows
+      .map(r => ({
+        date: String(r[dateCol.name]),
+        value: Number(r[numCol.name]) || 0,
+      }))
+      .filter(d => !isNaN(new Date(d.date).getTime()) && d.value !== 0)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 30);
+
+    if (timeSeriesData.length >= 5) {
+      // 简单线性预测
+      const n = timeSeriesData.length;
+      const sumX = timeSeriesData.reduce((s, _, i) => s + i, 0);
+      const sumY = timeSeriesData.reduce((s, d) => s + d.value, 0);
+      const sumXY = timeSeriesData.reduce((s, d, i) => s + i * d.value, 0);
+      const sumXX = timeSeriesData.reduce((s, _, i) => s + i * i, 0);
+      const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+      const nextValue = intercept + slope * n;
+      const trend = slope > 0 ? 'up' : slope < 0 ? 'down' : 'stable';
+      const avgGrowth = n > 1 ? (slope / (sumY / n)) * 100 : 0;
+
+      widgets.push({
+        id: `forecast-${dateCol.name}-${numCol.name}`,
+        type: 'forecast',
+        title: `${numCol.name} 趋势预测`,
+        xField: dateCol.name,
+        yField: numCol.name,
+        data: timeSeriesData.map(d => ({
+          [dateCol.name]: d.date,
+          [numCol.name]: d.value,
+        })),
+        forecastValue: Math.round(nextValue),
+        forecastTrend: trend,
+        forecastGrowth: Number(avgGrowth.toFixed(2)),
+        priority: 8,
+      });
+    }
+  }
+
+  // ===== 13. NPS组件（检测评分字段） =====
+  const scoreField = headers.find(h => /评分|满意度|score|rating|nps/i.test(h));
+  if (scoreField) {
+    const scores = rows
+      .map(r => Number(r[scoreField]))
+      .filter(v => !isNaN(v) && v >= 0 && v <= 10);
+    if (scores.length > 0) {
+      const promoters = scores.filter(s => s >= 9).length;
+      const passives = scores.filter(s => s >= 7 && s <= 8).length;
+      const detractors = scores.filter(s => s <= 6).length;
+      const total = scores.length;
+      const npsScore = total > 0 ? Math.round(((promoters - detractors) / total) * 100) : 0;
+      widgets.push({
+        id: `nps-${scoreField}`,
+        type: 'nps',
+        title: '净推荐值 (NPS)',
+        xField: '',
+        yField: '',
+        data: [
+          { category: '推荐者', count: promoters },
+          { category: '被动者', count: passives },
+          { category: '贬损者', count: detractors },
+        ],
+        npsScore,
+        npsTotal: total,
         priority: 7,
       });
     }

@@ -443,8 +443,8 @@ export function EnhancedLLMAssistant({
                 ));
               } else if (parsed.content) {
                 fullContent += parsed.content;
-                // 实时显示时先应用思考内容过滤，推荐追问部分暂时保留
-                const cleanContent = filterThinkingContent(fullContent);
+                // 实时显示时同时过滤思考内容和追问部分，避免追问混入答案实时显示
+                const cleanContent = filterThinkingContent(removeSuggestionsSection(fullContent));
                 setMessages(prev => prev.map(m =>
                   m.id === assistantMsgId
                     ? { ...m, content: cleanContent }
@@ -491,13 +491,31 @@ export function EnhancedLLMAssistant({
 
   // 过滤思考内容
   const filterThinkingContent = (content: string): string => {
-    // 移除 <think>...</think> 标签
-    let filtered = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
-    // 移除 以 "<think>" 开头到 "</think>" 结尾的内容（可能在开头）
-    filtered = filtered.replace(/^<think>[\s\S]*?<\/think>\s*/i, '');
-    // 移除独立的 </think> 或 </think> 行
-    filtered = filtered.replace(/^<\/think>\s*/gim, '');
-    filtered = filtered.replace(/^<think>\s*/gim, '');
+    if (!content) return content;
+
+    let filtered = content;
+
+    // 1. 移除 <think>...</think> 标签
+    filtered = filtered.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
+    // 2. 处理不完整的think标签（流式输出可能导致标签被截断）
+    if (filtered.includes('<think>') && !filtered.includes('</think>')) {
+      filtered = filtered.replace(/<think>[\s\S]*$/i, '');
+    }
+    filtered = filtered.replace(/^<\/think>\s*/i, '');
+    filtered = filtered.replace(/<think>\s*/gi, '');
+
+    // 3. 移除 ## 思考 等标题
+    filtered = filtered.replace(/^#{1,3}\s*思考\s*$/gmi, '');
+    filtered = filtered.replace(/^#{1,3}\s*推理过程\s*$/gmi, '');
+    filtered = filtered.replace(/^#{1,3}\s*思维链\s*$/gmi, '');
+
+    // 4. 移除 reasoning_content 字段
+    filtered = filtered.replace(/"reasoning_content"\s*:\s*"[^"]*"/gi, '');
+
+    // 5. 清理连续空行
+    filtered = filtered.replace(/\n{3,}/g, '\n\n');
+
     return filtered.trim();
   };
 
