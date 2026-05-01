@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 import { GlobalErrorBoundary } from '@/components/error-boundary';
+import { AuthProvider } from '@/lib/use-auth';
 
 export const metadata: Metadata = {
   title: {
@@ -60,7 +61,9 @@ export default function RootLayout({
       <body className={`antialiased`}>
         {isDev && <Inspector />}
         <GlobalErrorBoundary>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </GlobalErrorBoundary>
       </body>
     </html>

@@ -37,6 +37,10 @@ import {
   Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/use-auth';
+import { LoginDialog } from '@/components/login-dialog';
+import { UserMenu } from '@/components/user-menu';
+const AdminPanel = dynamic(() => import('@/components/admin-panel').then(m => ({ default: m.default })), { ssr: false });
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
 import { tripleCache } from '@/lib/cache-manager';
@@ -114,6 +118,8 @@ export default function HomePage() {
   }, []);
 
   const [showSettings, setShowSettings] = useState(false);
+  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
+  const { isLoggedIn, setLoginDialogOpen, hasPermission } = useAuth();
   const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -211,6 +217,13 @@ export default function HomePage() {
   // 事件处理
   // ============================================
   const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
+    if (!isLoggedIn) {
+      setLoginDialogOpen(true);
+      return;
+    }
+    if (!hasPermission('upload')) {
+      return;
+    }
     setParsedData(null);
     setAnalysis(null);
     setIsLoading(true);
@@ -988,6 +1001,12 @@ export default function HomePage() {
               </TooltipTrigger>
               <TooltipContent>设置</TooltipContent>
             </Tooltip>
+
+            {/* 用户登录入口 */}
+            <UserMenu
+              onOpenSettings={() => setShowSettings(true)}
+              onOpenAdmin={() => setAdminPanelOpen(true)}
+            />
           </div>
         </header>
 
@@ -1007,6 +1026,12 @@ export default function HomePage() {
         onDarkModeChange={setDarkMode}
         onModelChange={handleModelChange}
       />
+
+      {/* 登录弹窗 */}
+      <LoginDialog />
+
+      {/* 管理员控制台 */}
+      <AdminPanel open={adminPanelOpen} onOpenChange={setAdminPanelOpen} />
 
       {/* 全局 AI 助手 */}
       <GlobalAIAssistant

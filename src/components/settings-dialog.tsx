@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,6 +28,9 @@ import {
 import { cn } from '@/lib/utils';
 import { privacyMode } from '@/lib/security/privacy-mode';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
+import { useAuth } from '@/lib/use-auth';
+import { Badge } from '@/components/ui/badge';
+import { Globe, Key, Bot, Lock } from 'lucide-react';
 
 // ============================================
 // 通知渠道配置类型
@@ -63,6 +66,21 @@ export default function SettingsDialog({
   onDarkModeChange,
   onModelChange,
 }: SettingsDialogProps) {
+  const { user, isLoggedIn } = useAuth();
+  const [adminConfig, setAdminConfig] = useState<{ apiKey?: string; baseUrl?: string; modelName?: string }>({});
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    fetch('/api/admin/ai-config')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) setAdminConfig(data.config || {});
+      })
+      .catch(() => {});
+  }, []);
+
+  const canCustomModel = user?.permissions?.custom_ai_model ?? false;
+
   const [notificationConfig, setNotificationConfig] = useState<NotificationChannelConfig>(() => {
     if (typeof window === 'undefined') return DEFAULT_NOTIFICATION_CONFIG;
     try {
@@ -124,7 +142,50 @@ export default function SettingsDialog({
 
           {/* AI 模型配置 */}
           <TabsContent value="ai-settings" className="py-4">
-            <AIModelSettings onModelChange={onModelChange} />
+            {isLoggedIn && canCustomModel ? (
+              <AIModelSettings onModelChange={onModelChange} />
+            ) : (
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Bot className="w-5 h-5 text-primary" />
+                      <h3 className="text-lg font-semibold">平台模型配置</h3>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      <Lock className="w-3 h-3 mr-1" />
+                      由管理员配置
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    您当前使用的是管理员配置的AI模型。如需自定义模型，请联系管理员开启权限。
+                  </p>
+                  <div className="space-y-3 bg-muted/50 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted-foreground">Base URL</div>
+                        <div className="text-sm font-medium truncate">{adminConfig.baseUrl || '未配置'}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Key className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted-foreground">模型</div>
+                        <div className="text-sm font-medium truncate">{adminConfig.modelName || '未配置'}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Key className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted-foreground">API Key</div>
+                        <div className="text-sm font-medium">{adminConfig.apiKey ? '已配置' : '未配置'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* 数据预警 */}
