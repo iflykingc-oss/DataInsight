@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 
 export interface User {
   id: number;
-  email: string;
+  username: string;
   passwordHash: string;
   name: string;
   role: 'admin' | 'member';
@@ -27,7 +27,7 @@ export interface User {
 export interface LoginLog {
   id: number;
   userId: number;
-  email: string;
+  username: string;
   ip: string;
   userAgent: string;
   status: 'success' | 'failed';
@@ -61,7 +61,7 @@ let aiConfigIdCounter = 1;
 const users = new Map<number, User>([
   [1, {
     id: 1,
-    email: 'admin@datainsight.local',
+    username: 'admin',
     passwordHash: '$2b$10$KAtsw2LoYeMHPvzchflcueCCuhmZEx28b/hndS/NyJIA3dDvc6JaW', // password: 'admin123'
     name: '管理员',
     role: 'admin',
@@ -92,9 +92,9 @@ let adminAIConfig: AIConfig = {
 };
 
 // ==================== 用户CRUD ====================
-export function getUserByEmail(email: string): User | undefined {
+export function getUserByUsername(username: string): User | undefined {
   for (const user of users.values()) {
-    if (user.email === email) return user;
+    if (user.username === username) return user;
   }
 }
 
@@ -103,62 +103,65 @@ export function getUserById(id: number): User | undefined {
 }
 
 export function getAllUsers(): User[] {
-  return Array.from(users.values()).sort((a, b) => b.id - a.id);
+  return Array.from(users.values());
 }
 
 export async function createUser(data: {
-  email: string;
+  username: string;
   name: string;
   role?: 'admin' | 'member';
   password?: string;
-  permissions?: Partial<User['permissions']>;
+  permissions?: User['permissions'];
   createdBy: number;
 }): Promise<User> {
   const id = userIdCounter++;
-  const password = data.password || generateRandomPassword();
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = data.password 
+    ? await bcrypt.hash(data.password, 10)
+    : await bcrypt.hash('123456', 10); // 默认密码
 
   const user: User = {
     id,
-    email: data.email,
+    username: data.username,
     passwordHash,
     name: data.name,
     role: data.role || 'member',
     status: 'active',
-    permissions: {
+    permissions: data.permissions || {
       ai_analyze: true,
       export: true,
       dashboard: true,
       share: true,
       upload: true,
       custom_ai_model: false,
-      ...data.permissions,
     },
     createdBy: data.createdBy,
     createdAt: new Date().toISOString(),
   };
+
   users.set(id, user);
   return user;
 }
 
-export async function updateUser(
-  id: number,
-  data: Partial<Pick<User, 'name' | 'role' | 'status' | 'permissions'>> & { password?: string }
-): Promise<User | null> {
+export async function updateUser(id: number, data: Partial<{
+  username: string;
+  name: string;
+  role: 'admin' | 'member';
+  status: 'active' | 'disabled';
+  permissions: User['permissions'];
+  password: string;
+}>): Promise<User | null> {
   const user = users.get(id);
   if (!user) return null;
 
-  if (data.name !== undefined) user.name = data.name;
-  if (data.role !== undefined) user.role = data.role;
-  if (data.status !== undefined) user.status = data.status;
-  if (data.permissions !== undefined) {
-    user.permissions = { ...user.permissions, ...data.permissions };
-  }
+  if (data.username) user.username = data.username;
+  if (data.name) user.name = data.name;
+  if (data.role) user.role = data.role;
+  if (data.status) user.status = data.status;
+  if (data.permissions) user.permissions = { ...user.permissions, ...data.permissions };
   if (data.password) {
     user.passwordHash = await bcrypt.hash(data.password, 10);
   }
 
-  users.set(id, user);
   return user;
 }
 
@@ -170,86 +173,136 @@ export async function verifyPassword(user: User, password: string): Promise<bool
   return bcrypt.compare(password, user.passwordHash);
 }
 
-// ==================== 登录日志 ====================
-export function addLoginLog(data: Omit<LoginLog, 'id' | 'createdAt'>): LoginLog {
-  const log: LoginLog = {
-    ...data,
-    id: logIdCounter++,
-    createdAt: new Date().toISOString(),
-  };
-  loginLogs.unshift(log);
-  // 保留最近1000条
-  if (loginLogs.length > 1000) loginLogs.length = 1000;
-  return log;
+export function sanitizeUser(user: User): Omit<User, 'passwordHash'> {
+  const { passwordHash, ...sanitized } = user;
+  return sanitized;
 }
 
-export function getLoginLogs(filter?: { userId?: number; status?: string; limit?: number }): LoginLog[] {
-  let result = [...loginLogs];
-  if (filter?.userId !== undefined) {
-    result = result.filter(l => l.userId === filter.userId);
-  }
-  if (filter?.status) {
-    result = result.filter(l => l.status === filter.status);
-  }
-  const limit = filter?.limit ?? 100;
-  return result.slice(0, limit);
+// ==================== 登录日志 ====================
+export function addLoginLog(data: {
+  userId: number;
+  username: string;
+  ip: string;
+  userAgent: string;
+  status: 'success' | 'failed';
+}): void {
+  loginLogs.push({
+    id: logIdCounter++,
+    ...data,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+export function getLoginLogs(limit = 50): LoginLog[] {
+  return loginLogs.slice(-limit).reverse();
+}
+
+export function getLoginLogsByUser(userId: number, limit = 20): LoginLog[] {
+  return loginLogs
+    .filter(log => log.userId === userId)
+    .slice(-limit)
+    .reverse();
 }
 
 // ==================== 使用统计 ====================
-export function recordUsage(userId: number, action: string): UsageStat {
+export function addUsageStat(userId: number, action: string): void {
   const today = new Date().toISOString().split('T')[0];
   const existing = usageStats.find(
     s => s.userId === userId && s.action === action && s.date === today
   );
-
+  
   if (existing) {
-    existing.count += 1;
-    return existing;
+    existing.count++;
+  } else {
+    usageStats.push({
+      id: statIdCounter++,
+      userId,
+      action,
+      count: 1,
+      date: today,
+      createdAt: new Date().toISOString(),
+    });
   }
-
-  const stat: UsageStat = {
-    id: statIdCounter++,
-    userId,
-    action,
-    count: 1,
-    date: today,
-    createdAt: new Date().toISOString(),
-  };
-  usageStats.push(stat);
-  return stat;
 }
 
 export function getUsageStats(userId?: number): UsageStat[] {
-  if (userId !== undefined) {
+  if (userId) {
     return usageStats.filter(s => s.userId === userId);
   }
   return usageStats;
 }
 
+export function getUsageStatsByDate(startDate: string, endDate: string): UsageStat[] {
+  return usageStats.filter(s => s.date >= startDate && s.date <= endDate);
+}
+
 // ==================== AI配置 ====================
-export function getAdminAIConfig(): AIConfig {
-  return { ...adminAIConfig };
+export function getAIConfig(): AIConfig {
+  return adminAIConfig;
 }
 
-export function updateAdminAIConfig(data: Partial<Omit<AIConfig, 'id' | 'updatedAt'>>, updatedBy: number): AIConfig {
-  adminAIConfig = {
-    ...adminAIConfig,
-    ...data,
-    updatedBy,
-    updatedAt: new Date().toISOString(),
-  };
-  return { ...adminAIConfig };
+export function updateAIConfig(data: {
+  apiKey?: string;
+  baseUrl?: string;
+  modelName?: string;
+  updatedBy: number;
+}): AIConfig {
+  if (data.apiKey !== undefined) adminAIConfig.apiKey = data.apiKey;
+  if (data.baseUrl !== undefined) adminAIConfig.baseUrl = data.baseUrl;
+  if (data.modelName !== undefined) adminAIConfig.modelName = data.modelName;
+  adminAIConfig.updatedBy = data.updatedBy;
+  adminAIConfig.updatedAt = new Date().toISOString();
+  return adminAIConfig;
 }
 
-// ==================== 工具函数 ====================
-function generateRandomPassword(): string {
-  return Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-4);
+// 同步数据库中的用户到内存（启动时调用）
+export function syncUsersFromDB(dbUsers: Array<{
+  id: number;
+  username: string;
+  password_hash: string;
+  name: string;
+  role: string;
+  status: string;
+  permissions: User['permissions'];
+  created_by: number | null;
+  created_at: string;
+}>): void {
+  for (const u of dbUsers) {
+    users.set(u.id, {
+      id: u.id,
+      username: u.username,
+      passwordHash: u.password_hash,
+      name: u.name,
+      role: u.role as 'admin' | 'member',
+      status: u.status as 'active' | 'disabled',
+      permissions: u.permissions,
+      createdBy: u.created_by,
+      createdAt: u.created_at,
+    });
+    if (u.id >= userIdCounter) userIdCounter = u.id + 1;
+  }
 }
 
-export function sanitizeUser(user: User): Omit<User, 'passwordHash'> {
-  const { passwordHash, ...safe } = user;
-  return safe;
+// 同步登录日志从数据库
+export function syncLoginLogsFromDB(dbLogs: Array<{
+  id: number;
+  user_id: number;
+  username: string;
+  ip: string;
+  user_agent: string;
+  status: string;
+  created_at: string;
+}>): void {
+  for (const l of dbLogs) {
+    loginLogs.push({
+      id: l.id,
+      userId: l.user_id,
+      username: l.username,
+      ip: l.ip,
+      userAgent: l.user_agent,
+      status: l.status as 'success' | 'failed',
+      createdAt: l.created_at,
+    });
+    if (l.id >= logIdCounter) logIdCounter = l.id + 1;
+  }
 }
-
-// 初始化：将之前exec_sql创建的管理员数据同步到内存（如果exec_sql已创建）
-// 实际运行时内存存储是独立的

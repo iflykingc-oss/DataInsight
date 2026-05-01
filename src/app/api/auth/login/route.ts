@@ -1,41 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
-import { getUserByEmail, verifyPassword, addLoginLog, sanitizeUser } from '@/lib/auth';
+import { getUserByUsername, verifyPassword, addLoginLog, sanitizeUser } from '@/lib/auth';
 
 const JWT_SECRET = new TextEncoder().encode('datainsight-jwt-secret-key-2024');
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const { username, password } = body;
 
-    if (!email || !password) {
+    if (!username || !password) {
       addLoginLog({
         userId: 0,
-        email: email || 'unknown',
+        username: username || 'unknown',
         ip: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
         status: 'failed',
       });
-      return NextResponse.json({ error: '请输入邮箱和密码' }, { status: 400 });
+      return NextResponse.json({ error: '请输入账户和密码' }, { status: 400 });
     }
 
-    const user = getUserByEmail(email);
+    const user = getUserByUsername(username);
     if (!user) {
       addLoginLog({
         userId: 0,
-        email,
+        username,
         ip: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
         status: 'failed',
       });
-      return NextResponse.json({ error: '邮箱或密码错误' }, { status: 401 });
+      return NextResponse.json({ error: '账户或密码错误' }, { status: 401 });
     }
 
     if (user.status === 'disabled') {
       addLoginLog({
         userId: user.id,
-        email,
+        username,
         ip: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
         status: 'failed',
@@ -47,18 +47,18 @@ export async function POST(request: NextRequest) {
     if (!valid) {
       addLoginLog({
         userId: user.id,
-        email,
+        username,
         ip: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
         status: 'failed',
       });
-      return NextResponse.json({ error: '邮箱或密码错误' }, { status: 401 });
+      return NextResponse.json({ error: '账户或密码错误' }, { status: 401 });
     }
 
     // 生成JWT token
     const token = await new SignJWT({
       userId: user.id,
-      email: user.email,
+      username: user.username,
       role: user.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     addLoginLog({
       userId: user.id,
-      email,
+      username,
       ip: request.headers.get('x-forwarded-for') || 'unknown',
       userAgent: request.headers.get('user-agent') || 'unknown',
       status: 'success',

@@ -6,7 +6,7 @@ import {
   updateUser,
   deleteUser,
   sanitizeUser,
-  getUserByEmail,
+  getUserByUsername,
 } from '@/lib/auth';
 
 // GET /api/admin/users - 用户列表
@@ -29,19 +29,19 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { email, name, role = 'member', password, permissions } = body;
+    const { username, name, role = 'member', password, permissions } = body;
 
-    if (!email || !name) {
-      return NextResponse.json({ error: '邮箱和姓名必填' }, { status: 400 });
+    if (!username || !name) {
+      return NextResponse.json({ error: '账户和姓名必填' }, { status: 400 });
     }
 
-    const existing = getUserByEmail(email);
+    const existing = getUserByUsername(username);
     if (existing) {
-      return NextResponse.json({ error: '该邮箱已存在' }, { status: 400 });
+      return NextResponse.json({ error: '该账户已存在' }, { status: 400 });
     }
 
     const user = await createUser({
-      email,
+      username,
       name,
       role,
       password,

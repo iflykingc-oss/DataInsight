@@ -36,7 +36,7 @@ export function UserMenu({ onOpenSettings, onOpenAdmin }: UserMenuProps) {
     );
   }
 
-  const initials = user?.name?.slice(0, 2) || user?.email?.slice(0, 2) || 'U';
+  const initials = user?.name?.slice(0, 2) || user?.username?.slice(0, 2) || 'U';
 
   return (
     <DropdownMenu>
@@ -56,7 +56,7 @@ export function UserMenu({ onOpenSettings, onOpenAdmin }: UserMenuProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium">{user?.name}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
+            <p className="text-xs text-muted-foreground">{user?.username}</p>
             {isAdmin && (
               <div className="flex items-center gap-1 text-xs text-primary mt-1">
                 <Shield className="w-3 h-3" />

@@ -9,15 +9,10 @@ export async function GET(request: NextRequest) {
   }
 
   const url = new URL(request.url);
-  const userId = url.searchParams.get('userId');
-  const status = url.searchParams.get('status');
   const limit = url.searchParams.get('limit');
+  const parsedLimit = limit ? Math.min(parseInt(limit), 100) : 50;
 
-  const logs = getLoginLogs({
-    userId: userId ? parseInt(userId) : undefined,
-    status: status || undefined,
-    limit: limit ? parseInt(limit) : undefined,
-  });
+  const logs = getLoginLogs(parsedLimit);
 
   return NextResponse.json({ success: true, data: logs });
 }

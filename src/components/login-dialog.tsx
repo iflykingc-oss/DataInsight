@@ -17,7 +17,7 @@ import { LogIn, Loader2, AlertCircle, Shield } from 'lucide-react';
 
 export function LoginDialog() {
   const { loginDialogOpen, setLoginDialogOpen, login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,12 +27,12 @@ export function LoginDialog() {
     setError('');
     setLoading(true);
 
-    const result = await login(email, password);
+    const result = await login(username, password);
     setLoading(false);
 
     if (result.success) {
       setLoginDialogOpen(false);
-      setEmail('');
+      setUsername('');
       setPassword('');
     } else {
       setError(result.error || '登录失败');
@@ -61,15 +61,15 @@ export function LoginDialog() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="login-email">邮箱</Label>
+            <Label htmlFor="login-username">账户</Label>
             <Input
-              id="login-email"
-              type="email"
-              placeholder="请输入邮箱"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="login-username"
+              type="text"
+              placeholder="请输入账户"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
 
@@ -91,7 +91,7 @@ export function LoginDialog() {
               <Shield className="w-3.5 h-3.5" />
               <span className="font-medium">管理员默认账号</span>
             </div>
-            <div>邮箱: admin@datainsight.local</div>
+            <div>账户: admin</div>
             <div>密码: admin123</div>
           </div>
 

@@ -43,7 +43,7 @@ import {
 
 interface UserData {
   id: number;
-  email: string;
+  username: string;
   name: string;
   role: string;
   status: string;
@@ -61,7 +61,7 @@ interface UserData {
 interface LoginLog {
   id: number;
   userId: number;
-  email: string;
+  username: string;
   ip: string;
   status: string;
   createdAt: string;
@@ -90,7 +90,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [userFormOpen, setUserFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     name: '',
     role: 'member' as 'admin' | 'member',
     password: '',
@@ -192,7 +192,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
             ...(formData.password ? { password: formData.password } : {}),
           }
         : {
-            email: formData.email,
+            username: formData.username,
             name: formData.name,
             role: formData.role,
             password: formData.password || undefined,
@@ -249,7 +249,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const openEditForm = (u: UserData) => {
     setEditingUser(u);
     setFormData({
-      email: u.email,
+      username: u.username,
       name: u.name,
       role: u.role as 'admin' | 'member',
       password: '',
@@ -261,7 +261,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const openAddForm = () => {
     setEditingUser(null);
     setFormData({
-      email: '',
+      username: '',
       name: '',
       role: 'member',
       password: '',
@@ -374,7 +374,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>姓名</TableHead>
-                    <TableHead>邮箱</TableHead>
+                    <TableHead>账户</TableHead>
                     <TableHead>角色</TableHead>
                     <TableHead>AI分析</TableHead>
                     <TableHead>导出</TableHead>
@@ -389,7 +389,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                   {users.map((u) => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.name}</TableCell>
-                      <TableCell className="text-xs">{u.email}</TableCell>
+                      <TableCell className="text-xs">{u.username}</TableCell>
                       <TableCell>
                         <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
                           {u.role === 'admin' ? '管理员' : '成员'}
@@ -438,11 +438,11 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                 <div className="space-y-4">
                   {!editingUser && (
                     <div className="space-y-2">
-                      <Label>邮箱 *</Label>
+                      <Label>账户 *</Label>
                       <Input
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="user@company.com"
+                        value={formData.username}
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        placeholder="输入账户名"
                       />
                     </div>
                   )}
@@ -535,7 +535,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>邮箱</TableHead>
+                    <TableHead>账户</TableHead>
                     <TableHead>IP地址</TableHead>
                     <TableHead>状态</TableHead>
                     <TableHead>时间</TableHead>
@@ -544,7 +544,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                 <TableBody>
                   {loginLogs.map((log) => (
                     <TableRow key={log.id}>
-                      <TableCell className="text-xs">{log.email}</TableCell>
+                      <TableCell className="text-xs">{log.username}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{log.ip}</TableCell>
                       <TableCell>
                         {log.status === 'success' ? (

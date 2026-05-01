@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdmin, verifyAuth } from '@/lib/auth-middleware';
-import { getAdminAIConfig, updateAdminAIConfig } from '@/lib/auth';
+import { getAIConfig, updateAIConfig } from '@/lib/auth';
 
 // GET /api/admin/ai-config - 获取AI配置（管理员可编辑，普通用户只读）
 export async function GET(request: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const config = getAdminAIConfig();
+  const config = getAIConfig();
   // 普通用户不返回API Key
   if (auth.user!.role !== 'admin') {
     return NextResponse.json({
@@ -36,14 +36,12 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { apiKey, baseUrl, modelName } = body;
 
-    const config = updateAdminAIConfig(
-      {
-        apiKey: apiKey !== undefined ? apiKey : undefined,
-        baseUrl: baseUrl !== undefined ? baseUrl : undefined,
-        modelName: modelName !== undefined ? modelName : undefined,
-      },
-      auth.user!.id
-    );
+    const config = updateAIConfig({
+      apiKey: apiKey !== undefined ? apiKey : undefined,
+      baseUrl: baseUrl !== undefined ? baseUrl : undefined,
+      modelName: modelName !== undefined ? modelName : undefined,
+      updatedBy: auth.user!.id,
+    });
 
     return NextResponse.json({ success: true, data: config });
   } catch (error) {
