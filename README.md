@@ -19,6 +19,13 @@
 
 ## 核心能力
 
+### 🛡️ 权限管理系统
+
+- **管理员账号分配**：用户账户由管理员统一创建，无公开注册
+- **功能权限控制**：6个功能开关（AI分析、导出、仪表盘、分享、上传、自定义AI模型）
+- **用户管理**：管理员可查看用户列表、登录记录、使用统计
+- **AI模型配置**：管理员统一配置AI模型，用户可自定义（需管理员授权）
+
 ### 🏗 AI 智能建表
 
 没有数据？对话即建表。20 套场景模板覆盖通用/零售/美业/团队，或直接用自然语言描述需求，AI 自动生成含表头、示例数据、SUM 公式的 Excel 表格，支持对话迭代修改后一键导出。
@@ -199,8 +206,11 @@ src/
 │   └── page.tsx                 # 主页面（精简侧边栏 + 子Tab路由）
 ├── components/
 │   ├── ui/                      # shadcn/ui 组件库
-│   ├── sidebar.tsx              # 侧边栏导航（4组12项）
-│   ├── home-cards.tsx           # 首页功能卡片
+│   ├── sidebar.tsx              # 侧边栏导航（权限控制）
+│   ├── home-cards.tsx           # 首页功能卡片（权限控制）
+│   ├── login-dialog.tsx          # 统一登录弹窗
+│   ├── user-menu.tsx            # 右上角用户菜单
+│   ├── admin-panel.tsx          # 管理员面板（用户管理/AI配置/登录记录）
 │   ├── settings-dialog.tsx      # 设置弹窗（AI模型/预警/版本/模板/权限）
 │   ├── async-file-uploader.tsx  # 异步文件上传（Web Worker）
 │   ├── data-table.tsx           # 数据表格（含 AI 字段列渲染）
@@ -247,13 +257,17 @@ src/
 └── lib/
     ├── utils.ts                 # 通用工具（cn 等）
     ├── request.ts               # 统一请求（request + streamRequest）
-    ├── llm.ts                   # LLM 调用核心（callLLM + callLLMStream + callLLMStreamWithFallback）
+    ├── llm.ts                   # LLM 调用核心（callLLM + callLLMStream）
+    ├── auth.ts                  # 认证核心（登录/JWT/数据库操作）
+    ├── auth-middleware.ts       # API 路由权限中间件
+    ├── use-auth.tsx             # 全局登录状态 Hook
+    ├── use-permission-guard.tsx # 功能权限守卫组件
     ├── data-processor.ts        # 数据处理 + 深度分析引擎
     ├── ai-field-engine.ts       # AI 字段引擎（6种类型检测 + Prompt 生成）
     ├── metric-engine.ts         # 指标计算引擎（18预置 + 自定义）
     ├── cache-manager.ts         # LRU 缓存管理
     ├── session-store.ts         # 多 Tab 会话存储
-    ├── file-parser.worker.ts    # 文件解析 Web Worker
+    ├── file-parser.worker.ts   # 文件解析 Web Worker
     └── platform-types.ts        # 平台集成类型定义
 ```
 
@@ -284,8 +298,32 @@ src/
 
 ## API 接口
 
+### 认证接口
+
 | 接口 | 方法 | 说明 |
 |:-----|:----:|:-----|
+| `/api/auth/login` | POST | 用户登录 |
+| `/api/auth/me` | GET | 获取当前用户信息 |
+
+### 管理员接口（需管理员权限）
+
+| 接口 | 方法 | 说明 |
+|:-----|:----:|:-----|
+| `/api/admin/users` | GET/POST/PUT/DELETE | 用户管理 |
+| `/api/admin/login-logs` | GET | 登录记录 |
+| `/api/admin/usage-stats` | GET | 使用统计 |
+| `/api/admin/ai-config` | GET/PUT | AI模型配置 |
+
+### 数据接口
+
+| 接口 | 方法 | 说明 |
+|:-----|:----:|:-----|
+| `/api/auth/login` | POST | 用户登录 |
+| `/api/auth/me` | GET | 获取当前用户信息 |
+| `/api/admin/users` | GET/POST/PUT/DELETE | 用户管理（需管理员权限） |
+| `/api/admin/login-logs` | GET | 登录记录（需管理员权限） |
+| `/api/admin/usage-stats` | GET | 使用统计（需管理员权限） |
+| `/api/admin/ai-config` | GET/PUT | AI模型配置（需管理员权限） |
 | `/api/upload` | POST | 上传并解析 Excel/CSV 文件 |
 | `/api/analyze` | POST | 分析已解析的数据 |
 | `/api/llm-insight` | POST | AI 智能洞察（SSE 流式） |
@@ -297,6 +335,29 @@ src/
 | `/api/database` | POST | 外部数据库连接与查询 |
 | `/api/test-connection` | POST | AI 模型连接测试 |
 | `/api/alerts` | GET | 获取告警模板列表 |
+
+---
+
+## 登录说明
+
+### 默认管理员
+
+| 账户 | 密码 | 说明 |
+|:-----|:----:|:-----|
+| `admin` | `admin123` | 管理员账户，拥有全部权限 |
+
+### 功能权限
+
+管理员可控制用户使用以下功能：
+
+| 功能 | 说明 |
+|:-----|:-----|
+| AI智能分析 | AI问数、深度分析 |
+| 数据导出 | 导出Excel/CSV/PDF |
+| 仪表盘 | 创建和管理仪表盘 |
+| 分享链接 | 生成分享链接 |
+| 文件上传 | 上传Excel/CSV文件 |
+| 自定义AI模型 | 用户可配置自己的AI模型 |
 
 ---
 

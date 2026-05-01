@@ -43,7 +43,7 @@
 | 工具 | 表单收集 | 表单设计 / 数据管理 |
 | 工具 | SQL查询 | — |
 | 工具 | 报表导出 | 报表 / 导出 / 分享 / 应用设计 |
-| 设置弹窗 | — | AI模型 / 数据预警 / 版本快照 / 模板管理 / 权限 |
+| 设置弹窗 | — | AI模型 / 数据预警 / 版本快照 / 模板管理 / **权限管理** |
 
 ## 项目结构
 
@@ -292,12 +292,167 @@ NL2Dashboard 智能仪表盘生成（业务驱动）
 ### POST /api/test-connection
 AI 模型连接测试
 
+## 权限管理系统
+
+### 账号体系
+- **管理员分配账号**：用户账户由管理员创建，无公开注册
+- **登录方式**：用户名 + 密码登录
+- **默认管理员**：`admin` / `admin123`
+
+### 权限控制（6个功能开关）
+| 权限Key | 说明 | 默认值 |
+|---------|------|--------|
+| `ai_analyze` | AI智能分析 | true |
+| `export` | 数据导出 | true |
+| `dashboard` | 仪表盘创建 | true |
+| `share` | 分享链接 | true |
+| `upload` | 文件上传 | true |
+| `custom_ai_model` | 自定义AI模型 | false |
+
+### 前端权限控制
+- 未登录：点击功能弹出登录框
+- 无权限：显示"管理员已禁用此功能"提示
+
+### 认证 API
+
+#### POST /api/auth/login
+用户名密码登录
+
+**请求**:
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "name": "管理员",
+    "role": "admin",
+    "status": "active",
+    "permissions": {
+      "ai_analyze": true,
+      "export": true,
+      "dashboard": true,
+      "share": true,
+      "upload": true,
+      "custom_ai_model": true
+    }
+  }
+}
+```
+
+#### GET /api/auth/me
+获取当前用户信息
+
+**请求**: Header `Authorization: Bearer <token>`
+
+#### POST /api/auth/logout
+登出
+
+### 管理员 API
+
+#### GET /api/admin/users
+获取用户列表
+
+**请求**: Header `Authorization: Bearer <token>` (仅admin)
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "username": "admin",
+      "name": "管理员",
+      "role": "admin",
+      "status": "active",
+      "permissions": {...},
+      "createdBy": null,
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+#### POST /api/admin/users
+创建用户
+
+**请求**:
+```json
+{
+  "username": "testuser",
+  "password": "password123",
+  "name": "测试用户",
+  "role": "member",
+  "permissions": {
+    "ai_analyze": true,
+    "export": true,
+    "dashboard": true,
+    "share": true,
+    "upload": true,
+    "custom_ai_model": false
+  }
+}
+```
+
+#### PUT /api/admin/users/:id
+更新用户（角色、状态、权限）
+
+#### DELETE /api/admin/users/:id
+删除用户
+
+#### GET /api/admin/login-logs
+获取登录记录
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "username": "admin",
+      "ip": "192.168.1.1",
+      "status": "success",
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+#### GET /api/admin/usage-stats
+获取使用统计
+
+#### GET/PUT /api/admin/ai-config
+获取/更新全局AI模型配置
+
+**请求**:
+```json
+{
+  "apiKey": "sk-xxx",
+  "baseUrl": "https://api.deepseek.com",
+  "modelName": "deepseek-chat"
+}
+```
+
 ## 注意事项
 
 1. **文件大小限制**: 默认 50MB
 2. **支持的格式**: .xlsx, .xls, .csv
 3. **数据类型推断**: 自动识别数值、文本、日期字段
-4. **AI 模型**: 用户通过设置页面配置 OpenAI 兼容 API（apiKey + baseUrl + modelName），所有 AI 功能共用此配置
+4. **AI 模型配置**:
+   - 管理员配置全局AI模型（API Key、Base URL、模型名称）
+   - 用户是否可自定义AI模型由管理员控制（`custom_ai_model` 权限）
+   - 所有AI功能共用配置
 5. **错误边界**: 关键组件已包裹 ErrorBoundary
 6. **统一请求**: 使用 `src/lib/request.ts` 的 `request<T>()` 和 `streamRequest()` 进行 HTTP 请求
 7. **LLM 调用**: 使用 `src/lib/llm.ts` 的 `callLLM()` / `callLLMStream()` / `callLLMStreamWithFallback()`，统一超时120秒+自动重试
