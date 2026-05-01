@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import {
   Brain,
   Send,
@@ -23,12 +24,111 @@ import {
   Database,
   Target,
   Shield,
-  RotateCcw
+  RotateCcw,
+  Settings,
+  Plus,
+  Clock,
+  X,
+  Table,
+  LayoutDashboard,
+  GitBranch,
+  BookOpen,
+  Search,
+  ChevronRight,
+  ArrowRight,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import { toUserFriendlyError, type UserFriendlyError } from '@/lib/error-handler';
+
+// ============= 类型定义 =============
+
+// AI模式类型
+type AIMode = 'analysis' | 'table' | 'dashboard' | 'workflow' | 'tutorial';
+
+interface AIModeConfig {
+  id: AIMode;
+  label: string;
+  icon: React.ElementType;
+  description: string;
+  placeholder: string;
+  quickActions: { label: string; query: string }[];
+}
+
+const AI_MODES: AIModeConfig[] = [
+  {
+    id: 'analysis',
+    label: '数据分析',
+    icon: TrendingUp,
+    description: '查询或分析数据中的信息',
+    placeholder: '例如：查询金额大于1万的订单，或分析哪些产品销售额最高',
+    quickActions: [
+      { label: '核心指标分析', query: '分析这份数据的核心业务指标，包括数值型字段的汇总、平均、最大、最小值，以及文本型字段的分布情况' },
+      { label: '趋势分析', query: '分析数据的时间趋势，找出增长或下降的规律' },
+      { label: '异常检测', query: '识别数据中的异常值和异常模式' },
+      { label: '归因分析', query: '分析影响核心指标的关键因素' },
+    ],
+  },
+  {
+    id: 'table',
+    label: '数据表搭建',
+    icon: Table,
+    description: '创建或修改数据表结构',
+    placeholder: '例如：帮我创建一个项目进度跟踪表，包含任务名称、负责人、截止日期、完成状态',
+    quickActions: [
+      { label: '创建客户表', query: '创建一个客户信息表，包含姓名、电话、邮箱、公司、备注等字段' },
+      { label: '创建销售表', query: '创建一个销售记录表，包含日期、客户、产品、数量、金额、状态等字段' },
+      { label: '创建库存表', query: '创建一个库存管理表，包含商品名称、分类、库存量、预警值、供应商等字段' },
+    ],
+  },
+  {
+    id: 'dashboard',
+    label: '仪表盘搭建',
+    icon: LayoutDashboard,
+    description: '创建数据可视化图表',
+    placeholder: '例如：帮我创建一个展示销售数据的仪表盘，包含月度销售额趋势图和区域占比饼图',
+    quickActions: [
+      { label: '销售仪表盘', query: '创建一个销售仪表盘，包含月度趋势图、区域占比饼图、TOP产品柱状图' },
+      { label: '运营仪表盘', query: '创建一个运营仪表盘，包含关键指标卡片、趋势图、排行榜' },
+      { label: '财务仪表盘', query: '创建一个财务仪表盘，包含收支趋势、分类占比、TOP支出项' },
+    ],
+  },
+  {
+    id: 'workflow',
+    label: '工作流搭建',
+    icon: GitBranch,
+    description: '配置自动化流程',
+    placeholder: '例如：当有新记录时，给负责人发送通知消息',
+    quickActions: [
+      { label: '新增通知', query: '当数据表中有新记录时，自动发送通知给指定人员' },
+      { label: '状态更新', query: '当某个字段满足条件时，自动更新另一字段的值' },
+      { label: '数据同步', query: '当数据变更时，自动同步到另一张关联表' },
+    ],
+  },
+  {
+    id: 'tutorial',
+    label: '使用教程',
+    icon: BookOpen,
+    description: '解答产品使用问题',
+    placeholder: '例如：查找引用字段怎么使用，或如何设置数据预警',
+    quickActions: [
+      { label: '如何创建图表', query: '如何使用图表功能创建可视化图表' },
+      { label: '如何设置权限', query: '如何设置行级权限控制数据访问' },
+      { label: '如何使用公式', query: '如何在表格中使用公式和函数' },
+    ],
+  },
+];
+
+// 历史会话
+interface ChatSession {
+  id: string;
+  title: string;
+  mode: AIMode;
+  lastMessage: string;
+  timestamp: Date;
+  messages: ChatMessage[];
+}
 
 interface ChatMessage {
   id: string;
@@ -48,56 +148,58 @@ interface EnhancedLLMAssistantProps {
   modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
   onDataFilter?: (filter: { field: string; operator: string; value: string }[]) => void;
   onChartSuggest?: (suggestion: { type: string; xField: string; yField: string }) => void;
+  onNavigate?: (target: 'table-builder' | 'dashboard' | 'workflow' | 'settings') => void;
 }
-
-const PRESET_QUERIES = [
-  {
-    icon: TrendingUp,
-    label: '趋势与机会',
-    query: '分析核心业务指标的变化趋势，重点关注：1）哪些指标在增长/下降，具体变化幅度是多少；2）增长/下降的驱动因素是什么；3）基于趋势，未来1-2周最可能的发展方向；4）趋势中隐藏的业务机会点。请用具体数字说明，不要只说"有所增长"。'
-  },
-  {
-    icon: Lightbulb,
-    label: '业务洞察',
-    query: '从业务视角深度分析这份数据，要求：1）先判断这是什么业务场景（销售/用户/库存/财务等）；2）找出2-3个最有价值的业务发现（不是数据质量问题，而是业务规律）；3）每个发现给出具体的业务含义和可量化的影响；4）基于这些发现，本周可以做什么具体动作。'
-  },
-  {
-    icon: Target,
-    label: '优化方案',
-    query: '基于数据分析给出可落地的优化方案，要求：1）方案必须分优先级：本周可做（零成本/低成本）、本月可做（需要少量资源）、本季度规划；2）每个方案都要说明预期效果（能用数字就用数字）；3）优先给出不依赖额外数据的方案；4）最后说明当前数据的局限对结论的影响。'
-  },
-  {
-    icon: AlertTriangle,
-    label: '风险与预警',
-    query: '识别数据中的业务风险和异常信号，重点关注：1）哪些指标表现异常，偏离正常范围多少；2）这些异常可能的业务原因（不要只说"数据异常"）；3）如果不干预，预计会产生什么后果；4）给出最低成本的干预方案（本周内可执行）。'
-  },
-  {
-    icon: Database,
-    label: '数据诊断',
-    query: '诊断这份数据的质量和可用性：1）当前数据能支撑什么程度的分析（描述性/诊断性/预测性）；2）数据的主要短板是什么，对分析结论的影响有多大；3）在现有数据质量下，最可靠的分析结论是什么（给出置信度）；4）建议优先补充哪些数据来提升分析价值。'
-  },
-  {
-    icon: Sparkles,
-    label: '全面诊断',
-    query: '对这份数据做全面的业务诊断，涵盖：1）业务场景判断和核心指标识别；2）数据质量分层评估（原始层+清洗层）；3）2-3个核心业务发现（带具体数字）；4）1-2个风险点；5）按优先级排序的行动建议（本周/本月/本季度）。要求输出结构化、有数据支撑、可直接用于业务汇报。'
-  },
-];
 
 export function EnhancedLLMAssistant({
   data,
   analysis,
   modelConfig,
   onDataFilter,
-  onChartSuggest
+  onChartSuggest,
+  onNavigate,
 }: EnhancedLLMAssistantProps) {
+  // 状态
+  const [currentMode, setCurrentMode] = useState<AIMode>('analysis');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showContext, setShowContext] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showModeSelector, setShowModeSelector] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  // 获取当前模式配置
+  const currentModeConfig = AI_MODES.find(m => m.id === currentMode) || AI_MODES[0];
+
+  // 加载历史会话
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('datainsight-ai-sessions');
+      if (saved) {
+        const parsed = JSON.parse(saved) as ChatSession[];
+        // 转换日期字符串为Date对象
+        parsed.forEach(s => {
+          s.timestamp = new Date(s.timestamp);
+        });
+        setSessions(parsed);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // 保存历史会话
+  const saveSessions = useCallback((newSessions: ChatSession[]) => {
+    try {
+      localStorage.setItem('datainsight-ai-sessions', JSON.stringify(newSessions.slice(0, 50)));
+    } catch { /* ignore */ }
+  }, []);
+
+  // 滚动到底部
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -106,15 +208,77 @@ export function EnhancedLLMAssistant({
 
   const generateId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-  // 调用真实的 LLM API，流式响应
+  // 切换模式时清空对话
+  const handleModeChange = (mode: AIMode) => {
+    if (mode !== currentMode && messages.length > 0) {
+      // 保存当前会话
+      if (messages.length >= 2) {
+        const newSession: ChatSession = {
+          id: `session-${Date.now()}`,
+          title: messages[0]?.content.slice(0, 30) || '新会话',
+          mode: currentMode,
+          lastMessage: messages[messages.length - 1]?.content.slice(0, 50) || '',
+          timestamp: new Date(),
+          messages: [...messages],
+        };
+        setSessions(prev => {
+          const updated = [newSession, ...prev].slice(0, 50);
+          saveSessions(updated);
+          return updated;
+        });
+      }
+      setMessages([]);
+    }
+    setCurrentMode(mode);
+    setShowModeSelector(false);
+  };
+
+  // 新建会话
+  const handleNewSession = () => {
+    if (messages.length >= 2) {
+      const newSession: ChatSession = {
+        id: `session-${Date.now()}`,
+        title: messages[0]?.content.slice(0, 30) || '新会话',
+        mode: currentMode,
+        lastMessage: messages[messages.length - 1]?.content.slice(0, 50) || '',
+        timestamp: new Date(),
+        messages: [...messages],
+      };
+      setSessions(prev => {
+        const updated = [newSession, ...prev].slice(0, 50);
+        saveSessions(updated);
+        return updated;
+      });
+    }
+    setMessages([]);
+    setInput('');
+  };
+
+  // 加载历史会话
+  const handleLoadSession = (session: ChatSession) => {
+    setMessages(session.messages);
+    setCurrentMode(session.mode);
+    setShowHistory(false);
+  };
+
+  // 删除历史会话
+  const handleDeleteSession = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSessions(prev => {
+      const updated = prev.filter(s => s.id !== id);
+      saveSessions(updated);
+      return updated;
+    });
+  };
+
+  // 调用 LLM API
   const callLLMInsight = useCallback(async (question: string) => {
-    // 前端拦截：无模型配置时直接提示
     if (!modelConfig) {
       const assistantMsgId = `msg-${Date.now()}-noconfig`;
       const assistantMessage: ChatMessage = {
         id: assistantMsgId,
         role: 'assistant',
-        content: '⚠️ 尚未配置AI模型。请在「AI模型配置」中设置您的OpenAI兼容API（API Key + Base URL + 模型名称），即可启用智能分析功能。',
+        content: '尚未配置AI模型。请在「AI模型配置」中设置您的API，即可启用智能分析功能。',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, {
@@ -129,7 +293,6 @@ export function EnhancedLLMAssistant({
     const userMsgId = generateId();
     const assistantMsgId = generateId();
 
-    // 添加用户消息
     const userMessage: ChatMessage = {
       id: userMsgId,
       role: 'user',
@@ -137,7 +300,6 @@ export function EnhancedLLMAssistant({
       timestamp: new Date()
     };
 
-    // 添加空的助手消息占位
     const assistantMessage: ChatMessage = {
       id: assistantMsgId,
       role: 'assistant',
@@ -149,27 +311,38 @@ export function EnhancedLLMAssistant({
     setMessages(prev => [...prev, userMessage, assistantMessage]);
     setIsLoading(true);
 
-    // 取消之前的请求
     if (abortRef.current) {
       abortRef.current.abort();
     }
     abortRef.current = new AbortController();
 
     try {
-      const response = await fetch('/api/llm-insight', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: question,
+      // 根据模式选择API
+      let apiPath = '/api/llm-insight';
+      let requestBody: Record<string, unknown> = {
+        message: question,
+        mode: currentMode,
+        modelConfig,
+        chatHistory: messages
+          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .slice(-10)
+          .map(m => ({ role: m.role, content: m.content })),
+      };
+
+      // 数据分析模式才传数据
+      if (currentMode === 'analysis') {
+        requestBody = {
+          ...requestBody,
           data: { headers: data.headers, rows: data.rows.slice(0, 200), rowCount: data.rowCount, columnCount: data.columnCount },
           fieldStats: analysis.fieldStats.slice(0, 20),
           analysisMode: 'comprehensive',
-          modelConfig,
-          chatHistory: messages
-            .filter(m => m.role === 'user' || m.role === 'assistant')
-            .slice(-10)
-            .map(m => ({ role: m.role, content: m.content })),
-        }),
+        };
+      }
+
+      const response = await fetch(apiPath, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
         signal: abortRef.current.signal
       });
 
@@ -210,14 +383,11 @@ export function EnhancedLLMAssistant({
                     : m
                 ));
               }
-            } catch {
-              // 忽略解析错误
-            }
+            } catch { /* ignore */ }
           }
         }
       }
 
-      // 最终更新
       setMessages(prev => prev.map(m =>
         m.id === assistantMsgId
           ? { ...m, isStreaming: false, content: fullContent, suggestions: extractSuggestions(fullContent) }
@@ -226,8 +396,6 @@ export function EnhancedLLMAssistant({
 
     } catch (err) {
       if ((err as Error).name === 'AbortError') return;
-      console.error('LLM调用错误:', err);
-      const errorMsg = err instanceof Error ? err.message : '未知错误';
       const friendlyError = toUserFriendlyError(err as Error);
       
       setMessages(prev => prev.map(m =>
@@ -249,17 +417,14 @@ export function EnhancedLLMAssistant({
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [data, analysis, messages, modelConfig]);
+  }, [data, analysis, messages, modelConfig, currentMode]);
 
-  // 从响应中提取推荐追问
+  // 提取推荐追问
   const extractSuggestions = (content: string): string[] => {
     const suggestions: string[] = [];
-    
-    // 查找 "## 推荐追问" 或 "##推荐追问" 章节
     const sectionMatch = content.match(/##\s*推荐追问\s*\n([\s\S]*?)$/);
     if (sectionMatch) {
       const section = sectionMatch[1];
-      // 提取编号的追问行：1. 2. 3. 或 1）2）3）
       const lines = section.split('\n');
       for (const line of lines) {
         const match = line.match(/^\s*\d+[.、）)]\s*(.+)/);
@@ -269,26 +434,6 @@ export function EnhancedLLMAssistant({
         }
       }
     }
-    
-    // 如果LLM没有输出推荐追问章节，基于数据上下文生成追问
-    if (suggestions.length === 0) {
-      const numericFields = analysis.fieldStats.filter(f => f.type === 'number').map(f => f.field);
-      const textFields = analysis.fieldStats.filter(f => f.type === 'string' || f.type === 'id').map(f => f.field);
-      
-      if (numericFields.length > 0 && textFields.length > 0) {
-        suggestions.push(`按${textFields[0]}拆分，各组的${numericFields[0]}差异有多大，哪个组贡献最大`);
-      }
-      if (numericFields.length >= 2) {
-        suggestions.push(`${numericFields[0]}和${numericFields[1]}之间是否存在相关性，相关系数是多少`);
-      }
-      if (data.rows.length > 30) {
-        suggestions.push('前20%的关键项贡献了整体多大比例，是否符合二八法则');
-      }
-      if (numericFields.length > 0) {
-        suggestions.push(`剔除异常值（3σ外）后，${numericFields[0]}的均值和中位数变化多少`);
-      }
-    }
-    
     return suggestions.slice(0, 3);
   };
 
@@ -299,17 +444,15 @@ export function EnhancedLLMAssistant({
     await callLLMInsight(query);
   };
 
-  const handlePresetQuery = async (query: string) => {
+  const handleQuickAction = async (query: string) => {
     if (isLoading) return;
     setInput(query);
     await callLLMInsight(query);
   };
 
   const handleRetry = (msgIndex: number) => {
-    // 找到当前assistant消息对应的user消息（前一条）
     const userMsg = messages[msgIndex - 1];
     if (userMsg && userMsg.role === 'user') {
-      // 移除当前的assistant消息和对应的user消息
       setMessages(prev => prev.slice(0, msgIndex - 1));
       callLLMInsight(userMsg.content);
     }
@@ -331,71 +474,140 @@ export function EnhancedLLMAssistant({
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Brain className="w-5 h-5 text-primary" />
-            AI 数据分析助手
-            <Badge variant="secondary" className="text-xs">
-              <Sparkles className="w-3 h-3 mr-1" />
-              流式输出
-            </Badge>
+            AI 数据助手
           </CardTitle>
-          {messages.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={clearMessages} className="text-xs">
-              <RotateCcw className="w-3 h-3 mr-1" />
-              清空对话
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" className="h-8" onClick={() => setShowHistory(!showHistory)}>
+              <Clock className="w-4 h-4 mr-1" />
+              历史
             </Button>
+            <Button variant="ghost" size="sm" className="h-8" onClick={handleNewSession}>
+              <Plus className="w-4 h-4 mr-1" />
+              新会话
+            </Button>
+          </div>
+        </div>
+
+        {/* 模式切换器 */}
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-between mt-2"
+            onClick={() => setShowModeSelector(!showModeSelector)}
+          >
+            <span className="flex items-center gap-2">
+              {React.createElement(currentModeConfig.icon, { className: 'w-4 h-4' })}
+              {currentModeConfig.label}
+            </span>
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+
+          {showModeSelector && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-10 p-2 space-y-1">
+              {AI_MODES.map(mode => {
+                const Icon = mode.icon;
+                return (
+                  <button
+                    key={mode.id}
+                    className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-colors ${
+                      currentMode === mode.id 
+                        ? 'bg-primary/10 text-primary' 
+                        : 'hover:bg-muted'
+                    }`}
+                    onClick={() => handleModeChange(mode.id)}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{mode.label}</p>
+                      <p className="text-xs text-muted-foreground truncate">{mode.description}</p>
+                    </div>
+                    {currentMode === mode.id && <Check className="w-4 h-4" />}
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col min-h-0">
+        {/* 历史会话面板 */}
+        {showHistory && (
+          <div className="mb-3 p-3 bg-muted/50 rounded-lg max-h-64 overflow-auto">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium">历史会话</p>
+              <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setShowHistory(false)}>
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+            {sessions.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">暂无历史会话</p>
+            ) : (
+              <div className="space-y-1">
+                {sessions.slice(0, 10).map(session => (
+                  <div
+                    key={session.id}
+                    className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer group"
+                    onClick={() => handleLoadSession(session)}
+                  >
+                    <MessageSquare className="w-3 h-3 text-muted-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{session.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{session.lastMessage}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] h-5 shrink-0">
+                      {AI_MODES.find(m => m.id === session.mode)?.label}
+                    </Badge>
+                    <button
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => handleDeleteSession(session.id, e)}
+                    >
+                      <X className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 快捷操作 */}
-        <div className="mb-3">
-          <p className="text-xs text-gray-500 mb-2">快捷分析</p>
-          <div className="flex flex-wrap gap-2">
-            {PRESET_QUERIES.map((action, i) => {
-              const Icon = action.icon;
-              return (
+        {messages.length === 0 && (
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-xs text-muted-foreground">快捷操作</p>
+              <Badge variant="outline" className="text-[10px] h-5">
+                {currentModeConfig.label}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {currentModeConfig.quickActions.map((action, i) => (
                 <Button
                   key={i}
                   variant="outline"
                   size="sm"
-                  onClick={() => handlePresetQuery(action.query)}
+                  onClick={() => handleQuickAction(action.query)}
                   disabled={isLoading}
-                  className="text-xs h-7 hover:bg-primary/10 hover:text-primary hover:border-primary/20"
+                  className="text-xs h-auto py-2 justify-start text-left whitespace-normal hover:bg-primary/10"
                 >
-                  <Icon className="w-3 h-3 mr-1" />
-                  {action.label}
+                  <span className="line-clamp-2">{action.label}</span>
                 </Button>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 消息列表 */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto mb-3 pr-2 space-y-4 min-h-0">
           {messages.length === 0 && (
             <div className="text-center py-8">
-              <Brain className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-              <h3 className="font-medium text-gray-600 mb-2">AI 深度数据分析</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                基于大语言模型的智能分析，支持流式实时响应
+              <Brain className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+              <h3 className="font-medium text-sm mb-1">{currentModeConfig.label}</h3>
+              <p className="text-xs text-muted-foreground mb-2">{currentModeConfig.description}</p>
+              <p className="text-xs text-muted-foreground/70">
+                输入您的问题，或选择快捷操作开始
               </p>
-              <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
-                {PRESET_QUERIES.map((action, i) => {
-                  const Icon = action.icon;
-                  return (
-                    <Button
-                      key={i}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePresetQuery(action.query)}
-                      className="text-xs h-auto py-2 justify-start"
-                    >
-                      <Icon className="w-3 h-3 mr-2 flex-shrink-0" />
-                      <span className="truncate">{action.label}</span>
-                    </Button>
-                  );
-                })}
-              </div>
             </div>
           )}
 
@@ -404,7 +616,7 @@ export function EnhancedLLMAssistant({
               <div className={`max-w-[90%] rounded-lg px-4 py-3 ${
                 msg.role === 'user'
                   ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground border border-border'
+                  : 'bg-muted border border-border'
               }`}>
                 {/* 错误提示 */}
                 {msg.role === 'assistant' && msg.error && (
@@ -414,14 +626,6 @@ export function EnhancedLLMAssistant({
                       {msg.error.title}
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">{msg.error.message}</p>
-                    <div className="text-xs text-muted-foreground">
-                      <p className="font-medium mb-1">排查建议：</p>
-                      <ul className="list-disc list-inside space-y-0.5">
-                        {msg.error.suggestions.map((s, i) => (
-                          <li key={i}>{s}</li>
-                        ))}
-                      </ul>
-                    </div>
                     {msg.error.canRetry && (
                       <Button
                         variant="outline"
@@ -440,19 +644,17 @@ export function EnhancedLLMAssistant({
                 <div className="text-sm leading-relaxed">
                   {msg.role === 'assistant' ? (
                     <div className="prose prose-sm prose-gray max-w-none
-                      [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:text-gray-900
-                      [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1.5 [&_h2]:text-gray-800
-                      [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-gray-700
-                      [&_p]:my-1.5 [&_p]:text-gray-700
+                      [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2
+                      [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1.5
+                      [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1
+                      [&_p]:my-1.5
                       [&_ul]:my-1.5 [&_ul]:pl-4 [&_ul]:list-disc
                       [&_ol]:my-1.5 [&_ol]:pl-4 [&_ol]:list-decimal
-                      [&_li]:my-0.5 [&_li]:text-gray-700
-                      [&_strong]:text-gray-900 [&_strong]:font-semibold
-                      [&_code]:bg-gray-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:text-blue-700
-                      [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:text-xs [&_pre]:overflow-x-auto
-                      [&_blockquote]:border-l-3 [&_blockquote]:border-blue-400 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-gray-600
-                      [&_hr]:my-3 [&_hr]:border-gray-200
-                      [&_table]:my-2 [&_table]:text-xs [&_th]:bg-gray-50 [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1 [&_td]:border-gray-100
+                      [&_li]:my-0.5
+                      [&_strong]:font-semibold
+                      [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
+                      [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:text-xs [&_pre]:overflow-x-auto
+                      [&_table]:my-2 [&_table]:text-xs [&_th]:bg-muted [&_th]:px-2 [&_th]:py-1
                     ">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content.replace(/##\s*推荐追问[\s\S]*$/, '')}</ReactMarkdown>
                     </div>
@@ -464,9 +666,9 @@ export function EnhancedLLMAssistant({
                   )}
                 </div>
 
-                {/* 助手消息的操作栏 */}
+                {/* 助手消息操作栏 */}
                 {msg.role === 'assistant' && !msg.isStreaming && msg.content && (
-                  <div className="mt-2 pt-2 border-t border-gray-200 flex items-center gap-2">
+                  <div className="mt-2 pt-2 border-t border-border/50 flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -483,17 +685,17 @@ export function EnhancedLLMAssistant({
                       className="text-xs h-6 px-2"
                     >
                       <RotateCcw className="w-3 h-3 mr-1" />
-                      重新生成
+                      重试
                     </Button>
                   </div>
                 )}
 
                 {/* 推荐追问 */}
                 {msg.role === 'assistant' && msg.suggestions && msg.suggestions.length > 0 && !msg.isStreaming && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs font-medium mb-2 text-blue-500 flex items-center gap-1">
+                  <div className="mt-3 pt-3 border-t border-border/50">
+                    <p className="text-xs font-medium mb-2 text-primary flex items-center gap-1">
                       <Lightbulb className="w-3 h-3" />
-                      深度追问：
+                      深度追问
                     </p>
                     <div className="flex flex-col gap-1">
                       {msg.suggestions.slice(0, 3).map((s, i) => (
@@ -501,19 +703,20 @@ export function EnhancedLLMAssistant({
                           key={i}
                           variant="outline"
                           size="sm"
-                          onClick={() => handlePresetQuery(s)}
-                          className="text-xs h-auto py-1.5 px-2 text-left justify-start whitespace-normal hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
+                          onClick={() => handleQuickAction(s)}
+                          className="text-xs h-auto py-1.5 px-2 text-left justify-start whitespace-normal hover:bg-primary/10"
                         >
-                          <span className="text-blue-400 mr-1 shrink-0">{i + 1}.</span>
-                          {s}
+                          <span className="text-primary mr-1 shrink-0">{i + 1}.</span>
+                          <span className="line-clamp-2">{s}</span>
                         </Button>
                       ))}
                     </div>
                   </div>
                 )}
 
+                {/* 时间戳 */}
                 <p className={`text-xs mt-2 ${
-                  msg.role === 'user' ? 'text-white/60' : 'text-gray-400'
+                  msg.role === 'user' ? 'text-white/60' : 'text-muted-foreground/60'
                 }`}>
                   {msg.timestamp.toLocaleTimeString()}
                 </p>
@@ -523,8 +726,8 @@ export function EnhancedLLMAssistant({
 
           {isLoading && messages[messages.length - 1]?.role === 'user' && (
             <div className="flex justify-start">
-              <div className="bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-gray-500">
+              <div className="bg-muted rounded-lg px-4 py-3 border border-border">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm">AI 正在分析...</span>
                 </div>
@@ -536,7 +739,8 @@ export function EnhancedLLMAssistant({
         {/* 输入框 */}
         <div className="flex gap-2">
           <Input
-            placeholder="输入您的分析需求，如：分析销售趋势、找出异常值..."
+            ref={inputRef}
+            placeholder={currentModeConfig.placeholder}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
@@ -547,7 +751,6 @@ export function EnhancedLLMAssistant({
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
             size="icon"
-            className="bg-primary hover:bg-primary/90"
           >
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -570,7 +773,7 @@ export function EnhancedLLMAssistant({
         </Button>
 
         {showContext && (
-          <div className="mt-2 p-3 bg-gray-50 rounded-lg text-xs space-y-1">
+          <div className="mt-2 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
             <p className="font-medium">数据概况：</p>
             <p>文件: {data.fileName}</p>
             <p>行数: {(data.rowCount ?? 0).toLocaleString()} | 列数: {data.columnCount ?? 0}</p>
@@ -580,7 +783,6 @@ export function EnhancedLLMAssistant({
                 <p className="font-medium mt-2">深度分析：</p>
                 <p>健康评分: {analysis.deepAnalysis.healthScore.overall}/100</p>
                 <p>关键发现: {analysis.deepAnalysis.keyFindings.length} 项</p>
-                <p>数据画像: {analysis.deepAnalysis.dataProfile.dataType} / {analysis.deepAnalysis.dataProfile.suggestedIndustry}</p>
               </>
             )}
           </div>

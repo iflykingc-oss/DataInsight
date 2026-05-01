@@ -11,6 +11,7 @@ import {
   TrendingUp, LineChart, Activity, Layers,
   Table2, Filter, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight,
   Search, Save, FolderOpen, RotateCcw,
+  Trophy, Timer, Target, Star, Award, Crown, Medal, TrendingDown, Minus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
@@ -31,7 +32,7 @@ interface DashboardProps {
 
 const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16', '#2f54eb', '#a0d911'];
 
-type WidgetType = 'kpi' | 'bar' | 'line' | 'pie' | 'area' | 'radar' | 'pivot' | 'detail' | 'filter';
+type WidgetType = 'kpi' | 'bar' | 'line' | 'pie' | 'area' | 'radar' | 'pivot' | 'detail' | 'filter' | 'leaderboard' | 'countdown' | 'progress' | 'nps' | 'text';
 
 interface ChartWidget {
   id: string;
@@ -45,6 +46,19 @@ interface ChartWidget {
   pivotConfig?: { rowField: string; colField: string; valField: string; aggFunc: string };
   // 筛选器专用
   filterField?: string;
+  // 排行榜专用
+  rankField?: string;
+  // 倒计时专用
+  countdownTarget?: string;
+  // 进度图专用
+  progressValue?: number;
+  progressMax?: number;
+  // NPS专用
+  promoterCount?: number;
+  passiveCount?: number;
+  detractorCount?: number;
+  // 文本组件专用
+  textContent?: string;
 }
 
 // ============================================
@@ -582,6 +596,262 @@ export function Dashboard({ data, analysis }: DashboardProps) {
             );
           }
 
+          // ==================== 排行榜组件 ====================
+          if (widget.type === 'leaderboard') {
+            const topData = widget.data.slice(0, 10);
+            return (
+              <Card key={widget.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
+                    <Badge variant="outline" className="text-xs flex items-center gap-1">
+                      <Trophy className="w-3 h-3" /> 排行榜
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {topData.map((item, idx) => {
+                      const rank = idx + 1;
+                      const name = String(item[widget.xField] || item.name || `项目${rank}`);
+                      const value = Number(item[widget.yField] || item.value || 0);
+                      const percent = topData[0] ? (value / Number(topData[0][widget.yField] || topData[0].value || 1)) * 100 : 0;
+                      
+                      const rankIcons = [
+                        <Crown key="crown" className="w-4 h-4 text-yellow-500" />,
+                        <Medal key="medal" className="w-4 h-4 text-gray-400" />,
+                        <Medal key="medal2" className="w-4 h-4 text-amber-600" />,
+                      ];
+                      
+                      return (
+                        <div key={idx} className="flex items-center gap-3">
+                          <div className="w-8 flex justify-center">
+                            {rank <= 3 ? rankIcons[rank - 1] : (
+                              <span className="text-sm font-medium text-muted-foreground">{rank}</span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm truncate font-medium">{name}</span>
+                              <span className="text-sm font-bold ml-2">{typeof value === 'number' ? value.toLocaleString() : value}</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all ${
+                                  rank === 1 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
+                                  rank === 2 ? 'bg-gradient-to-r from-gray-300 to-gray-400' :
+                                  rank === 3 ? 'bg-gradient-to-r from-amber-600 to-amber-700' :
+                                  'bg-primary'
+                                }`}
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // ==================== 倒计时组件 ====================
+          if (widget.type === 'countdown') {
+            const targetDate = widget.countdownTarget ? new Date(widget.countdownTarget) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+            const now = new Date();
+            const diff = targetDate.getTime() - now.getTime();
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            const timeBlocks = [
+              { value: days, label: '天' },
+              { value: hours, label: '时' },
+              { value: minutes, label: '分' },
+              { value: seconds, label: '秒' },
+            ];
+            
+            return (
+              <Card key={widget.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
+                    <Badge variant="outline" className="text-xs flex items-center gap-1">
+                      <Timer className="w-3 h-3" /> 倒计时
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-4">
+                    <div className="grid grid-cols-4 gap-2">
+                      {timeBlocks.map((block, idx) => (
+                        <div key={idx} className="bg-primary/5 rounded-lg p-3">
+                          <div className="text-3xl font-bold text-primary">
+                            {String(block.value).padStart(2, '0')}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">{block.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-4">
+                      目标日期: {targetDate.toLocaleDateString('zh-CN')}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // ==================== 进度图组件 ====================
+          if (widget.type === 'progress') {
+            const currentValue = widget.progressValue || 0;
+            const maxValue = widget.progressMax || 100;
+            const percent = Math.min((currentValue / maxValue) * 100, 100);
+            
+            const getStatusColor = () => {
+              if (percent >= 100) return 'text-green-500';
+              if (percent >= 70) return 'text-primary';
+              if (percent >= 30) return 'text-yellow-500';
+              return 'text-red-500';
+            };
+            
+            return (
+              <Card key={widget.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
+                    <Badge variant="outline" className="text-xs flex items-center gap-1">
+                      <Target className="w-3 h-3" /> 进度
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-2xl font-bold">{currentValue.toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">当前值</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">目标: {maxValue.toLocaleString()}</p>
+                        <p className={`text-sm font-medium ${getStatusColor()}`}>{percent.toFixed(1)}%</p>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all ${
+                            percent >= 100 ? 'bg-green-500' :
+                            percent >= 70 ? 'bg-primary' :
+                            percent >= 30 ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          }`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      {/* 里程碑标记 */}
+                      <div className="absolute top-0 left-1/3 w-0.5 h-4 bg-muted-foreground/30" />
+                      <div className="absolute top-0 left-2/3 w-0.5 h-4 bg-muted-foreground/30" />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>0%</span>
+                      <span>33%</span>
+                      <span>66%</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // ==================== NPS组件 ====================
+          if (widget.type === 'nps') {
+            const promoter = widget.promoterCount || 0;
+            const passive = widget.passiveCount || 0;
+            const detractor = widget.detractorCount || 0;
+            const total = promoter + passive + detractor || 1;
+            const promoterPct = (promoter / total) * 100;
+            const passivePct = (passive / total) * 100;
+            const detractorPct = (detractor / total) * 100;
+            const npsScore = Math.round(promoterPct - detractorPct);
+            
+            const getNpsLevel = () => {
+              if (npsScore >= 70) return { label: '优秀', color: 'text-green-500', bg: 'bg-green-500' };
+              if (npsScore >= 50) return { label: '良好', color: 'text-primary', bg: 'bg-primary' };
+              if (npsScore >= 30) return { label: '一般', color: 'text-yellow-500', bg: 'bg-yellow-500' };
+              return { label: '需改进', color: 'text-red-500', bg: 'bg-red-500' };
+            };
+            
+            const level = getNpsLevel();
+            
+            return (
+              <Card key={widget.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
+                    <Badge variant="outline" className="text-xs flex items-center gap-1">
+                      <Star className="w-3 h-3" /> NPS
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center mb-4">
+                    <p className={`text-4xl font-bold ${level.color}`}>{npsScore}</p>
+                    <Badge className={`mt-2 ${level.bg} text-white`}>{level.label}</Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 text-xs text-green-600 flex items-center gap-1">
+                        <TrendingUp className="w-3 h-3" /> 推荐者
+                      </div>
+                      <div className="flex-1 h-4 bg-green-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-green-500" style={{ width: `${promoterPct}%` }} />
+                      </div>
+                      <span className="text-xs w-12 text-right">{promoterPct.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 text-xs text-gray-600 flex items-center gap-1">
+                        <Minus className="w-3 h-3" /> 被动者
+                      </div>
+                      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-gray-400" style={{ width: `${passivePct}%` }} />
+                      </div>
+                      <span className="text-xs w-12 text-right">{passivePct.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 text-xs text-red-600 flex items-center gap-1">
+                        <TrendingDown className="w-3 h-3" /> 贬损者
+                      </div>
+                      <div className="flex-1 h-4 bg-red-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-red-500" style={{ width: `${detractorPct}%` }} />
+                      </div>
+                      <span className="text-xs w-12 text-right">{detractorPct.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center mt-3">
+                    基于 {total.toLocaleString()} 条反馈
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // ==================== 文本组件 ====================
+          if (widget.type === 'text') {
+            return (
+              <Card key={widget.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="prose prose-sm max-w-none">
+                    {widget.textContent || '点击编辑文本内容'}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+
           // 图表渲染
           return (
             <Card key={widget.id} className="hover:shadow-md transition-shadow">
@@ -1107,6 +1377,76 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
       data: chartData,
       priority: 5,
     });
+  }
+
+  // ===== 9. 排行榜 =====
+  if (goodTextCols.length > 0 && numericCols.length > 0) {
+    const xCol = goodTextCols[0];
+    const yCol = numericCols[0];
+    const grouped = groupByField(rows, xCol.name, yCol.name);
+    const chartData = Object.entries(grouped)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
+      .slice(0, 10)
+      .map(([key, val]) => ({ [xCol.name]: key, [yCol.name]: val, name: key, value: val }));
+
+    if (chartData.length >= 3) {
+      widgets.push({
+        id: `leaderboard-${xCol.name}`,
+        type: 'leaderboard',
+        title: `${yCol.name} Top 10 排行榜`,
+        xField: xCol.name,
+        yField: yCol.name,
+        data: chartData,
+        priority: 8,
+      });
+    }
+  }
+
+  // ===== 10. 倒计时（基于最大日期字段） =====
+  if (dateCols.length > 0) {
+    const dateCol = dateCols[0];
+    const dates = rows.map(r => new Date(String(r[dateCol.name])).getTime()).filter(d => !isNaN(d));
+    if (dates.length > 0) {
+      const futureDates = dates.filter(d => d > Date.now());
+      const targetDate = futureDates.length > 0 
+        ? Math.min(...futureDates) 
+        : Math.max(...dates);
+      
+      widgets.push({
+        id: `countdown-${dateCol.name}`,
+        type: 'countdown',
+        title: `距 ${dateCol.name} 倒计时`,
+        countdownTarget: new Date(targetDate).toISOString(),
+        xField: '',
+        yField: '',
+        data: [] as Record<string, string | number>[],
+        priority: 6,
+      });
+    }
+  }
+
+  // ===== 11. 进度图（基于第一个数值字段） =====
+  if (numericCols.length > 0) {
+    const col = numericCols[0];
+    const values = rows.map(r => Number(r[col.name])).filter(v => !isNaN(v));
+    if (values.length > 0) {
+      const currentSum = values.reduce((a, b) => a + b, 0);
+      // 假设目标为当前最大值的1.5倍（预留50%增长空间）
+      const maxVal = Math.max(...values);
+      const targetValue = maxVal * 1.5;
+      
+      widgets.push({
+        id: `progress-${col.name}`,
+        type: 'progress',
+        title: `${col.name} 目标进度`,
+        xField: '',
+        yField: '',
+        progressValue: currentSum,
+        progressMax: targetValue,
+        data: [] as Record<string, string | number>[],
+        priority: 7,
+      });
+    }
   }
 
   return widgets.sort((a, b) => b.priority - a.priority);
