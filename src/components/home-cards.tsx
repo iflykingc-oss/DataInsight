@@ -96,17 +96,18 @@ interface QuickAction {
   bgColor: string;
   needsData: boolean;
   badge?: string;
+  permission?: string; // 需要的权限
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { id: 'insights', icon: Brain, label: '一键分析', desc: 'AI自动分析数据，生成业务洞察', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI' },
-  { id: 'chat', icon: MessageSquare, label: '问数对话', desc: '用自然语言提问，AI给答案', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI' },
-  { id: 'visualization', icon: LayoutGrid, label: '智能看板', desc: '一键生成业务仪表盘', color: 'text-purple-600', bgColor: 'bg-purple-50', needsData: true },
+  { id: 'insights', icon: Brain, label: '一键分析', desc: 'AI自动分析数据，生成业务洞察', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI', permission: 'ai_analyze' },
+  { id: 'chat', icon: MessageSquare, label: '问数对话', desc: '用自然语言提问，AI给答案', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI', permission: 'ai_analyze' },
+  { id: 'visualization', icon: LayoutGrid, label: '智能看板', desc: '一键生成业务仪表盘', color: 'text-purple-600', bgColor: 'bg-purple-50', needsData: true, permission: 'dashboard' },
   { id: 'data-table', icon: Table2, label: '数据表格', desc: '查看和编辑数据', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: true },
   { id: 'data-prep', icon: Database, label: '数据清洗', desc: '智能检测问题数据，一键修复', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true },
-  { id: 'metrics', icon: Target, label: '指标中心', desc: '业务指标自动计算与监控', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI' },
+  { id: 'metrics', icon: Target, label: '指标中心', desc: '业务指标自动计算与监控', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI', permission: 'ai_analyze' },
   { id: 'sql-lab', icon: Wrench, label: 'SQL查询', desc: '用SQL自由查询数据', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true },
-  { id: 'report-export', icon: FileText, label: '导出报告', desc: '生成分析报告并分享', color: 'text-green-600', bgColor: 'bg-green-50', needsData: true },
+  { id: 'report-export', icon: FileText, label: '导出报告', desc: '生成分析报告并分享', color: 'text-green-600', bgColor: 'bg-green-50', needsData: true, permission: 'export' },
 ];
 
 interface HomeCardsProps {
@@ -114,9 +115,23 @@ interface HomeCardsProps {
   onViewChange: (view: string) => void;
   fileName?: string;
   rowCount?: number;
+  isLoggedIn?: boolean;
+  onLoginRequired?: () => void;
+  hasPermission?: (permission: string) => boolean;
 }
 
-export default function HomeCards({ hasData, onViewChange, fileName, rowCount }: HomeCardsProps) {
+export default function HomeCards({ hasData, onViewChange, fileName, rowCount, isLoggedIn = false, onLoginRequired, hasPermission }: HomeCardsProps) {
+  // 权限检查辅助函数
+  const checkPermission = (permission: string) => {
+    if (!isLoggedIn && onLoginRequired) {
+      onLoginRequired();
+      return false;
+    }
+    if (hasPermission && !hasPermission(permission)) {
+      return false;
+    }
+    return true;
+  };
   if (!hasData) {
     return (
       <div className="space-y-8">
@@ -206,14 +221,24 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount }:
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {QUICK_ACTIONS.map((action) => {
-            const disabled = action.needsData && !hasData;
+            const needsDataDisabled = action.needsData && !hasData;
+            const needsPermission = action.permission && !checkPermission(action.permission);
+            const disabled = needsDataDisabled || needsPermission;
             return (
               <Card
                 key={action.id}
                 className={`group cursor-pointer transition-all hover:shadow-md ${
                   disabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
-                onClick={() => !disabled && onViewChange(action.id)}
+                onClick={() => {
+                  if (disabled) {
+                    if (!isLoggedIn && onLoginRequired) {
+                      onLoginRequired();
+                    }
+                    return;
+                  }
+                  onViewChange(action.id);
+                }}
               >
                 <CardContent className="p-3 flex items-center gap-3">
                   <div className={`w-9 h-9 rounded-lg ${action.bgColor} flex items-center justify-center shrink-0`}>

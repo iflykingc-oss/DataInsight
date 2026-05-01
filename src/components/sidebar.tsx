@@ -59,6 +59,10 @@ interface SidebarProps {
   onSettingsOpen: () => void;
   alertCount: number;
   modelConfigured: boolean;
+  // 权限相关
+  isLoggedIn?: boolean;
+  onLoginRequired?: () => void;
+  hasPermission?: (permission: string) => boolean;
 }
 
 export default function Sidebar({
@@ -70,7 +74,19 @@ export default function Sidebar({
   onSettingsOpen,
   alertCount,
   modelConfigured,
+  isLoggedIn = false,
+  onLoginRequired,
+  hasPermission,
 }: SidebarProps) {
+  // AI功能列表（需要AI分析权限）
+  const AI_FEATURES = ['insights', 'chat', 'metrics', 'ai-table-builder', 'multimodal', 'chart-center', 'visualization'];
+  
+  // 检查功能是否需要AI权限且被禁用
+  const isAIDisabled = (itemId: string) => {
+    if (!AI_FEATURES.includes(itemId)) return false;
+    return hasPermission ? !hasPermission('ai_analyze') : false;
+  };
+  
   return (
     <aside
       className={`${
@@ -107,13 +123,24 @@ export default function Sidebar({
                 </div>
               )}
               {items.map((item) => {
-                const disabled = item.needsData && !hasData;
+                const noData = item.needsData && !hasData;
+                const aiDisabled = isAIDisabled(item.id);
+                const disabled = noData || aiDisabled;
                 const isActive = activeView === item.id;
+                const handleClick = () => {
+                  if (disabled) return;
+                  // AI功能需要登录
+                  if (AI_FEATURES.includes(item.id) && !isLoggedIn && onLoginRequired) {
+                    onLoginRequired();
+                    return;
+                  }
+                  onViewChange(item.id);
+                };
                 return (
                   <button
                     key={item.id}
-                    onClick={() => !disabled && onViewChange(item.id)}
-                    disabled={disabled}
+                    onClick={handleClick}
+                    disabled={noData}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors relative ${
                       isActive
                         ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
@@ -121,7 +148,7 @@ export default function Sidebar({
                         ? 'text-sidebar-foreground/30 cursor-not-allowed'
                         : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                     } ${collapsed ? 'justify-center' : ''}`}
-                    title={collapsed ? `${item.label}：${item.desc}` : item.desc}
+                    title={collapsed ? `${item.label}：${item.desc}${aiDisabled ? '（无权限）' : ''}` : `${item.desc}${aiDisabled ? '（无权限）' : ''}`}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
                     {!collapsed && (

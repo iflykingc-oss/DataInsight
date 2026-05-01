@@ -472,7 +472,10 @@ export default function HomePage() {
               </Card>
 
               {/* AI生成表格 */}
-              <Card className="border border-dashed border-gray-300 hover:border-primary/50 cursor-pointer transition-colors" onClick={() => setViewMode('ai-table-builder')}>
+              <Card className="border border-dashed border-gray-300 hover:border-primary/50 cursor-pointer transition-colors" onClick={() => {
+                if (!isLoggedIn) { setLoginDialogOpen(true); return; }
+                setViewMode('ai-table-builder');
+              }}>
                 <CardContent className="py-4 flex flex-col justify-center h-full">
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-4 h-4 text-violet-600" />
@@ -491,6 +494,9 @@ export default function HomePage() {
             onViewChange={(v) => setViewMode(v as ViewMode)}
             fileName={parsedData?.fileName}
             rowCount={parsedData?.rowCount}
+            isLoggedIn={isLoggedIn}
+            onLoginRequired={() => setLoginDialogOpen(true)}
+            hasPermission={(perm: string) => hasPermission(perm as any)}
           />
         </div>
       );
@@ -935,6 +941,9 @@ export default function HomePage() {
         onSettingsOpen={() => setShowSettings(true)}
         alertCount={0}
         modelConfigured={!!activeModelConfig}
+        isLoggedIn={isLoggedIn}
+        onLoginRequired={() => setLoginDialogOpen(true)}
+        hasPermission={(perm: string) => hasPermission(perm as any)}
       />
 
       {/* ===== 右侧主区域 ===== */}
