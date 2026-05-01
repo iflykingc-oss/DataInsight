@@ -935,7 +935,7 @@ export function FormBuilder({
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.theme.primaryColor }} />
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.theme?.primaryColor || '#3b82f6' }} />
                   <CardTitle className="text-base">{config.title}</CardTitle>
                 </div>
                 <div className="flex gap-1">
@@ -1094,7 +1094,7 @@ export function FormRenderer({
                     className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm border cursor-pointer transition ${
                       selected ? "text-white border-transparent" : "bg-background hover:bg-muted"
                     }`}
-                    style={selected ? { backgroundColor: config.theme.primaryColor } : undefined}
+                    style={selected ? { backgroundColor: config.theme?.primaryColor } : undefined}
                   >
                     <input type="checkbox" className="sr-only" checked={selected}
                       onChange={() => {
@@ -1119,7 +1119,7 @@ export function FormRenderer({
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition ${
                     val === o ? "border-primary" : "border-muted-foreground/30"
                   }`}>
-                    {val === o && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.theme.primaryColor }} />}
+                    {val === o && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.theme?.primaryColor }} />}
                   </div>
                   <input type="radio" name={field.id} value={o} className="sr-only"
                     checked={val === o} onChange={() => setVal(field.id, o)} disabled={readOnly}
@@ -1275,26 +1275,26 @@ export function FormRenderer({
         {err && <p className="text-xs text-red-500 mt-1">{err}</p>}
       </div>
     );
-  }, [values, errors, readOnly, config.theme.primaryColor, setVal, handleFileUpload, uploadedFiles]);
+  }, [values, errors, readOnly, config.theme?.primaryColor, setVal, handleFileUpload, uploadedFiles]);
 
   return (
-    <div className="max-w-2xl mx-auto" style={{ backgroundColor: config.theme.bgColor }}>
+    <div className="max-w-2xl mx-auto" style={{ backgroundColor: config.theme?.bgColor || '#ffffff' }}>
       {/* Header */}
-      {config.theme.headerImage && (
-        <div className="w-full h-40 bg-cover bg-center rounded-t-lg" style={{ backgroundImage: `url(${config.theme.headerImage})` }} />
+      {config.theme?.headerImage && (
+        <div className="w-full h-40 bg-cover bg-center rounded-t-lg" style={{ backgroundImage: `url(${config.theme?.headerImage})` }} />
       )}
 
       <div className="bg-card rounded-lg shadow-sm border">
         {/* Progress bar */}
         {config.settings.showProgressBar && !readOnly && (
           <div className="h-1 bg-muted rounded-t-lg overflow-hidden">
-            <div className="h-full transition-all duration-300 rounded-full" style={{ width: `${progress}%`, backgroundColor: config.theme.primaryColor }} />
+            <div className="h-full transition-all duration-300 rounded-full" style={{ width: `${progress}%`, backgroundColor: config.theme?.primaryColor }} />
           </div>
         )}
 
         <div className="px-6 pt-6 pb-2">
           <div className="flex items-center gap-3">
-            {config.theme.logo && <img src={config.theme.logo} alt="Logo" className="w-8 h-8 rounded" />}
+            {config.theme?.logo && <img src={config.theme?.logo} alt="Logo" className="w-8 h-8 rounded" />}
             <h2 className="text-xl font-semibold">{config.title}</h2>
           </div>
           <p className="text-sm text-muted-foreground mt-1">{config.description}</p>
@@ -1309,7 +1309,7 @@ export function FormRenderer({
 
         {!readOnly && (
           <div className="px-6 pb-6">
-            <Button className="w-full text-base py-5" style={{ backgroundColor: config.theme.primaryColor }} onClick={handleSubmit}>
+            <Button className="w-full text-base py-5" style={{ backgroundColor: config.theme?.primaryColor }} onClick={handleSubmit}>
               提交
             </Button>
           </div>
