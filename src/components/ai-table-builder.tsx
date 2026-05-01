@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -13,6 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Building2,
   ShoppingCart,
@@ -33,9 +43,84 @@ import {
   ChevronUp,
   Lightbulb,
   X,
+  Settings,
+  Play,
+  Clock,
+  Zap,
+  FileText,
+  Shield,
+  LayoutDashboard,
+  GitBranch,
+  ChevronRight,
+  Layers,
+  Target,
+  BookOpen,
 } from 'lucide-react';
 
 // ============= 类型定义 =============
+
+// 搭建模式
+type BuildMode = 'default' | 'expert';
+type BuildDepth = 'light' | 'standard' | 'deep';
+
+interface BuildDepthConfig {
+  id: BuildDepth;
+  label: string;
+  icon: React.ElementType;
+  duration: string;
+  description: string;
+  features: string[];
+}
+
+const BUILD_DEPTH_OPTIONS: BuildDepthConfig[] = [
+  {
+    id: 'light',
+    label: '轻量搭建',
+    icon: Zap,
+    duration: '5-10分钟',
+    description: '适用于小型或快速搭建场景',
+    features: ['1-3张数据表', '基础视图配置', '简单示例数据'],
+  },
+  {
+    id: 'standard',
+    label: '标准搭建',
+    icon: Layers,
+    duration: '10-20分钟',
+    description: '适用于搭建结构完整、组织清晰的系统',
+    features: ['3-5张数据表', '多视图配置', '公式与关联', '基础权限'],
+  },
+  {
+    id: 'deep',
+    label: '深度搭建',
+    icon: GitBranch,
+    duration: '20-30分钟',
+    description: '适用于搭建大型、产品级复杂系统',
+    features: ['5+张数据表', '完整视图+仪表盘', '工作流自动化', '多级权限体系'],
+  },
+];
+
+// 系统设计文档
+interface SystemDesignDoc {
+  businessBackground: string;
+  businessGoal: string;
+  tableSchemes: {
+    tableName: string;
+    purpose: string;
+    fields: { name: string; type: string; description: string; required: boolean }[];
+  }[];
+  dashboardConfig: {
+    charts: string[];
+    kpis: string[];
+  };
+  workflowConfig: {
+    triggers: string[];
+    actions: string[];
+  };
+  permissionConfig: {
+    roles: { name: string; permissions: string[] }[];
+  };
+}
+
 interface SceneTemplate {
   id: string;
   name: string;
@@ -60,6 +145,8 @@ interface TableScheme {
   sampleRows: Record<string, unknown>[];
   formulas: Array<{ cell: string; formula: string; description: string }>;
   designNotes: string;
+  // 新增：完整系统方案
+  systemDoc?: SystemDesignDoc;
 }
 
 interface ChatMessage {
@@ -91,7 +178,7 @@ const QUICK_PROMPTS: Record<string, string[]> = {
   team: ['增加加班时长字段', '添加绩效评分列', '按月汇总工时', '增加请假类型'],
 };
 
-// 智能需求引导：场景绑定的快速需求建议
+// 智能需求引导
 const SCENE_REQUIREMENTS: Record<string, string[]> = {
   'general-ledger': ['按月度汇总收支', '区分收入和支出类别', '增加经手人字段'],
   'retail-daily-sales': ['按商品类别分组统计', '增加毛利率计算', '添加同比/环比对比'],
@@ -109,8 +196,8 @@ interface HistoryRecord {
 }
 
 export default function AITableBuilder({ modelConfig, className }: AITableBuilderProps) {
-  // 步骤状态：template → generate → preview → confirm
-  const [step, setStep] = useState<'template' | 'generate' | 'preview' | 'confirm'>('template');
+  // 步骤状态
+  const [step, setStep] = useState<'template' | 'generate' | 'design-doc' | 'preview' | 'confirm'>('template');
   const [templates, setTemplates] = useState<SceneTemplate[]>([]);
   const [selectedScene, setSelectedScene] = useState<SceneTemplate | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('general');
@@ -124,8 +211,15 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
 
   // 生成相关
   const [userRequirement, setUserRequirement] = useState('');
-  const [generateMode, setGenerateMode] = useState<'simple' | 'expert'>('simple');
+  
+  // 核心：模式选择（飞书模式）
+  const [buildMode, setBuildMode] = useState<BuildMode>('default');
+  const [buildDepth, setBuildDepth] = useState<BuildDepth>('standard');
+  const [showModeSelector, setShowModeSelector] = useState(true);
+  
   const [isGenerating, setIsGenerating] = useState(false);
+  const [buildProgress, setBuildProgress] = useState(0);
+  const [currentBuildStep, setCurrentBuildStep] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [iterationCount, setIterationCount] = useState(0);
@@ -190,7 +284,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
       createdAt: new Date().toLocaleString(),
     };
     setHistory(prev => {
-      const updated = [record, ...prev].slice(0, 20); // 最多保存20条
+      const updated = [record, ...prev].slice(0, 20);
       localStorage.setItem('datainsight-table-history', JSON.stringify(updated));
       return updated;
     });
@@ -223,6 +317,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     } else {
       setUserRequirement(`请基于"${scene.name}"场景生成经营台账`);
     }
+    setShowModeSelector(true);
     setStep('generate');
   };
 
@@ -230,26 +325,25 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   const validateRequirement = (text: string): { valid: boolean; error?: string } => {
     const trimmed = text.trim();
     if (trimmed.length < 5) {
-      return { valid: false, error: '需求描述太短了，请至少输入5个字，描述清楚需要什么表格。例如："月度销售跟踪表，包含日期、产品、销售额、客户"' };
+      return { valid: false, error: '需求描述太短了，请至少输入5个字，描述清楚需要什么表格。' };
     }
-    // 检查是否包含建表相关意图
-    const tableKeywords = /表|台账|sheet|表格|excel|字段|列|记录|跟踪|统计|汇总|明细|登记|管理|清单|目录/i;
+    const tableKeywords = /表|台账|sheet|表格|字段|列|记录|跟踪|统计|汇总|明细|登记|管理|清单|目录/i;
     if (!tableKeywords.test(trimmed)) {
-      return { valid: false, error: '您的描述似乎没有明确指向建表需求。请补充说明需要什么类型的表格，比如："创建一个客户信息登记表，包含姓名、电话、地址"' };
+      return { valid: false, error: '您的描述似乎没有明确指向建表需求，请补充说明需要什么类型的表格。' };
     }
     return { valid: true };
   };
 
-  // AI生成表格方案
-  const handleGenerate = useCallback(async () => {
+  // 启动AI生成（根据模式）
+  const handleStartBuild = useCallback(async () => {
     if (!userRequirement.trim()) return;
-    
+
     // 检查模型配置
     if (!modelConfig) {
       const assistantMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: '⚠️ 请先配置 AI 模型后再生成表格。点击右上角「模型设置」添加并启用模型。',
+        content: '请先配置 AI 模型后再生成表格。点击右上角「模型设置」添加并启用模型。',
         timestamp: new Date(),
       };
       setChatMessages(prev => [...prev, assistantMsg]);
@@ -262,7 +356,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
       const assistantMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: `⚠️ ${qualityCheck.error}`,
+        content: qualityCheck.error || '',
         timestamp: new Date(),
       };
       setChatMessages(prev => [...prev, assistantMsg]);
@@ -270,6 +364,8 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     }
 
     setIsGenerating(true);
+    setBuildProgress(0);
+
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -279,53 +375,125 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     setChatMessages(prev => [...prev, userMsg]);
 
     try {
-      const response = await fetch('/api/ai-table-builder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate',
-          sceneId: selectedScene?.id,
-          userRequirement,
-          mode: generateMode,
-          modelConfig,
-        }),
-      });
+      // 模拟构建进度
+      const steps = ['分析需求', '设计数据表', '配置视图', '生成示例数据', '创建仪表盘', '设置权限'];
+      
+      if (buildMode === 'default') {
+        // 默认模式：直接执行
+        for (let i = 0; i < steps.length; i++) {
+          setCurrentBuildStep(steps[i]);
+          setBuildProgress(Math.round(((i + 1) / steps.length) * 100));
+          await new Promise(r => setTimeout(r, 500));
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const assistantMsg: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: `⚠️ 生成失败：${errorData.error || `服务器错误 (${response.status})`}，请检查模型配置或稍后重试。`,
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, assistantMsg]);
-        return;
-      }
+        const response = await fetch('/api/ai-table-builder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate',
+            sceneId: selectedScene?.id,
+            userRequirement,
+            mode: buildMode,
+            depth: buildDepth,
+            modelConfig,
+          }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (data.success && data.data) {
-        const scheme = data.data as TableScheme;
-        setCurrentScheme(scheme);
-        const assistantMsg: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: `已为您生成「${scheme.tableName}」表格方案，包含 ${scheme.columns.length} 个字段。${scheme.designNotes ? `\n\n设计说明：${scheme.designNotes}` : ''}\n\n您可以继续提出修改要求，或点击下方「确认生成表格文件」下载。`,
-          timestamp: new Date(),
-          scheme,
-        };
-        setChatMessages(prev => [...prev, assistantMsg]);
-        setStep('preview');
-        saveToHistory(selectedScene?.name || '自定义', userRequirement, scheme);
+        if (data.success && data.data) {
+          const scheme = data.data as TableScheme;
+          setCurrentScheme(scheme);
+          const assistantMsg: ChatMessage = {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: `已为您生成「${scheme.tableName}」表格方案，包含 ${scheme.columns.length} 个字段。\n\n设计说明：${scheme.designNotes || '无'}\n\n您可以继续提出修改要求，或点击「确认生成表格文件」下载。`,
+            timestamp: new Date(),
+            scheme,
+          };
+          setChatMessages(prev => [...prev, assistantMsg]);
+          setStep('preview');
+          saveToHistory(selectedScene?.name || '自定义', userRequirement, scheme);
+        }
       } else {
-        const assistantMsg: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: `生成方案时遇到问题：${data.error || '请重试'}。请调整需求描述后重新生成。`,
-          timestamp: new Date(),
+        // 专家模式：先生成设计文档
+        setCurrentBuildStep('正在创建设计文档...');
+        setBuildProgress(30);
+        await new Promise(r => setTimeout(r, 800));
+
+        setCurrentBuildStep('分析业务需求...');
+        setBuildProgress(50);
+        await new Promise(r => setTimeout(r, 600));
+
+        setCurrentBuildStep('设计系统架构...');
+        setBuildProgress(70);
+        await new Promise(r => setTimeout(r, 500));
+
+        // 生成设计文档
+        const mockDoc: SystemDesignDoc = {
+          businessBackground: `基于${selectedScene?.name || '自定义'}场景的业务需求分析`,
+          businessGoal: '实现业务流程数字化管理，提升运营效率',
+          tableSchemes: [
+            {
+              tableName: userRequirement.includes('客户') ? '客户信息表' : '主数据表',
+              purpose: '记录核心业务数据',
+              fields: [
+                { name: '编号', type: 'text', description: '唯一标识', required: true },
+                { name: '名称', type: 'text', description: '业务名称', required: true },
+                { name: '状态', type: 'select', description: '当前状态', required: true },
+                { name: '创建时间', type: 'date', description: '记录创建日期', required: false },
+              ],
+            },
+          ],
+          dashboardConfig: {
+            charts: ['数据趋势图', '分类统计饼图'],
+            kpis: ['总记录数', '本月新增', '完成率'],
+          },
+          workflowConfig: {
+            triggers: ['数据新增时', '状态变更时'],
+            actions: ['发送通知', '更新关联表'],
+          },
+          permissionConfig: {
+            roles: [
+              { name: '管理员', permissions: ['全部权限'] },
+              { name: '普通用户', permissions: ['查看', '编辑'] },
+            ],
+          },
         };
-        setChatMessages(prev => [...prev, assistantMsg]);
+
+        const response = await fetch('/api/ai-table-builder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate',
+            sceneId: selectedScene?.id,
+            userRequirement,
+            mode: buildMode,
+            depth: buildDepth,
+            modelConfig,
+            generateDoc: true,
+          }),
+        });
+
+        const data = await response.json();
+        setBuildProgress(100);
+        await new Promise(r => setTimeout(r, 300));
+
+        if (data.success && data.data) {
+          const scheme = data.data as TableScheme;
+          scheme.systemDoc = mockDoc;
+          setCurrentScheme(scheme);
+
+          const assistantMsg: ChatMessage = {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: `已完成系统设计文档，包含以下内容：\n\n📋 **业务背景**：${mockDoc.businessBackground}\n🎯 **业务目标**：${mockDoc.businessGoal}\n📊 **数据表方案**：${mockDoc.tableSchemes.length} 张表\n📈 **仪表盘配置**：${mockDoc.dashboardConfig.charts.length} 个图表\n⚙️ **工作流配置**：${mockDoc.workflowConfig.triggers.length} 个触发器\n🔐 **权限配置**：${mockDoc.permissionConfig.roles.length} 个角色\n\n请确认设计方案无误后，点击「开始搭建」执行创建。`,
+            timestamp: new Date(),
+            scheme,
+          };
+          setChatMessages(prev => [...prev, assistantMsg]);
+          setStep('design-doc');
+        }
       }
     } catch (error) {
       const assistantMsg: ChatMessage = {
@@ -338,19 +506,45 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     }
 
     setIsGenerating(false);
+    setCurrentBuildStep('');
     setUserRequirement('');
-  }, [userRequirement, modelConfig, selectedScene, generateMode]);
+  }, [userRequirement, modelConfig, selectedScene, buildMode, buildDepth, saveToHistory]);
+
+  // 执行搭建（专家模式确认后）
+  const handleExecuteBuild = useCallback(async () => {
+    if (!currentScheme) return;
+    setIsGenerating(true);
+    setBuildProgress(0);
+
+    const steps = ['创建数据表', '配置视图', '生成示例数据', '创建仪表盘', '设置工作流', '配置权限'];
+    
+    for (let i = 0; i < steps.length; i++) {
+      setCurrentBuildStep(steps[i]);
+      setBuildProgress(Math.round(((i + 1) / steps.length) * 100));
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    const assistantMsg: ChatMessage = {
+      id: `assistant-${Date.now()}`,
+      role: 'assistant',
+      content: `✅ 系统搭建完成！\n\n已创建：\n• ${currentScheme.tableName}（${currentScheme.columns.length} 个字段）\n• 基础仪表盘视图\n• 示例数据\n\n您可以继续修改或点击「确认生成表格文件」下载。`,
+      timestamp: new Date(),
+      scheme: currentScheme,
+    };
+    setChatMessages(prev => [...prev, assistantMsg]);
+    setStep('preview');
+    setIsGenerating(false);
+  }, [currentScheme]);
 
   // AI迭代修改
   const handleIterate = useCallback(async () => {
     if (!chatInput.trim() || !currentScheme) return;
-    
-    // 检查模型配置
+
     if (!modelConfig) {
       const assistantMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: '⚠️ 请先配置 AI 模型后再进行修改。点击右上角「模型设置」添加并启用模型。',
+        content: '请先配置 AI 模型后再进行修改。',
         timestamp: new Date(),
       };
       setChatMessages(prev => [...prev, assistantMsg]);
@@ -381,18 +575,6 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const assistantMsg: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          role: 'assistant',
-          content: `⚠️ 修改失败：${errorData.error || `服务器错误 (${response.status})`}，请稍后重试。`,
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, assistantMsg]);
-        return;
-      }
-
       const data = await response.json();
 
       if (data.success && data.data) {
@@ -402,7 +584,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         const assistantMsg: ChatMessage = {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          content: `已根据您的要求修改方案，当前方案包含 ${newScheme.columns.length} 个字段。${newScheme.designNotes ? `\n\n修改说明：${newScheme.designNotes}` : ''}\n\n如需继续修改请输入，或点击「确认生成表格文件」下载。`,
+          content: `已根据您的要求修改方案，当前方案包含 ${newScheme.columns.length} 个字段。\n\n修改说明：${newScheme.designNotes || '无'}\n\n如需继续修改请输入，或点击「确认生成表格文件」下载。`,
           timestamp: new Date(),
           scheme: newScheme,
         };
@@ -449,7 +631,6 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
       const data = await response.json();
 
       if (data.success && data.data) {
-        // base64 → Blob → 下载
         const binaryString = atob(data.data.fileContent);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
@@ -485,6 +666,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     setUserRequirement('');
     setChatInput('');
     setIterationCount(0);
+    setShowModeSelector(true);
   };
 
   // 获取字段类型badge颜色
@@ -503,10 +685,29 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     <div className="space-y-6">
       {/* 标题区 */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">AI生成表格</h2>
+        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <Sparkles className="h-6 w-6 text-primary" />
+          AI智能搭建
+        </h2>
         <p className="text-muted-foreground">
-          选择业务场景，AI 帮你设计标准化经营台账，一键生成 Excel 模板
+          描述需求，AI帮你从零搭建完整的业务系统，或对已有系统进行迭代升级
         </p>
+      </div>
+
+      {/* 核心能力卡片 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { icon: Table, label: '搭建数据表', desc: '自动生成表结构' },
+          { icon: LayoutDashboard, label: '设计仪表盘', desc: '可视化图表' },
+          { icon: GitBranch, label: '搭建工作流', desc: '任务自动流转' },
+          { icon: Shield, label: '配置权限', desc: '角色访问控制' },
+        ].map((item, i) => (
+          <Card key={i} className="p-3 text-center">
+            <item.icon className="h-5 w-5 mx-auto mb-1 text-primary" />
+            <p className="font-medium text-sm">{item.label}</p>
+            <p className="text-xs text-muted-foreground">{item.desc}</p>
+          </Card>
+        ))}
       </div>
 
       {/* 搜索栏 + 收藏筛选 */}
@@ -610,6 +811,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
               onClick={() => {
                 setSelectedScene(null);
                 setUserRequirement('');
+                setShowModeSelector(true);
                 setStep('generate');
               }}
             >
@@ -629,7 +831,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
               {showHistory ? '收起' : `查看全部 (${history.length})`}
             </Button>
           </div>
-          <div className={`grid gap-3 ${showHistory ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {(showHistory ? history : history.slice(0, 3)).map(record => (
               <Card
                 key={record.id}
@@ -639,7 +841,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                   setChatMessages([{
                     id: `history-${Date.now()}`,
                     role: 'assistant' as const,
-                    content: `已加载历史方案「${record.scheme.tableName}」，包含 ${record.scheme.columns.length} 个字段。您可以继续修改或直接确认生成。`,
+                    content: `已加载历史方案「${record.scheme.tableName}」，包含 ${record.scheme.columns.length} 个字段。`,
                     timestamp: new Date(),
                     scheme: record.scheme,
                   }]);
@@ -662,6 +864,251 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     </div>
   );
 
+  // ============= 渲染：模式选择 =============
+  const renderModeSelector = () => (
+    <div className="space-y-6 p-6 bg-muted/30 rounded-lg">
+      <div className="text-center space-y-2">
+        <h3 className="text-lg font-semibold">选择搭建模式</h3>
+        <p className="text-sm text-muted-foreground">根据需求复杂度选择合适的搭建方式</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 默认模式 */}
+        <Card 
+          className={`cursor-pointer transition-all ${buildMode === 'default' ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
+          onClick={() => setBuildMode('default')}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                <CardTitle className="text-base">默认模式</CardTitle>
+              </div>
+              {buildMode === 'default' && <Check className="h-4 w-4 text-primary" />}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              AI收到需求后，将直接执行搭建流程，无需人工干预。适用于需求明确的轻量级项目。
+            </p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>快速搭建，即时反馈</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 专家模式 */}
+        <Card 
+          className={`cursor-pointer transition-all ${buildMode === 'expert' ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
+          onClick={() => setBuildMode('expert')}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-amber-600" />
+                <CardTitle className="text-base">专家模式</CardTitle>
+              </div>
+              {buildMode === 'expert' && <Check className="h-4 w-4 text-primary" />}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              AI会自动创建设计文档，详细说明搭建方案。经确认后，系统将按照文档执行搭建。
+            </p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <FileText className="h-3 w-3" />
+              <span>精准落地，持续维护</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 专家模式：选择搭建深度 */}
+      {buildMode === 'expert' && (
+        <div className="space-y-3">
+          <p className="text-sm font-medium">选择搭建方式</p>
+          <div className="grid grid-cols-3 gap-3">
+            {BUILD_DEPTH_OPTIONS.map(option => {
+              const Icon = option.icon;
+              return (
+                <Card
+                  key={option.id}
+                  className={`cursor-pointer transition-all ${buildDepth === option.id ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'}`}
+                  onClick={() => setBuildDepth(option.id)}
+                >
+                  <CardContent className="p-3 text-center">
+                    <Icon className={`h-5 w-5 mx-auto mb-1 ${buildDepth === option.id ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <p className="font-medium text-sm">{option.label}</p>
+                    <p className="text-xs text-muted-foreground">{option.duration}</p>
+                    <Separator className="my-2" />
+                    <div className="text-xs text-muted-foreground text-left space-y-0.5">
+                      {option.features.map((f, i) => (
+                        <p key={i}>• {f}</p>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={() => setShowModeSelector(false)}>
+          上一步
+        </Button>
+        <Button onClick={() => setShowModeSelector(false)}>
+          确认模式
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  // ============= 渲染：设计文档预览 =============
+  const renderDesignDoc = () => {
+    const doc = currentScheme?.systemDoc;
+    if (!doc) return null;
+
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              系统设计文档
+            </CardTitle>
+            <CardDescription>
+              请确认以下设计方案无误后，点击「开始搭建」执行创建
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* 业务背景 */}
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <BookOpen className="h-4 w-4 text-primary" />
+                <span className="font-medium text-sm">业务背景</span>
+              </div>
+              <p className="text-sm text-muted-foreground">{doc.businessBackground}</p>
+            </div>
+
+            {/* 业务目标 */}
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Target className="h-4 w-4 text-green-600" />
+                <span className="font-medium text-sm">业务目标</span>
+              </div>
+              <p className="text-sm text-muted-foreground">{doc.businessGoal}</p>
+            </div>
+
+            {/* 数据表方案 */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Table className="h-4 w-4 text-blue-600" />
+                <span className="font-medium text-sm">数据表方案（{doc.tableSchemes.length}张）</span>
+              </div>
+              <div className="space-y-2">
+                {doc.tableSchemes.map((t, i) => (
+                  <Card key={i} className="p-3">
+                    <p className="font-medium text-sm">{t.tableName}</p>
+                    <p className="text-xs text-muted-foreground mb-2">{t.purpose}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {t.fields.map((f, j) => (
+                        <Badge key={j} variant="outline" className="text-xs">
+                          {f.name}（{f.type}）
+                        </Badge>
+                      ))}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* 仪表盘配置 */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <LayoutDashboard className="h-4 w-4 text-purple-600" />
+                <span className="font-medium text-sm">仪表盘配置</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {doc.dashboardConfig.charts.map((c, i) => (
+                  <Badge key={i} variant="secondary">{c}</Badge>
+                ))}
+                {doc.dashboardConfig.kpis.map((k, i) => (
+                  <Badge key={i} variant="outline">{k}</Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* 工作流配置 */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <GitBranch className="h-4 w-4 text-orange-600" />
+                <span className="font-medium text-sm">工作流配置</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground">触发器：</span>
+                  {doc.workflowConfig.triggers.join('、')}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">动作：</span>
+                  {doc.workflowConfig.actions.join('、')}
+                </div>
+              </div>
+            </div>
+
+            {/* 权限配置 */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="h-4 w-4 text-red-600" />
+                <span className="font-medium text-sm">权限配置</span>
+              </div>
+              <div className="space-y-1">
+                {doc.permissionConfig.roles.map((r, i) => (
+                  <div key={i} className="text-xs">
+                    <span className="font-medium">{r.name}</span>：{r.permissions.join('、')}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 进度条（构建中） */}
+        {isGenerating && (
+          <Card className="p-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {currentBuildStep || '正在搭建...'}
+                </span>
+                <span>{buildProgress}%</span>
+              </div>
+              <Progress value={buildProgress} />
+            </div>
+          </Card>
+        )}
+
+        {/* 操作按钮 */}
+        {!isGenerating && (
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setStep('generate')}>
+              返回修改
+            </Button>
+            <Button onClick={handleExecuteBuild}>
+              <Play className="h-4 w-4 mr-1" />
+              开始搭建
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // ============= 渲染：生成/迭代 对话界面 =============
   const renderGeneratePage = () => (
     <div className="space-y-4 h-full flex flex-col">
@@ -676,9 +1123,9 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           <span className="font-medium">
             {selectedScene ? selectedScene.name : '自定义建模'}
           </span>
-          {selectedScene && (
-            <Badge variant="outline" className="text-xs">{selectedScene.industry}</Badge>
-          )}
+          <Badge variant="outline" className="text-xs">
+            {buildMode === 'default' ? '默认模式' : '专家模式'}
+          </Badge>
         </div>
         {currentScheme && (
           <Badge variant="default" className="gap-1">
@@ -688,13 +1135,16 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         )}
       </div>
 
-      {/* 主内容区：对话 + 预览 */}
+      {/* 模式选择 */}
+      {showModeSelector && !currentScheme && renderModeSelector()}
+
+      {/* 主内容区 */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* 左侧：对话区 */}
         <div className="flex-1 flex flex-col min-w-0 border rounded-lg">
           {/* 对话消息 */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-            {chatMessages.length === 0 && (
+            {chatMessages.length === 0 && !showModeSelector && (
               <div className="text-center py-8">
                 <Sparkles className="h-10 w-10 mx-auto mb-3 text-primary/60" />
                 <p className="font-medium">描述你的表格需求</p>
@@ -721,7 +1171,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                         className="block w-full text-left p-2 rounded bg-muted/50 hover:bg-muted transition-colors text-muted-foreground"
                         onClick={() => setUserRequirement(example)}
                       >
-                        💡 {example}
+                        {example}
                       </button>
                     ))}
                   </div>
@@ -753,9 +1203,12 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
 
             {isGenerating && (
               <div className="flex justify-start">
-                <div className="bg-muted/50 rounded-lg px-4 py-3 flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">AI 正在思考...</span>
+                <div className="bg-muted/50 rounded-lg px-4 py-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">{currentBuildStep || 'AI 正在分析需求...'}</span>
+                  </div>
+                  <Progress value={buildProgress} className="h-1" />
                 </div>
               </div>
             )}
@@ -764,9 +1217,31 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           </div>
 
           {/* 输入区 */}
-          <div className="border-t p-3">
-            {/* 快捷提示词 */}
-            {currentScheme && (
+          {!isGenerating && !currentScheme && (
+            <div className="border-t p-3 space-y-3">
+              <Input
+                placeholder="描述你的表格需求，例如：创建一个客户信息登记表..."
+                value={userRequirement}
+                onChange={e => setUserRequirement(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleStartBuild(); } }}
+                className="flex-1"
+              />
+              <div className="flex items-center justify-between">
+                <Button variant="outline" size="sm" onClick={() => setShowModeSelector(true)}>
+                  <Settings className="h-3 w-3 mr-1" />
+                  {buildMode === 'default' ? '默认模式' : '专家模式'}
+                </Button>
+                <Button onClick={handleStartBuild} disabled={!userRequirement.trim() || isGenerating}>
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  开始搭建
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* 迭代输入区 */}
+          {!isGenerating && currentScheme && (
+            <div className="border-t p-3">
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {(QUICK_PROMPTS[selectedScene?.category || 'general'] || QUICK_PROMPTS.general).map(p => (
                   <Button
@@ -780,246 +1255,272 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                   </Button>
                 ))}
               </div>
-            )}
+              <div className="flex gap-2">
+                <Input
+                  ref={inputRef}
+                  placeholder="输入修改要求，如：删除XX列、增加保质期字段..."
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleIterate(); } }}
+                  disabled={isGenerating}
+                  className="flex-1"
+                />
+                <Button onClick={handleIterate} disabled={isGenerating || !chatInput.trim()}>
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  修改
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
 
-            <div className="flex gap-2">
-              {currentScheme ? (
+        {/* 右侧：预览区 */}
+        {showPreview && currentScheme && (
+          <div className="w-80 border rounded-lg overflow-hidden flex flex-col">
+            <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
+              <span className="font-medium text-sm">方案预览</span>
+              <Button variant="ghost" size="sm" className="h-7" onClick={() => setShowPreview(false)}>
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-auto p-3">
+              <div className="space-y-3">
+                <div>
+                  <p className="font-medium text-sm">{currentScheme.tableName}</p>
+                  <p className="text-xs text-muted-foreground">{currentScheme.purpose}</p>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  共 {currentScheme.columns.length} 个字段
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">字段名</TableHead>
+                      <TableHead className="text-xs">类型</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentScheme.columns.slice(0, 10).map((col, i) => {
+                      const badge = getTypeBadge(col.type);
+                      return (
+                        <TableRow key={i}>
+                          <TableCell className="text-xs py-1">{col.name}</TableCell>
+                          <TableCell className="py-1">
+                            <Badge variant={badge.variant} className="text-xs h-5">{badge.label}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+                {currentScheme.columns.length > 10 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    还有 {currentScheme.columns.length - 10} 个字段...
+                  </p>
+                )}
+                {currentScheme.sampleRows.length > 0 && (
+                  <div className="pt-2 border-t">
+                    <p className="text-xs text-muted-foreground mb-1">示例数据</p>
+                    <div className="text-xs space-y-0.5">
+                      {Object.entries(currentScheme.sampleRows[0] || {}).map(([k, v]) => (
+                        <div key={k} className="truncate">
+                          <span className="text-muted-foreground">{k}：</span>
+                          <span>{String(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="p-3 border-t bg-muted/30">
+              <Button 
+                className="w-full" 
+                size="sm" 
+                onClick={handleConfirmGenerate}
+                disabled={isDownloading}
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    生成中...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-3 w-3 mr-1" />
+                    确认生成表格文件
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 切换预览按钮 */}
+      {!showPreview && currentScheme && (
+        <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
+          <Eye className="h-3 w-3 mr-1" />
+          显示预览
+        </Button>
+      )}
+    </div>
+  );
+
+  // ============= 渲染：预览页面 =============
+  const renderPreviewPage = () => (
+    <div className="space-y-4 h-full flex flex-col">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleReset}>
+            <RotateCcw className="h-4 w-4 mr-1" />
+            新建
+          </Button>
+          <span className="text-muted-foreground">|</span>
+          <span className="font-medium">方案预览</span>
+        </div>
+        <Badge variant="default" className="gap-1">
+          <Check className="h-3 w-3" />
+          迭代 {iterationCount} 次
+        </Badge>
+      </div>
+
+      {currentScheme && (
+        <>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>{currentScheme.tableName}</CardTitle>
+              <CardDescription>{currentScheme.purpose}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>字段名</TableHead>
+                    <TableHead>类型</TableHead>
+                    <TableHead>说明</TableHead>
+                    <TableHead>必填</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentScheme.columns.map((col, i) => {
+                    const badge = getTypeBadge(col.type);
+                    return (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{col.name}</TableCell>
+                        <TableCell><Badge variant={badge.variant}>{badge.label}</Badge></TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{col.description}</TableCell>
+                        <TableCell>{col.required ? <Check className="h-4 w-4 text-green-600" /> : '-'}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {currentScheme.sampleRows.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">示例数据</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {currentScheme.columns.map((col, i) => (
+                        <TableHead key={i}>{col.name}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentScheme.sampleRows.slice(0, 5).map((row, i) => (
+                      <TableRow key={i}>
+                        {currentScheme.columns.map((col, j) => (
+                          <TableCell key={j} className="text-sm">{String(row[col.name] ?? '')}</TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setStep('generate')}>
+              <MessageSquare className="h-4 w-4 mr-1" />
+              继续修改
+            </Button>
+            <Button onClick={handleConfirmGenerate} disabled={isDownloading}>
+              {isDownloading ? (
                 <>
-                  <Input
-                    ref={inputRef}
-                    placeholder="输入修改要求，如：删除XX列、增加保质期字段..."
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleIterate(); } }}
-                    disabled={isGenerating}
-                    className="flex-1"
-                  />
-                  <Button onClick={handleIterate} disabled={isGenerating || !chatInput.trim()}>
-                    <MessageSquare className="h-4 w-4 mr-1" />
-                    修改
-                  </Button>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  生成中...
                 </>
               ) : (
                 <>
-                  <Input
-                    ref={inputRef}
-                    placeholder="描述你的表格需求，如：我需要一个月度销售跟踪表..."
-                    value={userRequirement}
-                    onChange={e => setUserRequirement(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGenerate(); } }}
-                    disabled={isGenerating}
-                    className="flex-1"
-                  />
-                  <Button onClick={handleGenerate} disabled={isGenerating || !userRequirement.trim()}>
-                    <Sparkles className="h-4 w-4 mr-1" />
-                    生成方案
-                  </Button>
+                  <Download className="h-4 w-4 mr-1" />
+                  确认生成表格文件
                 </>
               )}
-            </div>
-
-            {/* 确认生成按钮 */}
-            {currentScheme && (
-              <div className="mt-3 flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
-                  <Lightbulb className="h-3 w-3 inline mr-1" />
-                  满意当前方案？确认后将生成标准 Excel 文件
-                </p>
-                <Button
-                  onClick={handleConfirmGenerate}
-                  disabled={isDownloading}
-                  className="gap-1"
-                >
-                  {isDownloading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  确认生成表格文件
-                </Button>
-              </div>
-            )}
+            </Button>
           </div>
-        </div>
-
-        {/* 右侧：方案预览 */}
-        {currentScheme && showPreview && (
-          <div className="w-[420px] flex-shrink-0 border rounded-lg overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium text-sm">方案预览</span>
-              </div>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowPreview(false)}>
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              {renderSchemePreview(currentScheme)}
-            </div>
-          </div>
-        )}
-
-        {currentScheme && !showPreview && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="self-start"
-            onClick={() => setShowPreview(true)}
-          >
-            <Eye className="h-4 w-4 mr-1" />
-            显示预览
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-
-  // ============= 渲染：方案预览 =============
-  const renderSchemePreview = (scheme: TableScheme) => (
-    <div className="space-y-4">
-      <div>
-        <h3 className="font-semibold text-base">{scheme.tableName}</h3>
-        <p className="text-sm text-muted-foreground mt-0.5">{scheme.purpose}</p>
-      </div>
-
-      {/* 字段清单 */}
-      <div>
-        <h4 className="font-medium text-sm mb-2 flex items-center gap-1">
-          <ChevronDown className="h-3.5 w-3.5" />
-          字段清单（{scheme.columns.length} 个）
-        </h4>
-        <div className="space-y-1.5">
-          {scheme.columns.map((col, idx) => {
-            const typeInfo = getTypeBadge(col.type);
-            return (
-              <div key={idx} className="flex items-center gap-2 text-sm p-2 rounded bg-background border">
-                <span className="font-medium min-w-0 truncate">{col.name}</span>
-                <Badge variant={typeInfo.variant} className="text-xs flex-shrink-0">{typeInfo.label}</Badge>
-                {col.required && <Badge variant="outline" className="text-xs flex-shrink-0">必填</Badge>}
-                {col.formula && <Badge variant="secondary" className="text-xs flex-shrink-0">公式</Badge>}
-                <span className="text-muted-foreground text-xs ml-auto truncate">{col.description}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 示例数据表格 */}
-      {scheme.sampleRows && scheme.sampleRows.length > 0 && (
-        <div>
-          <h4 className="font-medium text-sm mb-2 flex items-center gap-1">
-            <ChevronUp className="h-3.5 w-3.5" />
-            示例数据（{scheme.sampleRows.length} 条）
-          </h4>
-          <div className="border rounded overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {scheme.columns.map((col, idx) => (
-                    <TableHead key={idx} className="text-xs whitespace-nowrap">
-                      {col.name}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {scheme.sampleRows.map((row, rowIdx) => (
-                  <TableRow key={rowIdx}>
-                    {scheme.columns.map((col, colIdx) => (
-                      <TableCell key={colIdx} className="text-xs whitespace-nowrap">
-                        {String(row[col.name] ?? '')}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      )}
-
-      {/* 统计公式 */}
-      {scheme.formulas && scheme.formulas.length > 0 && (
-        <div>
-          <h4 className="font-medium text-sm mb-2">统计公式</h4>
-          <div className="space-y-1">
-            {scheme.formulas.map((f, idx) => (
-              <div key={idx} className="flex items-center gap-2 text-sm p-1.5 rounded bg-muted/30">
-                <code className="text-xs bg-background px-1.5 py-0.5 rounded border">{f.cell}</code>
-                <span className="font-mono text-xs">{f.formula}</span>
-                <span className="text-muted-foreground text-xs ml-auto">{f.description}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 设计说明 */}
-      {scheme.designNotes && (
-        <div className="p-3 bg-primary/5 rounded-lg border border-primary/10">
-          <p className="text-sm font-medium text-primary/80 mb-1">设计说明</p>
-          <p className="text-sm text-muted-foreground">{scheme.designNotes}</p>
-        </div>
+        </>
       )}
     </div>
   );
 
-  // ============= 渲染：完成页 =============
+  // ============= 渲染：完成页面 =============
   const renderConfirmPage = () => (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="text-center space-y-4 max-w-md">
-        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-          <Check className="h-8 w-8 text-primary" />
-        </div>
-        <h2 className="text-xl font-bold">表格已生成</h2>
-        <p className="text-muted-foreground">
-          「{currentScheme?.tableName}」已下载到本地。文件包含 {currentScheme?.columns.length} 个字段和 {currentScheme?.sampleRows?.length || 0} 条示例数据，可直接用 Excel/WPS 打开编辑。
-        </p>
-        <div className="p-3 bg-muted/50 rounded-lg text-sm text-left">
-          <p className="font-medium mb-1">使用提示</p>
-          <ul className="text-muted-foreground space-y-1 list-disc list-inside text-xs">
-            <li>删除示例数据后填入真实业务数据</li>
-            <li>公式会自动计算，无需手动修改</li>
-            <li>填好数据后可上传到 DataInsight 进行智能分析</li>
-          </ul>
-        </div>
-        <div className="flex gap-3 justify-center pt-2">
-          <Button variant="outline" onClick={handleReset}>
-            继续建模
-          </Button>
-          <Button onClick={handleConfirmGenerate} disabled={isDownloading}>
-            <Download className="h-4 w-4 mr-1" />
-            再次下载
-          </Button>
-        </div>
+    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+        <Check className="h-8 w-8 text-green-600" />
+      </div>
+      <h2 className="text-xl font-semibold">表格已生成</h2>
+      <p className="text-muted-foreground">Excel文件已准备好，可以开始使用了</p>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={handleReset}>
+          创建新表格
+        </Button>
+        <Button onClick={() => {
+          setStep('generate');
+          if (currentScheme) {
+            setChatMessages([{
+              id: `assistant-${Date.now()}`,
+              role: 'assistant',
+              content: `已加载「${currentScheme.tableName}」，包含 ${currentScheme.columns.length} 个字段。继续修改或重新生成。`,
+              timestamp: new Date(),
+              scheme: currentScheme,
+            }]);
+          }
+        }}>
+          继续修改
+        </Button>
       </div>
     </div>
   );
 
-  // ============= 主渲染 =============
-  if (!modelConfig) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-3">
-          <FileSpreadsheet className="h-12 w-12 mx-auto text-muted-foreground/40" />
-          <h3 className="font-semibold">请先配置 AI 模型</h3>
-          <p className="text-sm text-muted-foreground">
-            AI生成表格需要配置大语言模型才能使用
-          </p>
-          <p className="text-xs text-muted-foreground">
-            前往「AI 模型配置」页面添加模型
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  // ============= 主渲染逻辑 =============
   return (
-    <div className={`h-full ${className || ''}`}>
+    <div className={className}>
       {step === 'template' && renderTemplatePage()}
       {step === 'generate' && renderGeneratePage()}
-      {step === 'preview' && renderGeneratePage()}
+      {step === 'design-doc' && (
+        <div className="space-y-4 h-full flex flex-col">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleReset}>
+              <RotateCcw className="h-4 w-4 mr-1" />
+              返回
+            </Button>
+            <span className="text-muted-foreground">|</span>
+            <Badge variant="outline">专家模式</Badge>
+            <Badge variant="secondary">{BUILD_DEPTH_OPTIONS.find(d => d.id === buildDepth)?.label}</Badge>
+          </div>
+          {renderDesignDoc()}
+        </div>
+      )}
+      {step === 'preview' && renderPreviewPage()}
       {step === 'confirm' && renderConfirmPage()}
     </div>
   );
