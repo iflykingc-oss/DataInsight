@@ -1,51 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { FileUploader as AsyncFileUploader, UploadFile } from '@/components/async-file-uploader';
-import { DataTable } from '@/components/data-table';
-import { DataInsights } from '@/components/data-insights';
-import { Dashboard } from '@/components/dashboard';
-import { ReportGenerator } from '@/components/report-generator';
-import { FormBuilder } from '@/components/form-builder';
-import { DataSourceManager } from '@/components/data-source-manager';
-import { DataCleaner } from '@/components/data-cleaner';
-import { AdvancedCharts } from '@/components/advanced-charts';
-import { DashboardDesigner } from '@/components/dashboard-designer';
-import { EnhancedLLMAssistant } from '@/components/enhanced-llm-assistant';
-import { ShareManager } from '@/components/share-manager';
-import { GlobalAIAssistant } from '@/components/global-ai-assistant';
-import { SmartChartRecommender } from '@/components/smart-chart-recommender';
-import AITableBuilder from '@/components/ai-table-builder';
-import { MetricSemanticLayer } from '@/components/metric-semantic-layer';
-import { ErrorBoundary } from '@/components/error-boundary';
-import { DataQualityChecker } from '@/components/data-quality-checker';
-import { NL2Dashboard } from '@/components/nl2-dashboard';
-import { ChartExporter } from '@/components/chart-exporter';
-import { AIFieldPanel } from '@/components/ai-field-panel';
-import type { AIField } from '@/lib/ai-field-engine';
-import { MetricManager } from '@/components/metric-manager';
-import { ExtendedChartGallery } from '@/components/extended-chart-gallery';
-import { SqlLab } from '@/components/sql-lab';
-import { AIFormulaGenerator } from '@/components/ai-formula-generator';
-import { InsightReportGenerator } from '@/components/insight-report-generator';
-import { PivotTable } from '@/components/pivot-table';
-import { KanbanView } from '@/components/view-kanban';
-import { CalendarView } from '@/components/view-calendar';
-import { GanttView } from '@/components/view-gantt';
-import { LinkedTablesManager } from '@/components/linked-tables';
-import { MultimodalFields } from '@/components/multimodal-fields';
-import { WorkflowAutomation } from '@/components/workflow-automation';
-import { AppBuilder } from '@/components/app-builder';
-import { RowComments } from '@/components/row-comments';
 import Sidebar from '@/components/sidebar';
 import HomeCards from '@/components/home-cards';
 import SettingsDialog from '@/components/settings-dialog';
 import { OnboardingGuide } from '@/components/onboarding-guide';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Loader2,
@@ -69,8 +36,44 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
+import type { AIField } from '@/lib/ai-field-engine';
 import { tripleCache } from '@/lib/cache-manager';
 import { initSessionStore, sessionStore, createChatSession } from '@/lib/session-store';
+
+// 动态导入：首屏不需要的组件按需加载，大幅减小初始JS体积
+const DataTable = dynamic(() => import('@/components/data-table').then(m => ({ default: m.DataTable })), { ssr: false });
+const DataInsights = dynamic(() => import('@/components/data-insights').then(m => ({ default: m.DataInsights })), { ssr: false });
+const Dashboard = dynamic(() => import('@/components/dashboard').then(m => ({ default: m.Dashboard })), { ssr: false });
+const ReportGenerator = dynamic(() => import('@/components/report-generator').then(m => ({ default: m.ReportGenerator })), { ssr: false });
+const FormBuilder = dynamic(() => import('@/components/form-builder').then(m => ({ default: m.FormBuilder })), { ssr: false });
+const DataSourceManager = dynamic(() => import('@/components/data-source-manager').then(m => ({ default: m.DataSourceManager })), { ssr: false });
+const DataCleaner = dynamic(() => import('@/components/data-cleaner').then(m => ({ default: m.DataCleaner })), { ssr: false });
+const AdvancedCharts = dynamic(() => import('@/components/advanced-charts').then(m => ({ default: m.AdvancedCharts })), { ssr: false });
+const DashboardDesigner = dynamic(() => import('@/components/dashboard-designer').then(m => ({ default: m.DashboardDesigner })), { ssr: false });
+const EnhancedLLMAssistant = dynamic(() => import('@/components/enhanced-llm-assistant').then(m => ({ default: m.EnhancedLLMAssistant })), { ssr: false });
+const ShareManager = dynamic(() => import('@/components/share-manager').then(m => ({ default: m.ShareManager })), { ssr: false });
+const GlobalAIAssistant = dynamic(() => import('@/components/global-ai-assistant').then(m => ({ default: m.GlobalAIAssistant })), { ssr: false });
+const SmartChartRecommender = dynamic(() => import('@/components/smart-chart-recommender').then(m => ({ default: m.SmartChartRecommender })), { ssr: false });
+const AITableBuilder = dynamic(() => import('@/components/ai-table-builder'), { ssr: false });
+const MetricSemanticLayer = dynamic(() => import('@/components/metric-semantic-layer').then(m => ({ default: m.MetricSemanticLayer })), { ssr: false });
+const DataQualityChecker = dynamic(() => import('@/components/data-quality-checker').then(m => ({ default: m.DataQualityChecker })), { ssr: false });
+const NL2Dashboard = dynamic(() => import('@/components/nl2-dashboard').then(m => ({ default: m.NL2Dashboard })), { ssr: false });
+const ChartExporter = dynamic(() => import('@/components/chart-exporter').then(m => ({ default: m.ChartExporter })), { ssr: false });
+const AIFieldPanel = dynamic(() => import('@/components/ai-field-panel').then(m => ({ default: m.AIFieldPanel })), { ssr: false });
+const MetricManager = dynamic(() => import('@/components/metric-manager').then(m => ({ default: m.MetricManager })), { ssr: false });
+const ExtendedChartGallery = dynamic(() => import('@/components/extended-chart-gallery').then(m => ({ default: m.ExtendedChartGallery })), { ssr: false });
+const SqlLab = dynamic(() => import('@/components/sql-lab').then(m => ({ default: m.SqlLab })), { ssr: false });
+const AIFormulaGenerator = dynamic(() => import('@/components/ai-formula-generator').then(m => ({ default: m.AIFormulaGenerator })), { ssr: false });
+const InsightReportGenerator = dynamic(() => import('@/components/insight-report-generator').then(m => ({ default: m.InsightReportGenerator })), { ssr: false });
+const PivotTable = dynamic(() => import('@/components/pivot-table').then(m => ({ default: m.PivotTable })), { ssr: false });
+const KanbanView = dynamic(() => import('@/components/view-kanban').then(m => ({ default: m.KanbanView })), { ssr: false });
+const CalendarView = dynamic(() => import('@/components/view-calendar').then(m => ({ default: m.CalendarView })), { ssr: false });
+const GanttView = dynamic(() => import('@/components/view-gantt').then(m => ({ default: m.GanttView })), { ssr: false });
+const LinkedTablesManager = dynamic(() => import('@/components/linked-tables').then(m => ({ default: m.LinkedTablesManager })), { ssr: false });
+const MultimodalFields = dynamic(() => import('@/components/multimodal-fields').then(m => ({ default: m.MultimodalFields })), { ssr: false });
+const WorkflowAutomation = dynamic(() => import('@/components/workflow-automation').then(m => ({ default: m.WorkflowAutomation })), { ssr: false });
+const AppBuilder = dynamic(() => import('@/components/app-builder').then(m => ({ default: m.AppBuilder })), { ssr: false });
+const RowComments = dynamic(() => import('@/components/row-comments').then(m => ({ default: m.RowComments })), { ssr: false });
 
 // ============================================
 // 视图模式类型（整合后：10个入口，功能零删除）

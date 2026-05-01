@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Table, Database, Link2, Plus, Trash2, Eye, ArrowRightLeft } from 'lucide-react';
+import { Table, Database, Link2, Plus, Trash2, Eye, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DataTable } from '@/components/data-table';
 import type { ParsedData } from '@/lib/data-processor';
@@ -29,10 +29,10 @@ export interface LinkedTablesProps {
 
 function buildEnrichedTable(baseTable: ParsedData, relations: TableRelation[], allTables: ParsedData[]): ParsedData {
   if (!baseTable || relations.length === 0) return baseTable;
-  
+
   const newHeaders = [...baseTable.headers];
-  const lookupConfigs: { header: string; targetTable: ParsedData; targetField: string; displayField: string }[] = [];
-  
+  const lookupConfigs: { header: string; targetTable: ParsedData; targetField: string; displayField: string; relationSourceField: string }[] = [];
+
   relations
     .filter(r => r.sourceTable === baseTable.fileName)
     .forEach(r => {
@@ -47,21 +47,22 @@ function buildEnrichedTable(baseTable: ParsedData, relations: TableRelation[], a
             targetTable: target,
             targetField: r.targetField,
             displayField: df,
+            relationSourceField: r.sourceField,
           });
         }
       });
     });
-  
+
   const newRows = baseTable.rows.map(row => {
     const newRow = { ...row };
     lookupConfigs.forEach(cfg => {
-      const sourceVal = row[relations.find(r => r.targetTable === cfg.targetTable.fileName)?.sourceField || ''];
+      const sourceVal = row[cfg.relationSourceField];
       const targetRow = cfg.targetTable.rows.find(tr => String(tr[cfg.targetField]) === String(sourceVal));
       newRow[cfg.header] = targetRow ? targetRow[cfg.displayField] : null;
     });
     return newRow;
   });
-  
+
   return {
     ...baseTable,
     headers: newHeaders,
@@ -100,7 +101,7 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
       sourceField: newRelation.sourceField,
       targetTable: newRelation.targetTable,
       targetField: newRelation.targetField,
-      displayFields: newRelation.displayFields || [newRelation.targetField!],
+      displayFields: newRelation.displayFields && newRelation.displayFields.length > 0 ? newRelation.displayFields : [newRelation.targetField],
     };
     saveRelations([...relations, relation]);
     setShowAddRelation(false);
@@ -113,24 +114,51 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
 
   const sourceTable = tables.find(t => t.fileName === newRelation.sourceTable);
   const targetTable = tables.find(t => t.fileName === newRelation.targetTable);
+  const canCreateRelation = tables.length >= 2;
+
+  const openAddDialog = () => {
+    setNewRelation({
+      sourceTable: activeTable?.fileName || tables[0]?.fileName || '',
+      sourceField: '',
+      targetTable: '',
+      targetField: '',
+      displayFields: [],
+    });
+    setShowAddRelation(true);
+  };
 
   return (
     <div className="space-y-4">
-      {/* 子导航 */}
-      <div className="flex items-center gap-2">
-        <Button variant={viewMode === 'tables' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('tables')}>
-          <Database className="w-4 h-4 mr-1" /> 数据表
-        </Button>
-        <Button variant={viewMode === 'relations' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('relations')}>
-          <Link2 className="w-4 h-4 mr-1" /> 关联关系
-          {relations.length > 0 && (
-            <Badge variant="secondary" className="ml-1">{relations.length}</Badge>
-          )}
-        </Button>
-        <Button variant={viewMode === 'preview' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('preview')} disabled={!activeTable}>
-          <Eye className="w-4 h-4 mr-1" /> 关联预览
+      {/* 子导航 + 新建关联入口（始终可见） */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant={viewMode === 'tables' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('tables')}>
+            <Database className="w-4 h-4 mr-1" /> 数据表
+          </Button>
+          <Button variant={viewMode === 'relations' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('relations')}>
+            <Link2 className="w-4 h-4 mr-1" /> 关联关系
+            {relations.length > 0 && (
+              <Badge variant="secondary" className="ml-1">{relations.length}</Badge>
+            )}
+          </Button>
+          <Button variant={viewMode === 'preview' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('preview')} disabled={!activeTable}>
+            <Eye className="w-4 h-4 mr-1" /> 关联预览
+          </Button>
+        </div>
+        <Button size="sm" onClick={openAddDialog} title={!canCreateRelation ? '至少需要2张表才能建立关联' : ''}>
+          <Plus className="w-4 h-4 mr-1" /> 新建关联
         </Button>
       </div>
+
+      {/* 表数量不足提示 */}
+      {!canCreateRelation && (
+        <Card className="p-3 border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
+          <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>当前仅 {tables.length} 张数据表，至少需要 2 张表才能建立关联。请上传更多数据文件。</span>
+          </div>
+        </Card>
+      )}
 
       {viewMode === 'tables' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -167,24 +195,25 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
 
       {viewMode === 'relations' && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">表关联关系</h3>
-            <Button size="sm" onClick={() => setShowAddRelation(true)} disabled={tables.length < 2}>
-              <Plus className="w-4 h-4 mr-1" /> 新建关联
-            </Button>
-          </div>
           {relations.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
               <Link2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p>暂无关联关系</p>
-              <p className="text-xs mt-1">至少需要2张表才能建立关联</p>
+              <p className="text-xs mt-1">
+                {canCreateRelation ? '点击右上角「新建关联」建立表间关联' : '至少需要2张表才能建立关联'}
+              </p>
+              {canCreateRelation && (
+                <Button variant="outline" size="sm" className="mt-3" onClick={openAddDialog}>
+                  <Plus className="w-4 h-4 mr-1" /> 新建关联
+                </Button>
+              )}
             </Card>
           ) : (
             <div className="space-y-2">
               {relations.map(rel => (
                 <Card key={rel.id} className="p-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm flex-wrap">
                       <Badge variant="outline">{rel.sourceTable}</Badge>
                       <span className="text-muted-foreground">.{rel.sourceField}</span>
                       <ArrowRightLeft className="w-3 h-3 text-primary" />
@@ -218,81 +247,92 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>新建表关联</DialogTitle>
+            <DialogDescription>选择两张表之间的关联字段，建立数据关联后可自动拉取Lookup字段。</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div>
-              <label className="text-xs font-medium">源表</label>
-              <Select value={newRelation.sourceTable} onValueChange={v => setNewRelation({ ...newRelation, sourceTable: v, sourceField: '' })}>
-                <SelectTrigger><SelectValue placeholder="选择源表" /></SelectTrigger>
-                <SelectContent>
-                  {tables.map(t => <SelectItem key={t.fileName} value={t.fileName}>{t.fileName}</SelectItem>)}
-                </SelectContent>
-              </Select>
+          {!canCreateRelation ? (
+            <div className="py-6 text-center text-muted-foreground">
+              <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-500" />
+              <p>至少需要 2 张数据表才能建立关联</p>
+              <p className="text-xs mt-1">请先上传更多数据文件</p>
             </div>
-            {sourceTable && (
+          ) : (
+            <div className="space-y-3 py-2">
               <div>
-                <label className="text-xs font-medium">源表关联字段</label>
-                <Select value={newRelation.sourceField} onValueChange={v => setNewRelation({ ...newRelation, sourceField: v })}>
-                  <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
+                <label className="text-xs font-medium">源表</label>
+                <Select value={newRelation.sourceTable} onValueChange={v => setNewRelation({ ...newRelation, sourceTable: v, sourceField: '' })}>
+                  <SelectTrigger><SelectValue placeholder="选择源表" /></SelectTrigger>
                   <SelectContent>
-                    {sourceTable.headers.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                    {tables.map(t => <SelectItem key={t.fileName} value={t.fileName}>{t.fileName}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-            )}
-            <div>
-              <label className="text-xs font-medium">目标表</label>
-              <Select value={newRelation.targetTable} onValueChange={v => setNewRelation({ ...newRelation, targetTable: v, targetField: '', displayFields: [] })}>
-                <SelectTrigger><SelectValue placeholder="选择目标表" /></SelectTrigger>
-                <SelectContent>
-                  {tables.filter(t => t.fileName !== newRelation.sourceTable).map(t => (
-                    <SelectItem key={t.fileName} value={t.fileName}>{t.fileName}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {targetTable && (
-              <>
+              {sourceTable && (
                 <div>
-                  <label className="text-xs font-medium">目标表关联字段</label>
-                  <Select value={newRelation.targetField} onValueChange={v => setNewRelation({ ...newRelation, targetField: v })}>
+                  <label className="text-xs font-medium">源表关联字段</label>
+                  <Select value={newRelation.sourceField} onValueChange={v => setNewRelation({ ...newRelation, sourceField: v })}>
                     <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
                     <SelectContent>
-                      {targetTable.headers.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                      {sourceTable.headers.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <label className="text-xs font-medium">显示字段（可多选）</label>
-                  <ScrollArea className="h-24 border rounded-md p-2">
-                    <div className="space-y-1">
-                      {targetTable.headers.map(h => (
-                        <label key={h} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted rounded px-1">
-                          <input
-                            type="checkbox"
-                            checked={(newRelation.displayFields || []).includes(h)}
-                            onChange={e => {
-                              const current = newRelation.displayFields || [];
-                              setNewRelation({
-                                ...newRelation,
-                                displayFields: e.target.checked ? [...current, h] : current.filter(x => x !== h),
-                              });
-                            }}
-                          />
-                          <span className="text-xs">{h}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              </>
-            )}
-          </div>
+              )}
+              <div>
+                <label className="text-xs font-medium">目标表</label>
+                <Select value={newRelation.targetTable} onValueChange={v => setNewRelation({ ...newRelation, targetTable: v, targetField: '', displayFields: [] })}>
+                  <SelectTrigger><SelectValue placeholder="选择目标表" /></SelectTrigger>
+                  <SelectContent>
+                    {tables.filter(t => t.fileName !== newRelation.sourceTable).map(t => (
+                      <SelectItem key={t.fileName} value={t.fileName}>{t.fileName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {targetTable && (
+                <>
+                  <div>
+                    <label className="text-xs font-medium">目标表关联字段</label>
+                    <Select value={newRelation.targetField} onValueChange={v => setNewRelation({ ...newRelation, targetField: v })}>
+                      <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
+                      <SelectContent>
+                        {targetTable.headers.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">显示字段（可多选，从目标表拉取到源表）</label>
+                    <ScrollArea className="h-24 border rounded-md p-2">
+                      <div className="space-y-1">
+                        {targetTable.headers.map(h => (
+                          <label key={h} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted rounded px-1">
+                            <input
+                              type="checkbox"
+                              checked={(newRelation.displayFields || []).includes(h)}
+                              onChange={e => {
+                                const current = newRelation.displayFields || [];
+                                setNewRelation({
+                                  ...newRelation,
+                                  displayFields: e.target.checked ? [...current, h] : current.filter(x => x !== h),
+                                });
+                              }}
+                            />
+                            <span className="text-xs">{h}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setShowAddRelation(false)}>取消</Button>
-            <Button size="sm" onClick={handleAddRelation} disabled={!newRelation.sourceField || !newRelation.targetField}>
-              创建关联
-            </Button>
+            {canCreateRelation && (
+              <Button size="sm" onClick={handleAddRelation} disabled={!newRelation.sourceField || !newRelation.targetField}>
+                创建关联
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
