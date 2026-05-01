@@ -49,6 +49,7 @@ interface DataInsightsProps {
   analysis: DataAnalysis | null;
   onAnalyze: () => void;
   modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
+  onNavigateToCharts?: (chart: { chartType: string; xField: string; yField?: string; title: string }) => void;
 }
 
 const SEVERITY_CONFIG = {
@@ -60,7 +61,7 @@ const SEVERITY_CONFIG = {
 
 const CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
 
-export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataInsightsProps) {
+export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigateToCharts }: DataInsightsProps) {
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<AIEnhancedResult | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -383,32 +384,39 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
           </CardContent>
         </Card>
 
-        {/* 健康评分 */}
+        {/* 数据健康度 */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
-              数据健康评分
+              数据健康度
             </CardTitle>
+            <CardDescription>你的数据质量是否足够支撑可靠的分析结论</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center mb-4">
               <div className="text-5xl font-bold" style={{ color: getScoreColor(deep.healthScore.overall) }}>
                 {deep.healthScore.overall}
               </div>
-              <p className="text-sm text-gray-500 mt-1">综合评分</p>
+              <p className="text-sm mt-1">
+                {deep.healthScore.overall >= 80 ? '数据质量很好，可以放心分析' :
+                 deep.healthScore.overall >= 60 ? '数据基本可用，部分字段建议修复' :
+                 deep.healthScore.overall >= 40 ? '数据质量一般，建议先清洗再分析' :
+                 '数据质量较差，强烈建议先做数据清洗'}
+              </p>
             </div>
             <div className="space-y-2">
               {[
-                { label: '完整性', value: deep.healthScore.completeness },
-                { label: '一致性', value: deep.healthScore.consistency },
-                { label: '质量', value: deep.healthScore.quality },
-                { label: '可用性', value: deep.healthScore.usability },
+                { label: '完整性', value: deep.healthScore.completeness, tip: '缺值越少越好' },
+                { label: '一致性', value: deep.healthScore.consistency, tip: '格式统一越好' },
+                { label: '质量', value: deep.healthScore.quality, tip: '异常值越少越好' },
+                { label: '可用性', value: deep.healthScore.usability, tip: '分析友好程度' },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-2">
                   <span className="text-xs text-gray-500 w-12">{item.label}</span>
                   <Progress value={item.value} className="flex-1 h-2" />
                   <span className="text-xs font-medium w-8 text-right">{item.value}</span>
+                  <span className="text-xs text-muted-foreground w-24">{item.tip}</span>
                 </div>
               ))}
             </div>
@@ -579,16 +587,17 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
         </CardContent>
       </Card>
 
-      {/* 3. 趋势 + 分布 */}
+      {/* 3. 趋势速览 + 行动建议 */}
       <div className="grid lg:grid-cols-2 gap-4">
-        {/* 趋势分析 */}
+        {/* 趋势速览 - 业务语言 */}
         {deep.trends.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Activity className="w-5 h-5 text-primary" />
-                趋势分析
+                趋势速览
               </CardTitle>
+              <CardDescription>数据变化趋势的业务解读</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -602,21 +611,32 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
                   const trendBg = trend.direction === 'up' ? 'bg-green-50' :
                                   trend.direction === 'down' ? 'bg-red-50' :
                                   trend.direction === 'volatile' ? 'bg-orange-50' : 'bg-gray-50';
+                  // 业务化趋势描述
+                  const bizDirection = trend.direction === 'up' ? '增长' :
+                                       trend.direction === 'down' ? '下降' :
+                                       trend.direction === 'volatile' ? '波动' : '稳定';
+                  const bizAction = trend.direction === 'up' ? '持续关注增长动力' :
+                                    trend.direction === 'down' ? '需排查下降原因' :
+                                    trend.direction === 'volatile' ? '建议平滑波动分析' : '维持现状即可';
                   
                   return (
-                    <div key={idx} className={`flex items-center gap-3 p-3 rounded-lg ${trendBg}`}>
-                      <TrendIcon className={`w-8 h-8 ${trendColor}`} />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{trend.field}</span>
-                          <Badge variant="outline" className={`text-xs ${trendColor}`}>
-                            {trend.direction === 'up' ? '上升' :
-                             trend.direction === 'down' ? '下降' :
-                             trend.direction === 'volatile' ? '波动' : '稳定'}
-                            {trend.changeRate !== 0 && ` ${Math.abs(trend.changeRate)}%`}
-                          </Badge>
+                    <div key={idx} className={`p-3 rounded-lg ${trendBg}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${trendBg} border`}>
+                          <TrendIcon className={`w-5 h-5 ${trendColor}`} />
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{trend.description}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="font-medium text-sm">{trend.field}</span>
+                            <Badge variant="outline" className={`text-xs ${trendColor}`}>
+                              {bizDirection} {trend.changeRate !== 0 && `${Math.abs(trend.changeRate).toFixed(1)}%`}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-gray-600">{trend.description}</p>
+                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                            <Lightbulb className="w-3 h-3" /> {bizAction}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   );
@@ -626,35 +646,40 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
           </Card>
         )}
 
-        {/* 分布分析 */}
+        {/* 数据分布 - 业务解读替代技术指标 */}
         {deep.distributions.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-primary" />
-                分布分析
+                数据分布
               </CardTitle>
+              <CardDescription>了解数据的业务含义和分布特征</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {deep.distributions.slice(0, 6).map((dist, idx) => (
-                  <div key={idx} className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-sm">{dist.field}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {dist.type === 'normal' ? '正态' :
-                         dist.type === 'skewed_right' ? '右偏' :
-                         dist.type === 'skewed_left' ? '左偏' :
-                         dist.type === 'bimodal' ? '双峰' : '均匀'}
-                      </Badge>
+                {deep.distributions.slice(0, 6).map((dist, idx) => {
+                  // 业务化分布解读
+                  const bizType = dist.type === 'normal' ? '均衡分布' :
+                                  dist.type === 'skewed_right' ? '多数偏低' :
+                                  dist.type === 'skewed_left' ? '多数偏高' :
+                                  dist.type === 'bimodal' ? '两极分化' : '均匀分布';
+                  const bizMeaning = dist.type === 'normal' ? '数据分布均匀，适合常规统计' :
+                                     dist.type === 'skewed_right' ? '大部分值偏低，少数极端高值拉高了均值，建议关注中位数' :
+                                     dist.type === 'skewed_left' ? '大部分值偏高，少数低值，注意低值端是否有异常' :
+                                     dist.type === 'bimodal' ? '数据存在两个集中区间，可能包含两类不同群体，建议分组分析' :
+                                     '数据较均匀，无明显集中趋势';
+                  
+                  return (
+                    <div key={idx} className="p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-sm">{dist.field}</span>
+                        <Badge variant="secondary" className="text-xs">{bizType}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{bizMeaning}</p>
                     </div>
-                    <p className="text-xs text-gray-500">{dist.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                      <span>偏度: {dist.skewness}</span>
-                      <span>峰度: {dist.kurtosis}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -815,16 +840,16 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
         </Card>
       )}
 
-      {/* 5. 相关性分析 */}
+      {/* 5. 关联发现 - 业务语言 */}
       {deep.correlations.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Zap className="w-5 h-5 text-primary" />
-              字段相关性
+              关联发现
               <Badge variant="secondary">{deep.correlations.length}</Badge>
             </CardTitle>
-            <CardDescription>发现字段间的潜在关联关系</CardDescription>
+            <CardDescription>数据之间的关联关系，帮你发现隐藏规律</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -832,6 +857,17 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
                 const strengthColor = corr.strength === 'strong' ? 'text-red-600 bg-red-50' :
                                       corr.strength === 'moderate' ? 'text-orange-600 bg-orange-50' : 'text-blue-600 bg-blue-50';
                 const dirIcon = corr.direction === 'positive' ? '↑' : '↓';
+                // 业务化关联解读
+                const bizRelation = corr.direction === 'positive' 
+                  ? `${corr.field1}越高，${corr.field2}也越高` 
+                  : `${corr.field1}越高，${corr.field2}反而越低`;
+                const bizStrength = corr.strength === 'strong' ? '强关联' : 
+                                    corr.strength === 'moderate' ? '中等关联' : '弱关联';
+                const bizAction = corr.strength === 'strong' 
+                  ? (corr.direction === 'positive' 
+                    ? `可以联动优化：提升${corr.field1}可能同时提升${corr.field2}` 
+                    : `需权衡：提升${corr.field1}可能降低${corr.field2}`)
+                  : `关联较弱，可分开独立分析`;
                 
                 return (
                   <div key={idx} className={`p-3 rounded-lg border ${strengthColor}`}>
@@ -839,19 +875,15 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
                       <span className="font-medium text-sm">
                         {corr.field1} {dirIcon} {corr.field2}
                       </span>
-                      <Badge variant="outline" className="text-xs">
-                        {corr.strength === 'strong' ? '强' : corr.strength === 'moderate' ? '中' : '弱'}
-                      </Badge>
+                      <Badge variant="outline" className="text-xs">{bizStrength}</Badge>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Progress 
-                        value={Math.abs(corr.coefficient) * 100} 
-                        className="flex-1 h-2" 
-                      />
-                      <span className="text-xs font-mono font-medium">{(corr.coefficient * 100).toFixed(0)}%</span>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Progress value={Math.abs(corr.coefficient) * 100} className="flex-1 h-2" />
+                      <span className="text-xs font-mono font-medium">{(Math.abs(corr.coefficient) * 100).toFixed(0)}%</span>
                     </div>
-                    <p className="text-xs mt-1 opacity-70">
-                      {corr.direction === 'positive' ? '正相关：一个增大另一个也增大' : '负相关：一个增大另一个减小'}
+                    <p className="text-xs mt-1 font-medium opacity-80">{bizRelation}</p>
+                    <p className="text-xs mt-1 text-muted-foreground flex items-center gap-1">
+                      <Lightbulb className="w-3 h-3" /> {bizAction}
                     </p>
                   </div>
                 );
@@ -861,41 +893,47 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
         </Card>
       )}
 
-      {/* 6. 推荐图表 */}
+      {/* 6. 智能图表推荐 - 可直接操作 */}
       {deep.recommendedCharts.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              智能图表推荐
+              推荐这样看数据
             </CardTitle>
-            <CardDescription>根据数据特征自动推荐最佳可视化方案</CardDescription>
+            <CardDescription>一键生成适合你数据的图表，快速发现规律</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
               {deep.recommendedCharts.map((rec, idx) => {
                 const priorityColor = rec.priority === 'high' ? 'border-l-4 border-l-red-400' :
                                       rec.priority === 'medium' ? 'border-l-4 border-l-orange-400' : 'border-l-4 border-l-blue-400';
+                const chartLabel = rec.chartType === 'bar' ? '柱状图' :
+                                   rec.chartType === 'line' ? '折线图' :
+                                   rec.chartType === 'pie' ? '饼图' :
+                                   rec.chartType === 'scatter' ? '散点图' :
+                                   rec.chartType === 'area' ? '面积图' :
+                                   rec.chartType === 'radar' ? '雷达图' : rec.chartType;
                 
                 return (
-                  <div key={idx} className={`p-4 bg-white border rounded-lg ${priorityColor} hover:shadow-md transition-shadow`}>
+                  <div key={idx} className={`p-4 bg-white border rounded-lg ${priorityColor} hover:shadow-md transition-shadow group`}>
                     <div className="flex items-center gap-2 mb-2">
                       <BarChart3 className="w-5 h-5 text-primary" />
                       <span className="font-medium text-sm">{rec.title}</span>
                     </div>
-                    <Badge variant="outline" className="text-xs mb-2">
-                      {rec.chartType === 'bar' ? '柱状图' :
-                       rec.chartType === 'line' ? '折线图' :
-                       rec.chartType === 'pie' ? '饼图' :
-                       rec.chartType === 'scatter' ? '散点图' :
-                       rec.chartType === 'area' ? '面积图' :
-                       rec.chartType === 'radar' ? '雷达图' : rec.chartType}
-                    </Badge>
+                    <Badge variant="outline" className="text-xs mb-2">{chartLabel}</Badge>
                     <p className="text-xs text-gray-500 mt-2">{rec.reason}</p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
                       <span>X: {rec.xField}</span>
                       {rec.yField && <><ArrowRight className="w-3 h-3" /><span>Y: {rec.yField}</span></>}
                     </div>
+                    <Button 
+                      size="sm" variant="outline" 
+                      className="w-full mt-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => onNavigateToCharts?.(rec)}
+                    >
+                      一键生成此图表
+                    </Button>
                   </div>
                 );
               })}
@@ -904,15 +942,15 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig }: DataIns
         </Card>
       )}
 
-      {/* 7. 行动建议 - 按时间维度分组 */}
+      {/* 7. 行动建议 - 业务场景化 */}
       {deep.actionItems.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-primary" />
-              行动建议
+              下一步怎么做
             </CardTitle>
-            <CardDescription>按可落地时间分层的可执行方案</CardDescription>
+            <CardDescription>基于数据分析，给你可执行的行动方案</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
