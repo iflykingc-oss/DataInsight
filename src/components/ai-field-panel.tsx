@@ -327,6 +327,12 @@ export function AIFieldPanel({
                       </div>
                       <div className="text-xs text-muted-foreground truncate">
                         源列: {field.sourceColumns.join(', ')} · {Object.keys(field.results).length} 行已处理
+                        {field.previewMode && (
+                          <Badge variant="secondary" className="ml-1 text-xs">
+                            <Eye className="w-3 h-3 mr-0.5" />
+                            预览模式
+                          </Badge>
+                        )}
                         {field.status === 'completed' && Object.keys(field.results).length > 0 && (
                           <Button
                             variant="link"
@@ -393,8 +399,11 @@ export function AIFieldPanel({
                 {/* 展开的结果展示 */}
                 {expandedFieldId === field.id && field.status === 'completed' && Object.keys(field.results).length > 0 && (
                   <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="text-xs text-muted-foreground mb-2">
-                      处理结果（前10行）：
+                    <div className="text-xs text-muted-foreground mb-2 flex items-center justify-between">
+                      <span>处理结果（共 {Object.keys(field.results).length} 行）：</span>
+                      {field.previewMode && (
+                        <Badge variant="outline" className="text-xs">预览模式，仅处理前5行</Badge>
+                      )}
                     </div>
                     <div className="max-h-[200px] overflow-auto">
                       <table className="w-full text-xs">
@@ -406,26 +415,24 @@ export function AIFieldPanel({
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(field.results)
-                            .slice(0, 10)
-                            .map(([idx, value]) => (
+                          {Object.entries(field.results).map(([idx, value]) => {
+                            // 获取源数据（可能来自多个源列）
+                            const sourceValues = field.sourceColumns.map(col => {
+                              const cellValue = data.rows[Number(idx)]?.[col];
+                              return cellValue !== undefined && cellValue !== null ? String(cellValue) : '-';
+                            });
+                            return (
                               <tr key={idx} className="border-t">
                                 <td className="px-2 py-1 text-muted-foreground">{Number(idx) + 1}</td>
-                                <td className="px-2 py-1 max-w-[150px] truncate">
-                                  {selectedColumns.length > 0
-                                    ? String(data.rows[Number(idx)]?.[selectedColumns[0]] ?? '-')
-                                    : field.sourceColumns.map(col => `${col}: ${String(data.rows[Number(idx)]?.[col] ?? '-')}`).join(', ')}
+                                <td className="px-2 py-1 max-w-[150px] truncate" title={sourceValues.join(' | ')}>
+                                  {field.sourceColumns.length === 1 ? sourceValues[0] : sourceValues.join(' | ')}
                                 </td>
                                 <td className="px-2 py-1 font-medium text-primary">{String(value)}</td>
                               </tr>
-                            ))}
+                            );
+                          })}
                         </tbody>
                       </table>
-                      {Object.keys(field.results).length > 10 && (
-                        <div className="text-xs text-muted-foreground text-center mt-2">
-                          ... 还有 {Object.keys(field.results).length - 10} 行结果
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}

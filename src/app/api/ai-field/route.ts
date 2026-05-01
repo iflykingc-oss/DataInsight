@@ -98,10 +98,15 @@ export async function POST(req: NextRequest) {
       for (const result of batchResults) {
         if ('error' in result) {
           errors.push(result as { rowIndex: number; error: string });
-          // 出错时保留原值
+          // 出错时保留原值或标记为处理失败
+          const originalValue = ctx.rows[result.rowIndex]?.[aiField.sourceColumns[0]];
+          // 对于分类任务，如果原值是数字，标记为"未分类"
+          const value = typeof originalValue === 'number' && aiField.type === 'classify' 
+            ? '待分类' as CellValue 
+            : (originalValue ?? null);
           results.push({
             rowIndex: result.rowIndex,
-            value: ctx.rows[result.rowIndex]?.[aiField.sourceColumns[0]] ?? null,
+            value,
           });
         } else {
           results.push(result as { rowIndex: number; value: CellValue; confidence?: number });

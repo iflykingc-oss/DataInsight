@@ -275,9 +275,13 @@ export function buildAIFieldPrompt(
 数据：
 ${dataStr}`,
 
-    classify: `根据以下数据，按照规则"${field.config.classifyRules}"进行分类。只返回分类结果。
+    classify: `你是一个数据分类助手。请根据分类规则对数据进行分类。
+
+分类规则：${field.config.classifyRules || '高/中/低 三档分类'}
 数据：
-${dataStr}`,
+${dataStr}
+
+请分析数值，按照规则输出对应的分类标签（如：高客单、中客单、低客单）。只返回分类结果，不要其他文字。`,
 
     summarize: `将以下内容总结为${field.config.summarizeLength || 100}字以内的核心摘要。只返回摘要。
 内容：
