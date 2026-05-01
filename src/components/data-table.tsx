@@ -23,7 +23,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Search, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles,
   MoreHorizontal, Eye, Trash2, Copy, Star, StarOff, FileText,
-  RefreshCw, CheckSquare, Square, Bell, BellOff, MessageSquare
+  RefreshCw, CheckSquare, Square, Bell, BellOff, MessageSquare, Share2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -49,6 +49,7 @@ import type { ParsedData, FieldStat } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
 import { getAIFieldTypeIcon } from '@/lib/ai-field-engine';
 import { AICellToolbar } from '@/components/ai-cell-toolbar';
+import { RecordShareManager } from '@/components/record-share-manager';
 import { cn } from '@/lib/utils';
 
 interface RecordSubscription {
@@ -563,6 +564,22 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
             )}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={(e) => {
+              e.stopPropagation();
+              // 打开分享弹窗
+              setDetailRow({ row: data.rows[contextMenuPos.rowIndex], index: contextMenuPos.rowIndex });
+              setContextMenuPos(null);
+              // 触发分享
+              setTimeout(() => {
+                const shareBtn = document.querySelector('[data-share-record]') as HTMLButtonElement;
+                shareBtn?.click();
+              }, 100);
+            }}
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            分享记录
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => copyRowData(contextMenuPos.rowIndex)}>
             <Copy className="w-4 h-4 mr-2" />
             复制数据
@@ -637,6 +654,19 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
               
               {/* 操作按钮 */}
               <div className="flex items-center gap-2 border-t pt-4">
+                {detailRow && (
+                  <RecordShareManager
+                    recordData={detailRow.row}
+                    headers={data.headers}
+                    recordIndex={detailRow.index}
+                    trigger={
+                      <Button variant="outline" data-share-record>
+                        <Share2 className="w-4 h-4 mr-2" />
+                        分享记录
+                      </Button>
+                    }
+                  />
+                )}
                 <Button variant="outline" onClick={() => toggleSubscribe(detailRow.index)}>
                   {isRowSubscribed(detailRow.index) ? (
                     <>
