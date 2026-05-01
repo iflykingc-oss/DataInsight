@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -176,6 +176,70 @@ export function EnhancedLLMAssistant({
 
   // 获取当前模式配置
   const currentModeConfig = AI_MODES.find(m => m.id === currentMode) || AI_MODES[0];
+
+  // 基于数据列名自动推断业务场景，生成场景化推荐问题
+  const contextRecommendations = useMemo(() => {
+    if (!data?.headers?.length) return [];
+    const headers = data.headers.map(h => h.toLowerCase());
+    const numFields = analysis?.fieldStats?.filter(f => f.type === 'number').map(f => f.field) || [];
+    const dateFields = analysis?.fieldStats?.filter(f => f.type === 'date').map(f => f.field) || [];
+    const textFields = analysis?.fieldStats?.filter(f => f.type === 'string' || f.type === 'id' || f.type === 'mixed').map(f => f.field) || [];
+    const recs: { label: string; query: string; icon: React.ElementType; category: string }[] = [];
+
+    // 销售场景
+    if (headers.some(h => /销售|金额|收入|营收|订单|单价|数量/.test(h))) {
+      recs.push(
+        { label: '销售额总览', query: `统计总销售额、平均客单价、订单数量，告诉我整体销售情况`, icon: TrendingUp, category: '销售分析' },
+        { label: '找出TOP客户', query: `找出销售额最高的前10个客户/产品，分析它们的共同特征`, icon: Target, category: '销售分析' },
+        { label: '销售趋势', query: `按时间维度分析销售趋势，有没有增长或下降的拐点？`, icon: TrendingUp, category: '销售分析' },
+        { label: '为什么下滑', query: `如果近期销售额下降，帮我分析可能的原因，从客户、产品、时间等维度拆解`, icon: AlertTriangle, category: '销售分析' },
+      );
+    }
+    // HR场景
+    if (headers.some(h => /员工|部门|入职|薪资|绩效|考勤/.test(h))) {
+      recs.push(
+        { label: '人员结构', query: `分析员工部门分布、职级分布、年龄结构，告诉我团队构成特点`, icon: PieChart, category: 'HR分析' },
+        { label: '离职预警', query: `分析哪些部门或职级的离职率偏高，可能的原因是什么`, icon: AlertTriangle, category: 'HR分析' },
+        { label: '薪资分析', query: `分析薪资分布是否合理，同部门同职级的薪资差异大吗`, icon: Target, category: 'HR分析' },
+      );
+    }
+    // 项目管理
+    if (headers.some(h => /项目|任务|进度|完成|截止|负责人/.test(h))) {
+      recs.push(
+        { label: '进度总览', query: `统计各项目的完成率，哪些项目进度落后于计划`, icon: Target, category: '项目分析' },
+        { label: '瓶颈分析', query: `分析哪些负责人/阶段的任务积压最多，找出瓶颈`, icon: AlertTriangle, category: '项目分析' },
+        { label: '逾期预警', query: `列出所有逾期未完成的任务，分析逾期原因和影响范围`, icon: AlertTriangle, category: '项目分析' },
+      );
+    }
+    // 财务场景
+    if (headers.some(h => /成本|费用|支出|利润|预算|报销/.test(h))) {
+      recs.push(
+        { label: '收支分析', query: `分析收入和支出的整体情况，利润率是多少`, icon: TrendingUp, category: '财务分析' },
+        { label: '费用TOP', query: `找出费用最高的类别/项目，看看有没有可以优化的空间`, icon: Target, category: '财务分析' },
+        { label: '预算执行', query: `对比预算和实际支出，哪些项目超支了`, icon: AlertTriangle, category: '财务分析' },
+      );
+    }
+    // 通用推荐（当数据没有明确场景时）
+    if (recs.length === 0) {
+      if (numFields.length > 0) {
+        recs.push(
+          { label: '核心指标', query: `帮我总结这份数据的核心指标，包括各数值字段的汇总、均值、最大/最小值`, icon: TrendingUp, category: '通用分析' },
+          { label: '数据分布', query: `分析各字段的分布情况，有没有异常值或者偏斜`, icon: PieChart, category: '通用分析' },
+        );
+      }
+      if (dateFields.length > 0) {
+        recs.push(
+          { label: '趋势分析', query: `按时间维度分析数据变化趋势，找出关键转折点`, icon: TrendingUp, category: '通用分析' },
+        );
+      }
+      if (textFields.length > 0 && numFields.length > 0) {
+        recs.push(
+          { label: '分类对比', query: `按不同类别分组对比各数值指标，找出表现最好和最差的分组`, icon: Target, category: '通用分析' },
+        );
+      }
+    }
+    return recs.slice(0, 6); // 最多6个推荐
+  }, [data?.headers, analysis?.fieldStats]);
 
   // 加载历史会话
   useEffect(() => {
@@ -572,11 +636,46 @@ export function EnhancedLLMAssistant({
           </div>
         )}
 
-        {/* 快捷操作 */}
+        {/* 场景化推荐问题 - 基于数据列名自动推断业务场景 */}
+        {messages.length === 0 && contextRecommendations.length > 0 && (
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <p className="text-xs font-medium text-primary">基于你的数据，推荐这些问题</p>
+            </div>
+            <div className="space-y-1.5">
+              {(() => {
+                const categories = [...new Set(contextRecommendations.map(r => r.category))];
+                return categories.map(cat => (
+                  <div key={cat}>
+                    <p className="text-[10px] text-muted-foreground/70 mb-1 font-medium">{cat}</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {contextRecommendations.filter(r => r.category === cat).map((rec, i) => (
+                        <Button
+                          key={i}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuickAction(rec.query)}
+                          disabled={isLoading}
+                          className="text-xs h-auto py-2 justify-start text-left whitespace-normal hover:bg-primary/10 border-primary/20"
+                        >
+                          <rec.icon className="w-3 h-3 mr-1.5 shrink-0 text-primary/60" />
+                          <span className="line-clamp-2">{rec.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* 快捷操作 - 模式切换后的默认推荐 */}
         {messages.length === 0 && (
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
-              <p className="text-xs text-muted-foreground">快捷操作</p>
+              <p className="text-xs text-muted-foreground">更多操作</p>
               <Badge variant="outline" className="text-[10px] h-5">
                 {currentModeConfig.label}
               </Badge>
@@ -601,12 +700,12 @@ export function EnhancedLLMAssistant({
         {/* 消息列表 */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto mb-3 pr-2 space-y-4 min-h-0">
           {messages.length === 0 && (
-            <div className="text-center py-8">
-              <Brain className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+            <div className="text-center py-6">
+              <Brain className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
               <h3 className="font-medium text-sm mb-1">{currentModeConfig.label}</h3>
-              <p className="text-xs text-muted-foreground mb-2">{currentModeConfig.description}</p>
+              <p className="text-xs text-muted-foreground mb-1">{currentModeConfig.description}</p>
               <p className="text-xs text-muted-foreground/70">
-                输入您的问题，或选择快捷操作开始
+                选择上方推荐问题，或直接输入你的问题
               </p>
             </div>
           )}
