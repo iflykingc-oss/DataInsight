@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -19,12 +19,49 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  Search, ChevronLeft, ChevronRight, ArrowUpDown, Sparkles,
+  MoreHorizontal, Eye, Trash2, Copy, Star, StarOff, FileText,
+  RefreshCw, CheckSquare, Square, Bell, BellOff, MessageSquare
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
 import { getAIFieldTypeIcon } from '@/lib/ai-field-engine';
 import { AICellToolbar } from '@/components/ai-cell-toolbar';
 import { cn } from '@/lib/utils';
+
+interface RecordSubscription {
+  rowIndex: number;
+  field: string;
+}
+
+interface RecordSummary {
+  rowIndex: number;
+  summary: string;
+  insights: string[];
+  timestamp: number;
+}
 
 interface DataTableProps {
   data: ParsedData;
@@ -33,14 +70,24 @@ interface DataTableProps {
   modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
   onFieldClick?: (field: string, value: import('@/types').CellValue) => void;
   onCellChange?: (rowIndex: number, field: string, value: import('@/types').CellValue) => void;
+  onDeleteRow?: (rowIndex: number) => void;
+  onBulkDelete?: (rowIndices: number[]) => void;
 }
 
-export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFieldClick, onCellChange }: DataTableProps) {
+export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFieldClick, onCellChange, onDeleteRow, onBulkDelete }: DataTableProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  
+  // 新功能状态
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [subscribedRows, setSubscribedRows] = useState<RecordSubscription[]>([]);
+  const [recordSummaries, setRecordSummaries] = useState<RecordSummary[]>([]);
+  const [detailRow, setDetailRow] = useState<{ row: Record<string, unknown>; index: number } | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number; rowIndex: number } | null>(null);
 
   // AI单元格工具栏状态
   const [toolbarVisible, setToolbarVisible] = useState(false);
@@ -135,8 +182,151 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
 
   useEffect(() => {
     document.addEventListener('mouseup', handleTextSelection);
-    return () => document.removeEventListener('mouseup', handleTextSelection);
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('mouseup', handleTextSelection);
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, [handleTextSelection]);
+
+  // 处理点击空白处关闭右键菜单
+  const handleClickOutside = useCallback(() => {
+    setContextMenuPos(null);
+  }, []);
+
+  // 右键菜单
+  const handleContextMenu = useCallback((e: React.MouseEvent, rowIndex: number) => {
+    e.preventDefault();
+    setContextMenuPos({ x: e.clientX, y: e.clientY, rowIndex });
+  }, []);
+
+  // 切换关注记录
+  const toggleSubscribe = useCallback((rowIndex: number) => {
+    setSubscribedRows(prev => {
+      const exists = prev.find(r => r.rowIndex === rowIndex);
+      if (exists) {
+        return prev.filter(r => r.rowIndex !== rowIndex);
+      }
+      return [...prev, { rowIndex, field: data.headers[0] }];
+    });
+    setContextMenuPos(null);
+  }, [data.headers]);
+
+  // 复制行数据
+  const copyRowData = useCallback((rowIndex: number) => {
+    const row = data.rows[rowIndex];
+    const text = data.headers.map(h => `${h}: ${row[h] ?? ''}`).join('\n');
+    navigator.clipboard.writeText(text);
+    setContextMenuPos(null);
+  }, [data.rows, data.headers]);
+
+  // 删除单行
+  const handleDeleteRow = useCallback((rowIndex: number) => {
+    onDeleteRow?.(rowIndex);
+    setContextMenuPos(null);
+  }, [onDeleteRow]);
+
+  // 批量删除选中行
+  const handleBulkDelete = useCallback(() => {
+    const indices = Array.from(selectedRows);
+    onBulkDelete?.(indices);
+    setSelectedRows(new Set());
+    setContextMenuPos(null);
+  }, [selectedRows, onBulkDelete]);
+
+  // 智能总结单条记录
+  const generateSummary = useCallback(async (rowIndex: number) => {
+    if (!modelConfig?.apiKey) {
+      alert('请先在设置中配置AI模型');
+      return;
+    }
+    
+    setSummaryLoading(true);
+    setDetailRow({ row: data.rows[rowIndex], index: rowIndex });
+    
+    try {
+      const response = await fetch('/api/llm-insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `请总结这条记录的关键信息，生成一句话概括和关键洞察：\n${
+            data.headers.map(h => `${h}: ${data.rows[rowIndex][h] ?? ''}`).join('\n')
+          }`,
+          data: { headers: data.headers, rows: [data.rows[rowIndex]] },
+          chatHistory: []
+        })
+      });
+      
+      // SSE流式处理
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let summaryText = '';
+      
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                summaryText += data.content || '';
+              } catch {}
+            }
+          }
+        }
+      }
+      
+      setRecordSummaries(prev => [
+        ...prev.filter(s => s.rowIndex !== rowIndex),
+        {
+          rowIndex,
+          summary: summaryText || '记录摘要生成中...',
+          insights: [],
+          timestamp: Date.now()
+        }
+      ]);
+    } catch (error) {
+      console.error('生成摘要失败:', error);
+    } finally {
+      setSummaryLoading(false);
+      setContextMenuPos(null);
+    }
+  }, [modelConfig, data.rows, data.headers]);
+
+  // 全选/取消全选
+  const toggleSelectAll = useCallback(() => {
+    if (selectedRows.size === paginatedData.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(paginatedData.map((_, i) => (page - 1) * pageSize + i)));
+    }
+  }, [selectedRows.size, paginatedData.length, page, pageSize]);
+
+  // 切换单行选中
+  const toggleRowSelect = useCallback((rowIndex: number) => {
+    setSelectedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(rowIndex)) {
+        next.delete(rowIndex);
+      } else {
+        next.add(rowIndex);
+      }
+      return next;
+    });
+  }, []);
+
+  // 检查行是否被关注
+  const isRowSubscribed = useCallback((rowIndex: number) => {
+    return subscribedRows.some(r => r.rowIndex === rowIndex);
+  }, [subscribedRows]);
+
+  // 获取记录摘要
+  const getRecordSummary = useCallback((rowIndex: number) => {
+    return recordSummaries.find(s => s.rowIndex === rowIndex);
+  }, [recordSummaries]);
 
   const getFieldType = (field: string) => {
     return fieldStats?.find(f => f.field === field)?.type || 'string';
@@ -166,6 +356,22 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
   
   return (
     <div className="space-y-4">
+      {/* 批量操作栏 */}
+      {selectedRows.size > 0 && (
+        <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+          <Badge variant="secondary">
+            已选择 {selectedRows.size} 条记录
+          </Badge>
+          <Button size="sm" variant="outline" onClick={handleBulkDelete}>
+            <Trash2 className="w-4 h-4 mr-1" />
+            批量删除
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelectedRows(new Set())}>
+            取消选择
+          </Button>
+        </div>
+      )}
+      
       {/* 工具栏 */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 flex-1">
@@ -215,6 +421,12 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10 text-center">
+                  <Checkbox 
+                    checked={selectedRows.size === paginatedData.length && paginatedData.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead className="w-12 text-center">#</TableHead>
                 {data.headers.map(header => (
                   <TableHead
@@ -261,10 +473,28 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
               ) : (
                 paginatedData.map((row, rowIndex) => {
                   const actualRowIndex = (page - 1) * pageSize + rowIndex;
+                  const isSubscribed = isRowSubscribed(actualRowIndex);
+                  const hasSummary = !!getRecordSummary(actualRowIndex);
                   return (
-                    <TableRow key={`row-${rowIndex}`}>
+                    <TableRow 
+                      key={`row-${rowIndex}`} 
+                      className={cn(selectedRows.has(actualRowIndex) && 'bg-primary/5')}
+                      onContextMenu={(e) => handleContextMenu(e, actualRowIndex)}
+                    >
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          checked={selectedRows.has(actualRowIndex)}
+                          onCheckedChange={() => toggleRowSelect(actualRowIndex)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </TableCell>
                       <TableCell className="text-center text-gray-400">
-                        {actualRowIndex + 1}
+                        <div className="flex items-center gap-1">
+                          {isSubscribed && (
+                            <Bell className="w-3 h-3 text-yellow-500" />
+                          )}
+                          <span>{actualRowIndex + 1}</span>
+                        </div>
                       </TableCell>
                       {data.headers.map(header => (
                         <TableCell
@@ -305,6 +535,138 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
         </div>
       </div>
       
+      {/* 右键菜单 */}
+      {contextMenuPos && (
+        <div
+          className="fixed z-50 bg-background border rounded-lg shadow-lg py-1 min-w-[180px]"
+          style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
+        >
+          <DropdownMenuItem onClick={() => { setDetailRow({ row: data.rows[contextMenuPos.rowIndex], index: contextMenuPos.rowIndex }); setContextMenuPos(null); }}>
+            <Eye className="w-4 h-4 mr-2" />
+            查看详情
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => generateSummary(contextMenuPos.rowIndex)}>
+            <Sparkles className="w-4 h-4 mr-2" />
+            智能总结
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => toggleSubscribe(contextMenuPos.rowIndex)}>
+            {isRowSubscribed(contextMenuPos.rowIndex) ? (
+              <>
+                <BellOff className="w-4 h-4 mr-2" />
+                取消关注
+              </>
+            ) : (
+              <>
+                <Bell className="w-4 h-4 mr-2" />
+                关注记录
+              </>
+            )}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => copyRowData(contextMenuPos.rowIndex)}>
+            <Copy className="w-4 h-4 mr-2" />
+            复制数据
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(JSON.stringify(data.rows[contextMenuPos.rowIndex], null, 2))}>
+            <FileText className="w-4 h-4 mr-2" />
+            复制JSON
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => handleDeleteRow(contextMenuPos.rowIndex)}
+            className="text-red-600 focus:text-red-600"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            删除记录
+          </DropdownMenuItem>
+        </div>
+      )}
+
+      {/* 记录详情弹窗 */}
+      <Dialog open={!!detailRow} onOpenChange={() => setDetailRow(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              记录详情 #{detailRow ? detailRow.index + 1 : ''}
+              {detailRow && isRowSubscribed(detailRow.index) && (
+                <Badge variant="secondary" className="gap-1">
+                  <Bell className="w-3 h-3" /> 已关注
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {detailRow && (
+            <div className="space-y-4">
+              {/* 字段详情 */}
+              <div className="grid gap-3">
+                {data.headers.map(header => (
+                  <div key={header} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                    <Label className="w-32 shrink-0 font-medium">{header}</Label>
+                    <span className="flex-1 break-all">
+                      {detailRow.row[header] !== null && detailRow.row[header] !== undefined 
+                        ? String(detailRow.row[header]) 
+                        : <span className="text-muted-foreground italic">空</span>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              
+              {/* 智能总结 */}
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="font-medium">智能总结</span>
+                  {summaryLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
+                </div>
+                
+                {getRecordSummary(detailRow.index) ? (
+                  <div className="p-4 bg-primary/5 rounded-lg">
+                    <p className="text-sm mb-2">{getRecordSummary(detailRow.index)?.summary}</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Button onClick={() => generateSummary(detailRow.index)} disabled={summaryLoading}>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      生成总结
+                    </Button>
+                  </div>
+                )}
+              </div>
+              
+              {/* 操作按钮 */}
+              <div className="flex items-center gap-2 border-t pt-4">
+                <Button variant="outline" onClick={() => toggleSubscribe(detailRow.index)}>
+                  {isRowSubscribed(detailRow.index) ? (
+                    <>
+                      <BellOff className="w-4 h-4 mr-2" />
+                      取消关注
+                    </>
+                  ) : (
+                    <>
+                      <Bell className="w-4 h-4 mr-2" />
+                      关注记录
+                    </>
+                  )}
+                </Button>
+                <Button variant="outline" onClick={() => { copyRowData(detailRow.index); }}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  复制数据
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => { handleDeleteRow(detailRow.index); setDetailRow(null); }}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  删除记录
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* AI单元格工具栏 */}
       {toolbarVisible && selectedCell && (
         <div
