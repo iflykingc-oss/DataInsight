@@ -434,16 +434,20 @@ export function EnhancedLLMAssistant({
             try {
               const parsed = JSON.parse(line.slice(6));
               if (parsed.done) {
+                // 流结束时应用过滤：移除思考内容和推荐追问部分
+                const cleanContent = filterThinkingContent(removeSuggestionsSection(fullContent));
                 setMessages(prev => prev.map(m =>
                   m.id === assistantMsgId
-                    ? { ...m, isStreaming: false, content: fullContent, suggestions: extractSuggestions(fullContent) }
+                    ? { ...m, isStreaming: false, content: cleanContent, suggestions: extractSuggestions(fullContent) }
                     : m
                 ));
               } else if (parsed.content) {
                 fullContent += parsed.content;
+                // 实时显示时先应用思考内容过滤，推荐追问部分暂时保留
+                const cleanContent = filterThinkingContent(fullContent);
                 setMessages(prev => prev.map(m =>
                   m.id === assistantMsgId
-                    ? { ...m, content: fullContent }
+                    ? { ...m, content: cleanContent }
                     : m
                 ));
               }
@@ -452,9 +456,11 @@ export function EnhancedLLMAssistant({
         }
       }
 
+      // 最终更新：完整过滤
+      const cleanContent = filterThinkingContent(removeSuggestionsSection(fullContent));
       setMessages(prev => prev.map(m =>
         m.id === assistantMsgId
-          ? { ...m, isStreaming: false, content: fullContent, suggestions: extractSuggestions(fullContent) }
+          ? { ...m, isStreaming: false, content: cleanContent, suggestions: extractSuggestions(fullContent) }
           : m
       ));
 
@@ -483,10 +489,24 @@ export function EnhancedLLMAssistant({
     }
   }, [data, analysis, messages, modelConfig, currentMode]);
 
+  // 过滤思考内容
+  const filterThinkingContent = (content: string): string => {
+    // 移除 <think>...</think> 标签
+    let filtered = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    // 移除 以 "<think>" 开头到 "</think>" 结尾的内容（可能在开头）
+    filtered = filtered.replace(/^<think>[\s\S]*?<\/think>\s*/i, '');
+    // 移除独立的 </think> 或 </think> 行
+    filtered = filtered.replace(/^<\/think>\s*/gim, '');
+    filtered = filtered.replace(/^<think>\s*/gim, '');
+    return filtered.trim();
+  };
+
   // 提取推荐追问
   const extractSuggestions = (content: string): string[] => {
     const suggestions: string[] = [];
-    const sectionMatch = content.match(/##\s*推荐追问\s*\n([\s\S]*?)$/);
+    // 先过滤掉思考内容再提取
+    const cleanContent = filterThinkingContent(content);
+    const sectionMatch = cleanContent.match(/##\s*推荐追问\s*\n([\s\S]*?)$/);
     if (sectionMatch) {
       const section = sectionMatch[1];
       const lines = section.split('\n');
@@ -499,6 +519,11 @@ export function EnhancedLLMAssistant({
       }
     }
     return suggestions.slice(0, 3);
+  };
+
+  // 移除正文中的推荐追问部分
+  const removeSuggestionsSection = (content: string): string => {
+    return content.replace(/##\s*推荐追问\s*\n[\s\S]*$/, '').trim();
   };
 
   const handleSend = async () => {

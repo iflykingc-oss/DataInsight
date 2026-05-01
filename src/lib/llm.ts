@@ -303,6 +303,33 @@ export async function callLLM(
 }
 
 /**
+ * 过滤思考内容
+ * 移除 <think>...</think>、## 思考 等标记
+ */
+function filterThinkingContent(content: string): string {
+  if (!content) return content;
+  
+  let filtered = content;
+  
+  // 移除 <think>...</think> 标签
+  filtered = filtered.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  
+  // 移除 ## 思考、##思考 等标题（单独一行）
+  filtered = filtered.replace(/^#{1,3}\s*思考\s*$/gm, '');
+  
+  // 移除 **思考** 或 <思考> 等格式标记
+  filtered = filtered.replace(/\*\*思考\*\*/g, '');
+  filtered = filtered.replace(/<\/?思考>/g, '');
+  
+  // 移除分析过程等可能被用于思考的标记
+  filtered = filtered.replace(/^#{1,3}\s*分析过程\s*$/gm, '');
+  filtered = filtered.replace(/^#{1,3}\s*推理\s*$/gm, '');
+  filtered = filtered.replace(/^#{1,3}\s*分析\s*$/gm, '');
+  
+  return filtered;
+}
+
+/**
  * 流式调用 LLM（用于 AI 智能分析等场景）
  * 返回 ReadableStream，适配 SSE 协议
  * @param config 模型配置
@@ -415,9 +442,13 @@ export async function callLLMStream(
 
           try {
             const parsed = JSON.parse(data);
-            const content = parsed?.choices?.[0]?.delta?.content;
-            if (content) {
-              await writer.write(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+            const rawContent = parsed?.choices?.[0]?.delta?.content;
+            if (rawContent) {
+              // 过滤思考内容后再发送
+              const content = filterThinkingContent(rawContent);
+              if (content) {
+                await writer.write(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+              }
             }
           } catch {
             // 跳过无法解析的行
