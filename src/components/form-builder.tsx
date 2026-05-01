@@ -234,15 +234,11 @@ export function FormBuilder({
   }, []);
 
   const startNew = useCallback(() => {
-    if (!data) {
-      toast.error("请先上传数据表");
-      return;
-    }
     const newConfig: FormConfig = {
       id: genId(),
-      title: `${data.fileName || "数据"} - 收集表`,
+      title: "新建数据收集表单",
       description: "请填写以下信息",
-      fields: data.headers.map((h) => ({
+      fields: data ? data.headers.map((h) => ({
         id: genId(),
         sourceField: h,
         label: h,
@@ -252,7 +248,17 @@ export function FormBuilder({
         options: inferOptions(data.rows, h),
         placeholder: "",
         description: "",
-      })),
+      })) : [{
+        id: genId(),
+        sourceField: "字段1",
+        label: "字段1",
+        type: "text" as FormFieldType,
+        required: false,
+        visible: true,
+        options: [],
+        placeholder: "",
+        description: "",
+      }],
       theme: { primaryColor: "#3B82F6", bgColor: "#F0F7FF", headerImage: "", logo: "", font: "sans-serif" },
       settings: {
         deadline: null, submitLimit: null, allowModify: false,
