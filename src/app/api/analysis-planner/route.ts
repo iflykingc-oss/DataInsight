@@ -92,17 +92,21 @@ export async function POST(req: NextRequest) {
     const filteredStats = basicConstraint.filterFields(body.fieldStats, industryTemplate);
 
     // 构建轻量级数据概要（避免 token 爆炸）
-    const compactStats = filteredStats.map(f => ({
-      field: f.field,
-      type: f.type,
-      nullRate: `${f.nullRate.toFixed(1)}%`,
-      uniqueRate: `${f.uniqueRate.toFixed(1)}%`,
-      mean: f.mean !== undefined ? Number(f.mean.toFixed(2)) : undefined,
-      range: f.min !== undefined && f.max !== undefined
-        ? `${f.min} ~ ${f.max}`
-        : undefined,
-      topValue: f.topValues?.[0]?.value,
-    }));
+    const compactStats = (filteredStats as FieldStatSummary[]).map(f => {
+      const nullRate = f.totalRows > 0 ? (f.nullCount / f.totalRows * 100) : 0;
+      const uniqueRate = f.totalRows > 0 ? (f.uniqueCount / f.totalRows * 100) : 0;
+      return {
+        field: f.field,
+        type: f.type,
+        nullRate: `${nullRate.toFixed(1)}%`,
+        uniqueRate: `${uniqueRate.toFixed(1)}%`,
+        mean: f.mean !== undefined ? Number(f.mean.toFixed(2)) : undefined,
+        range: f.min !== undefined && f.max !== undefined
+          ? `${f.min} ~ ${f.max}`
+          : undefined,
+        topValue: f.topValues?.[0]?.value,
+      };
+    });
 
     const userIntentContext = body.userIntent
       ? `\n用户意图: "${body.userIntent}"`
