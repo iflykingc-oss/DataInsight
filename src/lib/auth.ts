@@ -18,6 +18,7 @@ export interface User {
     dashboard: boolean;
     share: boolean;
     upload: boolean;
+    form: boolean;
     custom_ai_model: boolean;
   };
   createdBy: number | null;
@@ -72,6 +73,7 @@ const users = new Map<number, User>([
       dashboard: true,
       share: true,
       upload: true,
+      form: true,
       custom_ai_model: true,
     },
     createdBy: null,
@@ -132,6 +134,7 @@ export async function createUser(data: {
       dashboard: true,
       share: true,
       upload: true,
+      form: true,
       custom_ai_model: false,
     },
     createdBy: data.createdBy,

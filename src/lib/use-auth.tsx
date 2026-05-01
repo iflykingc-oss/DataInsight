@@ -14,6 +14,7 @@ export interface User {
     dashboard: boolean;
     share: boolean;
     upload: boolean;
+    form: boolean;
     custom_ai_model: boolean;
   };
   createdBy: number | null;
@@ -31,6 +32,7 @@ interface AuthContextType {
   hasPermission: (key: keyof User['permissions']) => boolean;
   loginDialogOpen: boolean;
   setLoginDialogOpen: (open: boolean) => void;
+  onLoginRequired: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -96,6 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.reload();
   }, []);
 
+  const onLoginRequired = useCallback(() => {
+    setLoginDialogOpen(true);
+  }, []);
+
   const hasPermission = useCallback(
     (key: keyof User['permissions']) => {
       if (!user) return false;
@@ -116,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         refreshUser,
         hasPermission,
+        onLoginRequired,
         loginDialogOpen,
         setLoginDialogOpen,
       }}

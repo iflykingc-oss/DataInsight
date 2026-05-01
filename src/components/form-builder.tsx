@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect, useRef, Dispatch, SetStateAction } from "react";
+import { useAuth } from "@/lib/use-auth";
 import { ParsedData } from "@/lib/data-processor/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -228,10 +229,28 @@ export function FormBuilder({
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [dataViewFormId, setDataViewFormId] = useState<string | null>(null);
 
+  // 权限检查
+  const { user, isLoggedIn, onLoginRequired } = useAuth();
+  // 表单收集权限：依赖 upload 权限，无 upload 则无 form 权限
+  const canCreateForm = user ? (user.permissions?.upload !== false && user.permissions?.form !== false) : false;
+  const hasFormPermission = user?.permissions?.form !== false;
+
   const saveConfigs = useCallback((next: FormConfig[]) => {
     setConfigs(next);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }, []);
+
+  const handleCreateForm = useCallback(() => {
+    if (!isLoggedIn) {
+      onLoginRequired?.();
+      return;
+    }
+    if (!canCreateForm) {
+      toast.error("管理员已禁用表单收集功能");
+      return;
+    }
+    startNew();
+  }, [isLoggedIn, canCreateForm, onLoginRequired]);
 
   const startNew = useCallback(() => {
     const newConfig: FormConfig = {
@@ -912,7 +931,7 @@ export function FormBuilder({
           <ToggleLeft className="w-5 h-5" />
           表单收集
         </h3>
-        <Button onClick={startNew} disabled={!data}>
+        <Button onClick={handleCreateForm} disabled={!canCreateForm} title={!canCreateForm ? "管理员已禁用表单收集功能" : undefined}>
           <Plus className="w-4 h-4 mr-1" /> 新建表单
         </Button>
       </div>

@@ -496,6 +496,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                         ['dashboard', '仪表盘创建'],
                         ['share', '分享链接'],
                         ['upload', '文件上传'],
+                        ['form', '表单收集'],
                         ['custom_ai_model', '自定义AI模型'],
                       ] as [keyof typeof formData.permissions, string][]
                     ).map(([key, label]) => (
