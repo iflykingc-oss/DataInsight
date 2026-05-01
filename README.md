@@ -111,21 +111,23 @@
 
 ## 导航结构
 
-精简 3 组 10 项入口，每个入口通过子 Tab 展开详细功能：
+精简 4 组 12 项入口（独立功能优先，无数据时正常展示），每个入口通过子 Tab 展开详细功能：
 
 | 分组 | 入口 | 子 Tab |
 |:----:|:----:|:------:|
 | 数据 | AI 建表 | — |
-| 数据 | 数据表格 | 表格 / AI 字段 / AI 公式 |
+| 数据 | 数据表格 | 表格 / AI 字段 / AI 公式 / 关联表 / 自动化 / 评论 |
 | 数据 | 数据准备 | 数据源 / 清洗 / 质量 |
 | 分析 | 智能洞察 | 分析 / 报告 |
 | 分析 | 可视化 | 仪表盘 / AI 生成 / 设计器 |
 | 分析 | 指标体系 | AI 指标 / 指标管理 |
 | 分析 | 图表中心 | AI 推荐 / 高级 / ECharts |
 | 工具 | AI 问数 | — |
+| 工具 | AI 多模态 | 生图 / 图转文 / 文转图 / 图转表 |
+| 工具 | 表单收集 | 表单设计 / 数据管理 |
 | 工具 | SQL 查询 | — |
-| 工具 | 报表导出 | 报表 / 导出 / 分享 |
-| ⚙ 设置 | — | AI 模型 / 数据预警 / 版本快照 / 模板管理 |
+| 工具 | 报表导出 | 报表 / 导出 / 分享 / 应用设计 |
+| ⚙ 设置 | — | AI 模型 / 数据预警 / 版本快照 / 模板管理 / 权限 |
 
 ---
 
@@ -178,7 +180,7 @@ pnpm lint         # ESLint 代码检查
 ```
 src/
 ├── app/
-│   ├── api/                     # 后端 API 路由（11个）
+│   ├── api/                     # 后端 API 路由（12个）
 │   │   ├── upload/              #   文件上传与解析
 │   │   ├── analyze/             #   数据深度分析
 │   │   ├── llm-insight/         #   AI 智能洞察（SSE 流式）
@@ -189,40 +191,58 @@ src/
 │   │   ├── nl2-dashboard/       #   AI 仪表盘生成
 │   │   ├── database/            #   外部数据库连接
 │   │   ├── test-connection/     #   AI 模型连接测试
-│   │   └── alerts/              #   数据告警
+│   │   ├── alerts/              #   数据告警
+│   │   └── analysis-planner/   #   分析规划（定制分析）
+│   ├── form/                    # 表单填写独立页面
 │   ├── globals.css              # 全局样式 + CSS 变量主题
 │   ├── layout.tsx               # 根布局
 │   └── page.tsx                 # 主页面（精简侧边栏 + 子Tab路由）
 ├── components/
 │   ├── ui/                      # shadcn/ui 组件库
-│   ├── sidebar.tsx              # 侧边栏导航（3组10项）
+│   ├── sidebar.tsx              # 侧边栏导航（4组12项）
 │   ├── home-cards.tsx           # 首页功能卡片
-│   ├── settings-dialog.tsx      # 设置弹窗（AI模型/预警/版本/模板）
+│   ├── settings-dialog.tsx      # 设置弹窗（AI模型/预警/版本/模板/权限）
+│   ├── async-file-uploader.tsx  # 异步文件上传（Web Worker）
 │   ├── data-table.tsx           # 数据表格（含 AI 字段列渲染）
+│   ├── pivot-table.tsx          # 数据透视表（行/列/值字段 + 5种聚合）
 │   ├── ai-field-panel.tsx       # AI 字段配置面板（6种AI类型）
 │   ├── ai-formula-generator.tsx # AI 公式生成器
 │   ├── ai-cell-toolbar.tsx      # 单元格智能工具栏（8种AI操作）
 │   ├── data-insights.tsx        # 深度数据分析（7大模块）
 │   ├── insight-report-generator.tsx # 一键洞察报告（9模块勾选）
-│   ├── dashboard.tsx            # 交互式仪表盘
-│   ├── nl2-dashboard.tsx        # NL2Dashboard 对话生成
+│   ├── dashboard.tsx            # 交互式仪表盘（KPI卡片+图表联动）
+│   ├── nl2-dashboard.tsx        # NL2Dashboard 对话生成仪表盘
 │   ├── dashboard-designer.tsx   # 仪表盘设计器
 │   ├── echarts-extensions.tsx   # ECharts 高级图表（10种）
 │   ├── extended-chart-gallery.tsx # 扩展图表面板
 │   ├── metric-semantic-layer.tsx # AI 指标语义层
 │   ├── metric-manager.tsx       # 指标管理面板
 │   ├── sql-lab.tsx              # SQL Lab（浏览器端 SQLite）
-│   ├── data-alerting.tsx        # 智能告警
+│   ├── data-alerting.tsx        # 智能告警（6预置模板+自定义规则）
 │   ├── enhanced-llm-assistant.tsx # AI 分析助手（有数据时）
-│   ├── global-ai-assistant.tsx  # 全局 AI 助手（拖拽移动）
-│   ├── ai-table-builder.tsx     # AI 智能建表
-│   ├── async-file-uploader.tsx  # 异步文件上传（Web Worker）
-│   ├── data-cleaner.tsx         # 数据清洗
+│   ├── global-ai-assistant.tsx  # 全局 AI 助手（拖拽移动+操作执行）
+│   ├── ai-table-builder.tsx     # AI 智能建表（20套场景模板）
+│   ├── data-cleaner.tsx        # 数据清洗（IQR/Z-score/模板）
 │   ├── data-quality-checker.tsx # 数据质量检测
-│   ├── report-generator.tsx     # 报表生成
+│   ├── report-generator.tsx     # 报表生成（4模板+导出）
 │   ├── share-manager.tsx        # 分享管理
 │   ├── data-source-manager.tsx  # 数据源管理
-│   ├── platform-integrations.tsx # 多平台集成
+│   ├── platform-integrations.tsx # 多平台集成（飞书/企微/钉钉/WPS）
+│   ├── view-kanban.tsx          # 看板视图
+│   ├── view-calendar.tsx        # 日历视图
+│   ├── view-gantt.tsx          # 甘特图视图
+│   ├── form-builder.tsx         # 表单构建器（15种字段+主题+规则）
+│   ├── linked-tables.tsx        # 数据联动/关联表（多表+Lookup）
+│   ├── multimodal-fields.tsx     # AI 多模态（生图/图转文/文转图/图转表）
+│   ├── workflow-automation.tsx  # 自动化工作流（触发器+动作）
+│   ├── row-permissions.tsx      # 行级权限（字段/行/视图级）
+│   ├── row-comments.tsx         # 行内评论（表格即文档）
+│   ├── app-builder.tsx         # 应用设计器（拖拽搭建业务应用）
+│   ├── chart-exporter.tsx       # 图表导出
+│   ├── advanced-charts.tsx      # 高级图表
+│   ├── version-history.tsx      # 版本快照
+│   ├── template-manager.tsx     # 模板管理
+│   ├── ai-model-settings.tsx    # AI 模型配置面板
 │   └── error-boundary.tsx       # 错误边界
 └── lib/
     ├── utils.ts                 # 通用工具（cn 等）
