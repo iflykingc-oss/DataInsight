@@ -4,6 +4,7 @@ import {
   Home, Table2, Database, Brain, LayoutGrid, Target, PieChart, FileText,
   MessageSquare, Wrench, ChevronLeft, ChevronRight, Settings, Sparkles,
   AlertTriangle, Clock, BookTemplate, Grid3x3, Image, ClipboardList,
+  Bot,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'chart-center', label: '图表库', desc: '快速做柱状图、折线图等分析图', icon: PieChart, group: 'visual', needsData: true },
   // 工具组：辅助工具（部分可不依赖数据）
   { id: 'sql-lab', label: 'SQL 查询', desc: '用SQL查数据，结果直接可视化', icon: Wrench, group: 'tools', needsData: true },
+  { id: 'spreadsheet-agent', label: 'AI 表格助手', desc: '自然语言处理表格，一句话完成操作', icon: Bot, group: 'tools', badge: 'AI' },
   { id: 'multimodal', label: '多模态 AI', desc: 'AI生图、图生文、图片转表格', icon: Image, group: 'tools', badge: 'AI' },
   { id: 'form-collection', label: '表单收集', desc: '创建表单、二维码分享、收集数据', icon: ClipboardList, group: 'tools' },
   { id: 'report-export', label: '导出分享', desc: '导出报告、图表，分享给团队', icon: FileText, group: 'tools', needsData: true },
@@ -79,7 +81,7 @@ export default function Sidebar({
   hasPermission,
 }: SidebarProps) {
   // AI功能列表（需要AI分析权限）
-  const AI_FEATURES = ['insights', 'chat', 'metrics', 'ai-table-builder', 'multimodal', 'chart-center', 'visualization'];
+  const AI_FEATURES = ['insights', 'chat', 'metrics', 'ai-table-builder', 'multimodal', 'chart-center', 'visualization', 'spreadsheet-agent'];
   
   // 检查功能是否需要AI权限且被禁用
   const isAIDisabled = (itemId: string) => {

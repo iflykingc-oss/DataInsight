@@ -80,6 +80,7 @@ const MultimodalFields = dynamic(() => import('@/components/multimodal-fields').
 const WorkflowAutomation = dynamic(() => import('@/components/workflow-automation').then(m => ({ default: m.WorkflowAutomation })), { ssr: false });
 const AppBuilder = dynamic(() => import('@/components/app-builder').then(m => ({ default: m.AppBuilder })), { ssr: false });
 const RowComments = dynamic(() => import('@/components/row-comments').then(m => ({ default: m.RowComments })), { ssr: false });
+const SpreadsheetAgentPage = dynamic(() => import('@/components/SpreadsheetAgentPage').then(m => ({ default: m.SpreadsheetAgentPage })), { ssr: false });
 
 // ============================================
 // 视图模式类型（整合后：10个入口，功能零删除）
@@ -94,7 +95,8 @@ type ViewMode =
   | 'alerting' | 'version-history' | 'template-manager'
   | 'data-source'
   | 'pivot-table'
-  | 'multimodal' | 'form-collection';
+  | 'multimodal' | 'form-collection'
+  | 'spreadsheet-agent';
 
 
 // ============================================
@@ -897,6 +899,15 @@ export default function HomePage() {
     }
 
     // ========================================
+    // AI 表格智能体（全新功能）
+    // ========================================
+    if (viewMode === 'spreadsheet-agent') {
+      return (
+        <SpreadsheetAgentPage />
+      );
+    }
+
+    // ========================================
     // 表单收集（独立功能，可不依赖数据）
     // ========================================
     if (viewMode === 'form-collection') {
@@ -918,7 +929,7 @@ export default function HomePage() {
       'insights': '自动分析', 'visualization': '仪表盘',
       'metrics': '指标中心', 'chart-center': '图表库',
       'chat': '问答数据', 'sql-lab': 'SQL 查询',
-      'report-export': '导出分享',
+      'report-export': '导出分享', 'spreadsheet-agent': 'AI 表格助手',
       'alerting': '数据预警', 'version-history': '版本快照', 'template-manager': '模板管理',
       'pivot-table': '透视表',
       'multimodal': 'AI多模态', 'form-collection': '表单收集',
