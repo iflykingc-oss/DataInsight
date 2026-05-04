@@ -3,7 +3,7 @@
  * 支持预置指标 + 自定义指标 + 实时计算
  */
 
-import { CellValue } from '@/types';
+import { CellValue } from '@/lib/data-processor';
 
 // 指标定义
 export interface MetricDefinition {

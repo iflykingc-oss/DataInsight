@@ -228,7 +228,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
   // 从模板创建
   const createFromTemplate = (template: typeof WORKFLOW_TEMPLATES[0]) => {
     const newRule: WorkflowRule = {
-      id: `wf-${Date.now()}`,
+      id: `wf-${crypto.randomUUID()}`,
       name: template.name,
       description: template.description,
       enabled: false,

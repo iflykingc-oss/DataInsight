@@ -37,7 +37,7 @@ import {
   Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/use-auth';
+import { useAuth, type PermissionKey } from '@/lib/use-auth';
 import { LoginDialog } from '@/components/login-dialog';
 import { UserMenu } from '@/components/user-menu';
 const AdminPanel = dynamic(() => import('@/components/admin-panel').then(m => ({ default: m.default })), { ssr: false });
@@ -498,7 +498,7 @@ export default function HomePage() {
             rowCount={parsedData?.rowCount}
             isLoggedIn={isLoggedIn}
             onLoginRequired={() => setLoginDialogOpen(true)}
-            hasPermission={(perm: string) => hasPermission(perm as any)}
+            hasPermission={(perm: string) => hasPermission(perm as PermissionKey)}
           />
         </div>
       );
@@ -954,7 +954,7 @@ export default function HomePage() {
         modelConfigured={!!activeModelConfig}
         isLoggedIn={isLoggedIn}
         onLoginRequired={() => setLoginDialogOpen(true)}
-        hasPermission={(perm: string) => hasPermission(perm as any)}
+        hasPermission={(perm: string) => hasPermission(perm as PermissionKey)}
       />
 
       {/* ===== 右侧主区域 ===== */}

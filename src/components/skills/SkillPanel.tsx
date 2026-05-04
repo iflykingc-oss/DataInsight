@@ -29,7 +29,7 @@ export function SkillPanel({
             <span className="text-lg">🔍</span>
             <h3 className="font-medium text-amber-800">检测到 {problemReport.problems.length} 个问题</h3>
             <span className="ml-auto text-sm text-amber-600">
-              健康度: {problemReport.overallScore}/100
+              健康度: {problemReport.overallHealth}/100
             </span>
           </div>
           <div className="space-y-2">
@@ -43,7 +43,8 @@ export function SkillPanel({
                     className={cn(
                       'w-2 h-2 rounded-full',
                       problem.severity === 'critical' && 'bg-red-500',
-                      problem.severity === 'warning' && 'bg-amber-500',
+                      problem.severity === 'medium' && 'bg-amber-500',
+                      problem.severity === 'low' && 'bg-yellow-500',
                       problem.severity === 'info' && 'bg-blue-500'
                     )}
                   />

@@ -1,4 +1,4 @@
-import type { ParsedData, CellValue } from '@/types';
+import type { ParsedData, CellValue } from '@/lib/data-processor';
 import type { Operation } from './types';
 
 export interface SessionContext {
@@ -36,7 +36,7 @@ export function updateReferences(context: SessionContext, operation: Operation):
   context.references['刚才'] = operation;
   context.references['那个'] = operation;
 
-  if (operation.tool.startsWith('filter_')) {
+  if (operation.tool?.startsWith('filter_')) {
     context.references['筛选结果'] = operation;
   }
 }
@@ -81,8 +81,8 @@ export function undo(context: SessionContext): {
 
   return {
     success: true,
-    newData: lastOp.before.data,
-    message: `已撤销：${lastOp.tool}`,
+    newData: lastOp.before,
+    message: `已撤销：${lastOp.tool ?? lastOp.type}`,
   };
 }
 
@@ -94,7 +94,8 @@ export function getOperationSummary(context: SessionContext): {
   const byType: Record<string, number> = {};
 
   for (const op of context.operations) {
-    byType[op.tool] = (byType[op.tool] || 0) + 1;
+    const key = op.tool ?? op.type ?? 'unknown';
+    byType[key] = (byType[key] || 0) + 1;
   }
 
   return {

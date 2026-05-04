@@ -1,5 +1,5 @@
-import type { ParsedData, CellValue } from '@/types';
-import type { SkillDefinition } from './registry';
+import type { ParsedData, CellValue } from '@/lib/data-processor';
+import type { SkillDefinition } from '../registry';
 
 export type IntentType =
   | 'filter'
@@ -92,11 +92,11 @@ const TIME_UNITS: Record<TimeUnit, number> = {
 
 const TIME_KEYWORDS: Record<string, TimeUnit> = {
   '秒': '秒', '秒钟': '秒', 'second': '秒', 'seconds': '秒',
-  '分钟': '分钟', '分钟': '分钟', 'min': '分钟', 'mins': '分钟',
-  '小时': '小时', '小时': '小时', 'hour': '小时', 'hours': '小时',
-  '天': '天', '天': '天', 'day': '天', 'days': '天',
-  '周': '周', '周': '周', 'week': '周', 'weeks': '周',
-  '月': '月', '月': '月', 'month': '月', 'months': '月',
+  '分钟': '分钟', 'min': '分钟', 'mins': '分钟',
+  '小时': '小时', 'hour': '小时', 'hours': '小时',
+  '天': '天', 'day': '天', 'days': '天',
+  '周': '周', 'week': '周', 'weeks': '周',
+  '月': '月', 'month': '月', 'months': '月',
 };
 
 const AGGREGATION_FUNCTIONS = ['求和', '求平均', '平均值', '求均值', '计数', '统计', '求最大', '最大值', '求最小', '最小值', '求方差', '标准差'];
@@ -344,7 +344,7 @@ export class IntentClassifier {
         return {
           type: 'filter',
           params: {
-            ...(lastOp.params as FilterParams),
+            ...(lastOp.params as unknown as FilterParams),
             timeBased: true,
             timeValue: timeExpr.value,
             timeUnit: timeExpr.unit,
@@ -434,7 +434,7 @@ export class IntentClassifier {
       if (condition) {
         if (currentCondition && logicalOperators.length > 0) {
           currentCondition.nextCondition = condition;
-          currentCondition.logicalOperator = logicalOperators[conditions.length - 1] || 'and';
+          currentCondition.logicalOperator = (logicalOperators[conditions.length - 1] || 'and') as 'and' | 'or';
         } else {
           conditions.push(condition);
           currentCondition = condition;
@@ -455,7 +455,7 @@ export class IntentClassifier {
     const primaryCondition = conditions[0];
     return {
       type: 'filter',
-      params: primaryCondition,
+      params: primaryCondition as unknown as Record<string, unknown>,
       confidence: 0.9,
       needsClarification: false,
       skillId: 'smart-filter',
@@ -465,7 +465,7 @@ export class IntentClassifier {
             step: i + 1,
             type: 'filter' as IntentType,
             description: this.describeCondition(c),
-            params: c,
+            params: c as unknown as Record<string, unknown>,
             skillId: 'smart-filter',
           }))
         : undefined,
@@ -797,7 +797,7 @@ export class IntentClassifier {
 
   private parseAggregateIntent(input: string): ParsedIntent {
     let groupByColumn: string | null = null;
-    let aggFunctions: string[] = ['count'];
+    const aggFunctions: string[] = ['count'];
 
     const groupByMatch = input.match(/按(.+?)(?:分组|分类|汇总)/);
     if (groupByMatch) {
@@ -961,7 +961,7 @@ export class IntentClassifier {
         return {
           type: 'filter',
           params: {
-            ...(lastOp.params as FilterParams),
+            ...(lastOp.params as unknown as FilterParams),
             isContinuation: true,
           },
           confidence: 0.85,
@@ -980,7 +980,7 @@ export class IntentClassifier {
       return {
         type: lastOp.type,
         params: {
-          ...(lastOp.params as FilterParams),
+          ...(lastOp.params as unknown as FilterParams),
           isReference: true,
         },
         confidence: 0.8,
@@ -1104,7 +1104,7 @@ export class IntentClassifier {
     if (operation.type === 'filter' && operation.params.column) {
       this.context.columnMappings['上次筛选'] = operation.params.column as string;
       this.context.lastFilterResult = {
-        rowCount: (operation.params as FilterParams & { resultRows?: number }).resultRows || 0,
+        rowCount: (operation.params as unknown as FilterParams & { resultRows?: number }).resultRows || 0,
         columns: [operation.params.column as string],
       };
     }
@@ -1113,7 +1113,7 @@ export class IntentClassifier {
   private generateOperationDescription(operation: { type: IntentType; params: Record<string, unknown> }): string {
     switch (operation.type) {
       case 'filter':
-        return `筛选: ${(operation.params as FilterParams).column || '某列'}`;
+        return `筛选: ${(operation.params as unknown as FilterParams).column || '某列'}`;
       case 'delete':
         return `删除: ${operation.params.target || '指定行'}`;
       case 'format':

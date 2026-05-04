@@ -77,7 +77,7 @@ import {
 interface MetricManagerProps {
   data: {
     headers: string[];
-    rows: Record<string, import('@/types').CellValue>[];
+    rows: Record<string, import('@/lib/data-processor').CellValue>[];
   };
   detectedScenario?: string;
 }

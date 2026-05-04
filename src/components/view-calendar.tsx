@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import type { ParsedData } from '@/lib/data-processor';
 
 interface CalendarViewProps {
-  rows: Record<string, import('@/types').CellValue>[];
+  rows: Record<string, import('@/lib/data-processor').CellValue>[];
   headers: string[];
 }
 

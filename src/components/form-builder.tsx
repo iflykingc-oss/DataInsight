@@ -240,18 +240,6 @@ export function FormBuilder({
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }, []);
 
-  const handleCreateForm = useCallback(() => {
-    if (!isLoggedIn) {
-      onLoginRequired?.();
-      return;
-    }
-    if (!canCreateForm) {
-      toast.error("管理员已禁用表单收集功能");
-      return;
-    }
-    startNew();
-  }, [isLoggedIn, canCreateForm, onLoginRequired]);
-
   const startNew = useCallback(() => {
     const newConfig: FormConfig = {
       id: genId(),
@@ -289,6 +277,18 @@ export function FormBuilder({
     setEditing(newConfig);
     setEditTab("fields");
   }, [data]);
+
+  const handleCreateForm = useCallback(() => {
+    if (!isLoggedIn) {
+      onLoginRequired?.();
+      return;
+    }
+    if (!canCreateForm) {
+      toast.error("管理员已禁用表单收集功能");
+      return;
+    }
+    startNew();
+  }, [isLoggedIn, canCreateForm, onLoginRequired, startNew]);
 
   const addField = useCallback(() => {
     if (!editing) return;

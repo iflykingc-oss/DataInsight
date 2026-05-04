@@ -57,7 +57,7 @@ export interface AIConfig {
 let userIdCounter = 2;
 let logIdCounter = 1;
 let statIdCounter = 1;
-let aiConfigIdCounter = 1;
+const aiConfigIdCounter = 1;
 
 const users = new Map<number, User>([
   [1, {
@@ -84,7 +84,7 @@ const users = new Map<number, User>([
 const loginLogs: LoginLog[] = [];
 const usageStats: UsageStat[] = [];
 
-let adminAIConfig: AIConfig = {
+const adminAIConfig: AIConfig = {
   id: 1,
   apiKey: '',
   baseUrl: 'https://api.deepseek.com',

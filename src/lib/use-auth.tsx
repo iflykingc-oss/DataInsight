@@ -21,6 +21,8 @@ export interface User {
   createdAt: string;
 }
 
+export type PermissionKey = keyof User['permissions'];
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;

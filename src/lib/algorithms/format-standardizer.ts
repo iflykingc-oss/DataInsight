@@ -1,4 +1,4 @@
-import type { ParsedData, CellValue } from '@/types';
+import type { ParsedData, CellValue } from '@/lib/data-processor';
 
 export interface StandardizationResult {
   success: boolean;

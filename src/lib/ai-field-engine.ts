@@ -3,7 +3,7 @@
  * 核心能力：可视化配置AI字段、自然语言生成公式、单元格文本AI处理
  */
 
-import type { CellValue } from '@/types';
+import type { CellValue } from '@/lib/data-processor';
 
 // ============================================
 // AI字段类型定义（6大核心类型）

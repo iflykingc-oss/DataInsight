@@ -103,7 +103,7 @@ interface InsightMessage {
 interface MetricSemanticLayerProps {
   data: {
     headers: string[];
-    rows: Record<string, import('@/types').CellValue>[];
+    rows: Record<string, import('@/lib/data-processor').CellValue>[];
   };
   fieldStats: Array<{
     field: string;

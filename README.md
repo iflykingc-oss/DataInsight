@@ -22,7 +22,7 @@
 ### 🛡️ 权限管理系统
 
 - **管理员账号分配**：用户账户由管理员统一创建，无公开注册
-- **功能权限控制**：6个功能开关（AI分析、导出、仪表盘、分享、上传、自定义AI模型）
+- **功能权限控制**：7个功能开关（AI分析、导出、仪表盘、分享、上传、表单收集、自定义AI模型）
 - **用户管理**：管理员可查看用户列表、登录记录、使用统计
 - **AI模型配置**：管理员统一配置AI模型，用户可自定义（需管理员授权）
 
@@ -187,7 +187,9 @@ pnpm lint         # ESLint 代码检查
 ```
 src/
 ├── app/
-│   ├── api/                     # 后端 API 路由（12个）
+│   ├── api/                     # 后端 API 路由（15个）
+│   │   ├── auth/                #   认证（登录/登出/用户信息）
+│   │   ├── admin/               #   管理员（用户管理/AI配置/登录记录/使用统计）
 │   │   ├── upload/              #   文件上传与解析
 │   │   ├── analyze/             #   数据深度分析
 │   │   ├── llm-insight/         #   AI 智能洞察（SSE 流式）
@@ -199,7 +201,10 @@ src/
 │   │   ├── database/            #   外部数据库连接
 │   │   ├── test-connection/     #   AI 模型连接测试
 │   │   ├── alerts/              #   数据告警
-│   │   └── analysis-planner/   #   分析规划（定制分析）
+│   │   ├── analysis-planner/   #   分析规划（定制分析）
+│   │   ├── data-clean/          #   数据清洗
+│   │   ├── export/              #   数据导出
+│   │   └── platform/            #   平台集成（飞书/企微/钉钉/WPS）
 │   ├── form/                    # 表单填写独立页面
 │   ├── globals.css              # 全局样式 + CSS 变量主题
 │   ├── layout.tsx               # 根布局
@@ -236,12 +241,13 @@ src/
 │   ├── data-quality-checker.tsx # 数据质量检测
 │   ├── report-generator.tsx     # 报表生成（4模板+导出）
 │   ├── share-manager.tsx        # 分享管理
+│   ├── record-share-manager.tsx # 单条记录分享
 │   ├── data-source-manager.tsx  # 数据源管理
 │   ├── platform-integrations.tsx # 多平台集成（飞书/企微/钉钉/WPS）
 │   ├── view-kanban.tsx          # 看板视图
 │   ├── view-calendar.tsx        # 日历视图
 │   ├── view-gantt.tsx          # 甘特图视图
-│   ├── form-builder.tsx         # 表单构建器（15种字段+主题+规则）
+│   ├── form-builder.tsx         # 表单构建器（15种字段+主题+规则+权限控制）
 │   ├── linked-tables.tsx        # 数据联动/关联表（多表+Lookup）
 │   ├── multimodal-fields.tsx     # AI 多模态（生图/图转文/文转图/图转表）
 │   ├── workflow-automation.tsx  # 自动化工作流（触发器+动作）
@@ -262,7 +268,7 @@ src/
     ├── auth-middleware.ts       # API 路由权限中间件
     ├── use-auth.tsx             # 全局登录状态 Hook
     ├── use-permission-guard.tsx # 功能权限守卫组件
-    ├── data-processor.ts        # 数据处理 + 深度分析引擎
+    ├── data-processor/            # 数据处理模块（分析引擎+类型+深度分析）
     ├── ai-field-engine.ts       # AI 字段引擎（6种类型检测 + Prompt 生成）
     ├── metric-engine.ts         # 指标计算引擎（18预置 + 自定义）
     ├── cache-manager.ts         # LRU 缓存管理
@@ -304,6 +310,7 @@ src/
 |:-----|:----:|:-----|
 | `/api/auth/login` | POST | 用户登录 |
 | `/api/auth/me` | GET | 获取当前用户信息 |
+| `/api/auth/logout` | POST | 用户登出 |
 
 ### 管理员接口（需管理员权限）
 
@@ -318,12 +325,6 @@ src/
 
 | 接口 | 方法 | 说明 |
 |:-----|:----:|:-----|
-| `/api/auth/login` | POST | 用户登录 |
-| `/api/auth/me` | GET | 获取当前用户信息 |
-| `/api/admin/users` | GET/POST/PUT/DELETE | 用户管理（需管理员权限） |
-| `/api/admin/login-logs` | GET | 登录记录（需管理员权限） |
-| `/api/admin/usage-stats` | GET | 使用统计（需管理员权限） |
-| `/api/admin/ai-config` | GET/PUT | AI模型配置（需管理员权限） |
 | `/api/upload` | POST | 上传并解析 Excel/CSV 文件 |
 | `/api/analyze` | POST | 分析已解析的数据 |
 | `/api/llm-insight` | POST | AI 智能洞察（SSE 流式） |
@@ -334,7 +335,9 @@ src/
 | `/api/nl2-dashboard` | POST | AI 仪表盘生成 |
 | `/api/database` | POST | 外部数据库连接与查询 |
 | `/api/test-connection` | POST | AI 模型连接测试 |
-| `/api/alerts` | GET | 获取告警模板列表 |
+| `/api/alerts` | POST | 获取告警模板列表 |
+| `/api/analysis-planner` | POST | AI 分析规划 |
+| `/api/data-clean` | POST | 数据清洗 |
 
 ---
 
@@ -350,14 +353,15 @@ src/
 
 管理员可控制用户使用以下功能：
 
-| 功能 | 说明 |
-|:-----|:-----|
-| AI智能分析 | AI问数、深度分析 |
-| 数据导出 | 导出Excel/CSV/PDF |
-| 仪表盘 | 创建和管理仪表盘 |
-| 分享链接 | 生成分享链接 |
-| 文件上传 | 上传Excel/CSV文件 |
-| 自定义AI模型 | 用户可配置自己的AI模型 |
+| 功能 | 权限Key | 说明 |
+|:-----|:--------|:-----|
+| AI智能分析 | `ai_analyze` | AI问数、深度分析 |
+| 数据导出 | `export` | 导出Excel/CSV/PDF |
+| 仪表盘 | `dashboard` | 创建和管理仪表盘 |
+| 分享链接 | `share` | 生成分享链接 |
+| 文件上传 | `upload` | 上传Excel/CSV文件 |
+| 表单收集 | `form` | 创建和管理数据收集表单 |
+| 自定义AI模型 | `custom_ai_model` | 用户可配置自己的AI模型 |
 
 ---
 

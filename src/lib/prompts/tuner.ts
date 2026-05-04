@@ -1,26 +1,18 @@
-import type { ParsedData } from '@/types';
+import type { ParsedData } from '@/lib/data-processor';
 import type { ParsedIntent } from '../skills/intent/classifier';
-import { detectScenario, getScenarioTemplate, resolveColumnName, type Scenario } from './scenario-templates';
+import { matchScenario, getPromptTemplate, type Scenario } from './scenario-templates';
 
 export interface IntentPromptConfig {
   scenario: Scenario;
-  scenarioTemplate: ReturnType<typeof getScenarioTemplate>;
+  scenarioTemplate: ReturnType<typeof getPromptTemplate>;
   data: ParsedData;
 }
 
 export function buildIntentPrompt(input: string, config: IntentPromptConfig): string {
   const { scenario, scenarioTemplate, data } = config;
 
-  const scenarioInstructions = scenario !== 'general'
-    ? `\n【业务场景】${scenarioTemplate.name}\n已知的列名映射：\n${
-        Object.entries(scenarioTemplate.intentEnhancements.columnMappings)
-          .map(([k, v]) => `  - "${k}" 可能对应: ${v.join(', ')}`)
-          .join('\n')
-      }\n常用条件缩写：\n${
-        Object.entries(scenarioTemplate.intentEnhancements.conditionPatterns)
-          .map(([k, v]) => `  - "${k}" = ${v.column} ${v.operator} ${v.value}`)
-          .join('\n')
-      }`
+  const scenarioInstructions = scenario !== 'general' && scenarioTemplate
+    ? `\n【业务场景】${scenarioTemplate.name}`
     : '';
 
   return `你是一个表格处理助手。用户的表格包含以下信息：
@@ -61,16 +53,17 @@ export function buildFilterPrompt(
   const sampleValues = data.rows.slice(0, 5).map((r) => r[column]);
   const columnStats = data.rows.reduce(
     (acc, r) => {
-      const v = Number(r[column]);
+      const raw = r[column];
+      const v = typeof raw === 'number' ? raw : NaN;
       if (!isNaN(v)) {
-        acc.min = Math.min(acc.min, v);
-        acc.max = Math.max(acc.max, v);
-        acc.sum += v;
-        acc.count++;
+        acc.min = Math.min(acc.min as number, v);
+        acc.max = Math.max(acc.max as number, v);
+        (acc.sum as number) += v;
+        (acc.count as number)++;
       }
       return acc;
     },
-    { min: Infinity, max: -Infinity, sum: 0, count: 0 }
+    { min: Infinity as number | null, max: -Infinity as number | null, sum: 0 as number | null, count: 0 as number | null }
   );
 
   return `用户要求筛选条件：
@@ -82,8 +75,8 @@ export function buildFilterPrompt(
 【该列数据概览】
 样本值：${sampleValues.join(', ')}
 ${
-  columnStats.count > 0
-    ? `数值范围：${columnStats.min.toFixed(2)} ~ ${columnStats.max.toFixed(2)}\n平均值：${(columnStats.sum / columnStats.count).toFixed(2)}`
+  (columnStats.count as number) > 0
+    ? `数值范围：${Number(columnStats.min).toFixed(2)} ~ ${Number(columnStats.max).toFixed(2)}\n平均值：${((columnStats.sum as number) / (columnStats.count as number)).toFixed(2)}`
     : ''
 }
 
@@ -97,7 +90,7 @@ ${
 
 export function buildExplanationPrompt(
   intent: ParsedIntent,
-  result: { success: boolean; summary: string; changes?: { before: number; after: number }[] }
+  result: { success: boolean; summary: string; changes?: { before: number; after: number; description?: string }[] }
 ): string {
   const status = result.success ? '成功' : '失败';
 
@@ -112,7 +105,7 @@ ${result.summary}
 ${
   result.changes
     ? `【数据变化】
-${result.changes.map((c) => `${c.description}`).join('\n')}`
+${result.changes.map((c) => c.description || `${c.before} → ${c.after}`).join('\n')}`
     : ''
 }
 
@@ -135,12 +128,14 @@ export interface PromptTuningRecord {
 
 export class PromptTuner {
   private records: PromptTuningRecord[] = [];
-  private scenarioStats: Record<Scenario, { success: number; total: number }> = {
-    retail: { success: 0, total: 0 },
-    finance: { success: 0, total: 0 },
-    hr: { success: 0, total: 0 },
-    general: { success: 0, total: 0 },
-  };
+  private scenarioStats: Partial<Record<Scenario, { success: number; total: number }>> = {};
+
+  private getScenarioStat(scenario: Scenario): { success: number; total: number } {
+    if (!this.scenarioStats[scenario]) {
+      this.scenarioStats[scenario] = { success: 0, total: 0 };
+    }
+    return this.scenarioStats[scenario]!;
+  }
 
   logExecution(record: Omit<PromptTuningRecord, 'id' | 'timestamp'>): void {
     const fullRecord: PromptTuningRecord = {
@@ -151,14 +146,14 @@ export class PromptTuner {
 
     this.records.push(fullRecord);
 
-    this.scenarioStats[record.scenario].total++;
+    this.getScenarioStat(record.scenario).total++;
     if (record.success) {
-      this.scenarioStats[record.scenario].success++;
+      this.getScenarioStat(record.scenario).success++;
     }
   }
 
   getScenarioScore(scenario: Scenario): number {
-    const stats = this.scenarioStats[scenario];
+    const stats = this.getScenarioStat(scenario);
     if (stats.total === 0) return 100;
     return Math.round((stats.success / stats.total) * 100);
   }

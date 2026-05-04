@@ -1,6 +1,7 @@
-import type { ParsedData, CellValue } from '@/types';
+import type { ParsedData, CellValue } from '@/lib/data-processor';
 import type {
   SkillDefinition,
+  SkillStep,
   SkillContext,
   ExecutionResult,
   LogEntry,
@@ -547,7 +548,7 @@ export class SkillExecutor {
         warnings.push(`步骤 "${step.name}" 为高影响性操作`);
       }
 
-      if (step.estimatedImpact === 'high' && willExecute && riskLevel !== 'critical') {
+      if (step.estimatedImpact === 'high' && willExecute) {
         riskLevel = 'high';
       }
 
@@ -801,7 +802,7 @@ function extractColumns(
 
     resolve({
       success: true,
-      newData: { headers: newHeaders, rows: newRows },
+      newData: { headers: newHeaders, rows: newRows, fileName: context?.currentData?.fileName ?? 'data', rowCount: newRows.length, columnCount: newHeaders.length },
       summary: `提取 ${newHeaders.length} 列${invalidColumns.length > 0 ? `（${invalidColumns.length} 列不存在）` : ''}：${newHeaders.join(', ')}`,
       changes: [
         {
@@ -1294,13 +1295,16 @@ function detectEmptyRowsTool(
 ): Promise<ToolResult> {
   return new Promise((resolve) => {
     const detector = new ProblemDetector(data);
-    const result = detector.detectEmptyRows();
+    const results = detector.detectEmptyRows();
+    const totalCount = results.reduce((sum, r) => sum + r.count, 0);
+    const allIndices = results.flatMap(r => r.indices || []);
+    const maxSeverity = results.length > 0 ? results[0].severity : 'info';
     resolve({
       success: true,
       newData: data,
-      summary: `检测到 ${result.count} 个空行`,
-      affectedRows: result.indices,
-      metadata: { severity: result.severity },
+      summary: `检测到 ${totalCount} 个空行`,
+      affectedRows: allIndices,
+      metadata: { severity: maxSeverity },
     });
   });
 }
@@ -1312,13 +1316,16 @@ function detectDuplicateRowsTool(
 ): Promise<ToolResult> {
   return new Promise((resolve) => {
     const detector = new ProblemDetector(data);
-    const result = detector.detectDuplicateRows();
+    const results = detector.detectDuplicateRows();
+    const totalCount = results.reduce((sum, r) => sum + r.count, 0);
+    const allIndices = results.flatMap(r => r.indices || []);
+    const maxSeverity = results.length > 0 ? results[0].severity : 'info';
     resolve({
       success: true,
       newData: data,
-      summary: `检测到 ${result.count} 个重复行（共 ${result.indices?.length || 0} 条数据）`,
-      affectedRows: result.indices,
-      metadata: { severity: result.severity, groups: result.count },
+      summary: `检测到 ${totalCount} 个重复行（共 ${allIndices.length} 条数据）`,
+      affectedRows: allIndices,
+      metadata: { severity: maxSeverity, groups: totalCount },
     });
   });
 }
@@ -1365,12 +1372,15 @@ function detectMissingValuesTool(
 ): Promise<ToolResult> {
   return new Promise((resolve) => {
     const detector = new ProblemDetector(data);
-    const result = detector.detectMissingValues();
+    const results = detector.detectMissingValues();
+    const totalCount = results.reduce((sum, r) => sum + r.count, 0);
+    const maxSeverity = results.length > 0 ? results[0].severity : 'info';
+    const suggestions = results.flatMap(r => r.suggestions);
     resolve({
       success: true,
       newData: data,
-      summary: `检测到 ${result.count} 个缺失值`,
-      metadata: { severity: result.severity, suggestion: result.suggestion },
+      summary: `检测到 ${totalCount} 个缺失值`,
+      metadata: { severity: maxSeverity, suggestions },
     });
   });
 }
@@ -2031,7 +2041,7 @@ function applyTransformTool(
 
     return Promise.resolve({
       success: true,
-      newData: { headers: newHeaders, rows: newRows },
+      newData: { headers: newHeaders, rows: newRows, fileName: context?.currentData?.fileName ?? 'data', rowCount: newRows.length, columnCount: newHeaders.length },
       summary: '数据转置完成',
     });
   }
@@ -2145,7 +2155,7 @@ function restoreRowsTool(
   context?: SkillContext
 ): Promise<ToolResult> {
   if (context?.operationSnapshot) {
-    const snapshot = skillExecutor.getSnapshot(context.operationSnapshot);
+    const snapshot = skillExecutor.getSnapshot(typeof context.operationSnapshot === 'string' ? context.operationSnapshot : context.operationSnapshot.id);
     if (snapshot) {
       return Promise.resolve({
         success: true,

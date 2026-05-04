@@ -44,7 +44,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CellValue } from '@/types';
+import type { CellValue } from '@/lib/data-processor';
 import type { ParsedData } from '@/lib/data-processor';
 import {
   type AIField,
@@ -95,7 +95,7 @@ export function AIFieldPanel({
 
   // 智能推荐
   const recommendations = useMemo(() => {
-    const columnFeatures = data.headers.map(h => {
+    const columnFeatures: import('@/lib/ai-field-engine').ColumnFeature[] = data.headers.map(h => {
       const values = data.rows.map(r => r[h]).filter(v => v != null);
       const texts = values.map(v => String(v));
       const avgLen = texts.length > 0
@@ -104,10 +104,11 @@ export function AIFieldPanel({
       const nullRate = (data.rows.length - values.length) / data.rows.length;
       const isNumber = values.length > 0 && values.every(v => !isNaN(Number(v)));
       const isDate = values.length > 0 && values.every(v => !isNaN(Date.parse(String(v))));
+      const isBoolean = values.length > 0 && values.every(v => String(v) === 'true' || String(v) === 'false');
       return {
         name: h,
-        type: isNumber ? 'number' as const : isDate ? 'date' as const : 'text' as const,
-        sampleValues: values.slice(0, 3),
+        type: isBoolean ? 'boolean' as const : isNumber ? 'number' as const : isDate ? 'date' as const : 'text' as const,
+        sampleValues: values.slice(0, 3) as import('@/lib/data-processor').CellValue[],
         avgLength: avgLen,
         nullRate,
       };

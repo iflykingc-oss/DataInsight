@@ -940,7 +940,7 @@ function PivotTableView({
   valField,
   aggFunc,
 }: {
-  rows: Record<string, import('@/types').CellValue>[];
+  rows: Record<string, import('@/lib/data-processor').CellValue>[];
   rowField: string;
   colField: string;
   valField: string;
@@ -1149,7 +1149,7 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
   ];
 
   // ID/序号字段检测：连续递增序号检测算法
-  function isAutoIncrement(fieldName: string, rows: Record<string, import('@/types').CellValue>[]): boolean {
+  function isAutoIncrement(fieldName: string, rows: Record<string, import('@/lib/data-processor').CellValue>[]): boolean {
     const nums = rows.map(r => Number(r[fieldName])).filter(n => !isNaN(n));
     if (nums.length < 5) return false;
     const sorted = [...nums].sort((a, b) => a - b);
@@ -1578,7 +1578,7 @@ function generateDashboard(data: ParsedData, analysis: DataAnalysis | null): Cha
 // ============================================
 // 工具函数
 // ============================================
-function groupByField(rows: Record<string, import('@/types').CellValue>[], groupField: string, valueField: string): Record<string, number> {
+function groupByField(rows: Record<string, import('@/lib/data-processor').CellValue>[], groupField: string, valueField: string): Record<string, number> {
   const grouped: Record<string, number> = {};
   rows.forEach(r => {
     const key = String(r[groupField]);

@@ -28,7 +28,7 @@ import {
   type ExtendedChartType,
 } from './echarts-extensions';
 import { LayoutGrid, Info } from 'lucide-react';
-import type { CellValue } from '@/types';
+import type { CellValue } from '@/lib/data-processor';
 
 interface ExtendedChartGalleryProps {
   data: {

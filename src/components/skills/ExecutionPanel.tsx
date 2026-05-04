@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { LogEntry, ExecutionResult, SkillDefinition } from '@/lib/skills/registry';
-import type { ParsedData } from '@/types';
+import type { ParsedData } from '@/lib/data-processor';
 import { cn } from '@/lib/utils';
 import {
   CheckCircle,

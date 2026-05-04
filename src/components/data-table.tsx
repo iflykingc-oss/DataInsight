@@ -69,7 +69,7 @@ interface DataTableProps {
   fieldStats?: FieldStat[];
   aiFields?: AIField[];
   modelConfig?: { apiKey: string; baseUrl: string; model: string } | null;
-  onFieldClick?: (field: string, value: import('@/types').CellValue) => void;
+  onFieldClick?: (field: string, value: import('@/lib/data-processor').CellValue) => void;
   onCellChange?: (rowIndex: number, field: string, value: import('@/types').CellValue) => void;
   onDeleteRow?: (rowIndex: number) => void;
   onBulkDelete?: (rowIndices: number[]) => void;
@@ -393,11 +393,11 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
     return fieldStats?.find(f => f.field === field)?.type || 'string';
   };
   
-  const formatValue = (value: import('@/types').CellValue, type: string) => {
+  const formatValue = (value: import('@/lib/data-processor').CellValue, type: string) => {
     if (value === null || value === undefined || value === '') {
       return <span className="text-gray-400 italic">空</span>;
     }
-    if (value instanceof Date) {
+    if (typeof value === 'object' && value instanceof Date) {
       return value.toLocaleDateString();
     }
     if (typeof value === 'boolean') {

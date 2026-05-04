@@ -3,10 +3,12 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Spreadsheet } from '@/components/spreadsheet/Spreadsheet';
 import { ExecutionPanel, SkillCard } from '@/components/skills/ExecutionPanel';
-import type { ParsedData, CellRef } from '@/types';
+import type { ParsedData } from '@/lib/data-processor';
+import type { CellRef } from '@/components/spreadsheet/Spreadsheet';
 import type { SkillDefinition, LogEntry, ExecutionResult } from '@/lib/skills/registry';
 import type { ProblemReport } from '@/lib/algorithms/problem-detector';
-import { SKILL_REGISTRY, skillExecutor } from '@/lib/skills/registry';
+import { SKILL_REGISTRY } from '@/lib/skills/registry';
+import { skillExecutor } from '@/lib/skills/executor';
 import { classifyIntent, type ParsedIntent } from '@/lib/skills/intent/classifier';
 import { detectProblems } from '@/lib/algorithms/problem-detector';
 import { exportManager, EXPORT_PRESETS } from '@/lib/export/manager';
@@ -77,7 +79,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
         const workbook = XLSX.read(e.target?.result, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { header: 1 });
+        const jsonData = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1 });
 
         if (jsonData.length < 2) {
           alert('文件数据不足，至少需要一行表头和一行数据');
@@ -87,8 +89,8 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
         const headers = jsonData[0].map(String);
         const rows = jsonData.slice(1).map((row) => {
           const rowObj: Record<string, unknown> = {};
-          headers.forEach((header, i) => {
-            const cellValue = (row as unknown[])[i];
+          headers.forEach((header: string, i: number) => {
+            const cellValue = row[i];
             if (typeof cellValue === 'string' && cellValue.trim() === '') {
               rowObj[header] = null;
             } else {
@@ -102,8 +104,8 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
           headers,
           rows: rows as ParsedData['rows'],
           fileName: file.name,
-          fileSize: file.size,
-          sheetName,
+          rowCount: rows.length,
+          columnCount: headers.length,
         };
 
         setData(parsedData);
@@ -164,7 +166,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
         skill,
         skillContext,
         params,
-        (logs) => setExecutionLogs([...logs]),
+        (logs: LogEntry[]) => setExecutionLogs([...logs]),
         () => false
       );
 

@@ -4,10 +4,10 @@ import React, { useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, GanttChart } from 'lucide-react';
-import type { CellValue } from '@/types';
+import type { CellValue } from '@/lib/data-processor';
 
 interface GanttViewProps {
-  rows: Record<string, import('@/types').CellValue>[];
+  rows: Record<string, CellValue>[];
   headers: string[];
 }
 
@@ -57,7 +57,9 @@ export function GanttView({ rows, headers }: GanttViewProps) {
 
   // 时间范围
   const timeRange = useMemo(() => {
-    if (tasks.length === 0) return { min: new Date(), max: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) };
+    if (tasks.length === 0) {
+      return { min: new Date(2025, 0, 1), max: new Date(2025, 1, 1) };
+    }
     const min = new Date(Math.min(...tasks.map(t => t.start.getTime())));
     const max = new Date(Math.max(...tasks.map(t => t.end.getTime())));
     // 前后各加7天

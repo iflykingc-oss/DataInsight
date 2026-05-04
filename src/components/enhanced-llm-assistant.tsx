@@ -382,7 +382,7 @@ export function EnhancedLLMAssistant({
 
     try {
       // 根据模式选择API
-      let apiPath = '/api/llm-insight';
+      const apiPath = '/api/llm-insight';
       let requestBody: Record<string, unknown> = {
         message: question,
         mode: currentMode,

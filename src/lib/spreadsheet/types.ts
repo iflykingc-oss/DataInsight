@@ -1,4 +1,4 @@
-import { CellValue } from './data-processor';
+import type { CellValue } from '@/lib/data-processor';
 
 export type { CellValue };
 

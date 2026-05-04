@@ -1,4 +1,4 @@
-import type { ParsedData, CellValue } from '@/types';
+import type { ParsedData, CellValue } from '@/lib/data-processor';
 
 export type ProblemType =
   | 'empty_rows'
@@ -27,6 +27,7 @@ export type ProblemType =
   | 'category_mismatch'
   | 'reference_integrity'
   | 'distribution_skew'
+  | 'variance_zero'
   | 'cardinality_issue'
   | 'sum_mismatch'
   | 'balance_imbalance'
@@ -1261,11 +1262,11 @@ export class ProblemDetector {
     const longer = s1.length > s2.length ? s1 : s2;
     const shorter = s1.length > s2.length ? s2 : s1;
     if (longer.length === 0) return 1.0;
-    const costs: number[][] = [];
+    const costs: number[] = [];
     for (let i = 0; i <= s1.length; i++) {
       let lastValue = i;
       for (let j = 0; j <= s2.length; j++) {
-        if (i === 0) costs[j] = j;
+        if (i === 0) { costs[j] = j; }
         else if (j > 0) {
           let newValue = costs[j - 1] + 1;
           if (s1.charAt(i - 1) !== s2.charAt(j - 1)) newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;

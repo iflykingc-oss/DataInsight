@@ -1,4 +1,4 @@
-import type { ParsedData } from '@/types';
+import type { ParsedData } from '@/lib/data-processor';
 
 export type Scenario =
   | 'retail' | 'ecommerce' | 'store' | 'inventory'

@@ -4,7 +4,7 @@
  */
 
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
-import type { ApiResponse } from '@/types';
+import type { ApiResponse } from '@/types/api';
 
 /**
  * 文件上传并解析

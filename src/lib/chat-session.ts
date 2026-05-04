@@ -1,4 +1,5 @@
-import { ChatSession, ChatSessionSummary, LLMMessage, AIModelConfig, createSuccessResponse, createErrorResponse, type ApiResponse } from '@/types';
+import { ChatSession, ChatSessionSummary, LLMMessage, AIModelConfig } from '@/types/llm';
+import { createSuccessResponse, createErrorResponse, type ApiResponse } from '@/types/api';
 
 const STORAGE_KEY = 'datainsight_chat_sessions';
 const MAX_SESSIONS = 50;
@@ -124,7 +125,7 @@ export class ChatSessionManager {
     session.messages.push(message);
     session.updatedAt = new Date().toISOString();
 
-    if (message.role === 'user' && session.messages.filter(m => m.role === 'user').length === 1) {
+    if (message.role === 'user' && session.messages.filter((m: LLMMessage) => m.role === 'user').length === 1) {
       session.title = message.content.slice(0, 30) + (message.content.length > 30 ? '...' : '');
     }
 

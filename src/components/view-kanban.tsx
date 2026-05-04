@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LayoutGrid, Settings2 } from 'lucide-react';
 import type { ParsedData } from '@/lib/data-processor';
-import type { CellValue } from '@/types';
+import type { CellValue } from '@/lib/data-processor';
 
 interface KanbanViewProps {
   data: ParsedData;

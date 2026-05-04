@@ -30,7 +30,7 @@ export function AppBuilder() {
 
   const addBlock = (type: AppBlock['type']) => {
     const block: AppBlock = {
-      id: `blk-${Date.now()}`,
+      id: `blk-${crypto.randomUUID()}`,
       type,
       title: type === 'header' ? '标题' : type === 'text' ? '文本块' : type === 'chart' ? '图表' : type === 'table' ? '数据表' : type === 'image' ? '图片' : '指标卡',
       config: {},

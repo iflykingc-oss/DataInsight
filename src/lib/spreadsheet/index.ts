@@ -1,2 +1,2 @@
 export * from './types';
-export * from '../data-processor';
+export type { ParsedData as SpreadsheetParsedData } from '../data-processor';

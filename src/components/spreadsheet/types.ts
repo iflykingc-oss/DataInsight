@@ -1,3 +1,8 @@
+import type { CellValue } from '@/lib/data-processor';
+import type { CellRef } from './Spreadsheet';
+
+export type { CellValue, CellRef };
+
 export interface FilterCondition {
   column: string;
   operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 'is_empty' | 'is_not_empty';

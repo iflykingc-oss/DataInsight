@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -125,25 +125,28 @@ export function PivotTable({
 
   const result = useMemo(() => computePivot(rows, config), [rows, config]);
 
-  const handleSwap = useCallback(() => {
+  const handleSwap = () => {
     setConfig(prev => ({ ...prev, rowField: prev.colField, colField: prev.rowField }));
-  }, []);
+  };
 
-  const handleSave = useCallback(() => {
-    if (!config.rowField || !config.colField || !config.valField) return;
-    setHistory(prev => {
-      const next = prev.filter(h =>
-        !(h.rowField === config.rowField && h.colField === config.colField && h.valField === config.valField)
-      );
-      return [config, ...next].slice(0, 10);
+  const handleSave = () => {
+    setConfig(currentConfig => {
+      if (!currentConfig.rowField || !currentConfig.colField || !currentConfig.valField) return currentConfig;
+      setHistory(prev => {
+        const next = prev.filter(h =>
+          !(h.rowField === currentConfig.rowField && h.colField === currentConfig.colField && h.valField === currentConfig.valField)
+        );
+        return [currentConfig, ...next].slice(0, 10);
+      });
+      return currentConfig;
     });
-  }, [config]);
+  };
 
-  const applyHistory = useCallback((h: PivotConfig) => setConfig(h), []);
+  const applyHistory = (h: PivotConfig) => setConfig(h);
 
-  const removeHistory = useCallback((idx: number) => {
+  const removeHistory = (idx: number) => {
     setHistory(prev => prev.filter((_, i) => i !== idx));
-  }, []);
+  };
 
   const availableAgg: AggFunc[] = config.valField && fieldStats.find(f => f.field === config.valField)?.type === 'id'
     ? ['count']

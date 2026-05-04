@@ -1,4 +1,4 @@
-import type { ParsedData, CellValue } from '@/types';
+import type { ParsedData, CellValue } from '@/lib/data-processor';
 
 export interface ExportOptions {
   format: 'csv' | 'xlsx' | 'json' | 'tsv' | 'html';
@@ -318,7 +318,7 @@ export class ExportManager {
   }
 
   private generateXLSXContent(data: ParsedData, opts: ExportOptions): ArrayBuffer {
-    const sheetData = this.createSheetData(data);
+    const sheetData = this.createSheetData(data, opts);
     const xlsxBuilder = new XLSXBuilder();
     return xlsxBuilder.build(sheetData, {
       sheetName: opts.sheetName || '数据',
@@ -327,7 +327,7 @@ export class ExportManager {
     });
   }
 
-  private createSheetData(data: ParsedData): SheetData {
+  private createSheetData(data: ParsedData, opts: ExportOptions): SheetData {
     const rows: CellData[][] = [];
 
     rows.push(
@@ -653,7 +653,7 @@ export class ImportManager {
     const errors: string[] = [];
 
     try {
-      const text = await this.readFileContent(file, opts.encoding);
+      const text = await this.readFileContent(file, opts.encoding || 'utf-8');
       let data: ParsedData;
 
       switch (opts.format) {
@@ -757,8 +757,7 @@ export class ImportManager {
       rows.push(row);
     }
 
-    return { headers, rows };
-  }
+    return { headers, rows, fileName: 'export', rowCount: rows.length, columnCount: headers.length };  }
 
   private parseCSVLine(line: string, delimiter: string): string[] {
     const result: string[] = [];
@@ -800,7 +799,7 @@ export class ImportManager {
     }
 
     if (data.length === 0) {
-      return { headers: [], rows: [] };
+      return { headers: [], rows: [], fileName: 'export', rowCount: 0, columnCount: 0 };
     }
 
     const headers = Object.keys(data[0] as Record<string, unknown>);
@@ -812,8 +811,7 @@ export class ImportManager {
       return row;
     });
 
-    return { headers, rows };
-  }
+    return { headers, rows, fileName: 'export', rowCount: rows.length, columnCount: headers.length };  }
 
   private async parseXLSX(file: File): Promise<ParsedData> {
     return new Promise((resolve, reject) => {
@@ -833,7 +831,7 @@ export class ImportManager {
   }
 
   private parseXLSXArrayBuffer(buffer: ArrayBuffer): ParsedData {
-    return { headers: ['解析中...'], rows: [] };
+    return { headers: ['解析中...'], rows: [], fileName: 'export', rowCount: 0, columnCount: 1 };
   }
 }
 

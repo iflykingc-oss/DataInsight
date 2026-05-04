@@ -1,4 +1,4 @@
-import type { ParsedData, CellValue } from '@/types';
+import type { ParsedData, CellValue } from '@/lib/data-processor';
 import type { ProblemReport } from '../algorithms';
 
 export interface SkillStep {
@@ -6,7 +6,7 @@ export interface SkillStep {
   name: string;
   description: string;
   tool: string;
-  params: Record<string, unknown>;
+  params?: Record<string, unknown>;
   estimatedTime?: number;
   estimatedImpact?: 'low' | 'medium' | 'high';
   requiresConfirmation?: boolean;
@@ -62,7 +62,7 @@ export interface SkillDefinition {
   name: string;
   description: string;
   icon: string;
-  category: 'data' | 'format' | 'analysis' | 'export' | 'transform';
+  category: 'data' | 'format' | 'analysis' | 'export' | 'transform' | 'filter' | 'validate';
   triggerKeywords: string[];
   version: string;
   tags?: string[];
@@ -137,13 +137,13 @@ export interface ChangeRecord {
 }
 
 export interface SkillContext {
-  originalData: ParsedData;
+  originalData: ParsedData | null;
   currentData: ParsedData;
   problemReport?: ProblemReport;
   sessionId: string;
   timestamp: number;
   scenario?: string;
-  operationSnapshot?: DataSnapshot;
+  operationSnapshot?: DataSnapshot | string;
   userConfirmToken?: string;
 }
 

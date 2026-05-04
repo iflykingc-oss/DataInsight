@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import type { ParsedData, CellValue } from '@/types';
+import type { ParsedData, CellValue } from '@/lib/data-processor';
 import { cn } from '@/lib/utils';
 import {
   ChevronUp,
@@ -435,8 +435,8 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
 
   const handleSort = useCallback(
     (column: string) => {
-      const newDirection = state.sortState?.column === column && state.sortState.direction === 'asc' ? 'desc' : 'asc';
-      const newSortState = { column, direction: newDirection };
+      const newDirection: 'asc' | 'desc' = state.sortState?.column === column && state.sortState.direction === 'asc' ? 'desc' : 'asc';
+      const newSortState: SortState = { column, direction: newDirection };
       setState((prev) => ({ ...prev, sortState: newSortState }));
       onSort?.(column, newDirection);
     },
@@ -586,7 +586,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
   const renderHeader = (colIndex: number) => {
     const header = processedData.headers[colIndex];
     const isSorted = state.sortState?.column === header;
-    const sortDirection = isSorted ? state.sortState.direction : null;
+    const sortDirection = isSorted && state.sortState ? state.sortState.direction : null;
     const isFiltered = state.filterCondition?.column === header;
 
     return (
