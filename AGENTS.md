@@ -81,8 +81,10 @@ src/
 │   ├── view-gantt.tsx         # 甘特图视图（起止日期渲染）
 │   ├── data-insights.tsx      # 深度数据分析组件（7大模块+AI深度分析）
 │   ├── dashboard.tsx          # 自动生成交互式仪表盘（含配置持久化+联动筛选）
-│   ├── enhanced-llm-assistant.tsx  # AI分析助手（真实流式API，多轮上下文）
-│   ├── global-ai-assistant.tsx     # 全局AI助手（SSE流式+拖拽+操作执行）
+│   ├── global-agent-assistant.tsx  # 全局调度智能体UI（替换原有AI助手，支持场景路由+技能调用+流式输出）
+│   ├── scene-agent-panel.tsx       # 场景专属智能体面板（Tab内嵌，可折叠侧边栏）
+│   ├── enhanced-llm-assistant.tsx  # AI分析助手（保留，用于兼容）
+│   ├── global-ai-assistant.tsx     # 全局AI助手（保留，用于兼容）
 │   ├── ai-field-panel.tsx     # AI字段配置面板（6种AI字段类型）
 │   ├── ai-formula-generator.tsx # AI公式生成器（自然语言→公式+解释+采纳）
 │   ├── ai-cell-toolbar.tsx    # 单元格智能工具栏（8种AI操作）
@@ -301,6 +303,30 @@ NL2Dashboard 智能仪表盘生成（业务驱动）
 ### POST /api/test-connection
 AI 模型连接测试
 
+### POST /api/workflow
+工作流执行引擎（技能编排+分支+并行+超时控制）
+
+**action=execute**: 执行工作流
+```json
+{
+  "workflowId": "general-excel-to-report",
+  "context": {
+    "data": { "headers": [...], "rows": [...] },
+    "fieldStats": [...]
+  },
+  "scene": "data-analyze"
+}
+```
+
+**action=query**: 查询执行状态
+```json
+{ "instanceId": "wf-xxx" }
+```
+
+**action=cancel**: 取消执行
+```json
+{ "instanceId": "wf-xxx" }
+
 ## 权限管理系统
 
 ### 账号体系
@@ -469,4 +495,8 @@ AI 模型连接测试
 9. **WASM 依赖**: SQL Lab 使用 sql.js，WASM 文件位于 `public/sql-wasm.wasm`
 10. **主题**: 使用 CSS Variables + Tailwind 语义化类名，禁止硬编码颜色
 11. **懒加载**: 所有组件使用 `next/dynamic` 懒加载+SSR禁用，减少首屏编译时间
+12. **智能体架构**: 全局调度智能体 + Tab场景专属智能体，意图路由 + 任务规划 + 技能调用
+13. **出海合规**: 用户业务数据零存储（仅页面内存+临时会话），表单数据72小时TTL自动清理
+14. **技能中台**: 104个原子技能 + 18个高频技能handler实现（表格生成/清洗/分析/可视化/公式）
+15. **工作流引擎**: 102个预制工作流 + 双引擎（固化+动态编排），支持串行/分支/并行执行
 12. **AI多模态**: 图片生成使用 pollinations.ai CDN，无需API Key；图转文/图转表/语音转写需要配置AI模型
