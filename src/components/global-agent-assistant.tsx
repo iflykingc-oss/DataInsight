@@ -24,6 +24,7 @@ import { cn, generateId } from '@/lib/utils';
 import { callLLMStream, LLMModelConfig } from '@/lib/llm';
 import { classifyAndRoute } from '@/lib/agent/core/intent-router';
 import { FieldStat, ParsedData } from '@/lib/data-processor';
+import { createOrchestrator, ExecutionPlan } from '@/lib/orchestrator-agent';
 
 // ========================================
 // 类型定义
@@ -234,6 +235,55 @@ export function GlobalAgentAssistant({
     ]);
 
     try {
+      // === 全局调度智能体（确定性规则优先）===
+      const orchestrator = createOrchestrator({
+        currentView: currentView || 'home',
+        hasData: hasData,
+        dataInfo: data ? { fileName: data.fileName || '', rowCount: data.rowCount || 0, columnCount: data.columnCount || 0 } : undefined,
+        isLoggedIn: true,
+      });
+
+      const plan = orchestrator.parseRequest(text);
+
+      // 如果有建议操作，直接展示调度结果
+      if (plan.suggestedActions.length > 0) {
+        const actionMsg: ChatMessage = {
+          id: assistantId,
+          role: 'assistant',
+          content: plan.response,
+          timestamp: new Date(),
+          suggestions: plan.suggestedActions.map(a => a.label),
+          metadata: {
+            type: plan.isComposite ? 'plan' : 'route',
+            plan: plan.isComposite ? {
+              steps: plan.subTasks.map(t => ({
+                stepId: t.id,
+                description: t.description,
+                status: 'pending',
+              })),
+              estimatedComplexity: plan.subTasks.length > 2 ? 'high' : 'low',
+            } : undefined,
+          },
+        };
+        setMessages(prev => {
+          const filtered = prev.filter(m => m.id !== assistantId);
+          return [...filtered, actionMsg];
+        });
+
+        // 自动执行导航类操作
+        const navigateAction = plan.suggestedActions.find(a => a.action === 'navigate');
+        if (navigateAction && navigateAction.params?.view && onAction) {
+          setTimeout(() => {
+            onAction('navigate', { view: navigateAction.params!.view });
+          }, 500);
+        }
+
+        setLoading(false);
+        setStreamingId(null);
+        return;
+      }
+
+      // === 兜底：原有LLM流程 ===
       // 1. 意图识别（规则+轻量LLM）
       const intent = await classifyAndRoute(
         text,
@@ -361,7 +411,7 @@ export function GlobalAgentAssistant({
       setLoading(false);
       setStreamingId(null);
     }
-  }, [input, loading, messages, modelConfig, data, currentView, processStreamResponse]);
+  }, [input, loading, messages, modelConfig, data, currentView, hasData, onAction, processStreamResponse]);
 
   // -- 快捷操作 --
   const handleQuickAction = useCallback((action: string) => {
@@ -386,6 +436,14 @@ export function GlobalAgentAssistant({
       '生成仪表盘': 'dashboard',
       '数据清洗': 'data-cleaner',
       '创建报表': 'report',
+      '去上传': 'home',
+      '去上传数据': 'home',
+      '浏览模板': 'ai-table-builder',
+      '打开设置': 'settings',
+      '开始清洗': 'data-prep',
+      '开始分析': 'insights',
+      '生成图表': 'visualization',
+      '生成报告': 'report-export',
     };
     if (navMap[lower] && onAction) {
       onAction('navigate', { view: navMap[lower] });

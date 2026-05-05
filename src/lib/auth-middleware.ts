@@ -2,7 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { getUserById } from './auth';
 
-const JWT_SECRET = new TextEncoder().encode('datainsight-jwt-secret-key-2024');
+// 安全：从环境变量读取JWT密钥，提供强默认值但优先使用环境变量
+function getJwtSecret(): Uint8Array {
+  const envSecret = process.env.JWT_SECRET;
+  if (envSecret && envSecret.length >= 32) {
+    return new TextEncoder().encode(envSecret);
+  }
+  // 降级：使用随机生成的密钥（每次重启会失效所有token，强制重新登录）
+  console.warn('[Security] JWT_SECRET not configured or too short. Using ephemeral secret (all sessions will invalidate on restart).');
+  return new TextEncoder().encode('datainsight-jwt-ephemeral-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+}
+
+const JWT_SECRET = getJwtSecret();
 
 export async function verifyAuth(request: NextRequest) {
   const authHeader = request.headers.get('authorization');

@@ -1,6 +1,6 @@
 /**
  * 认证与权限管理核心
- * 当前使用内存存储，生产环境可替换为数据库存储
+ * 安全增强版：移除硬编码密码，强制首次登录初始化
  */
 
 import bcrypt from 'bcryptjs';
@@ -53,18 +53,130 @@ export interface AIConfig {
   updatedAt: string;
 }
 
-// ==================== 内存存储 ====================
-let userIdCounter = 2;
-let logIdCounter = 1;
-let statIdCounter = 1;
-const aiConfigIdCounter = 1;
+// ==================== 安全存储接口（可替换实现） ====================
+interface AuthStorage {
+  getUsers(): Map<number, User>;
+  saveUser(user: User): void;
+  deleteUser(id: number): boolean;
+  getLoginLogs(): LoginLog[];
+  addLoginLog(log: LoginLog): void;
+  getUsageStats(): UsageStat[];
+  addUsageStat(stat: UsageStat): void;
+  getAIConfig(): AIConfig;
+  saveAIConfig(config: AIConfig): void;
+}
 
-const users = new Map<number, User>([
-  [1, {
+// 内存存储实现（开发环境）
+class MemoryAuthStorage implements AuthStorage {
+  private users = new Map<number, User>();
+  private loginLogs: LoginLog[] = [];
+  private usageStats: UsageStat[] = [];
+  private aiConfig: AIConfig = {
     id: 1,
-    username: 'admin',
-    passwordHash: '$2b$10$KAtsw2LoYeMHPvzchflcueCCuhmZEx28b/hndS/NyJIA3dDvc6JaW', // password: 'admin123'
-    name: '管理员',
+    apiKey: '',
+    baseUrl: '',
+    modelName: '',
+    updatedBy: null,
+    updatedAt: new Date().toISOString(),
+  };
+  private userIdCounter = 1;
+  private logIdCounter = 1;
+  private statIdCounter = 1;
+
+  constructor() {
+    // 不再硬编码默认用户，强制首次初始化
+    this.loadFromEnv();
+  }
+
+  private loadFromEnv() {
+    // 支持通过环境变量配置初始管理员（仅用于首次部署）
+    const initAdmin = process.env.INIT_ADMIN_USERNAME;
+    const initPassword = process.env.INIT_ADMIN_PASSWORD;
+    if (initAdmin && initPassword && initAdmin.length >= 3 && initPassword.length >= 8) {
+      const passwordHash = bcrypt.hashSync(initPassword, 10);
+      this.users.set(1, {
+        id: 1,
+        username: initAdmin,
+        passwordHash,
+        name: '管理员',
+        role: 'admin',
+        status: 'active',
+        permissions: {
+          ai_analyze: true,
+          export: true,
+          dashboard: true,
+          share: true,
+          upload: true,
+          form: true,
+          custom_ai_model: true,
+        },
+        createdBy: null,
+        createdAt: new Date().toISOString(),
+      });
+      this.userIdCounter = 2;
+    }
+  }
+
+  getUsers(): Map<number, User> { return this.users; }
+
+  saveUser(user: User): void {
+    if (user.id >= this.userIdCounter) {
+      this.userIdCounter = user.id + 1;
+    }
+    this.users.set(user.id, user);
+  }
+
+  deleteUser(id: number): boolean {
+    return this.users.delete(id);
+  }
+
+  getNextUserId(): number { return this.userIdCounter++; }
+  getNextLogId(): number { return this.logIdCounter++; }
+  getNextStatId(): number { return this.statIdCounter++; }
+
+  getLoginLogs(): LoginLog[] { return this.loginLogs; }
+  addLoginLog(log: LoginLog): void { this.loginLogs.push(log); }
+
+  getUsageStats(): UsageStat[] { return this.usageStats; }
+  addUsageStat(stat: UsageStat): void { this.usageStats.push(stat); }
+
+  getAIConfig(): AIConfig { return this.aiConfig; }
+  saveAIConfig(config: AIConfig): void { this.aiConfig = config; }
+}
+
+// 全局存储实例（可替换为数据库存储）
+let storage: AuthStorage = new MemoryAuthStorage();
+
+export function setAuthStorage(newStorage: AuthStorage): void {
+  storage = newStorage;
+}
+
+function getStorage(): AuthStorage & { getNextUserId?(): number; getNextLogId?(): number; getNextStatId?(): number } {
+  return storage as AuthStorage & { getNextUserId?(): number; getNextLogId?(): number; getNextStatId?(): number };
+}
+
+// ==================== 初始化检查 ====================
+
+export function isInitialized(): boolean {
+  return getStorage().getUsers().size > 0;
+}
+
+export async function initializeAdmin(username: string, password: string, name: string): Promise<User> {
+  if (getStorage().getUsers().size > 0) {
+    throw new Error('系统已初始化，不能重复创建管理员');
+  }
+  if (username.length < 3) throw new Error('用户名至少3个字符');
+  if (password.length < 8) throw new Error('密码至少8个字符');
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+    throw new Error('密码必须包含字母和数字');
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const user: User = {
+    id: 1,
+    username,
+    passwordHash,
+    name,
     role: 'admin',
     status: 'active',
     permissions: {
@@ -78,34 +190,25 @@ const users = new Map<number, User>([
     },
     createdBy: null,
     createdAt: new Date().toISOString(),
-  }],
-]);
-
-const loginLogs: LoginLog[] = [];
-const usageStats: UsageStat[] = [];
-
-const adminAIConfig: AIConfig = {
-  id: 1,
-  apiKey: '',
-  baseUrl: 'https://api.deepseek.com',
-  modelName: 'deepseek-chat',
-  updatedBy: null,
-  updatedAt: new Date().toISOString(),
-};
+  };
+  getStorage().saveUser(user);
+  return user;
+}
 
 // ==================== 用户CRUD ====================
 export function getUserByUsername(username: string): User | undefined {
+  const users = getStorage().getUsers();
   for (const user of users.values()) {
     if (user.username === username) return user;
   }
 }
 
 export function getUserById(id: number): User | undefined {
-  return users.get(id);
+  return getStorage().getUsers().get(id);
 }
 
 export function getAllUsers(): User[] {
-  return Array.from(users.values());
+  return Array.from(getStorage().getUsers().values());
 }
 
 export async function createUser(data: {
@@ -116,10 +219,17 @@ export async function createUser(data: {
   permissions?: User['permissions'];
   createdBy: number;
 }): Promise<User> {
-  const id = userIdCounter++;
-  const passwordHash = data.password 
-    ? await bcrypt.hash(data.password, 10)
-    : await bcrypt.hash('123456', 10); // 默认密码
+  const s = getStorage();
+  const id = s.getNextUserId ? s.getNextUserId() : Date.now();
+
+  // 安全：不再使用默认密码，必须提供密码
+  if (!data.password || data.password.length < 8) {
+    throw new Error('密码必须至少8位字符');
+  }
+  if (!/[A-Za-z]/.test(data.password) || !/[0-9]/.test(data.password)) {
+    throw new Error('密码必须包含字母和数字');
+  }
+  const passwordHash = await bcrypt.hash(data.password, 12);
 
   const user: User = {
     id,
@@ -141,7 +251,7 @@ export async function createUser(data: {
     createdAt: new Date().toISOString(),
   };
 
-  users.set(id, user);
+  s.saveUser(user);
   return user;
 }
 
@@ -153,7 +263,7 @@ export async function updateUser(id: number, data: Partial<{
   permissions: User['permissions'];
   password: string;
 }>): Promise<User | null> {
-  const user = users.get(id);
+  const user = getStorage().getUsers().get(id);
   if (!user) return null;
 
   if (data.username) user.username = data.username;
@@ -162,14 +272,19 @@ export async function updateUser(id: number, data: Partial<{
   if (data.status) user.status = data.status;
   if (data.permissions) user.permissions = { ...user.permissions, ...data.permissions };
   if (data.password) {
-    user.passwordHash = await bcrypt.hash(data.password, 10);
+    if (data.password.length < 8) throw new Error('密码必须至少8位字符');
+    if (!/[A-Za-z]/.test(data.password) || !/[0-9]/.test(data.password)) {
+      throw new Error('密码必须包含字母和数字');
+    }
+    user.passwordHash = await bcrypt.hash(data.password, 12);
   }
 
+  getStorage().saveUser(user);
   return user;
 }
 
 export function deleteUser(id: number): boolean {
-  return users.delete(id);
+  return getStorage().deleteUser(id);
 }
 
 export async function verifyPassword(user: User, password: string): Promise<boolean> {
@@ -189,19 +304,21 @@ export function addLoginLog(data: {
   userAgent: string;
   status: 'success' | 'failed';
 }): void {
-  loginLogs.push({
-    id: logIdCounter++,
+  const s = getStorage();
+  const id = s.getNextLogId ? s.getNextLogId() : Date.now();
+  s.addLoginLog({
+    id,
     ...data,
     createdAt: new Date().toISOString(),
   });
 }
 
 export function getLoginLogs(limit = 50): LoginLog[] {
-  return loginLogs.slice(-limit).reverse();
+  return getStorage().getLoginLogs().slice(-limit).reverse();
 }
 
 export function getLoginLogsByUser(userId: number, limit = 20): LoginLog[] {
-  return loginLogs
+  return getStorage().getLoginLogs()
     .filter(log => log.userId === userId)
     .slice(-limit)
     .reverse();
@@ -209,16 +326,19 @@ export function getLoginLogsByUser(userId: number, limit = 20): LoginLog[] {
 
 // ==================== 使用统计 ====================
 export function addUsageStat(userId: number, action: string): void {
+  const s = getStorage();
   const today = new Date().toISOString().split('T')[0];
-  const existing = usageStats.find(
-    s => s.userId === userId && s.action === action && s.date === today
+  const stats = s.getUsageStats();
+  const existing = stats.find(
+    st => st.userId === userId && st.action === action && st.date === today
   );
-  
+
   if (existing) {
     existing.count++;
   } else {
-    usageStats.push({
-      id: statIdCounter++,
+    const id = s.getNextStatId ? s.getNextStatId() : Date.now();
+    s.addUsageStat({
+      id,
       userId,
       action,
       count: 1,
@@ -229,19 +349,20 @@ export function addUsageStat(userId: number, action: string): void {
 }
 
 export function getUsageStats(userId?: number): UsageStat[] {
+  const stats = getStorage().getUsageStats();
   if (userId) {
-    return usageStats.filter(s => s.userId === userId);
+    return stats.filter(s => s.userId === userId);
   }
-  return usageStats;
+  return stats;
 }
 
 export function getUsageStatsByDate(startDate: string, endDate: string): UsageStat[] {
-  return usageStats.filter(s => s.date >= startDate && s.date <= endDate);
+  return getStorage().getUsageStats().filter(s => s.date >= startDate && s.date <= endDate);
 }
 
 // ==================== AI配置 ====================
 export function getAIConfig(): AIConfig {
-  return adminAIConfig;
+  return getStorage().getAIConfig();
 }
 
 export function updateAIConfig(data: {
@@ -250,12 +371,14 @@ export function updateAIConfig(data: {
   modelName?: string;
   updatedBy: number;
 }): AIConfig {
-  if (data.apiKey !== undefined) adminAIConfig.apiKey = data.apiKey;
-  if (data.baseUrl !== undefined) adminAIConfig.baseUrl = data.baseUrl;
-  if (data.modelName !== undefined) adminAIConfig.modelName = data.modelName;
-  adminAIConfig.updatedBy = data.updatedBy;
-  adminAIConfig.updatedAt = new Date().toISOString();
-  return adminAIConfig;
+  const config = getStorage().getAIConfig();
+  if (data.apiKey !== undefined) config.apiKey = data.apiKey;
+  if (data.baseUrl !== undefined) config.baseUrl = data.baseUrl;
+  if (data.modelName !== undefined) config.modelName = data.modelName;
+  config.updatedBy = data.updatedBy;
+  config.updatedAt = new Date().toISOString();
+  getStorage().saveAIConfig(config);
+  return config;
 }
 
 // 同步数据库中的用户到内存（启动时调用）
@@ -271,7 +394,7 @@ export function syncUsersFromDB(dbUsers: Array<{
   created_at: string;
 }>): void {
   for (const u of dbUsers) {
-    users.set(u.id, {
+    getStorage().saveUser({
       id: u.id,
       username: u.username,
       passwordHash: u.password_hash,
@@ -282,7 +405,6 @@ export function syncUsersFromDB(dbUsers: Array<{
       createdBy: u.created_by,
       createdAt: u.created_at,
     });
-    if (u.id >= userIdCounter) userIdCounter = u.id + 1;
   }
 }
 
@@ -297,7 +419,7 @@ export function syncLoginLogsFromDB(dbLogs: Array<{
   created_at: string;
 }>): void {
   for (const l of dbLogs) {
-    loginLogs.push({
+    getStorage().addLoginLog({
       id: l.id,
       userId: l.user_id,
       username: l.username,
@@ -306,6 +428,5 @@ export function syncLoginLogsFromDB(dbLogs: Array<{
       status: l.status as 'success' | 'failed',
       createdAt: l.created_at,
     });
-    if (l.id >= logIdCounter) logIdCounter = l.id + 1;
   }
 }

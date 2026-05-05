@@ -72,8 +72,8 @@ export function NL2SQLDebug({ data, modelConfig, onSQLResult }: NL2SQLDebugProps
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(typeof window !== 'undefined' && localStorage.getItem('auth_token')
-            ? { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+          ...(typeof window !== 'undefined' && localStorage.getItem('datainsight_token')
+            ? { Authorization: `Bearer ${localStorage.getItem('datainsight_token')}` }
             : {}),
         },
         body: JSON.stringify({
@@ -101,8 +101,8 @@ export function NL2SQLDebug({ data, modelConfig, onSQLResult }: NL2SQLDebugProps
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(typeof window !== 'undefined' && localStorage.getItem('auth_token')
-              ? { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+            ...(typeof window !== 'undefined' && localStorage.getItem('datainsight_token')
+              ? { Authorization: `Bearer ${localStorage.getItem('datainsight_token')}` }
               : {}),
           },
           body: JSON.stringify({
@@ -153,8 +153,8 @@ export function NL2SQLDebug({ data, modelConfig, onSQLResult }: NL2SQLDebugProps
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                ...(typeof window !== 'undefined' && localStorage.getItem('auth_token')
-                  ? { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+                ...(typeof window !== 'undefined' && localStorage.getItem('datainsight_token')
+                  ? { Authorization: `Bearer ${localStorage.getItem('datainsight_token')}` }
                   : {}),
               },
               body: JSON.stringify({

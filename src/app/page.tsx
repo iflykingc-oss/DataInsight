@@ -454,26 +454,37 @@ export default function HomePage() {
       toast.error('无权使用 AI 分析', { description: '管理员已禁用 AI 分析功能' });
       return Promise.reject(new Error('无 AI 分析权限'));
     }
-    return fetch('/api/analyze', {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ data }),
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('分析请求失败');
-        return res.json();
-      })
-      .then(result => {
-        if (result.success && result.analysis) {
-          setAnalysis(result.analysis);
-        } else {
-          throw new Error(result.error || '分析结果无效');
-        }
-      })
-      .catch(err => {
-        console.error('分析失败:', err);
-        setError(err.message);
+    // 前端确定性分析优先，不依赖LLM
+    try {
+      import('@/lib/client-data-engine').then(({ analyzeDataClient }) => {
+        const clientAnalysis = analyzeDataClient(data);
+        setAnalysis(clientAnalysis);
+        toast.success('数据分析完成', { description: `已分析 ${data.rowCount} 行数据` });
       });
+      return Promise.resolve();
+    } catch (err) {
+      console.error('前端分析失败，回退到服务端:', err);
+      return fetch('/api/analyze', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ data }),
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('分析请求失败');
+          return res.json();
+        })
+        .then(result => {
+          if (result.success && result.analysis) {
+            setAnalysis(result.analysis);
+          } else {
+            throw new Error(result.error || '分析结果无效');
+          }
+        })
+        .catch(err => {
+          console.error('分析失败:', err);
+          setError(err.message);
+        });
+    }
   };
 
   const handleGoHome = () => {

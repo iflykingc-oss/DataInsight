@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,29 +13,64 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/lib/use-auth';
-import { LogIn, Loader2, AlertCircle, Shield } from 'lucide-react';
+import { LogIn, Loader2, AlertCircle, Shield, UserPlus } from 'lucide-react';
 
 export function LoginDialog() {
   const { loginDialogOpen, setLoginDialogOpen, login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [needInit, setNeedInit] = useState(false);
+  const [isInitMode, setIsInitMode] = useState(false);
+
+  // 检查系统是否需要初始化
+  useEffect(() => {
+    if (loginDialogOpen) {
+      fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+        .then(r => r.json())
+        .then(data => {
+          if (data.needInit) setNeedInit(true);
+        })
+        .catch(() => {});
+    }
+  }, [loginDialogOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const result = await login(username, password);
-    setLoading(false);
-
-    if (result.success) {
-      setLoginDialogOpen(false);
-      setUsername('');
-      setPassword('');
-    } else {
-      setError(result.error || '登录失败');
+    try {
+      if (isInitMode) {
+        // 初始化管理员
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, initMode: true, initName: name }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('datainsight_token', data.token);
+          window.location.reload();
+        } else {
+          setError(data.error || '初始化失败');
+        }
+      } else {
+        const result = await login(username, password);
+        if (result.success) {
+          setLoginDialogOpen(false);
+          setUsername('');
+          setPassword('');
+        } else {
+          setError(result.error || '登录失败');
+        }
+      }
+    } catch {
+      setError('网络错误，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,10 +80,12 @@ export function LoginDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <LogIn className="w-5 h-5" />
-            登录 DataInsight
+            {isInitMode ? '初始化管理员账号' : '登录 DataInsight'}
           </DialogTitle>
           <DialogDescription>
-            登录后即可使用全部功能
+            {isInitMode
+              ? '系统首次使用，请创建管理员账号'
+              : '登录后即可使用全部功能'}
           </DialogDescription>
         </DialogHeader>
 
@@ -58,6 +95,20 @@ export function LoginDialog() {
               <AlertCircle className="w-4 h-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
+          )}
+
+          {isInitMode && (
+            <div className="space-y-2">
+              <Label htmlFor="login-name">姓名</Label>
+              <Input
+                id="login-name"
+                type="text"
+                placeholder="请输入姓名"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
           )}
 
           <div className="space-y-2">
@@ -70,6 +121,7 @@ export function LoginDialog() {
               onChange={(e) => setUsername(e.target.value)}
               required
               autoComplete="username"
+              minLength={3}
             />
           </div>
 
@@ -78,33 +130,50 @@ export function LoginDialog() {
             <Input
               id="login-password"
               type="password"
-              placeholder="请输入密码"
+              placeholder={isInitMode ? '至少8位，包含字母和数字' : '请输入密码'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              autoComplete={isInitMode ? 'new-password' : 'current-password'}
+              minLength={8}
             />
           </div>
 
-          <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground space-y-1">
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5" />
-              <span className="font-medium">管理员默认账号</span>
+          {isInitMode && (
+            <div className="rounded-md bg-blue-50 p-3 text-xs text-blue-700 space-y-1">
+              <div className="flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5" />
+                <span className="font-medium">密码要求</span>
+              </div>
+              <div>至少8位字符，同时包含字母和数字</div>
             </div>
-            <div>账户: admin</div>
-            <div>密码: admin123</div>
-          </div>
+          )}
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                登录中...
+                {isInitMode ? '创建中...' : '登录中...'}
               </>
             ) : (
-              '登录'
+              <>
+                {isInitMode ? <UserPlus className="w-4 h-4 mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
+                {isInitMode ? '创建管理员' : '登录'}
+              </>
             )}
           </Button>
+
+          {needInit && !isInitMode && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => { setIsInitMode(true); setError(''); }}
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              初始化管理员账号
+            </Button>
+          )}
         </form>
       </DialogContent>
     </Dialog>

@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 import { getUserById, sanitizeUser } from '@/lib/auth';
 
-const JWT_SECRET = new TextEncoder().encode('datainsight-jwt-secret-key-2024');
+function getJwtSecret(): Uint8Array {
+  const envSecret = process.env.JWT_SECRET;
+  if (envSecret && envSecret.length >= 32) {
+    return new TextEncoder().encode(envSecret);
+  }
+  return new TextEncoder().encode('datainsight-jwt-ephemeral-' + Date.now());
+}
+
+const JWT_SECRET = getJwtSecret();
 
 export async function GET(request: NextRequest) {
   try {
