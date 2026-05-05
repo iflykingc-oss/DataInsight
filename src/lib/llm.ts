@@ -349,6 +349,60 @@ function filterThinkingContent(content: string): string {
 }
 
 /**
+ * 增强版流式思考内容过滤器（基于缓冲区的跨chunk过滤）
+ * 解决思考内容跨越多个chunk时，单chunk过滤无法完整移除的问题
+ */
+function createThinkingFilter() {
+  let thinkingBuffer = '';
+  let inThinkingBlock = false;
+
+  return (chunk: string): string => {
+    // 追加到缓冲区
+    thinkingBuffer += chunk;
+
+    // 如果已经在思考块中，查找结束标签
+    if (inThinkingBlock) {
+      const endIndex = thinkingBuffer.indexOf('</think>');
+      if (endIndex !== -1) {
+        // 找到结束标签，丢弃从开始到结束的全部内容
+        thinkingBuffer = thinkingBuffer.slice(endIndex + 7);
+        inThinkingBlock = false;
+      } else {
+        // 仍在思考块中，丢弃全部内容
+        thinkingBuffer = '';
+        return '';
+      }
+    }
+
+    // 检查缓冲区开头是否有开始标签
+    const startIndex = thinkingBuffer.indexOf('<think>');
+    if (startIndex !== -1) {
+      // 如果开始标签前有内容，先发送非思考内容
+      const before = thinkingBuffer.slice(0, startIndex);
+      thinkingBuffer = thinkingBuffer.slice(startIndex);
+
+      // 现在检查是否有结束标签
+      const endIndex = thinkingBuffer.indexOf('</think>');
+      if (endIndex !== -1) {
+        // 完整的思考块，丢弃全部
+        thinkingBuffer = thinkingBuffer.slice(endIndex + 7);
+        return filterThinkingContent(before);
+      } else {
+        // 开始标签后没有结束标签，进入思考块模式
+        inThinkingBlock = true;
+        thinkingBuffer = '';
+        return filterThinkingContent(before);
+      }
+    }
+
+    // 没有开始标签，正常过滤后返回
+    const result = filterThinkingContent(thinkingBuffer);
+    thinkingBuffer = '';
+    return result;
+  };
+}
+
+/**
  * 流式调用 LLM（用于 AI 智能分析等场景）
  * 返回 ReadableStream，适配 SSE 协议
  * @param config 模型配置
@@ -440,6 +494,7 @@ export async function callLLMStream(
   // 异步处理流式数据
   (async () => {
     try {
+      const filterThinking = createThinkingFilter();
       let buffer = '';
       while (true) {
         const { done, value } = await reader.read();
@@ -463,8 +518,8 @@ export async function callLLMStream(
             const parsed = JSON.parse(data);
             const rawContent = parsed?.choices?.[0]?.delta?.content;
             if (rawContent) {
-              // 过滤思考内容后再发送
-              const content = filterThinkingContent(rawContent);
+              // 使用增强版缓冲区过滤器，跨chunk完整移除思考内容
+              const content = filterThinking(rawContent);
               if (content) {
                 await writer.write(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
               }
