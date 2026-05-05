@@ -103,10 +103,9 @@ export async function POST(request: NextRequest) {
 
 // 生成表格方案（流式）
 async function handleGenerate(body: Record<string, unknown>, modelConfig: LLMModelConfig) {
-  const { sceneId, userRequirement, mode = 'simple' } = body as {
+  const { sceneId, userRequirement } = body as {
     sceneId?: string;
     userRequirement: string;
-    mode?: 'simple' | 'expert';
   };
 
   const scene = sceneId ? SCENE_TEMPLATES.find(t => t.id === sceneId) : null;
@@ -114,14 +113,18 @@ async function handleGenerate(body: Record<string, unknown>, modelConfig: LLMMod
     ? `行业：${scene.industry}，用途：${scene.usage}（${scene.name}）`
     : '用户自定义场景';
 
-  const modeInstruction = mode === 'expert'
-    ? `专家模式：用户需求较模糊，请主动设计完整的表格方案，包括：
+  // 智能体自动判断深度：根据需求复杂度自适应
+  const isComplex = userRequirement.length > 30 ||
+    /设计|完整|详细|深度|方案|结构|公式|统计|分析/.test(userRequirement);
+
+  const modeInstruction = isComplex
+    ? `用户需求较深入，请主动设计完整的表格方案，包括：
 1. 台账用途和业务价值说明
 2. 完整字段清单（含字段类型、是否必填、枚举选项、计算公式说明）
 3. 3-5条演示示例假数据
 4. 统计公式设计（求和、计数、毛利等）
 5. 表格结构设计说明`
-    : `简易模式：根据用户需求生成表格方案，包含字段清单、示例数据和设计说明。`;
+    : `用户需求较明确，请生成简洁的表格方案，包含字段清单、示例数据和设计说明。`;
 
   const systemPrompt = `你是专业的表格设计专家，擅长为中小商家和个体户设计标准化经营台账。
 

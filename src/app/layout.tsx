@@ -3,6 +3,7 @@ import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 import { GlobalErrorBoundary } from '@/components/error-boundary';
 import { AuthProvider } from '@/lib/use-auth';
+import { DataLifecycleProvider } from '@/components/data-lifecycle-provider';
 
 export const metadata: Metadata = {
   title: {
@@ -62,7 +63,9 @@ export default function RootLayout({
         {isDev && <Inspector />}
         <GlobalErrorBoundary>
           <AuthProvider>
-            {children}
+            <DataLifecycleProvider>
+              {children}
+            </DataLifecycleProvider>
           </AuthProvider>
         </GlobalErrorBoundary>
       </body>

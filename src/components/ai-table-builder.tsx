@@ -59,45 +59,7 @@ import {
 
 // ============= 类型定义 =============
 
-// 搭建模式
-type BuildMode = 'default' | 'expert';
-type BuildDepth = 'light' | 'standard' | 'deep';
-
-interface BuildDepthConfig {
-  id: BuildDepth;
-  label: string;
-  icon: React.ElementType;
-  duration: string;
-  description: string;
-  features: string[];
-}
-
-const BUILD_DEPTH_OPTIONS: BuildDepthConfig[] = [
-  {
-    id: 'light',
-    label: '轻量搭建',
-    icon: Zap,
-    duration: '5-10分钟',
-    description: '适用于小型或快速搭建场景',
-    features: ['1-3张数据表', '基础视图配置', '简单示例数据'],
-  },
-  {
-    id: 'standard',
-    label: '标准搭建',
-    icon: Layers,
-    duration: '10-20分钟',
-    description: '适用于搭建结构完整、组织清晰的系统',
-    features: ['3-5张数据表', '多视图配置', '公式与关联', '基础权限'],
-  },
-  {
-    id: 'deep',
-    label: '深度搭建',
-    icon: GitBranch,
-    duration: '20-30分钟',
-    description: '适用于搭建大型、产品级复杂系统',
-    features: ['5+张数据表', '完整视图+仪表盘', '工作流自动化', '多级权限体系'],
-  },
-];
+// 智能体自动判断深度，无需用户手动选择模式
 
 // 系统设计文档
 interface SystemDesignDoc {
@@ -212,11 +174,6 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   // 生成相关
   const [userRequirement, setUserRequirement] = useState('');
   
-  // 核心：模式选择（飞书模式）
-  const [buildMode, setBuildMode] = useState<BuildMode>('default');
-  const [buildDepth, setBuildDepth] = useState<BuildDepth>('standard');
-  const [showModeSelector, setShowModeSelector] = useState(true);
-  
   const [isGenerating, setIsGenerating] = useState(false);
   const [buildProgress, setBuildProgress] = useState(0);
   const [currentBuildStep, setCurrentBuildStep] = useState('');
@@ -317,7 +274,6 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     } else {
       setUserRequirement(`请基于"${scene.name}"场景生成经营台账`);
     }
-    setShowModeSelector(true);
     setStep('generate');
   };
 
@@ -378,122 +334,40 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
       // 模拟构建进度
       const steps = ['分析需求', '设计数据表', '配置视图', '生成示例数据', '创建仪表盘', '设置权限'];
       
-      if (buildMode === 'default') {
-        // 默认模式：直接执行
-        for (let i = 0; i < steps.length; i++) {
-          setCurrentBuildStep(steps[i]);
-          setBuildProgress(Math.round(((i + 1) / steps.length) * 100));
-          await new Promise(r => setTimeout(r, 500));
-        }
-
-        const response = await fetch('/api/ai-table-builder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'generate',
-            sceneId: selectedScene?.id,
-            userRequirement,
-            mode: buildMode,
-            depth: buildDepth,
-            modelConfig,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.success && data.data) {
-          const scheme = data.data as TableScheme;
-          setCurrentScheme(scheme);
-          const assistantMsg: ChatMessage = {
-            id: `assistant-${Date.now()}`,
-            role: 'assistant',
-            content: `已为您生成「${scheme.tableName}」表格方案，包含 ${scheme.columns.length} 个字段。\n\n设计说明：${scheme.designNotes || '无'}\n\n您可以继续提出修改要求，或点击「确认生成表格文件」下载。`,
-            timestamp: new Date(),
-            scheme,
-          };
-          setChatMessages(prev => [...prev, assistantMsg]);
-          setStep('preview');
-          saveToHistory(selectedScene?.name || '自定义', userRequirement, scheme);
-        }
-      } else {
-        // 专家模式：先生成设计文档
-        setCurrentBuildStep('正在创建设计文档...');
-        setBuildProgress(30);
-        await new Promise(r => setTimeout(r, 800));
-
-        setCurrentBuildStep('分析业务需求...');
-        setBuildProgress(50);
-        await new Promise(r => setTimeout(r, 600));
-
-        setCurrentBuildStep('设计系统架构...');
-        setBuildProgress(70);
+      // 智能体自动调度：统一走生成逻辑，根据需求复杂度内部判断
+      for (let i = 0; i < steps.length; i++) {
+        setCurrentBuildStep(steps[i]);
+        setBuildProgress(Math.round(((i + 1) / steps.length) * 100));
         await new Promise(r => setTimeout(r, 500));
+      }
 
-        // 生成设计文档
-        const mockDoc: SystemDesignDoc = {
-          businessBackground: `基于${selectedScene?.name || '自定义'}场景的业务需求分析`,
-          businessGoal: '实现业务流程数字化管理，提升运营效率',
-          tableSchemes: [
-            {
-              tableName: userRequirement.includes('客户') ? '客户信息表' : '主数据表',
-              purpose: '记录核心业务数据',
-              fields: [
-                { name: '编号', type: 'text', description: '唯一标识', required: true },
-                { name: '名称', type: 'text', description: '业务名称', required: true },
-                { name: '状态', type: 'select', description: '当前状态', required: true },
-                { name: '创建时间', type: 'date', description: '记录创建日期', required: false },
-              ],
-            },
-          ],
-          dashboardConfig: {
-            charts: ['数据趋势图', '分类统计饼图'],
-            kpis: ['总记录数', '本月新增', '完成率'],
-          },
-          workflowConfig: {
-            triggers: ['数据新增时', '状态变更时'],
-            actions: ['发送通知', '更新关联表'],
-          },
-          permissionConfig: {
-            roles: [
-              { name: '管理员', permissions: ['全部权限'] },
-              { name: '普通用户', permissions: ['查看', '编辑'] },
-            ],
-          },
+      const response = await fetch('/api/ai-table-builder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate',
+          sceneId: selectedScene?.id,
+          userRequirement,
+          depth: 'standard',
+          modelConfig,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        const scheme = data.data as TableScheme;
+        setCurrentScheme(scheme);
+        const assistantMsg: ChatMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: `已为您生成「${scheme.tableName}」表格方案，包含 ${scheme.columns.length} 个字段。\n\n设计说明：${scheme.designNotes || '无'}\n\n您可以继续提出修改要求，或点击「确认生成表格文件」下载。`,
+          timestamp: new Date(),
+          scheme,
         };
-
-        const response = await fetch('/api/ai-table-builder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'generate',
-            sceneId: selectedScene?.id,
-            userRequirement,
-            mode: buildMode,
-            depth: buildDepth,
-            modelConfig,
-            generateDoc: true,
-          }),
-        });
-
-        const data = await response.json();
-        setBuildProgress(100);
-        await new Promise(r => setTimeout(r, 300));
-
-        if (data.success && data.data) {
-          const scheme = data.data as TableScheme;
-          scheme.systemDoc = mockDoc;
-          setCurrentScheme(scheme);
-
-          const assistantMsg: ChatMessage = {
-            id: `assistant-${Date.now()}`,
-            role: 'assistant',
-            content: `已完成系统设计文档，包含以下内容：\n\n📋 **业务背景**：${mockDoc.businessBackground}\n🎯 **业务目标**：${mockDoc.businessGoal}\n📊 **数据表方案**：${mockDoc.tableSchemes.length} 张表\n📈 **仪表盘配置**：${mockDoc.dashboardConfig.charts.length} 个图表\n⚙️ **工作流配置**：${mockDoc.workflowConfig.triggers.length} 个触发器\n🔐 **权限配置**：${mockDoc.permissionConfig.roles.length} 个角色\n\n请确认设计方案无误后，点击「开始搭建」执行创建。`,
-            timestamp: new Date(),
-            scheme,
-          };
-          setChatMessages(prev => [...prev, assistantMsg]);
-          setStep('design-doc');
-        }
+        setChatMessages(prev => [...prev, assistantMsg]);
+        setStep('preview');
+        saveToHistory(selectedScene?.name || '自定义', userRequirement, scheme);
       }
     } catch (error) {
       const assistantMsg: ChatMessage = {
@@ -508,7 +382,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     setIsGenerating(false);
     setCurrentBuildStep('');
     setUserRequirement('');
-  }, [userRequirement, modelConfig, selectedScene, buildMode, buildDepth, saveToHistory]);
+  }, [userRequirement, modelConfig, selectedScene, saveToHistory]);
 
   // 执行搭建（专家模式确认后）
   const handleExecuteBuild = useCallback(async () => {
@@ -666,7 +540,6 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     setUserRequirement('');
     setChatInput('');
     setIterationCount(0);
-    setShowModeSelector(true);
   };
 
   // 获取字段类型badge颜色
@@ -811,7 +684,6 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
               onClick={() => {
                 setSelectedScene(null);
                 setUserRequirement('');
-                setShowModeSelector(true);
                 setStep('generate');
               }}
             >
@@ -861,109 +733,6 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           </div>
         </div>
       )}
-    </div>
-  );
-
-  // ============= 渲染：模式选择 =============
-  const renderModeSelector = () => (
-    <div className="space-y-6 p-6 bg-muted/30 rounded-lg">
-      <div className="text-center space-y-2">
-        <h3 className="text-lg font-semibold">选择搭建模式</h3>
-        <p className="text-sm text-muted-foreground">根据需求复杂度选择合适的搭建方式</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* 默认模式 */}
-        <Card 
-          className={`cursor-pointer transition-all ${buildMode === 'default' ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
-          onClick={() => setBuildMode('default')}
-        >
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                <CardTitle className="text-base">默认模式</CardTitle>
-              </div>
-              {buildMode === 'default' && <Check className="h-4 w-4 text-primary" />}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">
-              AI收到需求后，将直接执行搭建流程，无需人工干预。适用于需求明确的轻量级项目。
-            </p>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              <span>快速搭建，即时反馈</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 专家模式 */}
-        <Card 
-          className={`cursor-pointer transition-all ${buildMode === 'expert' ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
-          onClick={() => setBuildMode('expert')}
-        >
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-amber-600" />
-                <CardTitle className="text-base">专家模式</CardTitle>
-              </div>
-              {buildMode === 'expert' && <Check className="h-4 w-4 text-primary" />}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-3">
-              AI会自动创建设计文档，详细说明搭建方案。经确认后，系统将按照文档执行搭建。
-            </p>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <FileText className="h-3 w-3" />
-              <span>精准落地，持续维护</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 专家模式：选择搭建深度 */}
-      {buildMode === 'expert' && (
-        <div className="space-y-3">
-          <p className="text-sm font-medium">选择搭建方式</p>
-          <div className="grid grid-cols-3 gap-3">
-            {BUILD_DEPTH_OPTIONS.map(option => {
-              const Icon = option.icon;
-              return (
-                <Card
-                  key={option.id}
-                  className={`cursor-pointer transition-all ${buildDepth === option.id ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'}`}
-                  onClick={() => setBuildDepth(option.id)}
-                >
-                  <CardContent className="p-3 text-center">
-                    <Icon className={`h-5 w-5 mx-auto mb-1 ${buildDepth === option.id ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <p className="font-medium text-sm">{option.label}</p>
-                    <p className="text-xs text-muted-foreground">{option.duration}</p>
-                    <Separator className="my-2" />
-                    <div className="text-xs text-muted-foreground text-left space-y-0.5">
-                      {option.features.map((f, i) => (
-                        <p key={i}>• {f}</p>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={() => setShowModeSelector(false)}>
-          上一步
-        </Button>
-        <Button onClick={() => setShowModeSelector(false)}>
-          确认模式
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </div>
     </div>
   );
 
@@ -1123,9 +892,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           <span className="font-medium">
             {selectedScene ? selectedScene.name : '自定义建模'}
           </span>
-          <Badge variant="outline" className="text-xs">
-            {buildMode === 'default' ? '默认模式' : '专家模式'}
-          </Badge>
+          <Badge variant="outline" className="text-xs">AI智能体</Badge>
         </div>
         {currentScheme && (
           <Badge variant="default" className="gap-1">
@@ -1135,16 +902,13 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         )}
       </div>
 
-      {/* 模式选择 */}
-      {showModeSelector && !currentScheme && renderModeSelector()}
-
       {/* 主内容区 */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* 左侧：对话区 */}
         <div className="flex-1 flex flex-col min-w-0 border rounded-lg">
           {/* 对话消息 */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-            {chatMessages.length === 0 && !showModeSelector && (
+            {chatMessages.length === 0 && (
               <div className="text-center py-8">
                 <Sparkles className="h-10 w-10 mx-auto mb-3 text-primary/60" />
                 <p className="font-medium">描述你的表格需求</p>
@@ -1227,10 +991,6 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                 className="flex-1"
               />
               <div className="flex items-center justify-between">
-                <Button variant="outline" size="sm" onClick={() => setShowModeSelector(true)}>
-                  <Settings className="h-3 w-3 mr-1" />
-                  {buildMode === 'default' ? '默认模式' : '专家模式'}
-                </Button>
                 <Button onClick={handleStartBuild} disabled={!userRequirement.trim() || isGenerating}>
                   <Sparkles className="h-4 w-4 mr-1" />
                   开始搭建
@@ -1514,8 +1274,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
               返回
             </Button>
             <span className="text-muted-foreground">|</span>
-            <Badge variant="outline">专家模式</Badge>
-            <Badge variant="secondary">{BUILD_DEPTH_OPTIONS.find(d => d.id === buildDepth)?.label}</Badge>
+            <Badge variant="outline">AI智能体</Badge>
           </div>
           {renderDesignDoc()}
         </div>

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import type { SkillDefinition, LogEntry } from '@/lib/skills';
+import type { SkillDefinition } from '@/lib/skills';
 import type { ProblemReport } from '@/lib/algorithms';
 
 interface SkillPanelProps {
@@ -87,8 +87,21 @@ export function SkillPanel({
   );
 }
 
+interface LogEntry {
+  skillId: string;
+  status: 'success' | 'error';
+  message?: string;
+  timestamp: number;
+}
+
+interface ExecutionLogItem {
+  status: 'done' | 'running' | 'error' | 'pending';
+  stepName: string;
+  detail?: string;
+}
+
 interface ExecutionLogProps {
-  log: LogEntry[];
+  log: ExecutionLogItem[];
   className?: string;
 }
 
