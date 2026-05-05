@@ -57,6 +57,7 @@ const DataCleaner = dynamic(() => import('@/components/data-cleaner').then(m => 
 const AdvancedCharts = dynamic(() => import('@/components/advanced-charts').then(m => ({ default: m.AdvancedCharts })), { ssr: false });
 const DashboardDesigner = dynamic(() => import('@/components/dashboard-designer').then(m => ({ default: m.DashboardDesigner })), { ssr: false });
 const GlobalAgentAssistant = dynamic(() => import('@/components/global-agent-assistant').then(m => ({ default: m.GlobalAgentAssistant })), { ssr: false });
+const SceneAgentPanel = dynamic(() => import('@/components/scene-agent-panel').then(m => ({ default: m.SceneAgentPanel })), { ssr: false });
 const ShareManager = dynamic(() => import('@/components/share-manager').then(m => ({ default: m.ShareManager })), { ssr: false });
 const SmartChartRecommender = dynamic(() => import('@/components/smart-chart-recommender').then(m => ({ default: m.SmartChartRecommender })), { ssr: false });
 const AITableBuilder = dynamic(() => import('@/components/ai-table-builder'), { ssr: false });
@@ -521,9 +522,12 @@ export default function HomePage() {
     // AI 智能建表（不需要数据）
     if (viewMode === 'ai-table-builder') {
       return (
-        <ErrorBoundary moduleName="AI生成表格">
-          <AITableBuilder modelConfig={activeModelConfig} />
-        </ErrorBoundary>
+        <div className="relative">
+          <ErrorBoundary moduleName="AI生成表格">
+            <AITableBuilder modelConfig={activeModelConfig} />
+          </ErrorBoundary>
+          <SceneAgentPanel sceneId="table-generate" sceneName="生成表格" modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -541,7 +545,8 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'data-table' && parsedData) {
       return (
-        <Tabs defaultValue="table" className="space-y-4">
+        <div className="relative">
+          <Tabs defaultValue="table" className="space-y-4">
           <TabsList>
             <TabsTrigger value="table">数据视图</TabsTrigger>
             <TabsTrigger value="linked">关联表</TabsTrigger>
@@ -657,34 +662,39 @@ export default function HomePage() {
             <AIFormulaGenerator data={parsedData} modelConfig={activeModelConfig} onApplyFormula={handleApplyFormula} />
           </TabsContent>
         </Tabs>
-      );
-    }
+        <SceneAgentPanel sceneId="data-clean" sceneName="数据清洗" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+      </div>
+    );
+  }
 
     // ========================================
     // 数据处理（清洗 + 质量）
     // ========================================
     if (viewMode === 'data-prep') {
       return (
-        <Tabs defaultValue="clean" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="clean" disabled={!parsedData}>数据清洗</TabsTrigger>
-            <TabsTrigger value="quality" disabled={!parsedData || !analysis}>质量检测</TabsTrigger>
-          </TabsList>
-          <TabsContent value="clean">
-            {parsedData && analysis ? (
-              <DataCleaner data={parsedData} fieldStats={analysis.fieldStats} onDataChange={handleDataCleaned} />
-            ) : (
-              <div className="flex items-center justify-center py-12 text-gray-400">请先上传数据</div>
-            )}
-          </TabsContent>
-          <TabsContent value="quality">
-            {parsedData && analysis ? (
-              <DataQualityChecker data={parsedData} fieldStats={analysis.fieldStats} />
-            ) : (
-              <div className="flex items-center justify-center py-12 text-gray-400">请先上传数据</div>
-            )}
-          </TabsContent>
-        </Tabs>
+        <div className="relative">
+          <Tabs defaultValue="clean" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="clean" disabled={!parsedData}>数据清洗</TabsTrigger>
+              <TabsTrigger value="quality" disabled={!parsedData || !analysis}>质量检测</TabsTrigger>
+            </TabsList>
+            <TabsContent value="clean">
+              {parsedData && analysis ? (
+                <DataCleaner data={parsedData} fieldStats={analysis.fieldStats} onDataChange={handleDataCleaned} />
+              ) : (
+                <div className="flex items-center justify-center py-12 text-gray-400">请先上传数据</div>
+              )}
+            </TabsContent>
+            <TabsContent value="quality">
+              {parsedData && analysis ? (
+                <DataQualityChecker data={parsedData} fieldStats={analysis.fieldStats} />
+              ) : (
+                <div className="flex items-center justify-center py-12 text-gray-400">请先上传数据</div>
+              )}
+            </TabsContent>
+          </Tabs>
+          <SceneAgentPanel sceneId="data-clean" sceneName="数据清洗" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -716,21 +726,24 @@ export default function HomePage() {
         );
       }
       return (
-        <Tabs defaultValue="insights" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="insights">深度分析</TabsTrigger>
-            <TabsTrigger value="report">
-              <FileText className="w-3.5 h-3.5 mr-1" />
-              分析报告
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="insights">
-            <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
-          </TabsContent>
-          <TabsContent value="report">
-            <InsightReportGenerator analysis={analysis} fileName={parsedData?.fileName} />
-          </TabsContent>
-        </Tabs>
+        <div className="relative">
+          <Tabs defaultValue="insights" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="insights">深度分析</TabsTrigger>
+              <TabsTrigger value="report">
+                <FileText className="w-3.5 h-3.5 mr-1" />
+                分析报告
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="insights">
+              <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
+            </TabsContent>
+            <TabsContent value="report">
+              <InsightReportGenerator analysis={analysis} fileName={parsedData?.fileName} />
+            </TabsContent>
+          </Tabs>
+          <SceneAgentPanel sceneId="data-analyze" sceneName="数据分析" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -739,24 +752,27 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'visualization' && parsedData && analysis) {
       return (
-        <ErrorBoundary moduleName="仪表盘">
-          <Tabs defaultValue="dashboard" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="dashboard">快速看板</TabsTrigger>
-              <TabsTrigger value="nl2dash">AI 建看板</TabsTrigger>
-              <TabsTrigger value="designer">看板设计</TabsTrigger>
-            </TabsList>
-            <TabsContent value="dashboard">
-              <Dashboard data={parsedData} analysis={analysis} />
-            </TabsContent>
-            <TabsContent value="nl2dash">
-              <NL2Dashboard data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
-            </TabsContent>
-            <TabsContent value="designer">
-              <DashboardDesigner data={parsedData} fieldStats={analysis.fieldStats} />
-            </TabsContent>
-          </Tabs>
-        </ErrorBoundary>
+        <div className="relative">
+          <ErrorBoundary moduleName="仪表盘">
+            <Tabs defaultValue="dashboard" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="dashboard">快速看板</TabsTrigger>
+                <TabsTrigger value="nl2dash">AI 建看板</TabsTrigger>
+                <TabsTrigger value="designer">看板设计</TabsTrigger>
+              </TabsList>
+              <TabsContent value="dashboard">
+                <Dashboard data={parsedData} analysis={analysis} />
+              </TabsContent>
+              <TabsContent value="nl2dash">
+                <NL2Dashboard data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
+              </TabsContent>
+              <TabsContent value="designer">
+                <DashboardDesigner data={parsedData} fieldStats={analysis.fieldStats} />
+              </TabsContent>
+            </Tabs>
+          </ErrorBoundary>
+          <SceneAgentPanel sceneId="visualize" sceneName="可视化" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -765,20 +781,23 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'metrics' && parsedData && analysis) {
       return (
-        <ErrorBoundary moduleName="指标中心">
-          <Tabs defaultValue="ai-metric" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="ai-metric">AI 建指标</TabsTrigger>
-              <TabsTrigger value="metric-lib">指标列表</TabsTrigger>
-            </TabsList>
-            <TabsContent value="ai-metric">
-              <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
-            </TabsContent>
-            <TabsContent value="metric-lib">
-              <MetricManager data={parsedData} />
-            </TabsContent>
-          </Tabs>
-        </ErrorBoundary>
+        <div className="relative">
+          <ErrorBoundary moduleName="指标中心">
+            <Tabs defaultValue="ai-metric" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="ai-metric">AI 建指标</TabsTrigger>
+                <TabsTrigger value="metric-lib">指标列表</TabsTrigger>
+              </TabsList>
+              <TabsContent value="ai-metric">
+                <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
+              </TabsContent>
+              <TabsContent value="metric-lib">
+                <MetricManager data={parsedData} />
+              </TabsContent>
+            </Tabs>
+          </ErrorBoundary>
+          <SceneAgentPanel sceneId="data-analyze" sceneName="数据分析" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -787,22 +806,25 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'chart-center' && parsedData && analysis) {
       return (
-        <Tabs defaultValue="ai-chart" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="ai-chart">AI 选图</TabsTrigger>
-            <TabsTrigger value="advanced">高级图表</TabsTrigger>
-            <TabsTrigger value="echarts">专业图表</TabsTrigger>
-          </TabsList>
-          <TabsContent value="ai-chart">
-            <SmartChartRecommender data={parsedData} analysis={analysis} />
-          </TabsContent>
-          <TabsContent value="advanced">
-            <AdvancedCharts data={parsedData} fieldStats={analysis.fieldStats} />
-          </TabsContent>
-          <TabsContent value="echarts">
-            <ExtendedChartGallery data={parsedData} />
-          </TabsContent>
-        </Tabs>
+        <div className="relative">
+          <Tabs defaultValue="ai-chart" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="ai-chart">AI 选图</TabsTrigger>
+              <TabsTrigger value="advanced">高级图表</TabsTrigger>
+              <TabsTrigger value="echarts">专业图表</TabsTrigger>
+            </TabsList>
+            <TabsContent value="ai-chart">
+              <SmartChartRecommender data={parsedData} analysis={analysis} />
+            </TabsContent>
+            <TabsContent value="advanced">
+              <AdvancedCharts data={parsedData} fieldStats={analysis.fieldStats} />
+            </TabsContent>
+            <TabsContent value="echarts">
+              <ExtendedChartGallery data={parsedData} />
+            </TabsContent>
+          </Tabs>
+          <SceneAgentPanel sceneId="visualize" sceneName="可视化" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -859,7 +881,12 @@ export default function HomePage() {
     // SQL 查询
     // ========================================
     if (viewMode === 'sql-lab' && parsedData) {
-      return <SqlLab data={parsedData} />;
+      return (
+        <div className="relative">
+          <SqlLab data={parsedData} />
+          <SceneAgentPanel sceneId="data-analyze" sceneName="数据分析" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
     }
 
     // ========================================
@@ -867,7 +894,10 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'pivot-table' && parsedData) {
       return (
-        <PivotTable data={parsedData} analysis={analysis} />
+        <div className="relative">
+          <PivotTable data={parsedData} analysis={analysis} />
+          <SceneAgentPanel sceneId="data-analyze" sceneName="数据分析" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -876,30 +906,33 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'report-export' && parsedData) {
       return (
-        <Tabs defaultValue="report" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="report" disabled={!analysis}>生成报告</TabsTrigger>
-            <TabsTrigger value="export">导出图表</TabsTrigger>
-            <TabsTrigger value="app">应用设计</TabsTrigger>
-            <TabsTrigger value="share">分享管理</TabsTrigger>
-          </TabsList>
-          <TabsContent value="report">
-            {analysis ? (
-              <ReportGenerator data={parsedData} analysis={analysis} />
-            ) : (
-              <div className="flex items-center justify-center py-12 text-gray-400">数据正在分析中...</div>
-            )}
-          </TabsContent>
-          <TabsContent value="export">
-            <ChartExporter chartName={parsedData.fileName || '图表'} />
-          </TabsContent>
-          <TabsContent value="app">
-            <AppBuilder />
-          </TabsContent>
-          <TabsContent value="share">
-            <ShareManager dashboardName={parsedData.fileName} />
-          </TabsContent>
-        </Tabs>
+        <div className="relative">
+          <Tabs defaultValue="report" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="report" disabled={!analysis}>生成报告</TabsTrigger>
+              <TabsTrigger value="export">导出图表</TabsTrigger>
+              <TabsTrigger value="app">应用设计</TabsTrigger>
+              <TabsTrigger value="share">分享管理</TabsTrigger>
+            </TabsList>
+            <TabsContent value="report">
+              {analysis ? (
+                <ReportGenerator data={parsedData} analysis={analysis} />
+              ) : (
+                <div className="flex items-center justify-center py-12 text-gray-400">数据正在分析中...</div>
+              )}
+            </TabsContent>
+            <TabsContent value="export">
+              <ChartExporter chartName={parsedData.fileName || '图表'} />
+            </TabsContent>
+            <TabsContent value="app">
+              <AppBuilder />
+            </TabsContent>
+            <TabsContent value="share">
+              <ShareManager dashboardName={parsedData.fileName} />
+            </TabsContent>
+          </Tabs>
+          <SceneAgentPanel sceneId="general" sceneName="通用" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -908,7 +941,10 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'multimodal') {
       return (
-        <MultimodalFields data={parsedData || undefined} modelConfig={activeModelConfig} />
+        <div className="relative">
+          <MultimodalFields data={parsedData || undefined} modelConfig={activeModelConfig} />
+          <SceneAgentPanel sceneId="general" sceneName="通用" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -917,7 +953,10 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'spreadsheet-agent') {
       return (
-        <SpreadsheetAgentPage />
+        <div className="relative">
+          <SpreadsheetAgentPage />
+          <SceneAgentPanel sceneId="formula" sceneName="公式生成" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 
@@ -926,7 +965,10 @@ export default function HomePage() {
     // ========================================
     if (viewMode === 'form-collection') {
       return (
-        <FormBuilder data={parsedData} onDataChange={setParsedData} />
+        <div className="relative">
+          <FormBuilder data={parsedData} onDataChange={setParsedData} />
+          <SceneAgentPanel sceneId="general" sceneName="通用" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
       );
     }
 

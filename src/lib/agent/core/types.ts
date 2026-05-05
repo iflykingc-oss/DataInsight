@@ -30,6 +30,10 @@ export interface SceneRouteResult {
   reason: string;
   /** 置信度 0-1 */
   confidence: number;
+  /** 建议执行动作 */
+  suggestedAction?: string;
+  /** 建议参数 */
+  suggestedParams?: Record<string, unknown>;
 }
 
 /** 任务拆解结果 */
@@ -193,6 +197,10 @@ export interface IntentClassification {
   confidence: number;
   /** 匹配的关键词 */
   matchedKeywords?: string[];
+  /** 建议执行动作 */
+  suggestedAction?: string;
+  /** 建议参数 */
+  suggestedParams?: Record<string, unknown>;
 }
 
 /** 任务计划步骤（TaskPlanStep 是 TaskPlan 的别名） */
