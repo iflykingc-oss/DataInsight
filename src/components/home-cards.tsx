@@ -100,14 +100,14 @@ interface QuickAction {
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { id: 'insights', icon: Brain, label: '一键分析', desc: 'AI自动分析数据，生成业务洞察', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI', permission: 'ai_analyze' },
-  { id: 'chat', icon: MessageSquare, label: '问数对话', desc: '用自然语言提问，AI给答案', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true, badge: 'AI', permission: 'ai_analyze' },
-  { id: 'visualization', icon: LayoutGrid, label: '智能看板', desc: '一键生成业务仪表盘', color: 'text-purple-600', bgColor: 'bg-purple-50', needsData: true, permission: 'dashboard' },
-  { id: 'data-table', icon: Table2, label: '数据表格', desc: '查看和编辑数据', color: 'text-gray-600', bgColor: 'bg-gray-50', needsData: true },
-  { id: 'data-prep', icon: Database, label: '数据清洗', desc: '智能检测问题数据，一键修复', color: 'text-cyan-600', bgColor: 'bg-cyan-50', needsData: true },
-  { id: 'metrics', icon: Target, label: '指标中心', desc: '业务指标自动计算与监控', color: 'text-orange-600', bgColor: 'bg-orange-50', needsData: true, badge: 'AI', permission: 'ai_analyze' },
-  { id: 'sql-lab', icon: Wrench, label: 'SQL查询', desc: '用SQL自由查询数据', color: 'text-blue-600', bgColor: 'bg-blue-50', needsData: true },
-  { id: 'report-export', icon: FileText, label: '导出报告', desc: '生成分析报告并分享', color: 'text-green-600', bgColor: 'bg-green-50', needsData: true, permission: 'export' },
+  { id: 'insights', icon: Brain, label: '一键分析', desc: 'AI自动分析数据，生成业务洞察', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, badge: 'AI', permission: 'ai_analyze' },
+  { id: 'chat', icon: MessageSquare, label: '问数对话', desc: '用自然语言提问，AI给答案', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, badge: 'AI', permission: 'ai_analyze' },
+  { id: 'visualization', icon: LayoutGrid, label: '智能看板', desc: '一键生成业务仪表盘', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, permission: 'dashboard' },
+  { id: 'data-table', icon: Table2, label: '数据表格', desc: '查看和编辑数据', color: 'text-muted-foreground', bgColor: 'bg-muted', needsData: true },
+  { id: 'data-prep', icon: Database, label: '数据清洗', desc: '智能检测问题数据，一键修复', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true },
+  { id: 'metrics', icon: Target, label: '指标中心', desc: '业务指标自动计算与监控', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, badge: 'AI', permission: 'ai_analyze' },
+  { id: 'sql-lab', icon: Wrench, label: 'SQL查询', desc: '用SQL自由查询数据', color: 'text-muted-foreground', bgColor: 'bg-muted', needsData: true },
+  { id: 'report-export', icon: FileText, label: '导出报告', desc: '生成分析报告并分享', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, permission: 'export' },
 ];
 
 interface HomeCardsProps {
@@ -195,9 +195,9 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount, i
   return (
     <div className="space-y-6">
       {/* 数据状态横幅 */}
-      <div className="flex items-center gap-3 p-3 rounded-lg border border-l-4 border-l-green-500 bg-green-50/30">
-        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-          <CheckCircle className="w-4 h-4 text-green-600" />
+      <div className="flex items-center gap-3 p-3 rounded-lg border border-l-4 border-l-primary bg-primary/5">
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+          <CheckCircle className="w-4 h-4 text-primary" />
         </div>
         <div className="flex-1">
           <p className="text-sm font-medium">

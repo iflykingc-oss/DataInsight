@@ -78,6 +78,9 @@ ehthumbs.db
 Thumbs.db
 Desktop.ini
 
+# App data (auth store, user data)
+.data/
+
 # Temporary files
 *.tmp
 *.temp

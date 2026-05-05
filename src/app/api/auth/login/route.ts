@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SignJWT } from 'jose';
 import { getUserByUsername, verifyPassword, addLoginLog, sanitizeUser, isInitialized, initializeAdmin } from '@/lib/auth';
-
-// 安全：从环境变量读取JWT密钥，与auth-middleware保持一致
-function getJwtSecret(): Uint8Array {
-  const envSecret = process.env.JWT_SECRET;
-  if (envSecret && envSecret.length >= 32) {
-    return new TextEncoder().encode(envSecret);
-  }
-  console.warn('[Security] JWT_SECRET not configured. Using ephemeral secret.');
-  return new TextEncoder().encode('datainsight-jwt-ephemeral-' + Date.now());
-}
-
-const JWT_SECRET = getJwtSecret();
+import { signToken } from '@/lib/auth-middleware';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,15 +12,11 @@ export async function POST(request: NextRequest) {
       if (initMode && username && password && initName) {
         try {
           const user = await initializeAdmin(username, password, initName);
-          const token = await new SignJWT({
+          const token = await signToken({
             userId: user.id,
             username: user.username,
             role: user.role,
-          })
-            .setProtectedHeader({ alg: 'HS256' })
-            .setIssuedAt()
-            .setExpirationTime('7d')
-            .sign(JWT_SECRET);
+          });
 
           return NextResponse.json({
             success: true,
@@ -99,16 +83,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '账户或密码错误' }, { status: 401 });
     }
 
-    // 生成JWT token
-    const token = await new SignJWT({
+    // 使用统一的 signToken 生成JWT
+    const token = await signToken({
       userId: user.id,
       username: user.username,
       role: user.role,
-    })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('7d')
-      .sign(JWT_SECRET);
+    });
 
     addLoginLog({
       userId: user.id,

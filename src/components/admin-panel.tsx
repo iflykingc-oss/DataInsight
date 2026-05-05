@@ -110,8 +110,8 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   // AI配置
   const [aiConfig, setAiConfig] = useState<AIConfig>({
     apiKey: '',
-    baseUrl: 'https://api.deepseek.com',
-    modelName: 'deepseek-chat',
+    baseUrl: '',
+    modelName: '',
   });
   const [aiConfigLoading, setAiConfigLoading] = useState(false);
 

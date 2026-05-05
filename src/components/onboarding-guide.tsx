@@ -128,17 +128,7 @@ export function OnboardingGuide({ onComplete, trigger }: OnboardingGuideProps) {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <div className="flex items-center justify-between">
               <DialogTitle className="text-lg">{currentStepData.title}</DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSkip}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
             <DialogDescription className="sr-only">
               第 {currentStep + 1} / {GUIDE_STEPS.length} 步
             </DialogDescription>

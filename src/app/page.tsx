@@ -1182,16 +1182,12 @@ export default function HomePage() {
       {/* ===== 左侧侧边栏 ===== */}
       <Sidebar
         collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         activeView={viewMode}
         onViewChange={(v) => setViewMode(v as ViewMode)}
-        hasData={!!parsedData}
-        onSettingsOpen={() => setShowSettings(true)}
-        alertCount={0}
-        modelConfigured={!!activeModelConfig}
         isLoggedIn={isLoggedIn}
-        onLoginRequired={() => setLoginDialogOpen(true)}
-        hasPermission={(perm: string) => hasPermission(perm as PermissionKey)}
+        onOpenSettings={() => setShowSettings(true)}
+        onLoginClick={() => setLoginDialogOpen(true)}
       />
 
       {/* ===== 右侧主区域 ===== */}
@@ -1219,7 +1215,7 @@ export default function HomePage() {
             {!activeModelConfig && (
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/15 transition-colors cursor-pointer"
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer"
               >
                 <AlertCircle className="w-3 h-3" />
                 未配置AI模型
@@ -1228,8 +1224,8 @@ export default function HomePage() {
             {/* 数据状态指示 */}
             {parsedData ? (
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="flex items-center gap-1 text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
-                  <CheckCircle className="w-3 h-3" />
+                <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                  <CheckCircle className="w-3 h-3 text-primary" />
                   {parsedData.fileName}
                 </Badge>
                 <Badge variant="outline" className="text-[10px]">

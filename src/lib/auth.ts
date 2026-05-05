@@ -1,9 +1,11 @@
 /**
  * 认证与权限管理核心
- * 安全增强版：移除硬编码密码，强制首次登录初始化
+ * 持久化版：用户数据保存到文件系统，服务器重启不丢失
  */
 
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
 export interface User {
   id: number;
@@ -144,8 +146,108 @@ class MemoryAuthStorage implements AuthStorage {
   saveAIConfig(config: AIConfig): void { this.aiConfig = config; }
 }
 
-// 全局存储实例（可替换为数据库存储）
-let storage: AuthStorage = new MemoryAuthStorage();
+// ==================== 文件持久化存储 ====================
+const DATA_DIR = path.join(process.cwd(), '.data');
+const AUTH_FILE = path.join(DATA_DIR, 'auth-store.json');
+
+class PersistentAuthStorage extends MemoryAuthStorage {
+  private dirty = false;
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    super();
+    this.loadFromFile();
+  }
+
+  private loadFromFile() {
+    try {
+      if (!fs.existsSync(AUTH_FILE)) return;
+      const raw = fs.readFileSync(AUTH_FILE, 'utf-8');
+      const data = JSON.parse(raw);
+
+      // 恢复用户
+      if (data.users && Array.isArray(data.users)) {
+        for (const u of data.users) {
+          super.saveUser(u);
+          if (u.id >= (this as unknown as { userIdCounter: number }).userIdCounter) {
+            (this as unknown as { userIdCounter: number }).userIdCounter = u.id + 1;
+          }
+        }
+      }
+
+      // 恢复登录日志
+      if (data.loginLogs && Array.isArray(data.loginLogs)) {
+        for (const l of data.loginLogs) {
+          super.addLoginLog(l);
+        }
+      }
+
+      // 恢复AI配置
+      if (data.aiConfig) {
+        super.saveAIConfig(data.aiConfig);
+      }
+
+      console.log(`[Auth] Loaded ${data.users?.length || 0} users from persistent storage`);
+    } catch (err) {
+      console.warn('[Auth] Failed to load persistent storage, starting fresh:', err instanceof Error ? err.message : err);
+    }
+  }
+
+  private scheduleSave() {
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => this.saveNow(), 500);
+  }
+
+  private saveNow() {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      const usersMap = super.getUsers();
+      const usersArray = Array.from(usersMap.values());
+      console.log(`[Auth:Save] Saving ${usersArray.length} users to file:`, usersArray.map(u => u.username));
+      const data = {
+        users: usersArray,
+        loginLogs: super.getLoginLogs(),
+        aiConfig: super.getAIConfig(),
+        savedAt: new Date().toISOString(),
+      };
+      fs.writeFileSync(AUTH_FILE, JSON.stringify(data, null, 2), 'utf-8');
+      this.dirty = false;
+    } catch (err) {
+      console.error('[Auth] Failed to save persistent storage:', err instanceof Error ? err.message : err);
+    }
+  }
+
+  saveUser(user: User): void {
+    super.saveUser(user);
+    this.saveNow(); // Immediate save for user data integrity
+  }
+
+  deleteUser(id: number): boolean {
+    const result = super.deleteUser(id);
+    if (result) this.saveNow(); // Immediate save
+    return result;
+  }
+
+  addLoginLog(log: LoginLog): void {
+    super.addLoginLog(log);
+    this.scheduleSave(); // Login logs can be deferred
+  }
+
+  saveAIConfig(config: AIConfig): void {
+    super.saveAIConfig(config);
+    this.saveNow(); // Immediate save for config changes
+  }
+}
+
+// 全局存储实例（使用文件持久化）
+// 使用 globalThis 防止 HMR 导致的重复实例化
+const globalForAuth = globalThis as unknown as { __authStorage?: AuthStorage };
+if (!globalForAuth.__authStorage) {
+  globalForAuth.__authStorage = new PersistentAuthStorage();
+}
+let storage: AuthStorage = globalForAuth.__authStorage;
 
 export function setAuthStorage(newStorage: AuthStorage): void {
   storage = newStorage;
