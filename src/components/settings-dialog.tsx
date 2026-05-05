@@ -129,16 +129,52 @@ export default function SettingsDialog({
           <DialogTitle>设置与管理</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="ai-settings" className="w-full">
-          <TabsList className="flex-wrap">
-            <TabsTrigger value="ai-settings">AI 模型</TabsTrigger>
-            <TabsTrigger value="alert">数据预警</TabsTrigger>
-            <TabsTrigger value="version">版本快照</TabsTrigger>
-            <TabsTrigger value="template">模板管理</TabsTrigger>
-            <TabsTrigger value="general">通用</TabsTrigger>
-            <TabsTrigger value="notifications">通知渠道</TabsTrigger>
-            <TabsTrigger value="data">数据管理</TabsTrigger>
-            <TabsTrigger value="permissions">权限</TabsTrigger>
-          </TabsList>
+          <div className="mb-4 border-b">
+            <TabsList className="w-full justify-start h-auto p-0 bg-transparent gap-0 -mb-px">
+              <TabsTrigger 
+                value="ai-settings" 
+                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+              >
+                AI 模型
+              </TabsTrigger>
+              <TabsTrigger 
+                value="alert" 
+                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+              >
+                数据预警
+              </TabsTrigger>
+              <TabsTrigger 
+                value="version" 
+                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+              >
+                版本快照
+              </TabsTrigger>
+              <TabsTrigger 
+                value="template" 
+                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+              >
+                模板管理
+              </TabsTrigger>
+              <TabsTrigger 
+                value="general" 
+                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+              >
+                通用设置
+              </TabsTrigger>
+              <TabsTrigger 
+                value="notifications" 
+                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+              >
+                通知渠道
+              </TabsTrigger>
+              <TabsTrigger 
+                value="permissions" 
+                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+              >
+                权限管理
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* AI 模型配置 */}
           <TabsContent value="ai-settings" className="py-4">

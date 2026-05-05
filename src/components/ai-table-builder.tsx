@@ -125,10 +125,29 @@ interface AITableBuilderProps {
   className?: string;
 }
 
-// 场景分类
+// 场景分类 (20+行业)
 const CATEGORIES = [
   { id: 'general', name: '通用', icon: Building2, color: 'text-primary' },
   { id: 'retail', name: '零售电商', icon: ShoppingCart, color: 'text-emerald-600' },
+  { id: 'restaurant', name: '餐饮', icon: ShoppingCart, color: 'text-orange-600' },
+  { id: 'education', name: '教育培训', icon: BookOpen, color: 'text-blue-600' },
+  { id: 'health', name: '医疗健康', icon: Building2, color: 'text-red-600' },
+  { id: 'finance', name: '金融保险', icon: Building2, color: 'text-purple-600' },
+  { id: 'hr', name: '人力资源', icon: Users, color: 'text-indigo-600' },
+  { id: 'admin', name: '办公行政', icon: Building2, color: 'text-slate-600' },
+  { id: 'marketing', name: '市场营销', icon: Target, color: 'text-pink-600' },
+  { id: 'supply', name: '供应链物流', icon: Layers, color: 'text-amber-600' },
+  { id: 'manufacturing', name: '制造业', icon: Zap, color: 'text-gray-600' },
+  { id: 'realty', name: '地产物业', icon: Building2, color: 'text-stone-600' },
+  { id: 'hotel', name: '酒店旅游', icon: Layers, color: 'text-cyan-600' },
+  { id: 'media', name: '媒体娱乐', icon: Target, color: 'text-fuchsia-600' },
+  { id: 'legal', name: '法律服务', icon: Shield, color: 'text-neutral-600' },
+  { id: 'agri', name: '农业畜牧', icon: Target, color: 'text-lime-600' },
+  { id: 'gov', name: '政府公共', icon: Shield, color: 'text-rose-600' },
+  { id: 'tech', name: '科技互联', icon: Zap, color: 'text-violet-600' },
+  { id: 'env', name: '环保环卫', icon: Target, color: 'text-teal-600' },
+  { id: 'sports', name: '体育健身', icon: Target, color: 'text-orange-600' },
+  { id: 'publish', name: '出版传媒', icon: BookOpen, color: 'text-amber-600' },
   { id: 'beauty', name: '美业服务', icon: Scissors, color: 'text-pink-600' },
   { id: 'team', name: '小微团队', icon: Users, color: 'text-blue-600' },
 ];

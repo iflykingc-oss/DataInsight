@@ -114,16 +114,18 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
   // 计算上下文
   const computeContext = useMemo<ComputeContext>(
     () => ({
-      headers: data.headers,
-      rows: data.rows,
+      data: {
+        headers: data.headers,
+        rows: data.rows,
+      },
     }),
     [data]
   );
 
   // 检测适配的预置指标
   const applicablePresets = useMemo(() => {
-    return detectApplicableMetrics(data.headers, selectedScenario);
-  }, [data.headers, selectedScenario]);
+    return detectApplicableMetrics(data.headers, []);
+  }, [data.headers]);
 
   // 过滤预置指标
   const filteredPresets = useMemo(() => {
@@ -156,7 +158,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
   const computeSingleMetric = useCallback(
     (metric: MetricDefinition) => {
       const result = computeMetric(metric, computeContext);
-      setComputedResults(prev => ({ ...prev, [metric.id]: result }));
+      setComputedResults(prev => ({ ...prev, [metric.id]: { value: result, computedAt: Date.now() } }));
       return result;
     },
     [computeContext]
@@ -169,8 +171,8 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
 
     const newResults: Record<string, { value: number | null; error?: string; computedAt: number }> =
       {};
-    allMetrics.forEach(metric => {
-      newResults[metric.id] = computeMetric(metric, computeContext);
+    allMetrics.forEach((metric: MetricDefinition) => {
+      newResults[metric.id] = { value: computeMetric(metric, computeContext), computedAt: Date.now() };
     });
     setComputedResults(newResults);
   }, [activeTab, filteredPresets, filteredCustom, computeContext]);
@@ -184,16 +186,11 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
   const handleCreateMetric = useCallback(() => {
     if (!newMetricForm.name || !newMetricForm.formula) return;
 
-    const metric = createCustomMetric({
-      name: newMetricForm.name,
-      description: newMetricForm.description,
-      category: newMetricForm.category,
-      formula: newMetricForm.formula,
-      dependencies: newMetricForm.dependencies,
-      unit: newMetricForm.unit,
-      format: newMetricForm.format,
-      precision: newMetricForm.precision,
-    });
+    const metric = createCustomMetric(
+      newMetricForm.name,
+      newMetricForm.formula,
+      [newMetricForm.category]
+    );
 
     const updated = [...customMetrics, metric];
     setCustomMetrics(updated);
@@ -250,11 +247,15 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
     const result = computedResults[metric.id];
     const value = result?.value ?? null;
     const error = result?.error;
-    const categoryInfo = CATEGORY_LABELS[metric.category] || CATEGORY_LABELS.custom;
+    const categoryLabel = CATEGORY_LABELS[metric.category] || CATEGORY_LABELS.custom;
 
-    let thresholdStatus: { status: 'normal' | 'warning' | 'critical' | 'target'; message?: string } = { status: 'normal', message: undefined };
+    let thresholdStatus: 'normal' | 'warning' | 'critical' | 'success' = 'normal';
+    let thresholdMessage: string | undefined;
     if (value !== null && metric.thresholds) {
-      thresholdStatus = checkThresholdStatus(value, metric.thresholds);
+      thresholdStatus = checkThresholdStatus(value, metric);
+      if (thresholdStatus === 'success') thresholdMessage = '达标';
+      else if (thresholdStatus === 'warning') thresholdMessage = '预警';
+      else if (thresholdStatus === 'critical') thresholdMessage = '危急';
     }
 
     return (
@@ -266,9 +267,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className={categoryInfo.color}>
-                {categoryInfo.label}
-              </Badge>
+              <Badge variant="secondary">{categoryLabel}</Badge>
               {metric.isPreset && (
                 <Badge variant="outline" className="text-xs">
                   <BookOpen className="w-3 h-3 mr-1" />
@@ -301,37 +300,37 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
               ) : (
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-bold">
-                    {formatMetricValue(value, metric.format, metric.precision, metric.unit)}
+                    {formatMetricValue(value, metric)}
                   </span>
                 </div>
               )}
             </div>
 
-            {thresholdStatus.status !== 'normal' && (
+            {thresholdStatus !== 'normal' && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
                     <Badge
                       variant={
-                        thresholdStatus.status === 'critical'
+                        thresholdStatus === 'critical'
                           ? 'destructive'
-                          : thresholdStatus.status === 'warning'
+                          : thresholdStatus === 'warning'
                             ? 'secondary'
                             : 'default'
                       }
                       className="text-xs"
                     >
-                      {thresholdStatus.status === 'critical' && (
+                      {thresholdStatus === 'critical' && (
                         <AlertTriangle className="w-3 h-3 mr-1" />
                       )}
-                      {thresholdStatus.status === 'target' && (
+                      {thresholdStatus === 'success' && (
                         <CheckCircle2 className="w-3 h-3 mr-1" />
                       )}
-                      {thresholdStatus.message}
+                      {thresholdMessage}
                     </Badge>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{thresholdStatus.message}</p>
+                    <p>{thresholdMessage}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -660,9 +659,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
           {selectedMetric && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge className={CATEGORY_LABELS[selectedMetric.category]?.color}>
-                  {CATEGORY_LABELS[selectedMetric.category]?.label}
-                </Badge>
+                <Badge>{CATEGORY_LABELS[selectedMetric.category] || CATEGORY_LABELS.custom}</Badge>
                 {selectedMetric.isPreset && (
                   <Badge variant="outline">
                     <BookOpen className="w-3 h-3 mr-1" />
@@ -675,9 +672,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
                 <div className="text-4xl font-bold">
                   {formatMetricValue(
                     computedResults[selectedMetric.id]?.value ?? null,
-                    selectedMetric.format,
-                    selectedMetric.precision,
-                    selectedMetric.unit
+                    selectedMetric
                   )}
                 </div>
                 {computedResults[selectedMetric.id]?.error && (

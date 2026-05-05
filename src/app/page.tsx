@@ -449,6 +449,11 @@ export default function HomePage() {
   };
 
   const handleAnalyzeWith = (data: ParsedData) => {
+    // AI分析权限检查
+    if (!hasPermission('ai_analyze')) {
+      toast.error('无权使用 AI 分析', { description: '管理员已禁用 AI 分析功能' });
+      return Promise.reject(new Error('无 AI 分析权限'));
+    }
     return fetch('/api/analyze', {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -852,10 +857,24 @@ export default function HomePage() {
                 <Dashboard data={parsedData} analysis={analysis} />
               </TabsContent>
               <TabsContent value="nl2dash">
-                <NL2Dashboard data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
+                {hasPermission('dashboard') ? (
+                  <NL2Dashboard data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
+                ) : (
+                  <Card className="p-8 text-center text-muted-foreground">
+                    <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                    <p>管理员已禁用看板创建功能</p>
+                  </Card>
+                )}
               </TabsContent>
               <TabsContent value="designer">
-                <DashboardDesigner data={parsedData} fieldStats={analysis.fieldStats} />
+                {hasPermission('dashboard') ? (
+                  <DashboardDesigner data={parsedData} fieldStats={analysis.fieldStats} />
+                ) : (
+                  <Card className="p-8 text-center text-muted-foreground">
+                    <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                    <p>管理员已禁用看板设计功能</p>
+                  </Card>
+                )}
               </TabsContent>
             </Tabs>
           </ErrorBoundary>
@@ -1075,10 +1094,24 @@ export default function HomePage() {
               <ChartExporter chartName={parsedData.fileName || '图表'} />
             </TabsContent>
             <TabsContent value="app">
-              <AppBuilder />
+              {hasPermission('dashboard') ? (
+                <AppBuilder />
+              ) : (
+                <Card className="p-8 text-center text-muted-foreground">
+                  <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                  <p>管理员已禁用应用创建功能</p>
+                </Card>
+              )}
             </TabsContent>
             <TabsContent value="share">
-              <ShareManager dashboardName={parsedData.fileName} />
+              {hasPermission('share') ? (
+                <ShareManager dashboardName={parsedData.fileName} />
+              ) : (
+                <Card className="p-8 text-center text-muted-foreground">
+                  <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+                  <p>管理员已禁用分享功能</p>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
           <SceneAgentPanel sceneId="general" sceneName="通用" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
