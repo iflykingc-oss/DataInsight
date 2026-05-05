@@ -312,7 +312,7 @@ export default function HomePage() {
 
       // 所有已完成的文件都存入 multiTableData
       setMultiTableData(prev => {
-        let next = [...prev];
+        let next = Array.isArray(prev) ? [...prev] : [];
         for (const data of allParsedData) {
           next = next.filter(t => t.fileName !== data.fileName);
           next.push(data);
