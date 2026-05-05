@@ -78,7 +78,7 @@ const CHART_TYPES = [
 
 export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
   const [selectedChartType, setSelectedChartType] = useState('bar');
-  const [xAxisField, setXAxisField] = useState(data.headers[0] || '');
+  const [xAxisField, setXAxisField] = useState(data.headers[0] || 'none');
   const [yAxisFields, setYAxisFields] = useState<string[]>([]);
   
   const numericFields = useMemo(() =>
@@ -430,23 +430,23 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
                   <SelectValue placeholder="选择X轴字段" />
                 </SelectTrigger>
                 <SelectContent>
-                  {data.headers.map(h => (
+                  {data.headers.length > 0 ? data.headers.map(h => (
                     <SelectItem key={h} value={h}>{h}</SelectItem>
-                  ))}
+                  )) : <SelectItem value="none" disabled>无可用字段</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
               <Label>Y轴字段 (数值)</Label>
-              <Select value={yAxisFields[0] || ''} onValueChange={v => setYAxisFields([v])}>
+              <Select value={yAxisFields[0] || 'none'} onValueChange={v => setYAxisFields([v])}>
                 <SelectTrigger>
                   <SelectValue placeholder="选择Y轴字段" />
                 </SelectTrigger>
                 <SelectContent>
-                  {numericFields.map(f => (
+                  {numericFields.length > 0 ? numericFields.map(f => (
                     <SelectItem key={f.field} value={f.field}>{f.field}</SelectItem>
-                  ))}
+                  )) : <SelectItem value="none" disabled>无可用数值字段</SelectItem>}
                 </SelectContent>
               </Select>
             </div>

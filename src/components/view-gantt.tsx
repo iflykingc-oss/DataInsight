@@ -37,7 +37,7 @@ export function GanttView({ rows, headers }: GanttViewProps) {
   const [taskField, setTaskField] = useState<string>(headers[0] || '');
   const [startField, setStartField] = useState<string>(dateFields[0] || '');
   const [endField, setEndField] = useState<string>(dateFields[1] || dateFields[0] || '');
-  const [progressField, setProgressField] = useState<string>('');
+  const [progressField, setProgressField] = useState<string>('none');
 
   // 有效任务行（必须有任务名和起始日期）
   const tasks = useMemo(() => {
@@ -47,7 +47,7 @@ export function GanttView({ rows, headers }: GanttViewProps) {
         const start = parseDate(row[startField]);
         const end = parseDate(row[endField]) || (start ? new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000) : null);
         if (!name || !start || !end) return null;
-        const progress = progressField && !isNaN(Number(row[progressField]))
+        const progress = progressField && progressField !== 'none' && !isNaN(Number(row[progressField]))
           ? Math.min(100, Math.max(0, Number(row[progressField])))
           : 0;
         return { name, start, end, progress, row, idx };
@@ -124,7 +124,7 @@ export function GanttView({ rows, headers }: GanttViewProps) {
           <Select value={progressField} onValueChange={setProgressField}>
             <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="可选" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">无</SelectItem>
+              <SelectItem value="none">无</SelectItem>
               {headers.filter(h => {
                 const vals = rows.map(r => Number(r[h])).filter(n => !isNaN(n) && n >= 0 && n <= 100);
                 return vals.length > rows.length * 0.3;
