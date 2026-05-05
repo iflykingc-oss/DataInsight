@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { safeSetItem } from '@/lib/safe-storage';
 import {
   BarChart3, LayoutGrid, Download,
   TrendingUp, LineChart, Activity, Layers,
@@ -111,7 +112,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
     const updated = [...savedConfigs, newConfig];
     setSavedConfigs(updated);
     setActiveConfigId(newConfig.id);
-    localStorage.setItem('datainsight-dashboard-configs', JSON.stringify(updated));
+    safeSetItem('datainsight-dashboard-configs', JSON.stringify(updated));
     setShowSaveDialog(false);
     setSaveName('');
   }, [saveName, savedConfigs, chartType, filterValues, linkedFilter]);
@@ -133,7 +134,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
     const updated = savedConfigs.filter(c => c.id !== configId);
     setSavedConfigs(updated);
     if (activeConfigId === configId) setActiveConfigId(null);
-    localStorage.setItem('datainsight-dashboard-configs', JSON.stringify(updated));
+    safeSetItem('datainsight-dashboard-configs', JSON.stringify(updated));
   }, [savedConfigs, activeConfigId]);
 
   // 重置

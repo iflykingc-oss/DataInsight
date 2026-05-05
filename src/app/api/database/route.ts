@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 interface ConnectResult {
   success: boolean;
@@ -7,7 +8,10 @@ interface ConnectResult {
   recordCount?: number;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = await verifyAuth(request);
+  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
   try {
     const body = await request.json();
     const { action, credentials, tableName } = body;

@@ -4,14 +4,18 @@
  * 支持执行预制工作流和动态编排工作流
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { WorkflowDefinition } from '@/lib/workflow/core/types';
 import { executeWorkflow, cancelWorkflow, getWorkflowInstance } from '@/lib/workflow/core/engine';
 import { workflowRegistry } from '@/lib/workflow/core/registry';
 import { skillRegistry } from '@/lib/skills/core/registry';
 import type { SkillContext } from '@/lib/skills/core/types';
+import { verifyAuth } from '@/lib/auth-middleware';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = await verifyAuth(request);
+  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
   try {
     const body = await request.json();
     const { action, workflowId, workflowDefinition, inputs, context, options } = body;

@@ -1,6 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth-middleware';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const auth = await verifyAuth(request);
+  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!auth.user?.permissions?.export) return NextResponse.json({ error: '无导出权限' }, { status: 403 });
+
   try {
     const body = await request.json();
     const { title, subtitle, tableData } = body;

@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Dispatch, SetStateAction } from "react";
 import { useAuth } from "@/lib/use-auth";
 import { ParsedData } from "@/lib/data-processor/types";
+import { safeSetItem } from "@/lib/safe-storage";
 import { storeBusinessData, readBusinessData } from "@/lib/data-lifecycle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -238,7 +239,7 @@ export function FormBuilder({
 
   const saveConfigs = useCallback((next: FormConfig[]) => {
     setConfigs(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    safeSetItem(STORAGE_KEY, JSON.stringify(next));
   }, []);
 
   const startNew = useCallback(() => {

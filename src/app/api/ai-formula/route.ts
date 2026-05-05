@@ -5,8 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { callLLM } from '@/lib/llm';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 export async function POST(req: NextRequest) {
+  const auth = await verifyAuth(req);
+  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!auth.user?.permissions?.ai_analyze) return NextResponse.json({ error: '无AI分析权限' }, { status: 403 });
+
   try {
     const body = await req.json();
     const { requirement, headers, sampleRows, modelConfig } = body;

@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeData, type DataAnalysis } from '@/lib/data-processor';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  // D-04 修复：API后端鉴权，防止权限绕过
+  const auth = await verifyAuth(request);
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+  // 检查上传权限
+  if (!auth.user?.permissions?.upload) {
+    return NextResponse.json({ error: '无上传/分析权限' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const { data } = body;
@@ -31,11 +42,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const analysis: DataAnalysis = analyzeData(data);
-    
+    // D-06 修复：大表分析超时保护，超过10000行使用采样分析
+    const ANALYSIS_TIMEOUT_MS = 25000;
+    const SAMPLE_THRESHOLD = 10000;
+    let analysisData = data;
+
+    if (data.rows.length > SAMPLE_THRESHOLD) {
+      // 大表采样：取前2000行 + 随机2000行，保证分析速度
+      const sampleSize = 2000;
+      const head = data.rows.slice(0, sampleSize);
+      const randomIndices = new Set<number>();
+      while (randomIndices.size < Math.min(sampleSize, data.rows.length - sampleSize)) {
+        const idx = Math.floor(Math.random() * data.rows.length);
+        if (idx >= sampleSize) randomIndices.add(idx);
+      }
+      const randomSample = Array.from(randomIndices).map(i => data.rows[i]);
+      analysisData = { ...data, rows: [...head, ...randomSample] };
+    }
+
+    // 带超时的分析执行
+    const analysisPromise = Promise.resolve(analyzeData(analysisData));
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('分析超时，数据量过大')), ANALYSIS_TIMEOUT_MS)
+    );
+
+    let analysis: DataAnalysis;
+    try {
+      analysis = await Promise.race([analysisPromise, timeoutPromise]);
+    } catch (timeoutErr) {
+      return NextResponse.json(
+        { error: timeoutErr instanceof Error ? timeoutErr.message : '分析超时', sampled: true },
+        { status: 408 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      analysis
+      analysis,
+      sampled: data.rows.length > SAMPLE_THRESHOLD,
+      originalRowCount: data.rows.length,
+      sampledRowCount: analysisData.rows.length,
     });
   } catch (error) {
     console.error('数据分析错误:', error);

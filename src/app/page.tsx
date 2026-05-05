@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,7 @@ import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
 import { tripleCache } from '@/lib/cache-manager';
 import { initSessionStore, sessionStore, createChatSession } from '@/lib/session-store';
-import { storeBusinessData, readBusinessData } from '@/lib/data-lifecycle';
+import { storeBusinessData, readBusinessData, checkTTLWarning } from '@/lib/data-lifecycle';
 
 // 动态导入：首屏不需要的组件按需加载，大幅减小初始JS体积
 const DataTable = dynamic(() => import('@/components/data-table').then(m => ({ default: m.DataTable })), { ssr: false });
@@ -64,6 +65,9 @@ const SmartChartRecommender = dynamic(() => import('@/components/smart-chart-rec
 const AITableBuilder = dynamic(() => import('@/components/ai-table-builder'), { ssr: false });
 const MetricSemanticLayer = dynamic(() => import('@/components/metric-semantic-layer').then(m => ({ default: m.MetricSemanticLayer })), { ssr: false });
 const DataQualityChecker = dynamic(() => import('@/components/data-quality-checker').then(m => ({ default: m.DataQualityChecker })), { ssr: false });
+const SmartDataPrep = dynamic(() => import('@/components/smart-data-prep').then(m => ({ default: m.SmartDataPrep })), { ssr: false });
+const DataStorytelling = dynamic(() => import('@/components/data-storytelling').then(m => ({ default: m.DataStorytelling })), { ssr: false });
+const IndustryScenario = dynamic(() => import('@/components/industry-scenario').then(m => ({ default: m.IndustryScenario })), { ssr: false });
 const NL2Dashboard = dynamic(() => import('@/components/nl2-dashboard').then(m => ({ default: m.NL2Dashboard })), { ssr: false });
 const ChartExporter = dynamic(() => import('@/components/chart-exporter').then(m => ({ default: m.ChartExporter })), { ssr: false });
 const AIFieldPanel = dynamic(() => import('@/components/ai-field-panel').then(m => ({ default: m.AIFieldPanel })), { ssr: false });
@@ -90,7 +94,7 @@ type ViewMode =
   | 'home'
   | 'ai-table-builder'
   | 'data-table' | 'data-prep'
-  | 'insights' | 'visualization' | 'metrics' | 'chart-center'
+  | 'insights' | 'data-story' | 'industry-scenario' | 'visualization' | 'metrics' | 'chart-center'
   | 'chat'
   | 'sql-lab' | 'report-export'
   | 'alerting' | 'version-history' | 'template-manager'
@@ -123,6 +127,14 @@ export default function HomePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [adminPanelOpen, setAdminPanelOpen] = useState(false);
   const { isLoggedIn, setLoginDialogOpen, hasPermission } = useAuth();
+
+  // D-04修复：统一API请求头，携带JWT token
+  const getAuthHeaders = useCallback(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('datainsight_token') : null;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  }, []);
   const [analysis, setAnalysis] = useState<DataAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -233,6 +245,15 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
+  // D-15 修复：TTL过期预警
+  useEffect(() => {
+    const ttlCheck = checkTTLWarning();
+    if (ttlCheck.hasWarning) {
+      const items = ttlCheck.items.map(i => `${i.key} (剩余${i.remainingHours}h)`).join('、');
+      toast.warning(`部分数据即将过期清理: ${items}`, { duration: 8000 });
+    }
+  }, []);
+
   const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
     console.log('[Upload] handleFileUpload called, count:', uploadedFiles?.length, 'isLoggedIn:', isLoggedIn);
 
@@ -247,7 +268,6 @@ export default function HomePage() {
       return;
     }
 
-    setParsedData(null);
     setAnalysis(null);
     setIsLoading(true);
     setError(null);
@@ -256,42 +276,75 @@ export default function HomePage() {
       const completedFiles = uploadedFiles.filter(f => f.status === 'completed' || f.status === 'cached');
       console.log('[Upload] Completed files:', completedFiles.length, completedFiles.map(f => f.id));
 
+      // D-02 修复：当文件仍在解析时，保持加载状态而非提前返回
+      // Worker 回调会再次调用 onFileUpload，届时文件状态已变为 completed
       if (completedFiles.length === 0) {
         const pending = uploadedFiles.filter(f => f.status === 'pending' || f.status === 'parsing');
-        console.log('[Upload] Files still pending/parsing:', pending.length, '- waiting for worker callback');
+        if (pending.length > 0) {
+          console.log('[Upload] Files still pending/parsing:', pending.length, '- keeping loading state, waiting for worker callback');
+          // 保持 isLoading=true，不提前关闭 loading 状态
+          // Worker 完成后会再次调用 handleFileUpload，届时 completedFiles 不为空
+          return;
+        }
+        // 确实没有完成的文件（也不是 pending/parsing），关闭加载状态
         setIsLoading(false);
         return;
       }
 
-      const firstFile = completedFiles[0];
-      const parsedData = firstFile.parsedData;
+      // D-01 修复：处理所有已完成的文件，而不仅仅是第一个
+      // 将所有已解析的数据存入 multiTableData，第一个文件显示在主视图
+      const allParsedData = completedFiles
+        .map(f => f.parsedData)
+        .filter((d): d is ParsedData => d != null);
 
-      if (!parsedData) {
+      if (allParsedData.length === 0) {
         throw new Error('文件解析失败');
       }
 
-      console.log('[Upload] Processing file:', parsedData.fileName, 'rows:', parsedData.rowCount);
-      setParsedData(parsedData);
+      // 第一个文件显示在主视图
+      const firstParsedData = allParsedData[0];
+      console.log('[Upload] Processing file:', firstParsedData.fileName, 'rows:', firstParsedData.rowCount);
+
+      // 仅在首次上传（parsedData 为 null）时 setParsedData，后续文件完成时不覆盖主视图
+      if (!parsedData) {
+        setParsedData(firstParsedData);
+      }
+
+      // 所有已完成的文件都存入 multiTableData
       setMultiTableData(prev => {
-        const filtered = prev.filter(t => t.fileName !== parsedData.fileName);
-        const next = [...filtered, parsedData];
+        let next = [...prev];
+        for (const data of allParsedData) {
+          next = next.filter(t => t.fileName !== data.fileName);
+          next.push(data);
+        }
         storeBusinessData('datainsight-tables', next);
         return next;
       });
+
+      // 多文件上传时显示通知
+      if (completedFiles.length > 1) {
+        toast.success(`已处理 ${completedFiles.length} 个文件`, {
+          description: `主视图显示: ${firstParsedData.fileName}，其余可在关联表中查看`,
+        });
+      }
+
       setViewMode('data-table');
 
-      const dataHash = tripleCache.hashData(parsedData);
+      // 对主视图数据执行分析（使用当前主视图数据或第一个文件数据）
+      const dataToAnalyze = parsedData || firstParsedData;
+      const dataHash = tripleCache.hashData(dataToAnalyze);
       const cachedAnalysis = tripleCache.getAnalysis(dataHash);
 
       if (cachedAnalysis) {
         console.log('[Upload] Cache hit');
         setAnalysis(cachedAnalysis);
+        toast.success('从缓存加载分析结果', { description: '数据已分析过，直接展示缓存结果' });
       } else {
         console.log('[Upload] Cache miss, calling /api/analyze');
         const analyzeResponse = await fetch('/api/analyze', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: parsedData }),
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ data: dataToAnalyze }),
         });
 
         if (analyzeResponse.ok) {
@@ -299,7 +352,7 @@ export default function HomePage() {
           if (analyzeResult.success && analyzeResult.analysis) {
             console.log('[Upload] Analysis complete, insights:', analyzeResult.analysis.insights?.length);
             setAnalysis(analyzeResult.analysis);
-            tripleCache.cacheAnalysis(dataHash, analyzeResult.analysis, parsedData.columnCount);
+            tripleCache.cacheAnalysis(dataHash, analyzeResult.analysis, dataToAnalyze.columnCount);
           } else {
             console.error('[Upload] Invalid analysis result:', analyzeResult.error);
             setError('数据分析失败: ' + (analyzeResult.error || '未知错误'));
@@ -311,12 +364,12 @@ export default function HomePage() {
       }
 
       const chatSession = createChatSession(
-        `分析-${parsedData.fileName}`,
+        `分析-${dataToAnalyze.fileName}`,
         dataHash,
         {
-          fileName: parsedData.fileName,
-          rowCount: parsedData.rowCount,
-          columnCount: parsedData.columnCount
+          fileName: dataToAnalyze.fileName,
+          rowCount: dataToAnalyze.rowCount,
+          columnCount: dataToAnalyze.columnCount
         }
       );
       await sessionStore.saveChatSession(chatSession);
@@ -398,7 +451,7 @@ export default function HomePage() {
   const handleAnalyzeWith = (data: ParsedData) => {
     return fetch('/api/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ data }),
     })
       .then(res => {
@@ -532,7 +585,7 @@ export default function HomePage() {
     }
 
     // 需要数据但无数据的视图
-    const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'visualization', 'metrics', 'chart-center', 'chat', 'sql-lab', 'report-export'];
+    const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'data-story', 'industry-scenario', 'visualization', 'metrics', 'chart-center', 'chat', 'sql-lab', 'report-export'];
     if (needsDataViews.includes(viewMode) && !parsedData) {
       return (
         <div className="flex flex-col items-center justify-center py-20">
@@ -700,11 +753,19 @@ export default function HomePage() {
     if (viewMode === 'data-prep') {
       return (
         <div className="relative">
-          <Tabs defaultValue="clean" className="space-y-4">
+          <Tabs defaultValue="smart" className="space-y-4">
             <TabsList>
+              <TabsTrigger value="smart" disabled={!parsedData}>智能准备</TabsTrigger>
               <TabsTrigger value="clean" disabled={!parsedData}>数据清洗</TabsTrigger>
               <TabsTrigger value="quality" disabled={!parsedData || !analysis}>质量检测</TabsTrigger>
             </TabsList>
+            <TabsContent value="smart">
+              {parsedData && analysis ? (
+                <SmartDataPrep data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig || undefined} onDataReady={handleDataCleaned} />
+              ) : (
+                <div className="flex items-center justify-center py-12 text-gray-400">请先上传数据</div>
+              )}
+            </TabsContent>
             <TabsContent value="clean">
               {parsedData && analysis ? (
                 <DataCleaner data={parsedData} fieldStats={analysis.fieldStats} onDataChange={handleDataCleaned} />
@@ -905,6 +966,68 @@ export default function HomePage() {
     }
 
     // ========================================
+    // 数据故事 (Data Storytelling)
+    // ========================================
+    if (viewMode === 'data-story' && parsedData) {
+      return (
+        <div className="relative">
+          <ErrorBoundary moduleName="数据故事">
+            <DataStorytelling
+              data={parsedData}
+              fieldStats={analysis?.fieldStats || []}
+              modelConfig={activeModelConfig || undefined}
+              insights={analysis?.insights}
+            />
+          </ErrorBoundary>
+          <SceneAgentPanel sceneId="data-story" sceneName="数据故事" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // 行业场景
+    // ========================================
+    if (viewMode === 'industry-scenario' && parsedData) {
+      return (
+        <div className="relative">
+          <ErrorBoundary moduleName="行业场景">
+            <IndustryScenario
+              data={parsedData}
+              fieldStats={analysis?.fieldStats || []}
+              modelConfig={activeModelConfig || undefined}
+              onNavigate={(view: string) => setViewMode(view as ViewMode)}
+            />
+          </ErrorBoundary>
+          <SceneAgentPanel sceneId="industry-scenario" sceneName="行业场景" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // 数据故事
+    // ========================================
+    if (viewMode === 'data-story' && parsedData) {
+      return (
+        <div className="relative">
+          <DataStorytelling data={parsedData} fieldStats={analysis?.fieldStats || []} modelConfig={activeModelConfig || undefined} />
+          <SceneAgentPanel sceneId="data-analyze" sceneName="数据故事" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // 行业场景
+    // ========================================
+    if (viewMode === 'industry-scenario' && parsedData) {
+      return (
+        <div className="relative">
+          <IndustryScenario data={parsedData} fieldStats={analysis?.fieldStats || []} modelConfig={activeModelConfig || undefined} onNavigate={(view) => setViewMode(view as ViewMode)} />
+          <SceneAgentPanel sceneId="data-analyze" sceneName="行业场景" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    // ========================================
     // SQL 查询
     // ========================================
     if (viewMode === 'sql-lab' && parsedData) {
@@ -1009,7 +1132,7 @@ export default function HomePage() {
     const titles: Record<string, string> = {
       'home': '工作台', 'ai-table-builder': 'AI生成表格',
       'data-table': '数据预览', 'data-prep': '数据工作台',
-      'insights': '自动分析', 'visualization': '仪表盘',
+      'insights': '自动分析', 'data-story': '数据故事', 'industry-scenario': '行业场景', 'visualization': '仪表盘',
       'metrics': '指标中心', 'chart-center': '图表库',
       'chat': '问答数据', 'sql-lab': 'SQL 查询',
       'report-export': '导出分享', 'spreadsheet-agent': 'AI 表格助手',

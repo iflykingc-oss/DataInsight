@@ -357,15 +357,25 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
       }
 
       if (format === 'image') {
-        // 使用 html2canvas 导出图片
+        // D-13 修复：使用 html2canvas 导出图片，等待图表渲染完成
         try {
+          // 等待ECharts等异步渲染完成
+          await new Promise(resolve => setTimeout(resolve, 500));
           const html2canvas = (await import('html2canvas')).default;
           if (reportRef.current) {
             const canvas = await html2canvas(reportRef.current, {
               scale: 2, // 高清导出
               useCORS: true,
               logging: false,
-              backgroundColor: '#ffffff'
+              backgroundColor: '#ffffff',
+              // D-13 修复：确保canvas元素(ECharts)被正确捕获
+              onclone: (clonedDoc) => {
+                // 确保克隆的DOM中canvas元素可见
+                const canvases = clonedDoc.querySelectorAll('canvas');
+                canvases.forEach((c: HTMLCanvasElement) => {
+                  c.style.visibility = 'visible';
+                });
+              }
             });
             canvas.toBlob((blob) => {
               if (blob) {

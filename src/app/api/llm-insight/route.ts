@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { callLLMStreamWithFallback, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
 import { IndustryTemplateManager } from '@/lib/analysis/industry-templates';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 const templateManager = new IndustryTemplateManager();
 
@@ -51,6 +52,21 @@ function detectIntent(query: string): { intent: QueryIntent; label: string } {
 }
 
 export async function POST(request: NextRequest) {
+  // D-04 修复：API后端鉴权
+  const auth = await verifyAuth(request);
+  if (auth.error) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  if (!auth.user?.permissions?.ai_analyze) {
+    return new Response(JSON.stringify({ error: '无AI分析权限' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   try {
     const body = await request.json();
     const {

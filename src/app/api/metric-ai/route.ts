@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { callLLM, validateModelConfig, type LLMModelConfig } from "@/lib/llm";
+import { verifyAuth } from "@/lib/auth-middleware";
 
 // 业务场景识别关键词
 const BUSINESS_SCENARIOS = [
@@ -90,6 +91,10 @@ ${fieldInfo}
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await verifyAuth(request);
+  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!auth.user?.permissions?.ai_analyze) return NextResponse.json({ error: '无AI分析权限' }, { status: 403 });
+
   try {
     const { headers, rows, userDescription, fieldStats, modelConfig } = await request.json() as {
       headers: string[];

@@ -46,6 +46,8 @@ export interface UploadFile {
 interface FileUploaderProps {
   onFileUpload: (files: UploadFile[]) => void;
   onParseProgress?: (fileId: string, progress: number) => void;
+  /** 缓存命中时的回调，用于在父组件中显示通知 */
+  onCacheHit?: (fileName: string) => void;
   accept?: string;
   multiple?: boolean;
   maxSize?: number;
@@ -100,6 +102,7 @@ const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
 export function FileUploader({
   onFileUpload,
   onParseProgress,
+  onCacheHit,
   accept = '.xlsx,.xls,.csv,.txt',
   multiple = true,
   maxSize = 50,
@@ -155,7 +158,11 @@ export function FileUploader({
         parsedData.rowCount = parsedData.rows?.length ?? 0;
         parsedData.columnCount = parsedData.headers?.length ?? 0;
 
-        tripleCache.cacheData(parsedData);
+        // D-03 修复：缓存数据时同时存储文件指纹，便于下次上传同文件时在解析前命中缓存
+        const fileFingerprint = pendingFile
+          ? tripleCache.computeFileFingerprint(pendingFile.file.name, pendingFile.file.size, pendingFile.file.lastModified)
+          : undefined;
+        tripleCache.cacheData(parsedData, fileFingerprint);
 
         const completedFile: UploadFile = {
           ...(pendingFile || { id, file: new File([], 'unknown'), status: 'pending' as const, progress: 0 }),
@@ -213,16 +220,14 @@ export function FileUploader({
     }
 
     try {
-      const fileContent = file.slice(0, 1024 * 100);
-      const tempData: ParsedData = {
-        headers: [],
-        rows: [],
-        fileName: file.name,
-        rowCount: 0,
-        columnCount: 0
-      };
-      const hash = tripleCache.hashData(tempData);
-      return tripleCache.getData(hash);
+      // D-03 修复：使用文件元信息指纹查找缓存，而非对空数据哈希
+      // 之前使用 hashData({ headers: [], rows: [] }) 生成的哈希永远无法匹配真实缓存
+      const fingerprint = tripleCache.computeFileFingerprint(
+        file.name,
+        file.size,
+        file.lastModified
+      );
+      return tripleCache.findDataByFileFingerprint(fingerprint);
     } catch {
       return null;
     }
@@ -388,6 +393,9 @@ export function FileUploader({
         setFiles(prev => prev.map(f =>
           f.id === uploadFile.id ? { ...f, status: 'cached' as const, progress: 100, parsedData: cachedData, cacheHit: true } : f
         ));
+
+        // D-05 修复：缓存命中时通知父组件，以便显示 toast
+        onCacheHit?.(uploadFile.file.name);
 
         // 缓存命中也需上报，使用ref避免依赖
         if (!reportedFileIdsRef.current.has(uploadFile.id)) {

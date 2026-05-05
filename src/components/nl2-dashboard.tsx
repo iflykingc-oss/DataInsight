@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { safeSetItem } from '@/lib/safe-storage';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -306,7 +307,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
   // 保存历史
   useEffect(() => {
     if (history.length > 0) {
-      localStorage.setItem('nl2dashboard_history_v2', JSON.stringify(history.slice(0, 20)));
+      safeSetItem('nl2dashboard_history_v2', JSON.stringify(history.slice(0, 20)));
     }
   }, [history]);
 

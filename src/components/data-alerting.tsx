@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { safeSetItem } from '@/lib/safe-storage';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -381,17 +382,17 @@ export function DataAlerting({
 
   // 保存规则
   useEffect(() => {
-    localStorage.setItem(ALERTS_STORAGE_KEY, JSON.stringify(rules));
+    safeSetItem(ALERTS_STORAGE_KEY, JSON.stringify(rules));
   }, [rules]);
 
   // 保存历史
   useEffect(() => {
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, 100)));
+    safeSetItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, 100)));
   }, [history]);
 
   // 保存渠道配置
   useEffect(() => {
-    localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(channelConfig));
+    safeSetItem(CONFIG_STORAGE_KEY, JSON.stringify(channelConfig));
   }, [channelConfig]);
 
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);

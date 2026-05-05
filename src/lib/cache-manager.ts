@@ -26,6 +26,8 @@ class TripleCache {
   private dataCache = new Map<string, DataCacheEntry>();
   private analysisCache = new Map<string, AnalysisCacheEntry>();
   private chartConfigCache = new Map<string, ChartConfigCacheEntry>();
+  // 文件指纹 → 数据缓存hash 的映射，用于在解析前按文件元信息查找缓存
+  private fileFingerprintIndex = new Map<string, string>();
 
   private readonly MAX_CACHE_SIZE = 50 * 1024 * 1024;
   private currentSize = 0;
@@ -86,6 +88,12 @@ class TripleCache {
     if (dataEntry) {
       this.currentSize -= dataEntry.size;
       this.dataCache.delete(key);
+      // 清理指向该 hash 的所有指纹索引
+      for (const [fp, hash] of this.fileFingerprintIndex) {
+        if (hash === key) {
+          this.fileFingerprintIndex.delete(fp);
+        }
+      }
       return;
     }
 
@@ -103,6 +111,31 @@ class TripleCache {
     }
   }
 
+  /**
+   * 基于文件元信息（name + size + lastModified）生成指纹 key，
+   * 用于在解析前（尚无 headers/rows）查找缓存。
+   */
+  public computeFileFingerprint(fileName: string, fileSize: number, lastModified: number): string {
+    return `fp:${fileName}:${fileSize}:${lastModified}`;
+  }
+
+  /**
+   * 根据文件指纹查找已缓存的数据。在 checkCache 时使用，
+   * 此时文件尚未解析，无法通过 hashData 生成有效 hash。
+   */
+  public findDataByFileFingerprint(fingerprint: string): ParsedData | null {
+    const dataHash = this.fileFingerprintIndex.get(fingerprint);
+    if (!dataHash) return null;
+    const entry = this.dataCache.get(dataHash);
+    if (entry) {
+      entry.timestamp = Date.now();
+      return entry.data;
+    }
+    // 指针悬空（缓存已被淘汰），清理索引
+    this.fileFingerprintIndex.delete(fingerprint);
+    return null;
+  }
+
   public hashData(data: ParsedData): string {
     const content = JSON.stringify({
       headers: data.headers,
@@ -113,7 +146,7 @@ class TripleCache {
     return this.generateHash(content);
   }
 
-  public cacheData(data: ParsedData): string {
+  public cacheData(data: ParsedData, fileFingerprint?: string): string {
     const hash = this.hashData(data);
     const size = this.calculateSize(data);
 
@@ -130,6 +163,11 @@ class TripleCache {
 
     this.dataCache.set(hash, entry);
     this.currentSize += size;
+
+    // 同时存储文件指纹索引，便于下次上传同文件时在解析前命中缓存
+    if (fileFingerprint) {
+      this.fileFingerprintIndex.set(fileFingerprint, hash);
+    }
 
     return hash;
   }
@@ -218,6 +256,7 @@ class TripleCache {
     this.dataCache.clear();
     this.analysisCache.clear();
     this.chartConfigCache.clear();
+    this.fileFingerprintIndex.clear();
     this.currentSize = 0;
   }
 
@@ -226,6 +265,7 @@ class TripleCache {
       dataCacheCount: this.dataCache.size,
       analysisCacheCount: this.analysisCache.size,
       chartConfigCacheCount: this.chartConfigCache.size,
+      fingerprintCount: this.fileFingerprintIndex.size,
       currentSize: this.currentSize,
       maxSize: this.MAX_CACHE_SIZE
     };

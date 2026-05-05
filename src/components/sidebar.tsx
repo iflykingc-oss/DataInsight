@@ -4,7 +4,7 @@ import {
   Home, Table2, Database, Brain, LayoutGrid, Target, PieChart, FileText,
   MessageSquare, Wrench, ChevronLeft, ChevronRight, Settings, Sparkles,
   AlertTriangle, Clock, BookTemplate, Grid3x3, Image, ClipboardList,
-  Bot,
+  Bot, BookOpen, Building2,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'data-prep', label: '数据处理', desc: '清洗脏数据、检测数据质量', icon: Database, group: 'data', needsData: true },
   // 分析组：核心分析能力
   { id: 'insights', label: '自动分析', desc: 'AI自动分析数据，找问题出报告', icon: Brain, group: 'analysis', needsData: true, badge: 'AI' },
+  { id: 'data-story', label: '数据故事', desc: 'AI生成数据叙事故事，一键导出分享', icon: BookOpen, group: 'analysis', needsData: true, badge: 'NEW' },
+  { id: 'industry-scenario', label: '行业场景', desc: 'AI识别行业，加载行业指标和模板', icon: Building2, group: 'analysis', needsData: true, badge: 'NEW' },
   { id: 'chat', label: '问答数据', desc: '用自然语言问数据问题', icon: MessageSquare, group: 'analysis', needsData: true, badge: 'AI' },
   { id: 'metrics', label: '指标中心', desc: '管理销售额、转化率等业务指标', icon: Target, group: 'analysis', needsData: true },
   { id: 'pivot-table', label: '透视表', desc: '拖拽字段做交叉分析', icon: Grid3x3, group: 'analysis', needsData: true },

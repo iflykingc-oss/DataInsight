@@ -237,6 +237,31 @@ export function startDataLifecycleManager(): () => void {
   };
 }
 
+/** D-15 修复：检查即将过期的业务数据，返回预警信息 */
+export function checkTTLWarning(): { hasWarning: boolean; items: Array<{ key: string; remainingHours: number }> } {
+  const WARNING_THRESHOLD_MS = 12 * 60 * 60 * 1000; // 剩余12小时内预警
+  const items: Array<{ key: string; remainingHours: number }> = [];
+
+  for (const key of BUSINESS_STORAGE_KEYS) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const data = JSON.parse(raw);
+        const storedAt = data._storedAt || data._timestamp || 0;
+        if (storedAt > 0) {
+          const elapsed = Date.now() - storedAt;
+          const remaining = FORM_DATA_MAX_AGE_MS - elapsed;
+          if (remaining > 0 && remaining < WARNING_THRESHOLD_MS) {
+            items.push({ key, remainingHours: Math.round(remaining / (60 * 60 * 1000) * 10) / 10 });
+          }
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  return { hasWarning: items.length > 0, items };
+}
+
 /** 导出数据为文件（让用户下载保存） */
 export function exportToFile(data: unknown, filename: string, type: 'json' | 'csv' = 'json'): void {
   let content: string;

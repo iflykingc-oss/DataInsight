@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { callLLM, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 /**
  * AI 智能建表 API
@@ -62,6 +63,11 @@ interface TableScheme {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await verifyAuth(request);
+  if (auth.error) {
+    return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: { 'Content-Type': 'application/json' } });
+  }
+
   try {
     const body = await request.json();
     const { action, modelConfig } = body as {

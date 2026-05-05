@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as xlsx from 'xlsx';
 import type { ParsedData } from '@/lib/data-processor';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  const auth = await verifyAuth(request);
+  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!auth.user?.permissions?.upload) return NextResponse.json({ error: '无上传权限' }, { status: 403 });
+
   try {
     const contentType = request.headers.get('content-type') || '';
     if (!contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded')) {

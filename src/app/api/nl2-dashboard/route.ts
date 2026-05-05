@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callLLM, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 // ============================================
 // 领域知识库：中小商家销售分析核心指标 + 场景模板
@@ -326,6 +327,10 @@ ${numericFields.filter(f => !isIdField(f)).join('、') || '无有效数值字段
 // API Handler
 // ============================================
 export async function POST(req: NextRequest) {
+  const auth = await verifyAuth(req);
+  if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+  if (!auth.user?.permissions?.dashboard) return NextResponse.json({ error: '无仪表盘权限' }, { status: 403 });
+
   try {
     const body = await req.json();
     const { userMessage, data, fieldStats, context, modelConfig } = body as {

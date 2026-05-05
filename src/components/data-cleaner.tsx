@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { safeSetItem } from '@/lib/safe-storage';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -145,7 +146,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
     };
     const updated = [...savedTemplates, newTemplate];
     setSavedTemplates(updated);
-    localStorage.setItem('datainsight-clean-templates', JSON.stringify(updated));
+    safeSetItem('datainsight-clean-templates', JSON.stringify(updated));
     setShowTemplateSave(false);
     setTemplateName('');
   };
@@ -161,7 +162,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
   const handleDeleteTemplate = (templateId: string) => {
     const updated = savedTemplates.filter(t => t.id !== templateId);
     setSavedTemplates(updated);
-    localStorage.setItem('datainsight-clean-templates', JSON.stringify(updated));
+    safeSetItem('datainsight-clean-templates', JSON.stringify(updated));
   };
   const [nullFillField, setNullFillField] = useState('');
   const [nullFillMethod, setNullFillMethod] = useState<'value' | 'mean' | 'median' | 'mode' | 'forward'>('value');

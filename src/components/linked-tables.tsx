@@ -72,6 +72,45 @@ function buildEnrichedTable(baseTable: ParsedData, relations: TableRelation[], a
   };
 }
 
+/** D-14 修复：智能推荐关联字段 - 基于字段名相似度匹配 */
+function suggestRelationFields(sourceTable: ParsedData, targetTable: ParsedData): { sourceField: string; targetField: string; confidence: number }[] {
+  const suggestions: { sourceField: string; targetField: string; confidence: number }[] = [];
+  const commonIdPatterns = ['id', '_id', 'Id', 'ID', 'code', '_code', 'no', '_no', 'key', '_key', 'name', '_name'];
+
+  for (const srcField of sourceTable.headers) {
+    for (const tgtField of targetTable.headers) {
+      const srcLower = srcField.toLowerCase();
+      const tgtLower = tgtField.toLowerCase();
+
+      // 精确匹配
+      if (srcLower === tgtLower) {
+        suggestions.push({ sourceField: srcField, targetField: tgtField, confidence: 1.0 });
+        continue;
+      }
+
+      // ID关联模式: sourceTable的xxx_id 对应 targetTable的id或xxx_id
+      for (const pattern of commonIdPatterns) {
+        if (srcLower.endsWith(pattern) && tgtLower.endsWith(pattern)) {
+          const srcPrefix = srcLower.slice(0, srcLower.length - pattern.length);
+          const tgtPrefix = tgtLower.slice(0, tgtLower.length - pattern.length);
+          // "user_id" ↔ "id" 或 "user_id" ↔ "user_id"
+          if (tgtPrefix === '' || srcPrefix === tgtPrefix || 
+              tgtLower === pattern && srcLower.startsWith(tgtPrefix)) {
+            suggestions.push({ sourceField: srcField, targetField: tgtField, confidence: 0.85 });
+          }
+        }
+      }
+
+      // 包含匹配: "订单ID" contains "ID"
+      if (srcLower !== tgtLower && (srcLower.includes(tgtLower) || tgtLower.includes(srcLower))) {
+        suggestions.push({ sourceField: srcField, targetField: tgtField, confidence: 0.6 });
+      }
+    }
+  }
+
+  return suggestions.sort((a, b) => b.confidence - a.confidence).slice(0, 5);
+}
+
 export function LinkedTablesManager({ tables, activeTable, onTablesChange, onActiveTableChange }: LinkedTablesProps) {
   const [relations, setRelations] = useState<TableRelation[]>(() => {
     try {
@@ -291,6 +330,29 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
               </div>
               {targetTable && (
                 <>
+                  {/* D-14 修复：智能推荐关联字段 */}
+                  {sourceTable && newRelation.sourceTable && newRelation.targetTable && !newRelation.sourceField && (
+                    <div className="bg-muted/50 rounded-md p-2">
+                      <div className="text-xs font-medium text-muted-foreground mb-1.5">智能推荐关联字段</div>
+                      {suggestRelationFields(sourceTable, targetTable).length > 0 ? (
+                        <div className="space-y-1">
+                          {suggestRelationFields(sourceTable, targetTable).map((s, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-accent flex items-center justify-between"
+                              onClick={() => setNewRelation({ ...newRelation, sourceField: s.sourceField, targetField: s.targetField })}
+                            >
+                              <span>{s.sourceField} → {s.targetField}</span>
+                              <span className="text-muted-foreground">{Math.round(s.confidence * 100)}%</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground">未发现相似字段，请手动选择</div>
+                      )}
+                    </div>
+                  )}
                   <div>
                     <label className="text-xs font-medium">目标表关联字段</label>
                     <Select value={newRelation.targetField} onValueChange={v => setNewRelation({ ...newRelation, targetField: v })}>

@@ -106,7 +106,15 @@ export function SqlLab({ data, className }: SqlLabProps) {
         updateSchemas(database);
       } catch (err) {
         console.error('SQL.js 初始化失败:', err);
-        setError('SQL引擎加载失败，请检查网络连接');
+        // D-09 修复：WASM加载失败提供重试和降级提示
+        const isWasmError = err instanceof Error && 
+          (err.message.includes('wasm') || err.message.includes('WASM') || 
+           err.message.includes('fetch') || err.message.includes('network'));
+        if (isWasmError) {
+          setError('SQL引擎(WASM)加载失败，可能是网络问题。请刷新页面重试，或检查浏览器是否支持WebAssembly。');
+        } else {
+          setError(`SQL引擎初始化失败: ${err instanceof Error ? err.message : '未知错误'}。请尝试刷新页面。`);
+        }
       }
     };
 
