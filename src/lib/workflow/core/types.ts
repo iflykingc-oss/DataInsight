@@ -130,6 +130,8 @@ export interface WorkflowInstance {
   error?: string;
   /** 执行进度 0-100 */
   progress: number;
+  /** 原始工作流定义，用于步骤查找 */
+  definition: WorkflowDefinition;
 }
 
 /** 工作流执行选项 */

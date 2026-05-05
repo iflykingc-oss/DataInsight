@@ -13,6 +13,7 @@ import type {
 } from './types';
 import type { SkillContext, SkillResult } from '@/lib/skills/core/types';
 import { executeSkill } from '@/lib/skills/core/executor';
+import { skillRegistry } from '@/lib/skills/core/registry';
 
 /** 工作流实例存储（内存态，页面关闭即销毁） */
 const workflowInstances = new Map<string, WorkflowInstance>();
@@ -35,6 +36,7 @@ export async function executeWorkflow(
     skillRecords: [],
     startTime: Date.now(),
     progress: 0,
+    definition: workflow,
   };
 
   workflowInstances.set(instanceId, instance);
@@ -178,16 +180,21 @@ async function executeStep(
           if (!step.parallelSteps) {
             return createErrorResult(step.id, 'Parallel step missing parallelSteps');
           }
-          // 并行执行简化为串行（实际可优化为 Promise.all）
-          const results: SkillResult[] = [];
-          for (const subStepId of step.parallelSteps) {
-            // 从 steps map 查找子步骤
-            // 这里简化处理
-          }
+          // 并行执行子步骤
+          const subResults = await Promise.all(
+            step.parallelSteps.map(async (subStepId: string) => {
+              const subStep = instance.definition.steps.find((s: WorkflowStep) => s.id === subStepId);
+              if (!subStep) {
+                return createErrorResult(subStepId, `Sub-step not found: ${subStepId}`);
+              }
+              return executeStep(subStep, instance, options);
+            })
+          );
+          const allSuccess = subResults.every(r => r.success);
           return {
-            success: true,
+            success: allSuccess,
             skillId: step.id,
-            data: { parallelResults: results },
+            data: { parallelResults: subResults },
             duration: 0,
             usedStrategy: 'rule',
           };
