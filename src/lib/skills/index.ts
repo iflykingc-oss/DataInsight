@@ -3,6 +3,7 @@
  */
 
 import { skillRegistry } from './core/registry';
+import './core/handlers'; // 注册所有技能处理器
 import { registerSkills as registerGenerateSkills } from './definitions/generate';
 import { registerSkills as registerCleanSkills } from './definitions/clean';
 import { registerSkills as registerAnalyzeSkills } from './definitions/analyze';
