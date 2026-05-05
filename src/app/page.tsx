@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -218,23 +218,49 @@ export default function HomePage() {
   // ============================================
   // 事件处理
   // ============================================
+
+  // 挂起文件队列：登录成功后自动重试
+  const pendingUploadRef = useRef<UploadFile[] | null>(null);
+
+  // 登录成功后自动重试挂起的文件上传
+  useEffect(() => {
+    if (isLoggedIn && pendingUploadRef.current) {
+      console.log('[Upload] Login succeeded, retrying pending upload');
+      const pending = pendingUploadRef.current;
+      pendingUploadRef.current = null;
+      setTimeout(() => handleFileUpload(pending), 50);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
+
   const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
+    console.log('[Upload] handleFileUpload called, count:', uploadedFiles?.length, 'isLoggedIn:', isLoggedIn);
+
     if (!isLoggedIn) {
+      console.log('[Upload] Not logged in, queueing files and showing login dialog');
       setLoginDialogOpen(true);
+      pendingUploadRef.current = uploadedFiles;
       return;
     }
     if (!hasPermission('upload')) {
+      console.log('[Upload] No upload permission');
       return;
     }
+
     setParsedData(null);
     setAnalysis(null);
     setIsLoading(true);
+    setError(null);
 
     try {
       const completedFiles = uploadedFiles.filter(f => f.status === 'completed' || f.status === 'cached');
+      console.log('[Upload] Completed files:', completedFiles.length, completedFiles.map(f => f.id));
 
       if (completedFiles.length === 0) {
-        throw new Error('没有成功解析的文件');
+        const pending = uploadedFiles.filter(f => f.status === 'pending' || f.status === 'parsing');
+        console.log('[Upload] Files still pending/parsing:', pending.length, '- waiting for worker callback');
+        setIsLoading(false);
+        return;
       }
 
       const firstFile = completedFiles[0];
@@ -244,23 +270,24 @@ export default function HomePage() {
         throw new Error('文件解析失败');
       }
 
+      console.log('[Upload] Processing file:', parsedData.fileName, 'rows:', parsedData.rowCount);
       setParsedData(parsedData);
-      // 追加到多表存储（去重：同名表覆盖）
       setMultiTableData(prev => {
         const filtered = prev.filter(t => t.fileName !== parsedData.fileName);
         const next = [...filtered, parsedData];
         storeBusinessData('datainsight-tables', next);
         return next;
       });
-      // 上传成功后自动跳转到数据表格视图
       setViewMode('data-table');
 
       const dataHash = tripleCache.hashData(parsedData);
       const cachedAnalysis = tripleCache.getAnalysis(dataHash);
 
       if (cachedAnalysis) {
+        console.log('[Upload] Cache hit');
         setAnalysis(cachedAnalysis);
       } else {
+        console.log('[Upload] Cache miss, calling /api/analyze');
         const analyzeResponse = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -270,17 +297,16 @@ export default function HomePage() {
         if (analyzeResponse.ok) {
           const analyzeResult = await analyzeResponse.json();
           if (analyzeResult.success && analyzeResult.analysis) {
+            console.log('[Upload] Analysis complete, insights:', analyzeResult.analysis.insights?.length);
             setAnalysis(analyzeResult.analysis);
-
-            if (parsedData) {
-              tripleCache.cacheAnalysis(dataHash, analyzeResult.analysis, parsedData.columnCount);
-            }
+            tripleCache.cacheAnalysis(dataHash, analyzeResult.analysis, parsedData.columnCount);
           } else {
-            console.error('分析结果无效:', analyzeResult.error || 'unknown');
+            console.error('[Upload] Invalid analysis result:', analyzeResult.error);
+            setError('数据分析失败: ' + (analyzeResult.error || '未知错误'));
           }
         } else {
-          console.error('分析请求失败:', analyzeResponse.status);
-          // 即使分析失败，数据已加载成功，不阻断用户
+          console.error('[Upload] Analysis request failed:', analyzeResponse.status);
+          setError('分析请求失败，HTTP ' + analyzeResponse.status);
         }
       }
 
@@ -294,9 +320,10 @@ export default function HomePage() {
         }
       );
       await sessionStore.saveChatSession(chatSession);
+      pendingUploadRef.current = null;
 
     } catch (err) {
-      console.error('文件处理错误:', err);
+      console.error('[Upload] File processing error:', err);
       setError(err instanceof Error ? err.message : '处理失败');
     } finally {
       setIsLoading(false);

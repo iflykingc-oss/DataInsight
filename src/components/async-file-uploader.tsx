@@ -147,6 +147,7 @@ export function FileUploader({
       if (type === 'progress') {
         onParseProgressRef.current?.(id, progress);
       } else if (type === 'success') {
+        console.log('[Uploader] Worker success for id:', id);
         const parsedData = result as ParsedData;
         // 直接从pendingParseRef获取文件名，不依赖filesRef（可能未同步）
         const pendingFile = files.find(f => f.id === id);
@@ -170,7 +171,10 @@ export function FileUploader({
         // 仅对本次新完成的文件调用 onFileUpload，避免重复上报
         if (!reportedFileIdsRef.current.has(id)) {
           reportedFileIdsRef.current.add(id);
+          console.log('[Uploader] Reporting completed file:', id, 'pendingFile:', !!pendingFile, 'parsedData:', !!parsedData);
           onFileUploadRef.current([completedFile]);
+        } else {
+          console.log('[Uploader] File already reported, skip:', id);
         }
 
         const resolver = pendingParseRef.current.get(id);
@@ -356,12 +360,14 @@ export function FileUploader({
   }, []);
 
   const processFiles = useCallback(async (newFiles: File[]) => {
+    console.log('[Uploader] processFiles called, count:', newFiles.length, newFiles.map(f => f.name));
     const uploadFiles: UploadFile[] = newFiles.map(file => ({
       file,
       id: generateId(),
       status: 'pending' as const,
       progress: 0
     }));
+    console.log('[Uploader] Created upload entries:', uploadFiles.map(f => f.id));
 
     setFiles(prev => multiple ? [...prev, ...uploadFiles] : [...uploadFiles]);
 
@@ -376,6 +382,7 @@ export function FileUploader({
 
       const cachedData = checkCache(uploadFile.file);
       if (cachedData) {
+        console.log('[Uploader] Cache hit for file:', uploadFile.file.name, 'id:', uploadFile.id);
         cachedData.fileName = uploadFile.file.name;
 
         setFiles(prev => prev.map(f =>
@@ -385,11 +392,13 @@ export function FileUploader({
         // 缓存命中也需上报，使用ref避免依赖
         if (!reportedFileIdsRef.current.has(uploadFile.id)) {
           reportedFileIdsRef.current.add(uploadFile.id);
+          console.log('[Uploader] Reporting cached file:', uploadFile.id);
           onFileUploadRef.current([{ ...uploadFile, status: 'cached' as const, progress: 100, parsedData: cachedData, cacheHit: true }]);
         }
         continue;
       }
 
+      console.log('[Uploader] Starting to parse file:', uploadFile.file.name, 'id:', uploadFile.id);
       updateFileStatus(uploadFile.id, { status: 'parsing', progress: 0 });
       await parseFileAsync(uploadFile.file, uploadFile.id);
     }
