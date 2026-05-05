@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,13 +23,21 @@ import {
   Webhook,
   TestTube,
   Shield,
+  Bot,
+  Bell,
+  History,
+  BookTemplate,
+  Settings2,
+  Megaphone,
+  Lock,
+  Globe,
+  Key,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { privacyMode } from '@/lib/security/privacy-mode';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 import { useAuth } from '@/lib/use-auth';
 import { Badge } from '@/components/ui/badge';
-import { Globe, Key, Bot, Lock } from 'lucide-react';
 
 // ============================================
 // 通知渠道配置类型
@@ -46,6 +53,19 @@ const DEFAULT_NOTIFICATION_CONFIG: NotificationChannelConfig = {
   feishu: { webhookUrl: '', secret: '', enabled: false },
   webhook: { url: '', method: 'POST', headers: '', enabled: false },
 };
+
+// 侧边导航项定义
+const SETTINGS_TABS = [
+  { id: 'ai-settings', label: 'AI 模型', icon: Bot },
+  { id: 'alert', label: '数据预警', icon: Bell },
+  { id: 'version', label: '版本快照', icon: History },
+  { id: 'template', label: '模板管理', icon: BookTemplate },
+  { id: 'general', label: '通用设置', icon: Settings2 },
+  { id: 'notifications', label: '通知渠道', icon: Megaphone },
+  { id: 'permissions', label: '权限管理', icon: Shield },
+] as const;
+
+type SettingsTabId = typeof SETTINGS_TABS[number]['id'];
 
 interface SettingsDialogProps {
   open: boolean;
@@ -68,6 +88,7 @@ export default function SettingsDialog({
 }: SettingsDialogProps) {
   const { user, isLoggedIn } = useAuth();
   const [adminConfig, setAdminConfig] = useState<{ apiKey?: string; baseUrl?: string; modelName?: string }>({});
+  const [activeTab, setActiveTab] = useState<SettingsTabId>('ai-settings');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -114,7 +135,6 @@ export default function SettingsDialog({
     }
   };
 
-  // 保存通知配置到localStorage
   const saveNotificationConfig = (config: NotificationChannelConfig) => {
     setNotificationConfig(config);
     try {
@@ -122,62 +142,12 @@ export default function SettingsDialog({
     } catch { /* ignore */ }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>设置与管理</DialogTitle>
-        </DialogHeader>
-        <Tabs defaultValue="ai-settings" className="w-full">
-          <div className="mb-4 border-b">
-            <TabsList className="w-full justify-start h-auto p-0 bg-transparent gap-0 -mb-px">
-              <TabsTrigger 
-                value="ai-settings" 
-                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              >
-                AI 模型
-              </TabsTrigger>
-              <TabsTrigger 
-                value="alert" 
-                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              >
-                数据预警
-              </TabsTrigger>
-              <TabsTrigger 
-                value="version" 
-                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              >
-                版本快照
-              </TabsTrigger>
-              <TabsTrigger 
-                value="template" 
-                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              >
-                模板管理
-              </TabsTrigger>
-              <TabsTrigger 
-                value="general" 
-                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              >
-                通用设置
-              </TabsTrigger>
-              <TabsTrigger 
-                value="notifications" 
-                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              >
-                通知渠道
-              </TabsTrigger>
-              <TabsTrigger 
-                value="permissions" 
-                className="px-4 py-2.5 h-auto data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-              >
-                权限管理
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* AI 模型配置 */}
-          <TabsContent value="ai-settings" className="py-4">
+  // 渲染各Tab内容
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'ai-settings':
+        return (
+          <div className="space-y-4">
             {isLoggedIn && canCustomModel ? (
               <AIModelSettings onModelChange={onModelChange} />
             ) : (
@@ -222,33 +192,29 @@ export default function SettingsDialog({
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
+          </div>
+        );
 
-          {/* 数据预警 */}
-          <TabsContent value="alert" className="py-4">
-            {parsedData ? (
-              <DataAlerting data={parsedData} fieldStats={fieldStats} />
-            ) : (
-              <div className="flex flex-col items-center py-12 text-muted-foreground">
-                <AlertTriangle className="w-10 h-10 mb-3" />
-                <p>请先上传数据以使用数据预警功能</p>
-              </div>
-            )}
-          </TabsContent>
+      case 'alert':
+        return parsedData ? (
+          <DataAlerting data={parsedData} fieldStats={fieldStats} />
+        ) : (
+          <div className="flex flex-col items-center py-16 text-muted-foreground/50">
+            <AlertTriangle className="w-10 h-10 mb-3" />
+            <p className="text-sm">请先上传数据以使用数据预警功能</p>
+          </div>
+        );
 
-          {/* 版本快照 */}
-          <TabsContent value="version" className="py-4">
-            <VersionHistory currentContent={parsedData ? { data: { rows: parsedData.rows } } : undefined} />
-          </TabsContent>
+      case 'version':
+        return <VersionHistory currentContent={parsedData ? { data: { rows: parsedData.rows } } : undefined} />;
 
-          {/* 模板管理 */}
-          <TabsContent value="template" className="py-4">
-            <TemplateManager />
-          </TabsContent>
+      case 'template':
+        return <TemplateManager />;
 
-          {/* 通用设置 */}
-          <TabsContent value="general" className="space-y-4 py-4">
-            <div className="flex items-center justify-between">
+      case 'general':
+        return (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between py-3 border-b border-border/50">
               <div>
                 <p className="font-medium text-sm">深色模式</p>
                 <p className="text-xs text-muted-foreground">{darkMode ? '已开启深色主题' : '开启深色主题'}</p>
@@ -266,26 +232,26 @@ export default function SettingsDialog({
                 }}
               />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between py-3 border-b border-border/50">
               <div>
                 <p className="font-medium text-sm">数据缓存</p>
                 <p className="text-xs text-muted-foreground">本地存储分析数据</p>
               </div>
               <Switch defaultChecked />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between py-3 border-b border-border/50">
               <div>
                 <p className="font-medium text-sm">自动保存</p>
                 <p className="text-xs text-muted-foreground">每5分钟自动保存</p>
               </div>
               <Switch defaultChecked />
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between py-3 border-b border-border/50">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-primary" />
                 <div>
                   <p className="font-medium text-sm">隐私模式</p>
-                  <p className="text-xs text-muted-foreground">数据仅存于内存，关闭页面后自动销毁，不留任何痕迹</p>
+                  <p className="text-xs text-muted-foreground">数据仅存于内存，关闭页面后自动销毁</p>
                 </div>
               </div>
               <Switch
@@ -296,19 +262,18 @@ export default function SettingsDialog({
                   } else {
                     privacyMode.disable();
                   }
-                  // Force re-render
                   setNotificationConfig(prev => ({ ...prev }));
                 }}
               />
             </div>
             {privacyMode.enabled && (
-              <Card className="border-primary/30 bg-primary/5">
+              <Card className="mt-2 border-primary/30 bg-primary/5">
                 <CardContent className="pt-3 pb-3">
                   <div className="flex items-start gap-2">
                     <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                     <div className="text-xs space-y-1">
                       <p className="font-medium text-primary">隐私模式已开启</p>
-                      <p className="text-muted-foreground">所有数据仅存储在浏览器内存中，页面关闭后将彻底销毁。API密钥等敏感信息不会写入本地存储。</p>
+                      <p className="text-muted-foreground">所有数据仅存储在浏览器内存中，页面关闭后将彻底销毁。</p>
                       <Button
                         variant="outline"
                         size="sm"
@@ -326,10 +291,45 @@ export default function SettingsDialog({
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
+            {/* 数据管理 */}
+            <div className="pt-4 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">数据管理</p>
+              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
+                const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library', 'datainsight_notification_config'];
+                const exportData: Record<string, unknown> = {};
+                configKeys.forEach(key => {
+                  const val = localStorage.getItem(key);
+                  if (val) exportData[key] = JSON.parse(val);
+                });
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `datainsight-config-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                onOpenChange(false);
+              }}>
+                <Download className="w-4 h-4 mr-2" />
+                导出配置
+              </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
+                if (confirm('确定清除所有缓存数据？此操作不可恢复。')) {
+                  localStorage.clear();
+                  onOpenChange(false);
+                  window.location.reload();
+                }
+              }}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                清除缓存并刷新
+              </Button>
+            </div>
+          </div>
+        );
 
-          {/* 通知渠道设置 */}
-          <TabsContent value="notifications" className="space-y-4 py-4">
+      case 'notifications':
+        return (
+          <div className="space-y-4">
             <p className="text-xs text-muted-foreground">配置告警通知渠道，数据预警触发时将通过已启用的渠道发送通知。</p>
 
             {/* 邮件 */}
@@ -337,24 +337,24 @@ export default function SettingsDialog({
               <CardContent className="pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-blue-600" />
+                    <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <span className="font-medium text-sm">邮件通知</span>
                   </div>
                   <Switch
                     checked={notificationConfig.email.enabled}
-                    onCheckedChange={(v) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, enabled: v } }))}
+                    onCheckedChange={(v) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, enabled: v } })}
                   />
                 </div>
                 {notificationConfig.email.enabled && (
                   <div className="space-y-2">
                     <div className="grid grid-cols-3 gap-2">
-                      <Input placeholder="SMTP 服务器" value={notificationConfig.email.smtp} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, smtp: e.target.value } }))} className="text-xs h-8" />
-                      <Input placeholder="端口" value={notificationConfig.email.port} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, port: e.target.value } }))} className="text-xs h-8" />
-                      <Input placeholder="用户名" value={notificationConfig.email.user} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, user: e.target.value } }))} className="text-xs h-8" />
+                      <Input placeholder="SMTP 服务器" value={notificationConfig.email.smtp} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, smtp: e.target.value } })} className="text-xs h-8" />
+                      <Input placeholder="端口" value={notificationConfig.email.port} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, port: e.target.value } })} className="text-xs h-8" />
+                      <Input placeholder="用户名" value={notificationConfig.email.user} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, user: e.target.value } })} className="text-xs h-8" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="密码/授权码" type="password" value={notificationConfig.email.password} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, password: e.target.value } }))} className="text-xs h-8" />
-                      <Input placeholder="收件人邮箱" value={notificationConfig.email.to} onChange={(e) => setNotificationConfig(prev => ({ ...prev, email: { ...prev.email, to: e.target.value } }))} className="text-xs h-8" />
+                      <Input placeholder="密码/授权码" type="password" value={notificationConfig.email.password} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, password: e.target.value } })} className="text-xs h-8" />
+                      <Input placeholder="收件人邮箱" value={notificationConfig.email.to} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, to: e.target.value } })} className="text-xs h-8" />
                     </div>
                   </div>
                 )}
@@ -366,18 +366,18 @@ export default function SettingsDialog({
               <CardContent className="pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-green-600" />
+                    <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span className="font-medium text-sm">飞书通知</span>
                   </div>
                   <Switch
                     checked={notificationConfig.feishu.enabled}
-                    onCheckedChange={(v) => setNotificationConfig(prev => ({ ...prev, feishu: { ...prev.feishu, enabled: v } }))}
+                    onCheckedChange={(v) => saveNotificationConfig({ ...notificationConfig, feishu: { ...notificationConfig.feishu, enabled: v } })}
                   />
                 </div>
                 {notificationConfig.feishu.enabled && (
                   <div className="space-y-2">
-                    <Input placeholder="飞书机器人 Webhook 地址" value={notificationConfig.feishu.webhookUrl} onChange={(e) => setNotificationConfig(prev => ({ ...prev, feishu: { ...prev.feishu, webhookUrl: e.target.value } }))} className="text-xs h-8" />
-                    <Input placeholder="签名密钥（可选）" value={notificationConfig.feishu.secret} onChange={(e) => setNotificationConfig(prev => ({ ...prev, feishu: { ...prev.feishu, secret: e.target.value } }))} className="text-xs h-8" />
+                    <Input placeholder="飞书机器人 Webhook 地址" value={notificationConfig.feishu.webhookUrl} onChange={(e) => saveNotificationConfig({ ...notificationConfig, feishu: { ...notificationConfig.feishu, webhookUrl: e.target.value } })} className="text-xs h-8" />
+                    <Input placeholder="签名密钥（可选）" value={notificationConfig.feishu.secret} onChange={(e) => saveNotificationConfig({ ...notificationConfig, feishu: { ...notificationConfig.feishu, secret: e.target.value } })} className="text-xs h-8" />
                   </div>
                 )}
               </CardContent>
@@ -393,12 +393,12 @@ export default function SettingsDialog({
                   </div>
                   <Switch
                     checked={notificationConfig.webhook.enabled}
-                    onCheckedChange={(v) => setNotificationConfig(prev => ({ ...prev, webhook: { ...prev.webhook, enabled: v } }))}
+                    onCheckedChange={(v) => saveNotificationConfig({ ...notificationConfig, webhook: { ...notificationConfig.webhook, enabled: v } })}
                   />
                 </div>
                 {notificationConfig.webhook.enabled && (
                   <div className="space-y-2">
-                    <Input placeholder="Webhook URL（支持飞书/钉钉/企微自动适配）" value={notificationConfig.webhook.url} onChange={(e) => setNotificationConfig(prev => ({ ...prev, webhook: { ...prev.webhook, url: e.target.value } }))} className="text-xs h-8" />
+                    <Input placeholder="Webhook URL（支持飞书/钉钉/企微自动适配）" value={notificationConfig.webhook.url} onChange={(e) => saveNotificationConfig({ ...notificationConfig, webhook: { ...notificationConfig.webhook, url: e.target.value } })} className="text-xs h-8" />
                   </div>
                 )}
               </CardContent>
@@ -426,50 +426,57 @@ export default function SettingsDialog({
             {notifTestResult && (
               <div className={cn(
                 'p-3 rounded-lg text-xs flex items-center gap-2',
-                notifTestResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+                notifTestResult.success ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' : 'bg-destructive/10 text-destructive border border-destructive/20'
               )}>
                 {notifTestResult.success ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
                 {notifTestResult.message}
               </div>
             )}
-          </TabsContent>
+          </div>
+        );
 
-          {/* 数据管理 */}
-          <TabsContent value="permissions" className="py-4">
-            <RowPermissions headers={parsedData?.headers || []} />
-          </TabsContent>
-          <TabsContent value="data" className="space-y-3 py-4">
-            <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
-              const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library', 'datainsight_notification_config'];
-              const exportData: Record<string, unknown> = {};
-              configKeys.forEach(key => {
-                const val = localStorage.getItem(key);
-                if (val) exportData[key] = JSON.parse(val);
-              });
-              const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `datainsight-config-${new Date().toISOString().slice(0, 10)}.json`;
-              a.click();
-              URL.revokeObjectURL(url);
-              onOpenChange(false);
-            }}>
-              <Download className="w-4 h-4 mr-2" />
-              导出配置
-            </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => {
-              if (confirm('确定清除所有缓存数据？此操作不可恢复。')) {
-                localStorage.clear();
-                onOpenChange(false);
-                window.location.reload();
-              }
-            }}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              清除缓存并刷新
-            </Button>
-          </TabsContent>
-        </Tabs>
+      case 'permissions':
+        return <RowPermissions headers={parsedData?.headers || []} />;
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[80vh] p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-5 pb-0">
+          <DialogTitle className="text-base">设置与管理</DialogTitle>
+        </DialogHeader>
+        <div className="flex min-h-[480px]">
+          {/* 左侧导航列表 */}
+          <nav className="w-44 border-r border-border bg-muted/20 py-2 px-2 shrink-0">
+            {SETTINGS_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors',
+                    isActive
+                      ? 'bg-accent text-accent-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
+                  )}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+          {/* 右侧内容区 */}
+          <div className="flex-1 px-6 py-4 overflow-y-auto">
+            {renderTabContent()}
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

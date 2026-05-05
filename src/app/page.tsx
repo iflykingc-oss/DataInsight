@@ -524,63 +524,72 @@ export default function HomePage() {
     if (viewMode === 'home') {
       const hasData = !!parsedData;
       return (
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-8">
           {/* 数据获取入口：3种平行的数据接入方式 */}
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground">获取数据</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">获取数据</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* 上传文件 */}
-              <Card className={cn('border transition-colors hover:border-primary/50 cursor-pointer', hasData ? 'bg-green-50/30 border-green-200' : 'border-dashed border-gray-300')}>
-                <CardContent className="py-4">
+              <Card className={cn(
+                'border transition-all hover:shadow-sm cursor-pointer',
+                hasData ? 'bg-emerald-500/5 border-emerald-500/20' : 'border-dashed border-border hover:border-primary/40'
+              )}>
+                <CardContent className="py-5">
                   {hasData ? (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg"><FileSpreadsheet className="w-5 h-5 text-green-600" /></div>
+                        <div className="p-2.5 bg-emerald-500/10 rounded-lg"><FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /></div>
                         <div>
                           <p className="font-medium text-sm">{parsedData.fileName}</p>
                           <p className="text-xs text-muted-foreground">{parsedData?.rowCount?.toLocaleString() ?? '0'} 行 &middot; {parsedData?.columnCount ?? 0} 列</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleGoHome} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                      <Button variant="ghost" size="sm" onClick={handleGoHome} className="text-destructive/70 hover:text-destructive hover:bg-destructive/10">
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Upload className="w-4 h-4 text-primary" />
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <Upload className="w-4 h-4 text-primary" />
+                        </div>
                         <span className="font-medium text-sm">上传文件</span>
                       </div>
                       <div className="w-full"><AsyncFileUploader onFileUpload={handleFileUpload} /></div>
-                      <p className="text-xs text-muted-foreground">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
+                      <p className="text-xs text-muted-foreground/70">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* 连接数据源 */}
-              <Card className="border border-dashed border-gray-300 hover:border-primary/50 cursor-pointer transition-colors" onClick={() => setViewMode('data-source')}>
-                <CardContent className="py-4 flex flex-col justify-center h-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Database className="w-4 h-4 text-blue-600" />
+              <Card className="border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all hover:shadow-sm" onClick={() => setViewMode('data-source')}>
+                <CardContent className="py-5 flex flex-col justify-center h-full">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                      <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </div>
                     <span className="font-medium text-sm">连接数据源</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">连接数据库或API，实时同步数据</p>
+                  <p className="text-xs text-muted-foreground/70 ml-[42px]">连接数据库或API，实时同步数据</p>
                 </CardContent>
               </Card>
 
               {/* AI生成表格 */}
-              <Card className="border border-dashed border-gray-300 hover:border-primary/50 cursor-pointer transition-colors" onClick={() => {
+              <Card className="border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all hover:shadow-sm" onClick={() => {
                 if (!isLoggedIn) { setLoginDialogOpen(true); return; }
                 setViewMode('ai-table-builder');
               }}>
-                <CardContent className="py-4 flex flex-col justify-center h-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-4 h-4 text-violet-600" />
-                    <span className="font-medium text-sm">AI生成表格</span>
-                    <Badge variant="secondary" className="text-[10px] h-4 px-1">AI</Badge>
+                <CardContent className="py-5 flex flex-col justify-center h-full">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="p-2 bg-violet-500/10 rounded-lg">
+                      <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <span className="font-medium text-sm">AI 生成表格</span>
+                    <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary">AI</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">描述你的需求，AI自动创建表格模板</p>
+                  <p className="text-xs text-muted-foreground/70 ml-[42px]">描述你的需求，AI 自动创建表格模板</p>
                 </CardContent>
               </Card>
             </div>
@@ -605,11 +614,11 @@ export default function HomePage() {
     if (needsDataViews.includes(viewMode) && !parsedData) {
       return (
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Upload className="w-10 h-10 text-gray-400" />
+          <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
+            <Upload className="w-10 h-10 text-muted-foreground/50" />
           </div>
-          <h3 className="text-lg font-medium text-gray-600 mb-2">请先上传数据</h3>
-          <p className="text-sm text-gray-400 mb-6">此功能需要加载数据后才能使用</p>
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">请先上传数据</h3>
+          <p className="text-sm text-muted-foreground/60 mb-6">此功能需要加载数据后才能使用</p>
           <Button onClick={() => setViewMode('home')}>去上传数据</Button>
         </div>
       );
@@ -779,21 +788,21 @@ export default function HomePage() {
               {parsedData && analysis ? (
                 <SmartDataPrep data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig || undefined} onDataReady={handleDataCleaned} />
               ) : (
-                <div className="flex items-center justify-center py-12 text-gray-400">请先上传数据</div>
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">请先上传数据</div>
               )}
             </TabsContent>
             <TabsContent value="clean">
               {parsedData && analysis ? (
                 <DataCleaner data={parsedData} fieldStats={analysis.fieldStats} onDataChange={handleDataCleaned} />
               ) : (
-                <div className="flex items-center justify-center py-12 text-gray-400">请先上传数据</div>
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">请先上传数据</div>
               )}
             </TabsContent>
             <TabsContent value="quality">
               {parsedData && analysis ? (
                 <DataQualityChecker data={parsedData} fieldStats={analysis.fieldStats} />
               ) : (
-                <div className="flex items-center justify-center py-12 text-gray-400">请先上传数据</div>
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">请先上传数据</div>
               )}
             </TabsContent>
           </Tabs>
@@ -970,9 +979,9 @@ export default function HomePage() {
           />
           <Card>
             <CardContent className="pt-6 space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-blue-800 mb-2">你能问什么？</h4>
-                <ul className="text-sm text-blue-600 space-y-1.5">
+              <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                <h4 className="font-medium text-primary mb-2">你能问什么？</h4>
+                <ul className="text-sm text-primary/70 space-y-1.5">
                   <li className="flex items-start gap-2"><Search className="w-4 h-4 mt-0.5 shrink-0" />查找数据 - &ldquo;销售额超过10万的订单有哪些？&rdquo;</li>
                   <li className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 shrink-0" />统计计算 - &ldquo;各区域平均绩效得分是多少？&rdquo;</li>
                   <li className="flex items-start gap-2"><TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />原因分析 - &ldquo;为什么本月销售额下降了15%？&rdquo;</li>
@@ -980,9 +989,9 @@ export default function HomePage() {
                   <li className="flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />分析报告 - &ldquo;帮我生成本周项目进展周报&rdquo;</li>
                 </ul>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-medium text-green-800 mb-2">试试这些问题</h4>
-                <div className="space-y-2 text-sm text-green-600">
+              <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
+                <h4 className="font-medium text-emerald-700 dark:text-emerald-400 mb-2">试试这些问题</h4>
+                <div className="space-y-2 text-sm text-emerald-600/80 dark:text-emerald-400/80">
                   <p>&ldquo;哪些产品销量最高？&rdquo;</p>
                   <p>&ldquo;月度收入变化趋势如何？&rdquo;</p>
                   <p>&ldquo;用户年龄分布是什么样的？&rdquo;</p>
@@ -1033,29 +1042,7 @@ export default function HomePage() {
       );
     }
 
-    // ========================================
-    // 数据故事
-    // ========================================
-    if (viewMode === 'data-story' && parsedData) {
-      return (
-        <div className="relative">
-          <DataStorytelling data={parsedData} fieldStats={analysis?.fieldStats || []} modelConfig={activeModelConfig || undefined} />
-          <SceneAgentPanel sceneId="data-analyze" sceneName="数据故事" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
 
-    // ========================================
-    // 行业场景
-    // ========================================
-    if (viewMode === 'industry-scenario' && parsedData) {
-      return (
-        <div className="relative">
-          <IndustryScenario data={parsedData} fieldStats={analysis?.fieldStats || []} modelConfig={activeModelConfig || undefined} onNavigate={(view) => setViewMode(view as ViewMode)} />
-          <SceneAgentPanel sceneId="data-analyze" sceneName="行业场景" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
 
     // ========================================
     // SQL 查询
@@ -1098,7 +1085,7 @@ export default function HomePage() {
               {analysis ? (
                 <ReportGenerator data={parsedData} analysis={analysis} />
               ) : (
-                <div className="flex items-center justify-center py-12 text-gray-400">数据正在分析中...</div>
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">数据正在分析中...</div>
               )}
             </TabsContent>
             <TabsContent value="export">
@@ -1210,19 +1197,19 @@ export default function HomePage() {
       {/* ===== 右侧主区域 ===== */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* 顶部栏 */}
-        <header className="h-14 bg-white border-b flex items-center justify-between px-5 flex-shrink-0">
+        <header className="h-14 bg-background/80 backdrop-blur-sm border-b flex items-center justify-between px-5 flex-shrink-0">
           <div className="flex items-center gap-3">
             {/* 面包屑 */}
             <button
               onClick={() => setViewMode('home')}
-              className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-sm text-muted-foreground/60 hover:text-foreground transition-colors"
             >
               工作台
             </button>
             {viewMode !== 'home' && (
               <>
-                <span className="text-gray-300">/</span>
-                <span className="text-sm font-medium text-gray-700">{getCurrentViewTitle()}</span>
+                <span className="text-muted-foreground/30">/</span>
+                <span className="text-sm font-medium text-foreground">{getCurrentViewTitle()}</span>
               </>
             )}
           </div>
@@ -1232,7 +1219,7 @@ export default function HomePage() {
             {!activeModelConfig && (
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
+                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/15 transition-colors cursor-pointer"
               >
                 <AlertCircle className="w-3 h-3" />
                 未配置AI模型
@@ -1241,7 +1228,7 @@ export default function HomePage() {
             {/* 数据状态指示 */}
             {parsedData ? (
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="flex items-center gap-1 text-xs bg-green-50 text-green-700 border-green-200">
+                <Badge variant="secondary" className="flex items-center gap-1 text-xs bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
                   <CheckCircle className="w-3 h-3" />
                   {parsedData.fileName}
                 </Badge>
@@ -1251,14 +1238,14 @@ export default function HomePage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs text-gray-500 hover:text-red-600"
+                  className="h-7 text-xs text-muted-foreground hover:text-destructive"
                   onClick={handleGoHome}
                 >
                   切换数据
                 </Button>
               </div>
             ) : (
-              <span className="text-xs text-gray-400">请上传数据</span>
+              <span className="text-xs text-muted-foreground/50">请上传数据</span>
             )}
 
             <Separator orientation="vertical" className="h-5" />
@@ -1266,7 +1253,7 @@ export default function HomePage() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowSettings(true)}>
-                  <Settings className="w-4 h-4 text-gray-500" />
+                  <Settings className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>设置</TooltipContent>
