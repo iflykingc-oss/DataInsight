@@ -126,6 +126,15 @@ src/
     ├── metric-engine.ts       # 指标计算引擎（18预置+自定义+阈值检查）
     ├── cache-manager.ts       # 缓存管理（LRU+TTL+容量控制）
     ├── session-store.ts       # 会话存储（多Tab数据共享+事件通知）
+    ├── data-lifecycle.ts      # 数据生命周期管理（72小时TTL自动清理）
+    ├── agent/                 # 智能体核心层
+    │   └── core/              #   类型定义 / 全局调度智能体 / 场景智能体 / 意图路由 / 任务规划 / 上下文管理
+    ├── skills/                # 原子技能中台
+    │   ├── core/              #   类型定义 / 注册表 / 执行器
+    │   └── definitions/       #   104个技能定义（生成/清洗/分析/可视化/公式/解析）
+    ├── workflow/              # 工作流引擎
+    │   ├── core/              #   类型定义 / 执行引擎 / 注册表
+    │   └── definitions/       #   102个工作流定义（通用/销售/财务/项目/教育）
     ├── file-parser.worker.ts  # 文件解析Web Worker
     └── platform-types.ts      # 平台集成类型定义
 ```
