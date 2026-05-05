@@ -99,3 +99,11 @@ Desktop.ini
 
 .coze-logs
 assets/
+next-env.d.ts
+
+# App logs
+/app/work/logs/
+
+# Deployment artifacts
+.cozeproj/
+.canvas.json

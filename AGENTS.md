@@ -38,6 +38,8 @@
 | 分析 | 可视化 | 仪表盘 / AI生成 / 设计器 |
 | 分析 | 指标体系 | AI指标 / 指标管理 |
 | 分析 | 图表中心 | AI推荐 / 高级 / ECharts |
+| 分析 | 数据故事 | — |
+| 分析 | 行业场景 | — |
 | 工具 | AI问数 | — |
 | 工具 | AI多模态 | 生图 / 图转文 / 文转图 / 图转表 |
 | 工具 | 表单收集 | 表单设计 / 数据管理 |
@@ -62,6 +64,8 @@ src/
 │   │   ├── database/          # 数据库连接 API（外部数据库查询）
 │   │   ├── test-connection/   # AI 模型连接测试 API
 │   │   ├── analysis-planner/  # AI 分析规划 API（分析方案生成）
+│   │   ├── data-story/        # 数据故事 API（SSE流式生成5段式叙事）
+│   │   ├── industry-detect/   # 行业识别 API（AI自动识别8大行业）
 │   │   └── alerts/            # 数据告警 API（CRUD+模板）
 │   ├── globals.css
 │   ├── layout.tsx
@@ -99,6 +103,12 @@ src/
 │   ├── data-quality-checker.tsx # 数据质量检测
 │   ├── data-alerting.tsx      # 数据预警（6个预置模板+自定义规则+统计面板）
 │   ├── nl2-dashboard.tsx     # NL2Dashboard（流式生成+编辑）
+│   ├── data-storytelling.tsx  # 数据故事（AI生成5段式叙事+图表嵌入+PPT导出）
+│   ├── industry-scenario.tsx  # 行业场景（AI识别+模板+预置指标+仪表盘）
+│   ├── smart-data-prep.tsx    # 智能数据准备（上传即检测+一键修复+模板）
+│   ├── industry-dashboards.tsx # 行业大屏模板（8个行业ECharts可视化模板）
+│   ├── nl2sql-debug.tsx       # NL2SQL自调试（SQL生成→执行→错误→修正循环）
+│   ├── ai-preset-manager.tsx  # AI预设管理器（.gpt.md格式+导入导出+分类）
 │   ├── echarts-extensions.tsx # ECharts高级图表（10种）
 │   ├── extended-chart-gallery.tsx # 扩展图表面板
 │   ├── linked-tables.tsx      # 多表关联管理（关联字段+Lookup+联合查询）
@@ -138,6 +148,9 @@ src/
     │   ├── core/              #   类型定义 / 执行引擎 / 注册表
     │   └── definitions/       #   102个工作流定义（通用/销售/财务/项目/教育）
     ├── file-parser.worker.ts  # 文件解析Web Worker
+    ├── safe-storage.ts         # 统一存储层（自动降级sessionStorage+容量预警）
+    ├── auth-middleware.ts      # API鉴权中间件（JWT验证+权限检查）
+    ├── data-lifecycle-provider.tsx # 数据生命周期Provider（TTL检查+预警）
     └── platform-types.ts      # 平台集成类型定义
 ```
 
@@ -293,6 +306,44 @@ AI 智能生成指标体系
 
 ### POST /api/nl2-dashboard
 NL2Dashboard 智能仪表盘生成（业务驱动）
+
+### POST /api/data-story
+AI 数据故事生成（SSE流式，5段式叙事结构）
+
+**请求**:
+```json
+{
+  "data": { "headers": [...], "rows": [...] },
+  "fieldStats": [...],
+  "storyType": "executive|detailed|interactive",
+  "focusAreas": ["sales", "customer"]
+}
+```
+
+**响应**: SSE 流式（text/event-stream）
+
+### POST /api/industry-detect
+AI 行业识别（基于表头和样本数据推断行业）
+
+**请求**:
+```json
+{
+  "headers": ["商品名称", "销售额", "客户年龄", "购买日期"],
+  "sampleRows": [{...}, {...}]
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "data": {
+    "industry": "retail",
+    "confidence": 0.92,
+    "metrics": ["月销售额", "客单价", "复购率"]
+  }
+}
+```
 
 ### GET /api/alerts
 获取告警模板列表（20个预置模板 + 6大分类）
@@ -496,7 +547,8 @@ AI 模型连接测试
 10. **主题**: 使用 CSS Variables + Tailwind 语义化类名，禁止硬编码颜色
 11. **懒加载**: 所有组件使用 `next/dynamic` 懒加载+SSR禁用，减少首屏编译时间
 12. **智能体架构**: 全局调度智能体 + Tab场景专属智能体，意图路由 + 任务规划 + 技能调用
-13. **出海合规**: 用户业务数据零存储（仅页面内存+临时会话），表单数据72小时TTL自动清理
+13. **出海合规**: 用户业务数据零存储（仅页面内存+临时会话），表单数据72小时TTL自动清理（24小时预警通知）
 14. **技能中台**: 104个原子技能 + 18个高频技能handler实现（表格生成/清洗/分析/可视化/公式）
 15. **工作流引擎**: 102个预制工作流 + 双引擎（固化+动态编排），支持串行/分支/并行执行
-12. **AI多模态**: 图片生成使用 pollinations.ai CDN，无需API Key；图转文/图转表/语音转写需要配置AI模型
+16. **AI多模态**: 图片生成使用 pollinations.ai CDN，无需API Key；图转文/图转表/语音转写需要配置AI模型
+17. **API鉴权**: 所有数据处理API路由已添加 `verifyAuth` 中间件，需携带 Bearer Token
