@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import '@/lib/auth-server';
 import { verifyAdmin, verifyAuth } from '@/lib/auth-middleware';
 import { getAIConfig, updateAIConfig } from '@/lib/auth';
 import { validate, withSecurityHeaders } from '@/lib/validation';

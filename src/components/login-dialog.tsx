@@ -76,17 +76,26 @@ export function LoginDialog() {
 
   return (
     <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
-      <DialogContent className="sm:max-w-[420px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg">
-            <LogIn className="w-5 h-5" />
-            {isInitMode ? '初始化管理员账号' : '登录 DataInsight'}
-          </DialogTitle>
-          <DialogDescription>
-            {isInitMode
-              ? '系统首次使用，请创建管理员账号'
-              : '登录后即可使用全部功能'}
-          </DialogDescription>
+      <DialogContent showCloseButton={false} className="sm:max-w-[420px]">
+        <DialogHeader className="flex flex-row items-start justify-between">
+          <div className="space-y-1.5">
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <LogIn className="w-5 h-5" />
+              {isInitMode ? '初始化管理员账号' : '登录 DataInsight'}
+            </DialogTitle>
+            <DialogDescription>
+              {isInitMode
+                ? '系统首次使用，请创建管理员账号'
+                : '登录后即可使用全部功能'}
+            </DialogDescription>
+          </div>
+          <button
+            onClick={() => setLoginDialogOpen(false)}
+            className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none mt-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <span className="sr-only">关闭</span>
+          </button>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">

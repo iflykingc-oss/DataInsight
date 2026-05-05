@@ -17,7 +17,6 @@ import {
   CheckCircle,
   AlertCircle,
   Download,
-  Trash2,
   Mail,
   MessageSquare,
   Webhook,
@@ -34,7 +33,6 @@ import {
   Key,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { privacyMode } from '@/lib/security/privacy-mode';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 import { useAuth } from '@/lib/use-auth';
 import { Badge } from '@/components/ui/badge';
@@ -233,69 +231,28 @@ export default function SettingsDialog({
               />
             </div>
             <div className="flex items-center justify-between py-3 border-b border-border/50">
-              <div>
-                <p className="font-medium text-sm">数据缓存</p>
-                <p className="text-xs text-muted-foreground">本地存储分析数据</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-border/50">
-              <div>
-                <p className="font-medium text-sm">自动保存</p>
-                <p className="text-xs text-muted-foreground">每5分钟自动保存</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between py-3 border-b border-border/50">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-primary" />
                 <div>
-                  <p className="font-medium text-sm">隐私模式</p>
-                  <p className="text-xs text-muted-foreground">数据仅存于内存，关闭页面后自动销毁</p>
+                  <p className="font-medium text-sm">数据安全声明</p>
+                  <p className="text-xs text-muted-foreground">除账号权限配置和表单收集数据外，系统不保存任何用户数据</p>
                 </div>
               </div>
-              <Switch
-                checked={privacyMode.enabled}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    privacyMode.enable();
-                  } else {
-                    privacyMode.disable();
-                  }
-                  setNotificationConfig(prev => ({ ...prev }));
-                }}
-              />
             </div>
-            {privacyMode.enabled && (
-              <Card className="mt-2 border-primary/30 bg-primary/5">
-                <CardContent className="pt-3 pb-3">
-                  <div className="flex items-start gap-2">
-                    <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                    <div className="text-xs space-y-1">
-                      <p className="font-medium text-primary">隐私模式已开启</p>
-                      <p className="text-muted-foreground">所有数据仅存储在浏览器内存中，页面关闭后将彻底销毁。</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-1 h-6 text-xs"
-                        onClick={() => {
-                          privacyMode.destroyAll();
-                          setNotificationConfig(prev => ({ ...prev }));
-                        }}
-                      >
-                        <Trash2 className="w-3 h-3 mr-1" />
-                        立即销毁所有数据
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground space-y-1 mt-2">
+              <p className="font-medium text-foreground">数据处理原则</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>上传的表格数据仅用于页面内存分析，关闭页面后自动释放</li>
+                <li>AI 交互记录不存储，对话仅在当前会话有效</li>
+                <li>账号与权限配置持久化存储，保障多设备访问</li>
+                <li>表单收集数据设有 72 小时 TTL，到期自动清除</li>
+              </ul>
+            </div>
             {/* 数据管理 */}
             <div className="pt-4 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">数据管理</p>
+              <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">配置管理</p>
               <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
-                const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library', 'datainsight_notification_config'];
+                const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library', 'datainsight_notification_config', 'datainsight-darkmode'];
                 const exportData: Record<string, unknown> = {};
                 configKeys.forEach(key => {
                   const val = localStorage.getItem(key);
@@ -308,20 +265,9 @@ export default function SettingsDialog({
                 a.download = `datainsight-config-${new Date().toISOString().slice(0, 10)}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
-                onOpenChange(false);
               }}>
                 <Download className="w-4 h-4 mr-2" />
                 导出配置
-              </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
-                if (confirm('确定清除所有缓存数据？此操作不可恢复。')) {
-                  localStorage.clear();
-                  onOpenChange(false);
-                  window.location.reload();
-                }
-              }}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                清除缓存并刷新
               </Button>
             </div>
           </div>
@@ -445,9 +391,16 @@ export default function SettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] p-0 gap-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-5 pb-0">
+      <DialogContent showCloseButton={false} className="max-w-3xl max-h-[80vh] p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-5 pb-0 flex flex-row items-center justify-between">
           <DialogTitle className="text-base">设置与管理</DialogTitle>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <span className="sr-only">关闭</span>
+          </button>
         </DialogHeader>
         <div className="flex min-h-[480px]">
           {/* 左侧导航列表 */}

@@ -3,21 +3,34 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { showError, showSuccess } from './feedback';
 
+export type UserRole = 'admin' | 'editor' | 'analyst' | 'viewer' | 'custom';
+
+export interface UserPermissions {
+  upload: boolean;
+  export: boolean;
+  ai_analyze: boolean;
+  ai_table_builder: boolean;
+  ai_formula: boolean;
+  ai_field: boolean;
+  dashboard: boolean;
+  report: boolean;
+  share: boolean;
+  sql_query: boolean;
+  metric_custom: boolean;
+  workflow: boolean;
+  form: boolean;
+  custom_ai_model: boolean;
+  admin_user: boolean;
+  admin_ai_config: boolean;
+}
+
 export interface User {
   id: number;
   username: string;
   name: string;
-  role: 'admin' | 'member';
+  role: UserRole;
   status: 'active' | 'disabled';
-  permissions: {
-    ai_analyze: boolean;
-    export: boolean;
-    dashboard: boolean;
-    share: boolean;
-    upload: boolean;
-    form: boolean;
-    custom_ai_model: boolean;
-  };
+  permissions: UserPermissions;
   createdBy: number | null;
   createdAt: string;
 }

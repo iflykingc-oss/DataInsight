@@ -181,7 +181,7 @@ export const Validators = {
   role: {
     type: 'string' as const,
     required: true,
-    enum: ['admin', 'member'],
+    enum: ['admin', 'editor', 'analyst', 'viewer', 'custom'],
   },
   apiKey: {
     type: 'string' as const,

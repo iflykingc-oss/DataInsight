@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import '@/lib/auth-server';
 import { verifyAdmin } from '@/lib/auth-middleware';
 import { getLoginLogs } from '@/lib/auth';
 

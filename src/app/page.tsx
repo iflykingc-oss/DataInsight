@@ -44,9 +44,7 @@ import { UserMenu } from '@/components/user-menu';
 const AdminPanel = dynamic(() => import('@/components/admin-panel').then(m => ({ default: m.default })), { ssr: false });
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
-import { tripleCache } from '@/lib/cache-manager';
-import { initSessionStore, sessionStore, createChatSession } from '@/lib/session-store';
-import { storeBusinessData, readBusinessData, checkTTLWarning } from '@/lib/data-lifecycle';
+import { checkTTLWarning } from '@/lib/data-lifecycle';
 
 // 动态导入：首屏不需要的组件按需加载，大幅减小初始JS体积
 const DataTable = dynamic(() => import('@/components/data-table').then(m => ({ default: m.DataTable })), { ssr: false });
@@ -119,10 +117,7 @@ export default function HomePage() {
     }
   }, []);
 
-  // 初始化 SessionStore
-  useEffect(() => {
-    initSessionStore().catch(console.error);
-  }, []);
+
 
   const [showSettings, setShowSettings] = useState(false);
   const [adminPanelOpen, setAdminPanelOpen] = useState(false);
@@ -145,15 +140,8 @@ export default function HomePage() {
   const [kanbanField, setKanbanField] = useState<string>('');
   const [dateField, setDateField] = useState<string>('');
   const [ganttConfig, setGanttConfig] = useState<{ nameField: string; startField: string; endField: string }>({ nameField: '', startField: '', endField: '' });
-  // 多表数据存储（用于关联表功能）
-  const [multiTableData, setMultiTableData] = useState<ParsedData[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        return readBusinessData<ParsedData[]>('datainsight-tables') || [];
-      } catch { return []; }
-    }
-    return [];
-  });
+  // 多表数据存储（仅当前会话内存，不持久化）
+  const [multiTableData, setMultiTableData] = useState<ParsedData[]>([]);
 
 
   // 模型配置状态 - 初始为null避免SSR不一致
@@ -317,7 +305,6 @@ export default function HomePage() {
           next = next.filter(t => t.fileName !== data.fileName);
           next.push(data);
         }
-        storeBusinessData('datainsight-tables', next);
         return next;
       });
 
@@ -330,49 +317,28 @@ export default function HomePage() {
 
       setViewMode('data-table');
 
-      // 对主视图数据执行分析（使用当前主视图数据或第一个文件数据）
+      // 对主视图数据执行分析
       const dataToAnalyze = parsedData || firstParsedData;
-      const dataHash = tripleCache.hashData(dataToAnalyze);
-      const cachedAnalysis = tripleCache.getAnalysis(dataHash);
+      const analyzeResponse = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ data: dataToAnalyze }),
+      });
 
-      if (cachedAnalysis) {
-        console.log('[Upload] Cache hit');
-        setAnalysis(cachedAnalysis);
-        toast.success('从缓存加载分析结果', { description: '数据已分析过，直接展示缓存结果' });
-      } else {
-        console.log('[Upload] Cache miss, calling /api/analyze');
-        const analyzeResponse = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ data: dataToAnalyze }),
-        });
-
-        if (analyzeResponse.ok) {
-          const analyzeResult = await analyzeResponse.json();
-          if (analyzeResult.success && analyzeResult.analysis) {
-            console.log('[Upload] Analysis complete, insights:', analyzeResult.analysis.insights?.length);
-            setAnalysis(analyzeResult.analysis);
-            tripleCache.cacheAnalysis(dataHash, analyzeResult.analysis, dataToAnalyze.columnCount);
-          } else {
-            console.error('[Upload] Invalid analysis result:', analyzeResult.error);
-            setError('数据分析失败: ' + (analyzeResult.error || '未知错误'));
-          }
+      if (analyzeResponse.ok) {
+        const analyzeResult = await analyzeResponse.json();
+        if (analyzeResult.success && analyzeResult.analysis) {
+          console.log('[Upload] Analysis complete, insights:', analyzeResult.analysis.insights?.length);
+          setAnalysis(analyzeResult.analysis);
         } else {
-          console.error('[Upload] Analysis request failed:', analyzeResponse.status);
-          setError('分析请求失败，HTTP ' + analyzeResponse.status);
+          console.error('[Upload] Invalid analysis result:', analyzeResult.error);
+          setError('数据分析失败: ' + (analyzeResult.error || '未知错误'));
         }
+      } else {
+        console.error('[Upload] Analysis request failed:', analyzeResponse.status);
+        setError('分析请求失败，HTTP ' + analyzeResponse.status);
       }
 
-      const chatSession = createChatSession(
-        `分析-${dataToAnalyze.fileName}`,
-        dataHash,
-        {
-          fileName: dataToAnalyze.fileName,
-          rowCount: dataToAnalyze.rowCount,
-          columnCount: dataToAnalyze.columnCount
-        }
-      );
-      await sessionStore.saveChatSession(chatSession);
       pendingUploadRef.current = null;
 
     } catch (err) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import '@/lib/auth-server';
 import { verifyAdmin } from '@/lib/auth-middleware';
 import {
   getAllUsers,
@@ -59,9 +60,9 @@ export async function POST(request: NextRequest) {
     const user = await createUser({
       username: username as string,
       name: name as string,
-      role: role as 'admin' | 'member',
+      role: role as 'admin' | 'editor' | 'analyst' | 'viewer' | 'custom',
       password: password as string,
-      permissions: permissions as { ai_analyze: boolean; export: boolean; dashboard: boolean; share: boolean; upload: boolean; form: boolean; custom_ai_model: boolean; } | undefined,
+      permissions: permissions as unknown as import('@/lib/auth').UserPermissions | undefined,
       createdBy: auth.user!.id,
     });
 
@@ -104,7 +105,7 @@ export async function PUT(request: NextRequest) {
     const validation = validate(body, {
       username: { type: 'string', minLength: 3, maxLength: 50 },
       name: { type: 'string', minLength: 1, maxLength: 100 },
-      role: { type: 'string', enum: ['admin', 'member'] },
+      role: { type: 'string', enum: ['admin', 'editor', 'analyst', 'viewer', 'custom'] },
       status: { type: 'string', enum: ['active', 'disabled'] },
       password: { type: 'string', minLength: 8, maxLength: 128 },
       permissions: { type: 'object' },

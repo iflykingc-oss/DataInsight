@@ -39,7 +39,10 @@ import {
   XCircle,
   Activity,
   KeyRound,
+  LayoutGrid,
+  Settings2,
 } from 'lucide-react';
+import { ROLE_TEMPLATES, PERMISSION_LABELS, type Role } from '@/lib/auth';
 
 interface UserData {
   id: number;
@@ -47,14 +50,7 @@ interface UserData {
   name: string;
   role: string;
   status: string;
-  permissions: {
-    ai_analyze: boolean;
-    export: boolean;
-    dashboard: boolean;
-    share: boolean;
-    upload: boolean;
-    custom_ai_model: boolean;
-  };
+  permissions: Record<string, boolean>;
   createdAt: string;
 }
 
@@ -78,6 +74,14 @@ interface AdminPanelProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const ROLE_OPTIONS: { value: Role; label: string; desc: string }[] = [
+  { value: 'admin', label: '管理员', desc: '全部权限' },
+  { value: 'editor', label: '编辑者', desc: '可上传、分析、建表、仪表盘' },
+  { value: 'analyst', label: '分析师', desc: '可分析、图表、SQL查询' },
+  { value: 'viewer', label: '查看者', desc: '仅查看仪表盘和报表' },
+  { value: 'custom', label: '自定义', desc: '手动配置权限' },
+];
+
 export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('users');
@@ -89,19 +93,18 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [users, setUsers] = useState<UserData[]>([]);
   const [userFormOpen, setUserFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    username: string;
+    name: string;
+    role: Role;
+    password: string;
+    permissions: Record<string, boolean>;
+  }>({
     username: '',
     name: '',
-    role: 'member' as 'admin' | 'member',
+    role: 'editor',
     password: '',
-    permissions: {
-      ai_analyze: true,
-      export: true,
-      dashboard: true,
-      share: true,
-      upload: true,
-      custom_ai_model: false,
-    },
+    permissions: { ...ROLE_TEMPLATES.editor },
   });
 
   // 登录记录
@@ -174,6 +177,15 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       fetchAIConfig();
     }
   }, [open, user, fetchUsers, fetchLoginLogs, fetchAIConfig]);
+
+  const applyRoleTemplate = (role: Role) => {
+    if (role === 'custom') return;
+    setFormData((prev) => ({
+      ...prev,
+      role,
+      permissions: { ...ROLE_TEMPLATES[role] },
+    }));
+  };
 
   // 添加/编辑用户
   const handleSaveUser = async () => {
@@ -251,7 +263,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     setFormData({
       username: u.username,
       name: u.name,
-      role: u.role as 'admin' | 'member',
+      role: (u.role as Role) || 'editor',
       password: '',
       permissions: { ...u.permissions },
     });
@@ -263,21 +275,13 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     setFormData({
       username: '',
       name: '',
-      role: 'member',
+      role: 'editor',
       password: '',
-      permissions: {
-        ai_analyze: true,
-        export: true,
-        dashboard: true,
-        share: true,
-        upload: true,
-        custom_ai_model: false,
-      },
+      permissions: { ...ROLE_TEMPLATES.editor },
     });
     setUserFormOpen(true);
   };
 
-  // 保存AI配置
   const handleSaveAIConfig = async () => {
     setAiConfigLoading(true);
     try {
@@ -302,7 +306,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     }
   };
 
-  const togglePermission = (key: keyof typeof formData.permissions) => {
+  const togglePermission = (key: string) => {
     setFormData((prev) => ({
       ...prev,
       permissions: {
@@ -312,19 +316,64 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     }));
   };
 
+  // 权限按类别分组
+  const permissionCategories = [
+    {
+      key: '数据与AI',
+      icon: <Brain className="w-4 h-4" />,
+      keys: ['upload', 'export', 'ai_analyze', 'ai_table_builder', 'ai_formula', 'ai_field'],
+    },
+    {
+      key: '可视化与报表',
+      icon: <LayoutGrid className="w-4 h-4" />,
+      keys: ['dashboard', 'report', 'share', 'metric_custom', 'form'],
+    },
+    {
+      key: '高级功能',
+      icon: <Settings2 className="w-4 h-4" />,
+      keys: ['sql_query', 'workflow', 'custom_ai_model'],
+    },
+    {
+      key: '系统管理',
+      icon: <Shield className="w-4 h-4" />,
+      keys: ['admin_user', 'admin_ai_config'],
+    },
+  ];
+
+  const getRoleBadge = (role: string) => {
+    const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+      admin: { label: '管理员', variant: 'default' },
+      editor: { label: '编辑者', variant: 'secondary' },
+      analyst: { label: '分析师', variant: 'outline' },
+      viewer: { label: '查看者', variant: 'outline' },
+      custom: { label: '自定义', variant: 'destructive' },
+    };
+    const cfg = map[role] || { label: role, variant: 'outline' as const };
+    return <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>;
+  };
+
   if (user?.role !== 'admin') return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            管理员控制台
-          </DialogTitle>
-          <DialogDescription>
-            管理用户账号、权限配置和系统设置
-          </DialogDescription>
+      <DialogContent showCloseButton={false} className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="flex flex-row items-start justify-between">
+          <div className="space-y-1.5">
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              管理员控制台
+            </DialogTitle>
+            <DialogDescription>
+              管理用户账号、权限配置和系统设置
+            </DialogDescription>
+          </div>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none mt-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            <span className="sr-only">关闭</span>
+          </button>
         </DialogHeader>
 
         {error && (
@@ -376,12 +425,10 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                     <TableHead>姓名</TableHead>
                     <TableHead>账户</TableHead>
                     <TableHead>角色</TableHead>
-                    <TableHead>AI分析</TableHead>
-                    <TableHead>导出</TableHead>
+                    <TableHead>数据</TableHead>
+                    <TableHead>AI</TableHead>
                     <TableHead>仪表盘</TableHead>
-                    <TableHead>分享</TableHead>
-                    <TableHead>上传</TableHead>
-                    <TableHead>自定义模型</TableHead>
+                    <TableHead>系统</TableHead>
                     <TableHead className="w-[100px]">操作</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -390,17 +437,33 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.name}</TableCell>
                       <TableCell className="text-xs">{u.username}</TableCell>
+                      <TableCell>{getRoleBadge(u.role)}</TableCell>
                       <TableCell>
-                        <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-                          {u.role === 'admin' ? '管理员' : '成员'}
-                        </Badge>
+                        <div className="flex gap-1 flex-wrap">
+                          {u.permissions.upload && <Badge variant="outline" className="text-[10px] h-5">上传</Badge>}
+                          {u.permissions.export && <Badge variant="outline" className="text-[10px] h-5">导出</Badge>}
+                        </div>
                       </TableCell>
-                      <TableCell>{u.permissions.ai_analyze ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-400" />}</TableCell>
-                      <TableCell>{u.permissions.export ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-400" />}</TableCell>
-                      <TableCell>{u.permissions.dashboard ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-400" />}</TableCell>
-                      <TableCell>{u.permissions.share ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-400" />}</TableCell>
-                      <TableCell>{u.permissions.upload ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-400" />}</TableCell>
-                      <TableCell>{u.permissions.custom_ai_model ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-gray-400" />}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          {u.permissions.ai_analyze && <Badge variant="outline" className="text-[10px] h-5">分析</Badge>}
+                          {u.permissions.ai_table_builder && <Badge variant="outline" className="text-[10px] h-5">建表</Badge>}
+                          {u.permissions.ai_formula && <Badge variant="outline" className="text-[10px] h-5">公式</Badge>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          {u.permissions.dashboard && <Badge variant="outline" className="text-[10px] h-5">仪表盘</Badge>}
+                          {u.permissions.share && <Badge variant="outline" className="text-[10px] h-5">分享</Badge>}
+                          {u.permissions.report && <Badge variant="outline" className="text-[10px] h-5">报表</Badge>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          {u.permissions.admin_user && <Badge variant="outline" className="text-[10px] h-5">用户管理</Badge>}
+                          {u.permissions.admin_ai_config && <Badge variant="outline" className="text-[10px] h-5">AI配置</Badge>}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button
@@ -431,11 +494,18 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
 
             {/* 添加/编辑用户弹窗 */}
             <Dialog open={userFormOpen} onOpenChange={setUserFormOpen}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
+              <DialogContent showCloseButton={false} className="max-w-lg max-h-[85vh] overflow-y-auto">
+                <DialogHeader className="flex flex-row items-start justify-between">
                   <DialogTitle>{editingUser ? '编辑用户' : '添加用户'}</DialogTitle>
+                  <button
+                    onClick={() => setUserFormOpen(false)}
+                    className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    <span className="sr-only">关闭</span>
+                  </button>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {!editingUser && (
                     <div className="space-y-2">
                       <Label>账户 *</Label>
@@ -454,29 +524,32 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                       placeholder="用户姓名"
                     />
                   </div>
+
+                  {/* 角色选择 */}
                   <div className="space-y-2">
-                    <Label>角色</Label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="role"
-                          checked={formData.role === 'member'}
-                          onChange={() => setFormData({ ...formData, role: 'member' })}
-                        />
-                        成员
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          name="role"
-                          checked={formData.role === 'admin'}
-                          onChange={() => setFormData({ ...formData, role: 'admin' })}
-                        />
-                        管理员
-                      </label>
+                    <Label>角色模板</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {ROLE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => applyRoleTemplate(opt.value)}
+                          className={`relative flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
+                            formData.role === opt.value
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                              : 'border-border hover:border-muted-foreground/30'
+                          }`}
+                        >
+                          <span className="text-sm font-medium">{opt.label}</span>
+                          <span className="text-xs text-muted-foreground mt-0.5">{opt.desc}</span>
+                          {formData.role === opt.value && (
+                            <CheckCircle2 className="w-4 h-4 text-primary absolute top-2 right-2" />
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
+
                   <div className="space-y-2">
                     <Label>{editingUser ? '新密码（留空不修改）' : '密码（留空自动生成）'}</Label>
                     <Input
@@ -487,28 +560,36 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                     />
                   </div>
 
-                  <div className="space-y-3 pt-2">
-                    <Label className="font-medium">功能权限</Label>
-                    {(
-                      [
-                        ['ai_analyze', 'AI智能分析'],
-                        ['export', '数据导出'],
-                        ['dashboard', '仪表盘创建'],
-                        ['share', '分享链接'],
-                        ['upload', '文件上传'],
-                        ['form', '表单收集'],
-                        ['custom_ai_model', '自定义AI模型'],
-                      ] as [keyof typeof formData.permissions, string][]
-                    ).map(([key, label]) => (
-                      <div key={key} className="flex items-center justify-between">
-                        <span className="text-sm">{label}</span>
-                        <Switch
-                          checked={formData.permissions[key]}
-                          onCheckedChange={() => togglePermission(key)}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  {/* 权限配置 */}
+                  {formData.role === 'custom' && (
+                    <div className="space-y-4 pt-2 border-t">
+                      <Label className="font-medium">自定义权限</Label>
+                      {permissionCategories.map((cat) => (
+                        <div key={cat.key} className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                            {cat.icon}
+                            {cat.key}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {cat.keys
+                              .filter((k) => PERMISSION_LABELS[k as keyof typeof PERMISSION_LABELS])
+                              .map((key) => (
+                                <div key={key} className="flex items-center justify-between bg-muted/40 rounded-md px-3 py-2">
+                                  <span className="text-sm">
+                                    {PERMISSION_LABELS[key as keyof typeof PERMISSION_LABELS] || key}
+                                  </span>
+                                  <Switch
+                                    checked={!!formData.permissions[key]}
+                                    onCheckedChange={() => togglePermission(key)}
+                                    className="scale-90"
+                                  />
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <Button onClick={handleSaveUser} disabled={loading} className="w-full">
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

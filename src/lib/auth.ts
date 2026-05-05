@@ -1,28 +1,40 @@
 /**
  * 认证与权限管理核心
- * 持久化版：用户数据保存到文件系统，服务器重启不丢失
+ * 安全增强版：移除硬编码密码，强制首次登录初始化
  */
 
 import bcrypt from 'bcryptjs';
-import fs from 'fs';
-import path from 'path';
+
+export type Role = 'admin' | 'editor' | 'analyst' | 'viewer' | 'custom';
+export type UserRole = Role;
+
+export interface UserPermissions {
+  upload: boolean;
+  export: boolean;
+  ai_analyze: boolean;
+  ai_table_builder: boolean;
+  ai_formula: boolean;
+  ai_field: boolean;
+  dashboard: boolean;
+  report: boolean;
+  share: boolean;
+  sql_query: boolean;
+  metric_custom: boolean;
+  workflow: boolean;
+  form: boolean;
+  custom_ai_model: boolean;
+  admin_user: boolean;
+  admin_ai_config: boolean;
+}
 
 export interface User {
   id: number;
   username: string;
   passwordHash: string;
   name: string;
-  role: 'admin' | 'member';
+  role: Role;
   status: 'active' | 'disabled';
-  permissions: {
-    ai_analyze: boolean;
-    export: boolean;
-    dashboard: boolean;
-    share: boolean;
-    upload: boolean;
-    form: boolean;
-    custom_ai_model: boolean;
-  };
+  permissions: UserPermissions;
   createdBy: number | null;
   createdAt: string;
 }
@@ -56,7 +68,7 @@ export interface AIConfig {
 }
 
 // ==================== 安全存储接口（可替换实现） ====================
-interface AuthStorage {
+export interface AuthStorage {
   getUsers(): Map<number, User>;
   saveUser(user: User): void;
   deleteUser(id: number): boolean;
@@ -104,13 +116,10 @@ class MemoryAuthStorage implements AuthStorage {
         role: 'admin',
         status: 'active',
         permissions: {
-          ai_analyze: true,
-          export: true,
-          dashboard: true,
-          share: true,
-          upload: true,
-          form: true,
-          custom_ai_model: true,
+          upload: true, export: true, ai_analyze: true, ai_table_builder: true,
+          ai_formula: true, ai_field: true, dashboard: true, report: true,
+          share: true, sql_query: true, metric_custom: true, workflow: true,
+          form: true, custom_ai_model: true, admin_user: true, admin_ai_config: true,
         },
         createdBy: null,
         createdAt: new Date().toISOString(),
@@ -146,108 +155,8 @@ class MemoryAuthStorage implements AuthStorage {
   saveAIConfig(config: AIConfig): void { this.aiConfig = config; }
 }
 
-// ==================== 文件持久化存储 ====================
-const DATA_DIR = path.join(process.cwd(), '.data');
-const AUTH_FILE = path.join(DATA_DIR, 'auth-store.json');
-
-class PersistentAuthStorage extends MemoryAuthStorage {
-  private dirty = false;
-  private saveTimer: ReturnType<typeof setTimeout> | null = null;
-
-  constructor() {
-    super();
-    this.loadFromFile();
-  }
-
-  private loadFromFile() {
-    try {
-      if (!fs.existsSync(AUTH_FILE)) return;
-      const raw = fs.readFileSync(AUTH_FILE, 'utf-8');
-      const data = JSON.parse(raw);
-
-      // 恢复用户
-      if (data.users && Array.isArray(data.users)) {
-        for (const u of data.users) {
-          super.saveUser(u);
-          if (u.id >= (this as unknown as { userIdCounter: number }).userIdCounter) {
-            (this as unknown as { userIdCounter: number }).userIdCounter = u.id + 1;
-          }
-        }
-      }
-
-      // 恢复登录日志
-      if (data.loginLogs && Array.isArray(data.loginLogs)) {
-        for (const l of data.loginLogs) {
-          super.addLoginLog(l);
-        }
-      }
-
-      // 恢复AI配置
-      if (data.aiConfig) {
-        super.saveAIConfig(data.aiConfig);
-      }
-
-      console.log(`[Auth] Loaded ${data.users?.length || 0} users from persistent storage`);
-    } catch (err) {
-      console.warn('[Auth] Failed to load persistent storage, starting fresh:', err instanceof Error ? err.message : err);
-    }
-  }
-
-  private scheduleSave() {
-    if (this.saveTimer) clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(() => this.saveNow(), 500);
-  }
-
-  private saveNow() {
-    try {
-      if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-      }
-      const usersMap = super.getUsers();
-      const usersArray = Array.from(usersMap.values());
-      console.log(`[Auth:Save] Saving ${usersArray.length} users to file:`, usersArray.map(u => u.username));
-      const data = {
-        users: usersArray,
-        loginLogs: super.getLoginLogs(),
-        aiConfig: super.getAIConfig(),
-        savedAt: new Date().toISOString(),
-      };
-      fs.writeFileSync(AUTH_FILE, JSON.stringify(data, null, 2), 'utf-8');
-      this.dirty = false;
-    } catch (err) {
-      console.error('[Auth] Failed to save persistent storage:', err instanceof Error ? err.message : err);
-    }
-  }
-
-  saveUser(user: User): void {
-    super.saveUser(user);
-    this.saveNow(); // Immediate save for user data integrity
-  }
-
-  deleteUser(id: number): boolean {
-    const result = super.deleteUser(id);
-    if (result) this.saveNow(); // Immediate save
-    return result;
-  }
-
-  addLoginLog(log: LoginLog): void {
-    super.addLoginLog(log);
-    this.scheduleSave(); // Login logs can be deferred
-  }
-
-  saveAIConfig(config: AIConfig): void {
-    super.saveAIConfig(config);
-    this.saveNow(); // Immediate save for config changes
-  }
-}
-
-// 全局存储实例（使用文件持久化）
-// 使用 globalThis 防止 HMR 导致的重复实例化
-const globalForAuth = globalThis as unknown as { __authStorage?: AuthStorage };
-if (!globalForAuth.__authStorage) {
-  globalForAuth.__authStorage = new PersistentAuthStorage();
-}
-let storage: AuthStorage = globalForAuth.__authStorage;
+// 全局存储实例（可替换为数据库存储）
+let storage: AuthStorage = new MemoryAuthStorage();
 
 export function setAuthStorage(newStorage: AuthStorage): void {
   storage = newStorage;
@@ -282,13 +191,10 @@ export async function initializeAdmin(username: string, password: string, name: 
     role: 'admin',
     status: 'active',
     permissions: {
-      ai_analyze: true,
-      export: true,
-      dashboard: true,
-      share: true,
-      upload: true,
-      form: true,
-      custom_ai_model: true,
+      upload: true, export: true, ai_analyze: true, ai_table_builder: true,
+      ai_formula: true, ai_field: true, dashboard: true, report: true,
+      share: true, sql_query: true, metric_custom: true, workflow: true,
+      form: true, custom_ai_model: true, admin_user: true, admin_ai_config: true,
     },
     createdBy: null,
     createdAt: new Date().toISOString(),
@@ -316,9 +222,9 @@ export function getAllUsers(): User[] {
 export async function createUser(data: {
   username: string;
   name: string;
-  role?: 'admin' | 'member';
+  role?: Role;
   password?: string;
-  permissions?: User['permissions'];
+  permissions?: UserPermissions;
   createdBy: number;
 }): Promise<User> {
   const s = getStorage();
@@ -338,16 +244,13 @@ export async function createUser(data: {
     username: data.username,
     passwordHash,
     name: data.name,
-    role: data.role || 'member',
+    role: data.role || 'editor',
     status: 'active',
     permissions: data.permissions || {
-      ai_analyze: true,
-      export: true,
-      dashboard: true,
-      share: true,
-      upload: true,
-      form: true,
-      custom_ai_model: false,
+      upload: true, export: true, ai_analyze: true, ai_table_builder: true,
+      ai_formula: true, ai_field: true, dashboard: true, report: true,
+      share: true, sql_query: true, metric_custom: true, workflow: true,
+      form: true, custom_ai_model: false, admin_user: false, admin_ai_config: false,
     },
     createdBy: data.createdBy,
     createdAt: new Date().toISOString(),
@@ -360,9 +263,9 @@ export async function createUser(data: {
 export async function updateUser(id: number, data: Partial<{
   username: string;
   name: string;
-  role: 'admin' | 'member';
+  role: Role;
   status: 'active' | 'disabled';
-  permissions: User['permissions'];
+  permissions: UserPermissions;
   password: string;
 }>): Promise<User | null> {
   const user = getStorage().getUsers().get(id);
@@ -450,6 +353,127 @@ export function addUsageStat(userId: number, action: string): void {
   }
 }
 
+// ==================== 角色模板与权限辅助 ====================
+
+export const ROLE_TEMPLATES: Record<Exclude<Role, 'custom'>, UserPermissions> = {
+  admin: {
+    upload: true, export: true, ai_analyze: true, ai_table_builder: true,
+    ai_formula: true, ai_field: true, dashboard: true, report: true,
+    share: true, sql_query: true, metric_custom: true, workflow: true,
+    form: true, custom_ai_model: true, admin_user: true, admin_ai_config: true,
+  },
+  editor: {
+    upload: true, export: true, ai_analyze: true, ai_table_builder: true,
+    ai_formula: true, ai_field: true, dashboard: true, report: true,
+    share: true, sql_query: true, metric_custom: true, workflow: true,
+    form: true, custom_ai_model: false, admin_user: false, admin_ai_config: false,
+  },
+  analyst: {
+    upload: false, export: false, ai_analyze: true, ai_table_builder: false,
+    ai_formula: false, ai_field: false, dashboard: true, report: true,
+    share: false, sql_query: true, metric_custom: true, workflow: false,
+    form: false, custom_ai_model: false, admin_user: false, admin_ai_config: false,
+  },
+  viewer: {
+    upload: false, export: false, ai_analyze: false, ai_table_builder: false,
+    ai_formula: false, ai_field: false, dashboard: true, report: true,
+    share: false, sql_query: false, metric_custom: false, workflow: false,
+    form: false, custom_ai_model: false, admin_user: false, admin_ai_config: false,
+  },
+};
+
+export const ROLE_LABELS: Record<Role, string> = {
+  admin: '管理员',
+  editor: '编辑者',
+  analyst: '分析师',
+  viewer: '查看者',
+  custom: '自定义',
+};
+
+export const ROLE_DESCRIPTIONS: Record<Exclude<Role, 'custom'>, string> = {
+  admin: '拥有所有权限，可管理用户和系统配置',
+  editor: '可上传数据、使用AI功能、创建仪表盘和报表',
+  analyst: '可进行数据分析、创建仪表盘和SQL查询，但不能上传数据',
+  viewer: '仅可查看仪表盘和报表，无法进行任何操作',
+};
+
+export const PERMISSION_LABELS: Record<keyof UserPermissions, string> = {
+  upload: '数据上传',
+  export: '数据导出',
+  ai_analyze: 'AI智能分析',
+  ai_table_builder: 'AI智能建表',
+  ai_formula: 'AI公式生成',
+  ai_field: 'AI字段生成',
+  dashboard: '仪表盘创建',
+  report: '报表导出',
+  share: '分享链接',
+  sql_query: 'SQL查询',
+  metric_custom: '自定义指标',
+  workflow: '自动化工作流',
+  form: '表单收集',
+  custom_ai_model: '自定义AI模型',
+  admin_user: '用户管理',
+  admin_ai_config: 'AI模型配置',
+};
+
+export interface PermissionCategory {
+  key: string;
+  label: string;
+  permissions: { key: keyof UserPermissions; label: string }[];
+}
+
+export const PERMISSION_CATEGORIES: PermissionCategory[] = [
+  {
+    key: 'data',
+    label: '数据操作',
+    permissions: [
+      { key: 'upload', label: '数据上传' },
+      { key: 'export', label: '数据导出' },
+      { key: 'ai_table_builder', label: 'AI智能建表' },
+      { key: 'ai_formula', label: 'AI公式生成' },
+      { key: 'ai_field', label: 'AI字段生成' },
+    ],
+  },
+  {
+    key: 'analysis',
+    label: '分析能力',
+    permissions: [
+      { key: 'ai_analyze', label: 'AI智能分析' },
+      { key: 'dashboard', label: '仪表盘创建' },
+      { key: 'report', label: '报表导出' },
+      { key: 'sql_query', label: 'SQL查询' },
+      { key: 'metric_custom', label: '自定义指标' },
+    ],
+  },
+  {
+    key: 'collaboration',
+    label: '协作分享',
+    permissions: [
+      { key: 'share', label: '分享链接' },
+      { key: 'workflow', label: '自动化工作流' },
+      { key: 'form', label: '表单收集' },
+    ],
+  },
+  {
+    key: 'admin',
+    label: '系统管理',
+    permissions: [
+      { key: 'admin_user', label: '用户管理' },
+      { key: 'admin_ai_config', label: 'AI模型配置' },
+      { key: 'custom_ai_model', label: '自定义AI模型' },
+    ],
+  },
+];
+
+export function checkPermission(
+  user: Omit<User, 'passwordHash'> | null,
+  key: keyof UserPermissions
+): boolean {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  return user.permissions[key] ?? false;
+}
+
 export function getUsageStats(userId?: number): UsageStat[] {
   const stats = getStorage().getUsageStats();
   if (userId) {
@@ -501,7 +525,7 @@ export function syncUsersFromDB(dbUsers: Array<{
       username: u.username,
       passwordHash: u.password_hash,
       name: u.name,
-      role: u.role as 'admin' | 'member',
+      role: u.role as Role,
       status: u.status as 'active' | 'disabled',
       permissions: u.permissions,
       createdBy: u.created_by,
