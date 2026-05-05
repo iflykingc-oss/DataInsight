@@ -56,9 +56,8 @@ const DataSourceManager = dynamic(() => import('@/components/data-source-manager
 const DataCleaner = dynamic(() => import('@/components/data-cleaner').then(m => ({ default: m.DataCleaner })), { ssr: false });
 const AdvancedCharts = dynamic(() => import('@/components/advanced-charts').then(m => ({ default: m.AdvancedCharts })), { ssr: false });
 const DashboardDesigner = dynamic(() => import('@/components/dashboard-designer').then(m => ({ default: m.DashboardDesigner })), { ssr: false });
-const EnhancedLLMAssistant = dynamic(() => import('@/components/enhanced-llm-assistant').then(m => ({ default: m.EnhancedLLMAssistant })), { ssr: false });
+const GlobalAgentAssistant = dynamic(() => import('@/components/global-agent-assistant').then(m => ({ default: m.GlobalAgentAssistant })), { ssr: false });
 const ShareManager = dynamic(() => import('@/components/share-manager').then(m => ({ default: m.ShareManager })), { ssr: false });
-const GlobalAIAssistant = dynamic(() => import('@/components/global-ai-assistant').then(m => ({ default: m.GlobalAIAssistant })), { ssr: false });
 const SmartChartRecommender = dynamic(() => import('@/components/smart-chart-recommender').then(m => ({ default: m.SmartChartRecommender })), { ssr: false });
 const AITableBuilder = dynamic(() => import('@/components/ai-table-builder'), { ssr: false });
 const MetricSemanticLayer = dynamic(() => import('@/components/metric-semantic-layer').then(m => ({ default: m.MetricSemanticLayer })), { ssr: false });
@@ -813,7 +812,22 @@ export default function HomePage() {
     if (viewMode === 'chat' && analysis) {
       return (
         <div className="grid lg:grid-cols-2 gap-6">
-          <EnhancedLLMAssistant data={parsedData!} analysis={analysis} modelConfig={activeModelConfig} />
+          <GlobalAgentAssistant
+            mode="embedded"
+            hasData={!!parsedData}
+            rowCount={parsedData?.rowCount}
+            data={parsedData || undefined}
+            fieldStats={analysis?.fieldStats}
+            modelConfig={activeModelConfig || undefined}
+            currentView={viewMode}
+            onAction={(action, params) => {
+              if (action === 'navigate' && params?.view) {
+                setViewMode(params.view as ViewMode);
+              } else if (action === 'open-settings') {
+                setShowSettings(true);
+              }
+            }}
+          />
           <Card>
             <CardContent className="pt-6 space-y-4">
               <div className="p-4 bg-blue-50 rounded-lg">
@@ -1054,12 +1068,13 @@ export default function HomePage() {
       <AdminPanel open={adminPanelOpen} onOpenChange={setAdminPanelOpen} />
 
       {/* 全局 AI 助手 */}
-      <GlobalAIAssistant
+      <GlobalAgentAssistant
+        mode="floating"
         hasData={!!parsedData}
         rowCount={parsedData?.rowCount}
         data={parsedData || undefined}
         fieldStats={analysis?.fieldStats}
-        modelConfig={activeModelConfig}
+        modelConfig={activeModelConfig || undefined}
         currentView={viewMode}
         onAction={(action, params) => {
           if (action === 'navigate' && params?.view) {
