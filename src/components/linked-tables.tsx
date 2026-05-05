@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DataTable } from '@/components/data-table';
 import type { ParsedData } from '@/lib/data-processor';
+import { storeBusinessData, readBusinessData } from '@/lib/data-lifecycle';
 
 interface TableRelation {
   id: string;
@@ -74,7 +75,7 @@ function buildEnrichedTable(baseTable: ParsedData, relations: TableRelation[], a
 export function LinkedTablesManager({ tables, activeTable, onTablesChange, onActiveTableChange }: LinkedTablesProps) {
   const [relations, setRelations] = useState<TableRelation[]>(() => {
     try {
-      return JSON.parse(localStorage.getItem('datainsight-relations') || '[]');
+      return readBusinessData<TableRelation[]>('datainsight-relations') || [];
     } catch {
       return [];
     }
@@ -85,7 +86,7 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
 
   const saveRelations = useCallback((rels: TableRelation[]) => {
     setRelations(rels);
-    localStorage.setItem('datainsight-relations', JSON.stringify(rels));
+    storeBusinessData('datainsight-relations', rels);
   }, []);
 
   const enrichedActiveTable = useMemo(() => {

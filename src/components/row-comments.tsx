@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { storeBusinessData, readBusinessData } from '@/lib/data-lifecycle';
 
 interface Comment {
   id: string;
@@ -23,7 +24,7 @@ interface RowCommentsProps {
 
 export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
   const [comments, setComments] = useState<Comment[]>(() => {
-    try { return JSON.parse(localStorage.getItem('datainsight-comments') || '[]'); }
+    try { return readBusinessData<Comment[]>('datainsight-comments') || []; }
     catch { return []; }
   });
   const [activeRow, setActiveRow] = useState<number>(0);
@@ -31,7 +32,7 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
 
   const saveComments = (c: Comment[]) => {
     setComments(c);
-    localStorage.setItem('datainsight-comments', JSON.stringify(c));
+    storeBusinessData('datainsight-comments', c);
   };
 
   const addComment = () => {

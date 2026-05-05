@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef, Dispatch, SetStateAction } from "react";
 import { useAuth } from "@/lib/use-auth";
 import { ParsedData } from "@/lib/data-processor/types";
+import { storeBusinessData, readBusinessData } from "@/lib/data-lifecycle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -191,7 +192,7 @@ function inferOptions(
 
 function loadSubmissions(formId?: string): FormSubmission[] {
   try {
-    const all = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || "[]") as FormSubmission[];
+    const all = readBusinessData<FormSubmission[]>(SUBMISSIONS_KEY) || [];
     return formId ? all.filter((s) => s.formId === formId) : all;
   } catch {
     return [];
@@ -199,7 +200,7 @@ function loadSubmissions(formId?: string): FormSubmission[] {
 }
 
 function saveSubmissions(subs: FormSubmission[]) {
-  localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(subs));
+  storeBusinessData(SUBMISSIONS_KEY, subs);
 }
 
 /* ─── Main Component ─── */

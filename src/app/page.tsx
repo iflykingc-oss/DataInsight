@@ -45,6 +45,7 @@ import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
 import { tripleCache } from '@/lib/cache-manager';
 import { initSessionStore, sessionStore, createChatSession } from '@/lib/session-store';
+import { storeBusinessData, readBusinessData } from '@/lib/data-lifecycle';
 
 // 动态导入：首屏不需要的组件按需加载，大幅减小初始JS体积
 const DataTable = dynamic(() => import('@/components/data-table').then(m => ({ default: m.DataTable })), { ssr: false });
@@ -136,8 +137,7 @@ export default function HomePage() {
   const [multiTableData, setMultiTableData] = useState<ParsedData[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('datainsight-tables');
-        return saved ? JSON.parse(saved) : [];
+        return readBusinessData<ParsedData[]>('datainsight-tables') || [];
       } catch { return []; }
     }
     return [];
@@ -249,7 +249,7 @@ export default function HomePage() {
       setMultiTableData(prev => {
         const filtered = prev.filter(t => t.fileName !== parsedData.fileName);
         const next = [...filtered, parsedData];
-        localStorage.setItem('datainsight-tables', JSON.stringify(next));
+        storeBusinessData('datainsight-tables', next);
         return next;
       });
       // 上传成功后自动跳转到数据表格视图

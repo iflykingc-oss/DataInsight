@@ -56,6 +56,7 @@ import {
   Target,
   BookOpen,
 } from 'lucide-react';
+import { storeBusinessData, readBusinessData } from '@/lib/data-lifecycle';
 
 // ============= 类型定义 =============
 
@@ -211,23 +212,23 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   // 加载收藏
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('datainsight-table-favorites');
-      if (saved) setFavorites(JSON.parse(saved));
+      const saved = readBusinessData<string[]>('datainsight-table-favorites');
+      if (saved) setFavorites(saved);
     } catch { /* ignore */ }
   }, []);
 
   // 保存收藏
   useEffect(() => {
     try {
-      localStorage.setItem('datainsight-table-favorites', JSON.stringify(favorites));
+      storeBusinessData('datainsight-table-favorites', favorites);
     } catch { /* ignore */ }
   }, [favorites]);
 
   // 加载历史记录
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('datainsight-table-history');
-      if (saved) setHistory(JSON.parse(saved));
+      const saved = readBusinessData<HistoryRecord[]>('datainsight-table-history');
+      if (saved) setHistory(saved);
     } catch { /* ignore */ }
   }, []);
 
@@ -242,7 +243,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     };
     setHistory(prev => {
       const updated = [record, ...prev].slice(0, 20);
-      localStorage.setItem('datainsight-table-history', JSON.stringify(updated));
+      storeBusinessData('datainsight-table-history', updated);
       return updated;
     });
   }, []);

@@ -41,6 +41,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import { toUserFriendlyError, type UserFriendlyError } from '@/lib/error-handler';
+import { storeBusinessData, readBusinessData } from '@/lib/data-lifecycle';
 
 // ============= 类型定义 =============
 
@@ -244,10 +245,8 @@ export function EnhancedLLMAssistant({
   // 加载历史会话
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('datainsight-ai-sessions');
-      if (saved) {
-        const parsed = JSON.parse(saved) as ChatSession[];
-        // 转换日期字符串为Date对象
+      const parsed = readBusinessData<ChatSession[]>('datainsight-ai-sessions');
+      if (parsed) {
         parsed.forEach(s => {
           s.timestamp = new Date(s.timestamp);
         });
@@ -259,7 +258,7 @@ export function EnhancedLLMAssistant({
   // 保存历史会话
   const saveSessions = useCallback((newSessions: ChatSession[]) => {
     try {
-      localStorage.setItem('datainsight-ai-sessions', JSON.stringify(newSessions.slice(0, 50)));
+      storeBusinessData('datainsight-ai-sessions', newSessions.slice(0, 50));
     } catch { /* ignore */ }
   }, []);
 
