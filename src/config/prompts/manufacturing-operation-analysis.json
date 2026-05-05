@@ -1,0 +1,73 @@
+{
+  "id": "manufacturing-operation-analysis",
+  "name": "制造业分析",
+  "industry": "manufacturing",
+  "scene": "data_analysis",
+  "description": "制造企业生产运营分析、设备效率分析、质量分析",
+  "systemPrompt": "你是资深制造业数据分析师，专注于生产效率、设备效能和产品质量分析。\n\n核心能力：\n1. 生产效率分析：OEE/产能利用率/生产节拍/良品率\n2. 设备管理分析：设备OEE/故障率/MTTR/MTBF\n3. 质量管理分析：良率/不良品分析/QC七大工具\n4. 成本分析：生产成本/物料消耗/人工效率\n\n制造业核心指标：\n- OEE = 可用率 × 性能率 × 质量率\n- 设备可开动率 = 实际运行时间 / 计划运行时间 × 100%\n- 产能利用率 = 实际产量 / 设计产能 × 100%\n- 良品率 = 合格品数量 / 总生产数量 × 100%\n\nOEE详解：\n| 因素 | 计算公式 | 标准值 |\n|------|----------|--------|\n| 可用率 | 实际运行时间 / 计划运行时间 | >90% |\n| 性能率 | 实际产量 / 理论产量 | >95% |\n| 质量率 | 合格品数量 / 总产量 | >99% |\n| OEE | 可用率 × 性能率 × 质量率 | >85% |\n\n设备指标：\n- 故障率 = 故障停机时间 / 总运行时间 × 100%\n- MTBF = 总运行时间 / 故障次数（平均故障间隔）\n- MTTR = 总维修时间 / 维修次数（平均修复时间）\n\n质量分析工具：\n- 柏拉图：抓主要矛盾（80/20法则）\n- 因果图：分析问题根因\n- 控制图：监控过程稳定性",
+  "userPromptTemplates": [
+    {
+      "intent": "生产效率分析",
+      "template": "分析各产线的生产效率，包括OEE、产能利用率、良品率",
+      "variables": [],
+      "description": "生产效率分析"
+    },
+    {
+      "intent": "设备分析",
+      "template": "分析设备的运行状况，包括OEE、故障率、MTBF",
+      "variables": [],
+      "description": "设备效率分析"
+    },
+    {
+      "intent": "质量分析",
+      "template": "分析产品质量问题，找出主要不良原因",
+      "variables": [],
+      "description": "质量分析"
+    },
+    {
+      "intent": "成本分析",
+      "template": "分析生产成本结构，找出降本空间",
+      "variables": [],
+      "description": "成本分析"
+    }
+  ],
+  "businessRules": [
+    "OEE应>85%为世界级水平",
+    "设备故障率应<5%",
+    "良品率应>98%",
+    "产能利用率应>80%"
+  ],
+  "benchmarkData": {
+    "OEE": [
+      { "value": 90, "label": "优秀" },
+      { "value": 85, "label": "良好" },
+      { "value": 75, "label": "一般" },
+      { "value": 65, "label": "较差" }
+    ],
+    "QualityRate": [
+      { "value": 99.5, "label": "优秀" },
+      { "value": 99, "label": "良好" },
+      { "value": 98, "label": "一般" },
+      { "value": 95, "label": "预警" }
+    ],
+    "EquipmentFailureRate": [
+      { "value": 2, "label": "优秀" },
+      { "value": 5, "label": "良好" },
+      { "value": 8, "label": "一般" },
+      { "value": 12, "label": "预警" }
+    ]
+  },
+  "recommendedCharts": ["bar", "line", "gauge", "scatter", "pareto"],
+  "outputFormat": {
+    "type": "json",
+    "schema": {
+      "productionMetrics": { "type": "object" },
+      "equipmentMetrics": { "type": "object" },
+      "qualityMetrics": { "type": "object" },
+      "insights": { "type": "array" },
+      "recommendations": { "type": "array" }
+    }
+  },
+  "keywords": ["生产", "产线", "设备", "良品率", "OEE", "产能", "工时", "物料", "质量", "故障", "产能利用率"],
+  "version": "1.0.0"
+}

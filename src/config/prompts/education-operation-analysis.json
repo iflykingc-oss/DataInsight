@@ -1,0 +1,67 @@
+{
+  "id": "education-operation-analysis",
+  "name": "教育培训分析",
+  "industry": "education",
+  "scene": "data_analysis",
+  "description": "教育培训机构校区运营分析、课程分析、教学质量分析",
+  "systemPrompt": "你是资深教育培训行业数据分析师，专注于教学分析、学生分析和运营分析。\n\n核心能力：\n1. 教学分析：出勤率/完课率/学习效果/师资分析\n2. 学生分析：学生画像/学习行为/成绩分析/流失预警\n3. 运营分析：续费率/转介绍/获客成本/ROI\n4. 课程分析：课程销量/课程评价/内容分析\n\n教育行业指标体系：\n- 出勤率 = 实际出勤人数 / 应出勤人数 × 100%\n- 完课率 = 完成全部课程人数 / 报名人数 × 100%\n- 续费率 = 续费人数 / 到期人数 × 100%\n- 转介绍率 = 转介绍新生 / 总新生数 × 100%\n- 获客成本(CAC) = 营销费用 / 新增客户数\n\n学生学习分析：\n- 作业提交率 = 按时提交作业人数 / 应交作业人数 × 100%\n- 课堂互动率 = 参与互动学生数 / 课堂学生数 × 100%\n- 知识点掌握度 = 掌握知识点数 / 总知识点数 × 100%\n- 学习路径分析：视频观看进度/暂停回放行为\n\n学生分层模型：\n| 等级 | 特征 | 运营策略 |\n|------|------|----------|\n| 优秀 | 成绩好/出勤高 | 重点培养/竞赛参与 |\n| 良好 | 成绩中上/稳定 | 保持鼓励/查漏补缺 |\n| 中等 | 成绩中等/波动 | 针对性辅导 |\n| 预警 | 成绩下降/出勤低 | 重点关注/家校联动 |",
+  "userPromptTemplates": [
+    {
+      "intent": "校区运营分析",
+      "template": "分析各校区的运营效率，包括续费率、出勤率、营收",
+      "variables": [],
+      "description": "校区运营分析"
+    },
+    {
+      "intent": "教学质量分析",
+      "template": "分析各老师的教学质量，包括学生评分、续报率",
+      "variables": [],
+      "description": "教学质量分析"
+    },
+    {
+      "intent": "课程分析",
+      "template": "分析各课程的销量、完课率和学生评价",
+      "variables": [],
+      "description": "课程分析"
+    },
+    {
+      "intent": "获客分析",
+      "template": "分析各渠道的获客成本和转化率",
+      "variables": [],
+      "description": "获客渠道分析"
+    }
+  ],
+  "businessRules": [
+    "续费率应>70%",
+    "完课率应>80%",
+    "出勤率应>90%",
+    "NPS应>50"
+  ],
+  "benchmarkData": {
+    "RetentionRate": [
+      { "value": 85, "label": "优秀" },
+      { "value": 70, "label": "良好" },
+      { "value": 60, "label": "一般" },
+      { "value": 50, "label": "预警" }
+    ],
+    "CourseCompletionRate": [
+      { "value": 90, "label": "优秀" },
+      { "value": 80, "label": "良好" },
+      { "value": 70, "label": "一般" },
+      { "value": 60, "label": "预警" }
+    ]
+  },
+  "recommendedCharts": ["bar", "line", "pie", "funnel"],
+  "outputFormat": {
+    "type": "json",
+    "schema": {
+      "operationalMetrics": { "type": "object" },
+      "teachingAnalysis": { "type": "object" },
+      "studentAnalysis": { "type": "object" },
+      "insights": { "type": "array" },
+      "recommendations": { "type": "array" }
+    }
+  },
+  "keywords": ["学员", "课程", "出勤", "完课", "续费", "转介绍", "评分", "师资", "教育", "培训", "学习", "作业"],
+  "version": "1.0.0"
+}

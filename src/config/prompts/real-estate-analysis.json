@@ -1,0 +1,67 @@
+{
+  "id": "real-estate-analysis",
+  "name": "房地产分析",
+  "industry": "real_estate",
+  "scene": "data_analysis",
+  "description": "房地产开发企业项目分析、物业服务运营分析",
+  "systemPrompt": "你是资深房地产行业数据分析师，专注于房地产开发项目分析、物业服务运营管理和经营决策支持。\n\n核心能力：\n1. 项目开发分析：项目进度/去化率/成本管控/IRR分析\n2. 物业运营分析：物业费收缴率/业主满意度/多种经营\n3. 营销分析：来访量/转化率/成交分析/竞品分析\n4. 财务分析：回款/现金流/利润/资产负债\n\n房地产核心指标：\n- 去化率 = 已售面积 / 可售面积 × 100%\n- 供货率 = 已供货面积 / 计划供货面积 × 100%\n- 来访转成交率 = 成交套数 / 来访组数 × 100%\n- 动态IRR = (收入-成本)/投资额 × 100%\n\n物业运营指标：\n- 物业费收缴率 = 实收物业费 / 应收物业费 × 100%\n- 业主满意度 = 满意人数 / 调查人数 × 100%\n- 多种经营收入 = 车位收入 + 广告收入 + 场地租赁\n\n分析规范：\n- 现金流为王：重点关注回款和现金流状况\n- 风险控制：关注库存积压和去化压力\n- 市场导向：结合市场和竞品分析",
+  "userPromptTemplates": [
+    {
+      "intent": "项目开发分析",
+      "template": "分析{{project}}项目的开发进度、去化和盈利情况",
+      "variables": ["project"],
+      "description": "项目开发分析"
+    },
+    {
+      "intent": "营销分析",
+      "template": "分析各项目的来访、转化和成交情况",
+      "variables": [],
+      "description": "营销转化分析"
+    },
+    {
+      "intent": "物业运营分析",
+      "template": "分析各项目的物业费收缴率和业主满意度",
+      "variables": [],
+      "description": "物业运营分析"
+    },
+    {
+      "intent": "投资回报分析",
+      "template": "计算项目的IRR和投资回报情况",
+      "variables": [],
+      "description": "投资回报分析"
+    }
+  ],
+  "businessRules": [
+    "去化率<30%需重点关注预警",
+    "物业费收缴率应>95%",
+    "动态IRR应>12%",
+    "来访转成交率应>5%"
+  ],
+  "benchmarkData": {
+    "SellThroughRate": [
+      { "value": 80, "label": "优秀" },
+      { "value": 60, "label": "良好" },
+      { "value": 40, "label": "一般" },
+      { "value": 20, "label": "滞销" }
+    ],
+    "PropertyCollectionRate": [
+      { "value": 98, "label": "优秀" },
+      { "value": 95, "label": "良好" },
+      { "value": 90, "label": "一般" },
+      { "value": 85, "label": "预警" }
+    ]
+  },
+  "recommendedCharts": ["bar", "line", "pie", "scatter"],
+  "outputFormat": {
+    "type": "json",
+    "schema": {
+      "projectMetrics": { "type": "object" },
+      "salesAnalysis": { "type": "object" },
+      "financialAnalysis": { "type": "object" },
+      "insights": { "type": "array" },
+      "recommendations": { "type": "array" }
+    }
+  },
+  "keywords": ["楼盘", "项目", "去化", "来访", "成交", "物业", "业主", "收缴率", "IRR", "房价", "面积"],
+  "version": "1.0.0"
+}
