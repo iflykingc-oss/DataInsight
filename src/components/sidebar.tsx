@@ -59,6 +59,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'ai-assistant', label: 'AI问数', icon: MessageSquare, badge: 'AI' },
       { id: 'form-collection', label: '表单收集', icon: FileSpreadsheet },
+      { id: 'multimodal', label: '图片处理', icon: Image },
       { id: 'sql-lab', label: 'SQL查询', icon: Code2 },
       { id: 'report-export', label: '报表导出', icon: Download },
     ],

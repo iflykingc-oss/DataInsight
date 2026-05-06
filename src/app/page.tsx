@@ -833,10 +833,6 @@ export default function HomePage() {
               </TabsTrigger>
               <TabsTrigger value="data-story">数据故事</TabsTrigger>
               <TabsTrigger value="industry">行业场景</TabsTrigger>
-              <TabsTrigger value="multimodal">
-                <ImageIcon className="w-3.5 h-3.5 mr-1" />
-                AI多模态
-              </TabsTrigger>
             </TabsList>
             <TabsContent value="insights">
               <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
@@ -858,20 +854,6 @@ export default function HomePage() {
                 fieldStats={analysis?.fieldStats || []}
                 modelConfig={activeModelConfig || undefined}
                 onNavigate={(view: string) => setViewMode(view as ViewMode)}
-              />
-            </TabsContent>
-            <TabsContent value="multimodal">
-              <MultimodalFields
-                data={parsedData}
-                modelConfig={activeModelConfig ? {
-                  apiKey: activeModelConfig.apiKey,
-                  baseUrl: activeModelConfig.baseUrl,
-                  model: activeModelConfig.model,
-                } : null}
-                onImageToTable={(result: any) => {
-                  setParsedData(result);
-                  setViewMode('data-table');
-                }}
               />
             </TabsContent>
           </Tabs>
@@ -1172,7 +1154,8 @@ export default function HomePage() {
       'home': '工作台', 'ai-table-builder': 'AI生成表格',
       'data-table': '数据预览', 'data-prep': '数据工作台',
       'insights': '智能洞察', 'visualization': '可视化',
-      'chat': '问答数据', 'sql-lab': 'SQL 查询',
+      'chat': '问答数据', 'multimodal': '图片处理',
+      'sql-lab': 'SQL 查询',
       'report-export': '导出分享',
       'alerting': '数据预警', 'version-history': '版本快照', 'template-manager': '模板管理',
       'pivot-table': '透视表',
