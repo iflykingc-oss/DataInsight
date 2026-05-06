@@ -207,8 +207,6 @@ function buildPrompt(
 ): string {
   const headers = data.headers;
   const numericFields = getNumericFields(fieldStats).map(f => f.field);
-  const textFields = fieldStats.filter(f => f.type === 'string').map(f => f.field);
-  const dateFields = fieldStats.filter(f => f.type === 'date').map(f => f.field);
 
   // 检测业务场景
   let detectedScenario = '通用数据分析';

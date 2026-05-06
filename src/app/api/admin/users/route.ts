@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/auth-server';
 import { verifyAdmin } from '@/lib/auth-middleware';
 import {
-  getAllUsers,
-  createUser,
+  getAllUsersAsync,
+  createUserAsync,
+  getUserByUsernameAsync,
+} from '@/lib/auth-server';
+import {
   updateUser,
   deleteUser,
   sanitizeUser,
-  getUserByUsername,
 } from '@/lib/auth';
 import { validate, Validators, withSecurityHeaders } from '@/lib/validation';
 import { logAdminAction, maskSensitiveData } from '@/lib/audit-logger';
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
     return withSecurityHeaders(NextResponse.json({ error: auth.error }, { status: auth.status }));
   }
 
-  const users = getAllUsers().map(sanitizeUser);
+  const users = (await getAllUsersAsync()).map(sanitizeUser);
   return withSecurityHeaders(NextResponse.json({ success: true, data: users }));
 }
 
@@ -51,13 +53,13 @@ export async function POST(request: NextRequest) {
 
     const { username, name, role, password, permissions } = validation.sanitized;
 
-    const existing = getUserByUsername(username as string);
+    const existing = await getUserByUsernameAsync(username as string);
     if (existing) {
       return withSecurityHeaders(NextResponse.json({ error: '该账户已存在' }, { status: 400 }));
     }
 
     const startTime = Date.now();
-    const user = await createUser({
+    const user = await createUserAsync({
       username: username as string,
       name: name as string,
       role: role as 'admin' | 'editor' | 'analyst' | 'viewer' | 'custom',

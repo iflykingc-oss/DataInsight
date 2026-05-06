@@ -514,7 +514,7 @@ ${JSON.stringify(currentScheme, null, 2)}
       const jsonMatch = result.match(/```json\s*([\s\S]*?)```/) || result.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('AI未返回有效的JSON方案');
       scheme = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-    } catch (parseError) {
+    } catch {
       return Response.json({
         success: false,
         error: `方案格式异常，请重试`,
@@ -569,7 +569,6 @@ async function handleConfirm(body: Record<string, unknown>) {
 
     // 添加公式行（在示例数据下方）
     if (scheme.formulas && scheme.formulas.length > 0) {
-      const formulaRowIndex = aoa.length;
       const formulaRow: unknown[] = new Array(headers.length).fill('');
 
       for (const f of scheme.formulas) {

@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/auth-server';
 import { verifyAdmin, verifyAuth } from '@/lib/auth-middleware';
-import { getAIConfig, updateAIConfig } from '@/lib/auth';
+import { getAIConfigAsync, saveAIConfigAsync } from '@/lib/auth-server';
 import { validate, withSecurityHeaders } from '@/lib/validation';
 import { logAdminAction, maskSensitiveData } from '@/lib/audit-logger';
 
-// GET /api/admin/ai-config - 获取AI配置（管理员可编辑，普通用户只读）
+// GET /api/admin/ai-config
 export async function GET(request: NextRequest) {
   const auth = await verifyAuth(request);
   if (auth.error) {
     return withSecurityHeaders(NextResponse.json({ error: auth.error }, { status: auth.status }));
   }
 
-  const config = getAIConfig();
-  // 普通用户不返回API Key
+  const config = await getAIConfigAsync();
   if (auth.user!.role !== 'admin') {
     return withSecurityHeaders(NextResponse.json({
       success: true,
       data: {
         baseUrl: config.baseUrl,
         modelName: config.modelName,
-        // apiKey 不返回给普通用户
       },
     }));
   }
@@ -28,7 +26,7 @@ export async function GET(request: NextRequest) {
   return withSecurityHeaders(NextResponse.json({ success: true, data: maskSensitiveData(config as unknown as Record<string, unknown>) }));
 }
 
-// PUT /api/admin/ai-config - 更新AI配置（仅管理员）
+// PUT /api/admin/ai-config
 export async function PUT(request: NextRequest) {
   const auth = await verifyAdmin(request);
   if (auth.error) {
@@ -52,22 +50,27 @@ export async function PUT(request: NextRequest) {
     }
 
     const { apiKey, baseUrl, modelName } = validation.sanitized;
+    const existing = await getAIConfigAsync();
 
-    const config = updateAIConfig({
-      apiKey: apiKey !== undefined ? (apiKey as string) : undefined,
-      baseUrl: baseUrl !== undefined ? (baseUrl as string) : undefined,
-      modelName: modelName !== undefined ? (modelName as string) : undefined,
+    await saveAIConfigAsync({
+      id: existing.id,
+      apiKey: apiKey !== undefined ? (apiKey as string) : existing.apiKey,
+      baseUrl: baseUrl !== undefined ? (baseUrl as string) : existing.baseUrl,
+      modelName: modelName !== undefined ? (modelName as string) : existing.modelName,
       updatedBy: auth.user!.id,
+      updatedAt: new Date().toISOString(),
     });
+
+    const updated = await getAIConfigAsync();
 
     logAdminAction('UPDATE_AI_CONFIG', 'success', {
       userId: auth.user!.id,
       username: auth.user!.username,
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      details: maskSensitiveData({ baseUrl: config.baseUrl, modelName: config.modelName }),
+      details: maskSensitiveData({ baseUrl: updated.baseUrl, modelName: updated.modelName }),
     });
 
-    return withSecurityHeaders(NextResponse.json({ success: true, data: maskSensitiveData(config as unknown as Record<string, unknown>) }));
+    return withSecurityHeaders(NextResponse.json({ success: true, data: maskSensitiveData(updated as unknown as Record<string, unknown>) }));
   } catch (error) {
     const message = error instanceof Error ? error.message : '更新失败';
     logAdminAction('UPDATE_AI_CONFIG', 'failure', {

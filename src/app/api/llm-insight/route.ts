@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
       message,
       data,
       fieldStats,
-      analysisMode = 'comprehensive',
       modelConfig,
       chatHistory,
     } = body as {

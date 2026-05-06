@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callLLM } from '@/lib/llm';
 import { IndustryTemplateManager, BasicConstraint } from '@/lib/analysis/industry-templates';
-import type { LLMDecisionInstruction } from '@/lib/analysis/industry-templates';
 import { verifyAuth } from '@/lib/auth-middleware';
 
 const templateManager = new IndustryTemplateManager();

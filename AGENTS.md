@@ -25,7 +25,7 @@
 - **文件解析**: xlsx (Excel), papaparse (CSV)
 - **SQL引擎**: sql.js (浏览器端WASM)
 - **AI 集成**: 用户自定义 OpenAI 兼容模型（通过 API Key + Base URL + Model Name）
-- **状态持久化**: localStorage (仪表盘配置/清洗模板/建表历史/自定义指标/告警规则)
+- **状态持久化**: Supabase PostgreSQL (用户认证/权限/AI配置/登录日志/使用统计) + localStorage (仪表盘配置/清洗模板/建表历史/自定义指标/告警规则)
 
 ## 导航结构（4组12项）
 
@@ -150,8 +150,16 @@ src/
     ├── file-parser.worker.ts  # 文件解析Web Worker
     ├── safe-storage.ts         # 统一存储层（自动降级sessionStorage+容量预警）
     ├── auth-middleware.ts      # API鉴权中间件（JWT验证+权限检查）
+    ├── auth-server.ts           # 认证服务层（Supabase PostgreSQL 存储 + bcrypt 密码 + JWT 令牌）
+    ├── auth.ts                 # 前端认证上下文（login/logout/user状态）
     ├── data-lifecycle-provider.tsx # 数据生命周期Provider（TTL检查+预警）
     └── platform-types.ts      # 平台集成类型定义
+    └── storage/
+        └── database/          # Supabase 数据库集成
+            ├── shared/
+            │   ├── schema.ts    # Drizzle ORM Schema 定义（users/login_logs/usage_stats/admin_ai_config）
+            │   └── relations.ts # 表关系定义
+            └── supabase-client.ts # Supabase 客户端初始化（服务端鉴权）
 ```
 
 ## 开发命令
@@ -542,7 +550,7 @@ AI 模型连接测试
 5. **错误边界**: 关键组件已包裹 ErrorBoundary
 6. **统一请求**: 使用 `src/lib/request.ts` 的 `request<T>()` 和 `streamRequest()` 进行 HTTP 请求
 7. **LLM 调用**: 使用 `src/lib/llm.ts` 的 `callLLM()` / `callLLMStream()` / `callLLMStreamWithFallback()`，统一超时120秒+自动重试
-8. **持久化**: 仪表盘配置、清洗模板、建表历史、自定义指标、告警规则、表单配置/收集数据、关联表配置、评论数据均存储在 localStorage
+8. **持久化**: 用户认证/权限/AI配置/登录日志/使用统计存储在 Supabase PostgreSQL；仪表盘配置/清洗模板/建表历史/自定义指标/告警规则/表单配置/收集数据/关联表配置/评论数据均存储在浏览器 localStorage
 9. **WASM 依赖**: SQL Lab 使用 sql.js，WASM 文件位于 `public/sql-wasm.wasm`
 10. **主题**: 使用 CSS Variables + Tailwind 语义化类名，禁止硬编码颜色
 11. **懒加载**: 所有组件使用 `next/dynamic` 懒加载+SSR禁用，减少首屏编译时间

@@ -112,7 +112,7 @@ export async function POST(request: Request) {
 
     switch (action) {
       case 'connect': {
-        const { token, error } = await getDingTalkToken(credentials);
+        const { error } = await getDingTalkToken(credentials);
         if (error) {
           return NextResponse.json<ConnectResult>(
             { success: false, message: error },

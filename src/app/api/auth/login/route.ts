@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/auth-server';
-import { getUserByUsername, verifyPassword, addLoginLog, sanitizeUser, isInitialized, initializeAdmin } from '@/lib/auth';
+import { verifyPassword, sanitizeUser } from '@/lib/auth';
 import { signToken } from '@/lib/auth-middleware';
+import {
+  getUserByUsernameAsync,
+  addLoginLogAsync,
+  isInitializedAsync,
+  initializeAdminAsync,
+} from '@/lib/auth-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,29 +15,32 @@ export async function POST(request: NextRequest) {
     const { username, password, initMode, initName } = body;
 
     // 系统未初始化时，允许创建首个管理员
-    if (!isInitialized()) {
-      if (initMode && username && password && initName) {
-        try {
-          const user = await initializeAdmin(username, password, initName);
-          const token = await signToken({
-            userId: user.id,
-            username: user.username,
-            role: user.role,
-          });
+    if (initMode) {
+      try {
+        const user = await initializeAdminAsync(username, password, initName);
+        const token = await signToken({
+          userId: user.id,
+          username: user.username,
+          role: user.role,
+        });
 
-          return NextResponse.json({
-            success: true,
-            token,
-            user: sanitizeUser(user),
-            initialized: true,
-          });
-        } catch (initError) {
-          return NextResponse.json(
-            { error: initError instanceof Error ? initError.message : '初始化失败' },
-            { status: 400 }
-          );
-        }
+        return NextResponse.json({
+          success: true,
+          token,
+          user: sanitizeUser(user),
+          initialized: true,
+        });
+      } catch (initError) {
+        return NextResponse.json(
+          { error: initError instanceof Error ? initError.message : '初始化失败' },
+          { status: 400 }
+        );
       }
+    }
+
+    // 检查是否已初始化
+    const initialized = await isInitializedAsync();
+    if (!initialized) {
       return NextResponse.json(
         { error: '系统未初始化，请先创建管理员账号', needInit: true },
         { status: 403 }
@@ -39,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!username || !password) {
-      addLoginLog({
+      await addLoginLogAsync({
         userId: 0,
         username: username || 'unknown',
         ip: request.headers.get('x-forwarded-for') || 'unknown',
@@ -49,9 +58,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '请输入账户和密码' }, { status: 400 });
     }
 
-    const user = getUserByUsername(username);
+    const user = await getUserByUsernameAsync(username);
     if (!user) {
-      addLoginLog({
+      await addLoginLogAsync({
         userId: 0,
         username,
         ip: request.headers.get('x-forwarded-for') || 'unknown',
@@ -62,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (user.status === 'disabled') {
-      addLoginLog({
+      await addLoginLogAsync({
         userId: user.id,
         username,
         ip: request.headers.get('x-forwarded-for') || 'unknown',
@@ -74,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     const valid = await verifyPassword(user, password);
     if (!valid) {
-      addLoginLog({
+      await addLoginLogAsync({
         userId: user.id,
         username,
         ip: request.headers.get('x-forwarded-for') || 'unknown',
@@ -84,14 +93,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '账户或密码错误' }, { status: 401 });
     }
 
-    // 使用统一的 signToken 生成JWT
     const token = await signToken({
       userId: user.id,
       username: user.username,
       role: user.role,
     });
 
-    addLoginLog({
+    await addLoginLogAsync({
       userId: user.id,
       username,
       ip: request.headers.get('x-forwarded-for') || 'unknown',

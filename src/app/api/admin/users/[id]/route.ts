@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/auth-server';
 import { verifyAdmin } from '@/lib/auth-middleware';
-import { updateUser, deleteUser, getAllUsers, sanitizeUser } from '@/lib/auth';
-import { validate, Validators, withSecurityHeaders } from '@/lib/validation';
+import { updateUserAsync, deleteUserAsync } from '@/lib/auth-server';
+import { sanitizeUser } from '@/lib/auth';
+import { withSecurityHeaders } from '@/lib/validation';
 
 // PUT /api/admin/users/:id - 更新用户
 export async function PUT(
@@ -22,24 +23,9 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const { name, role, password, permissions, status } = body;
 
-    // 可选字段验证
-    const validation = validate(body, {
-      name: { ...Validators.name, required: false },
-      role: { ...Validators.role, required: false },
-      password: { ...Validators.password, required: false },
-      permissions: { type: 'object', required: false },
-      status: { type: 'string', enum: ['active', 'inactive'], required: false },
-    });
-
-    if (!validation.valid) {
-      return withSecurityHeaders(NextResponse.json(
-        { error: '输入验证失败', details: validation.errors },
-        { status: 400 }
-      ));
-    }
-
-    const updated = await updateUser(userId, body);
+    const updated = await updateUserAsync(userId, { name, role, password, permissions, status });
     if (!updated) {
       return withSecurityHeaders(NextResponse.json({ error: '用户不存在' }, { status: 404 }));
     }
@@ -71,12 +57,11 @@ export async function DELETE(
       return withSecurityHeaders(NextResponse.json({ error: '无效的用户ID' }, { status: 400 }));
     }
 
-    // 不能删除自己
     if (auth.user?.id === userId) {
       return withSecurityHeaders(NextResponse.json({ error: '不能删除当前登录用户' }, { status: 400 }));
     }
 
-    const deleted = deleteUser(userId);
+    const deleted = await deleteUserAsync(userId);
     if (!deleted) {
       return withSecurityHeaders(NextResponse.json({ error: '用户不存在' }, { status: 404 }));
     }
