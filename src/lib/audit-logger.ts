@@ -203,7 +203,7 @@ export function getFailedLogins(limit = 100): AuditLogEntry[] {
 
 export function maskSensitiveData(data: Record<string, unknown>): Record<string, unknown> {
   const masked: Record<string, unknown> = {};
-  const sensitiveKeys = ['password', 'passwordHash', 'apiKey', 'secret', 'token', 'credential', 'auth'];
+  const sensitiveKeys = ['password', 'passwordhash', 'apikey', 'secret', 'token', 'credential', 'auth'];
 
   for (const [key, value] of Object.entries(data)) {
     const isSensitive = sensitiveKeys.some(sk => key.toLowerCase().includes(sk));
