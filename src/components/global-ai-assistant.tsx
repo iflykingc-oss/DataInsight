@@ -298,13 +298,13 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
   // 快捷操作映射
   const actionPatterns: { pattern: RegExp; action: string; params?: Record<string, unknown>; response: string }[] = [
     { pattern: /打开.*仪表盘|查看.*仪表盘|跳转.*仪表盘/, action: 'navigate', params: { view: 'visualization' }, response: '已为您切换到「可视化」→「仪表盘」视图。' },
-    { pattern: /打开.*图表|查看.*图表|生成.*图表/, action: 'navigate', params: { view: 'chart-center' }, response: '已为您切换到「图表中心」视图，可选择AI推荐或高级图表。' },
+    { pattern: /打开.*图表|查看.*图表|生成.*图表/, action: 'navigate', params: { view: 'visualization' }, response: '已为您切换到「可视化」→「图表中心」视图，可选择AI选图或高级图表。' },
     { pattern: /打开.*表格|查看.*数据|跳转.*表格/, action: 'navigate', params: { view: 'data-table' }, response: '已为您切换到「数据表格」视图。' },
     { pattern: /打开.*分析|深度分析|智能洞察/, action: 'navigate', params: { view: 'insights' }, response: '已为您切换到「智能洞察」视图，可查看深度分析报告。' },
     { pattern: /打开.*SQL|SQL查询|写SQL/, action: 'navigate', params: { view: 'sql-lab' }, response: '已为您切换到「SQL查询」视图，可执行即席SQL查询。' },
     { pattern: /打开.*设置|设置.*模型|配置.*AI/, action: 'open-settings', params: { tab: 'ai-settings' }, response: '已为您打开「设置」→「AI模型」配置面板。' },
     { pattern: /打开.*透视表|数据透视/, action: 'navigate', params: { view: 'pivot-table' }, response: '已为您切换到「透视表」视图。' },
-    { pattern: /打开.*报表|导出.*报表|生成.*报告/, action: 'navigate', params: { view: 'report-export' }, response: '已为您切换到「报表导出」视图。' },
+    { pattern: /打开.*报表|导出.*报表|生成.*报表|生成.*报告/, action: 'navigate', params: { view: 'report-export' }, response: '已为您切换到「报表导出」视图。' },
   ];
 
   // 发送消息
