@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import {
   Database, BarChart3, Wrench, Settings, LayoutDashboard, Table2,
-  Brain, FileSpreadsheet, Sparkles, Layers, MessageSquare, Image,
+  Brain, FileSpreadsheet, Sparkles, MessageSquare, Image,
   FileText, Code2, Download, ChevronDown, ChevronRight,
   Home, Shield, LucideIcon
 } from 'lucide-react';
@@ -49,8 +49,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'insights', label: '智能洞察', icon: Brain, badge: 'AI' },
       { id: 'visualization', label: '可视化', icon: LayoutDashboard },
-      { id: 'metrics', label: '指标体系', icon: Layers },
-      { id: 'chart-center', label: '图表中心', icon: BarChart3 },
     ],
   },
   {
@@ -60,7 +58,6 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { id: 'ai-assistant', label: 'AI问数', icon: MessageSquare, badge: 'AI' },
-      { id: 'multimodal', label: 'AI多模态', icon: Image },
       { id: 'form-collection', label: '表单收集', icon: FileSpreadsheet },
       { id: 'sql-lab', label: 'SQL查询', icon: Code2 },
       { id: 'report-export', label: '报表导出', icon: Download },

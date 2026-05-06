@@ -39,6 +39,7 @@ import {
   Code2,
   MessageSquare,
   Download,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, type PermissionKey } from '@/lib/use-auth';
@@ -91,18 +92,18 @@ const SpreadsheetAgentPage = dynamic(() => import('@/components/SpreadsheetAgent
 // ============================================
 // 视图模式类型（整合后：10个入口，功能零删除）
 // ============================================
-type ViewMode =
-  | 'home'
-  | 'ai-table-builder'
-  | 'data-table' | 'data-prep'
-  | 'insights' | 'visualization' | 'metrics' | 'chart-center'
-  | 'chat' | 'ai-assistant'
-  | 'sql-lab' | 'report-export'
-  | 'alerting' | 'version-history' | 'template-manager'
-  | 'data-source'
-  | 'pivot-table'
-  | 'multimodal' | 'form-collection'
-  | 'spreadsheet-agent';
+	type ViewMode =
+	  | 'home'
+	  | 'ai-table-builder'
+	  | 'data-table' | 'data-prep'
+	  | 'insights' | 'visualization'
+	  | 'chat' | 'ai-assistant'
+	  | 'sql-lab' | 'report-export'
+	  | 'spreadsheet-agent' | 'form-collection'
+	  | 'alerting' | 'version-history' | 'template-manager'
+	  | 'data-source'
+	  | 'pivot-table'
+	
 
 
 // ============================================
@@ -150,22 +151,14 @@ export default function HomePage() {
   const [dataPrepTab, setDataPrepTab] = useState('smart');
   const [insightsTab, setInsightsTab] = useState('analysis');
   const [vizTab, setVizTab] = useState('dashboard');
-  const [chartTab, setChartTab] = useState('recommend');
-  const [metricsTab, setMetricsTab] = useState('ai');
-  const [reportTab, setReportTab] = useState('report');
   const [dataSourceTab, setDataSourceTab] = useState('sources');
-  const [multimodalTab, setMultimodalTab] = useState('image-gen');
 
   // 视图切换时重置子Tab到默认值
   useEffect(() => {
     if (viewMode === 'data-prep') setDataPrepTab('smart');
     if (viewMode === 'insights') setInsightsTab('analysis');
     if (viewMode === 'visualization') setVizTab('dashboard');
-    if (viewMode === 'chart-center') setChartTab('recommend');
-    if (viewMode === 'metrics') setMetricsTab('ai');
-    if (viewMode === 'report-export') setReportTab('report');
     if (viewMode === 'data-source') setDataSourceTab('sources');
-    if (viewMode === 'multimodal') setMultimodalTab('image-gen');
   }, [viewMode]);
 
 
@@ -601,7 +594,7 @@ export default function HomePage() {
     }
 
     // 需要数据但无数据的视图（这些视图没有自定义空状态，使用通用提示）
-    const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'visualization', 'metrics', 'chart-center'];
+    const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'visualization'];
     if (needsDataViews.includes(viewMode) && !parsedData) {
       return (
         <div className="flex flex-col items-center justify-center py-20">
@@ -840,6 +833,10 @@ export default function HomePage() {
               </TabsTrigger>
               <TabsTrigger value="data-story">数据故事</TabsTrigger>
               <TabsTrigger value="industry">行业场景</TabsTrigger>
+              <TabsTrigger value="multimodal">
+                <ImageIcon className="w-3.5 h-3.5 mr-1" />
+                AI多模态
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="insights">
               <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
@@ -863,6 +860,20 @@ export default function HomePage() {
                 onNavigate={(view: string) => setViewMode(view as ViewMode)}
               />
             </TabsContent>
+            <TabsContent value="multimodal">
+              <MultimodalFields
+                data={parsedData}
+                modelConfig={activeModelConfig ? {
+                  apiKey: activeModelConfig.apiKey,
+                  baseUrl: activeModelConfig.baseUrl,
+                  model: activeModelConfig.model,
+                } : null}
+                onImageToTable={(result: any) => {
+                  setParsedData(result);
+                  setViewMode('data-table');
+                }}
+              />
+            </TabsContent>
           </Tabs>
           <SceneAgentPanel sceneId="data-analyze" sceneName="数据分析" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
         </div>
@@ -881,6 +892,14 @@ export default function HomePage() {
                 <TabsTrigger value="dashboard">快速看板</TabsTrigger>
                 <TabsTrigger value="nl2dash">AI 建看板</TabsTrigger>
                 <TabsTrigger value="designer">看板设计</TabsTrigger>
+                <TabsTrigger value="charts">
+                  <BarChart3 className="w-3.5 h-3.5 mr-1" />
+                  图表中心
+                </TabsTrigger>
+                <TabsTrigger value="metrics">
+                  <TrendingUp className="w-3.5 h-3.5 mr-1" />
+                  指标体系
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="dashboard">
                 <Dashboard data={parsedData} analysis={analysis} />
@@ -905,60 +924,40 @@ export default function HomePage() {
                   </Card>
                 )}
               </TabsContent>
+              <TabsContent value="charts">
+                <Tabs defaultValue="ai-chart" className="mt-4">
+                  <TabsList>
+                    <TabsTrigger value="ai-chart">AI 选图</TabsTrigger>
+                    <TabsTrigger value="advanced">高级图表</TabsTrigger>
+                    <TabsTrigger value="echarts">专业图表</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="ai-chart">
+                    <SmartChartRecommender data={parsedData} analysis={analysis} />
+                  </TabsContent>
+                  <TabsContent value="advanced">
+                    <AdvancedCharts data={parsedData} fieldStats={analysis.fieldStats} />
+                  </TabsContent>
+                  <TabsContent value="echarts">
+                    <ExtendedChartGallery data={parsedData} />
+                  </TabsContent>
+                </Tabs>
+              </TabsContent>
+              <TabsContent value="metrics">
+                <Tabs defaultValue="ai-metric" className="mt-4">
+                  <TabsList>
+                    <TabsTrigger value="ai-metric">AI 建指标</TabsTrigger>
+                    <TabsTrigger value="metric-lib">指标列表</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="ai-metric">
+                    <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig || undefined} />
+                  </TabsContent>
+                  <TabsContent value="metric-lib">
+                    <MetricManager data={parsedData} />
+                  </TabsContent>
+                </Tabs>
+              </TabsContent>
             </Tabs>
           </ErrorBoundary>
-          <SceneAgentPanel sceneId="visualize" sceneName="可视化" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
-
-    // ========================================
-    // 指标中心（整合：AI建指标 + 指标列表）
-    // ========================================
-    if (viewMode === 'metrics' && parsedData && analysis) {
-      return (
-        <div className="relative">
-          <ErrorBoundary moduleName="指标中心">
-            <Tabs defaultValue="ai-metric" key="ai-metric" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="ai-metric">AI 建指标</TabsTrigger>
-                <TabsTrigger value="metric-lib">指标列表</TabsTrigger>
-              </TabsList>
-              <TabsContent value="ai-metric">
-                <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
-              </TabsContent>
-              <TabsContent value="metric-lib">
-                <MetricManager data={parsedData} />
-              </TabsContent>
-            </Tabs>
-          </ErrorBoundary>
-          <SceneAgentPanel sceneId="data-analyze" sceneName="数据分析" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
-
-    // ========================================
-    // 图表库（整合：AI选图 + 高级图表 + 专业图表）
-    // ========================================
-    if (viewMode === 'chart-center' && parsedData && analysis) {
-      return (
-        <div className="relative">
-          <Tabs defaultValue="ai-chart" key="ai-chart" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="ai-chart">AI 选图</TabsTrigger>
-              <TabsTrigger value="advanced">高级图表</TabsTrigger>
-              <TabsTrigger value="echarts">专业图表</TabsTrigger>
-            </TabsList>
-            <TabsContent value="ai-chart">
-              <SmartChartRecommender data={parsedData} analysis={analysis} />
-            </TabsContent>
-            <TabsContent value="advanced">
-              <AdvancedCharts data={parsedData} fieldStats={analysis.fieldStats} />
-            </TabsContent>
-            <TabsContent value="echarts">
-              <ExtendedChartGallery data={parsedData} />
-            </TabsContent>
-          </Tabs>
           <SceneAgentPanel sceneId="visualize" sceneName="可视化" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
         </div>
       );
@@ -1139,18 +1138,6 @@ export default function HomePage() {
     }
 
     // ========================================
-    // AI 多模态（独立功能，可不依赖数据）
-    // ========================================
-    if (viewMode === 'multimodal') {
-      return (
-        <div className="relative">
-          <MultimodalFields data={parsedData || undefined} modelConfig={activeModelConfig} />
-          <SceneAgentPanel sceneId="general" sceneName="通用" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
-
-    // ========================================
     // AI 表格智能体（全新功能）
     // ========================================
     if (viewMode === 'spreadsheet-agent') {
@@ -1185,12 +1172,11 @@ export default function HomePage() {
       'home': '工作台', 'ai-table-builder': 'AI生成表格',
       'data-table': '数据预览', 'data-prep': '数据工作台',
       'insights': '智能洞察', 'visualization': '可视化',
-      'metrics': '指标中心', 'chart-center': '图表库',
       'chat': '问答数据', 'sql-lab': 'SQL 查询',
-      'report-export': '导出分享', 'spreadsheet-agent': 'AI 表格助手',
+      'report-export': '导出分享',
       'alerting': '数据预警', 'version-history': '版本快照', 'template-manager': '模板管理',
       'pivot-table': '透视表',
-      'multimodal': 'AI多模态', 'form-collection': '表单收集',
+      'form-collection': '表单收集',
     };
     return titles[viewMode] || '';
   };
