@@ -54,7 +54,7 @@ const DEFAULT_NOTIFICATION_CONFIG: NotificationChannelConfig = {
 
 // 侧边导航项定义
 const SETTINGS_TABS = [
-  { id: 'ai-settings', label: 'AI 模型', icon: Bot },
+  { id: 'ai-settings', label: '当前模型', icon: Bot },
   { id: 'alert', label: '数据预警', icon: Bell },
   { id: 'version', label: '版本快照', icon: History },
   { id: 'template', label: '模板管理', icon: BookTemplate },

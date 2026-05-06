@@ -36,6 +36,9 @@ import {
   Calendar as CalendarIcon,
   GanttChart as GanttIcon,
   Brain,
+  Code2,
+  MessageSquare,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, type PermissionKey } from '@/lib/use-auth';
@@ -92,8 +95,8 @@ type ViewMode =
   | 'home'
   | 'ai-table-builder'
   | 'data-table' | 'data-prep'
-  | 'insights' | 'data-story' | 'industry-scenario' | 'visualization' | 'metrics' | 'chart-center'
-  | 'chat'
+  | 'insights' | 'visualization' | 'metrics' | 'chart-center'
+  | 'chat' | 'ai-assistant'
   | 'sql-lab' | 'report-export'
   | 'alerting' | 'version-history' | 'template-manager'
   | 'data-source'
@@ -597,8 +600,8 @@ export default function HomePage() {
       );
     }
 
-    // 需要数据但无数据的视图
-    const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'data-story', 'industry-scenario', 'visualization', 'metrics', 'chart-center', 'chat', 'sql-lab', 'report-export'];
+    // 需要数据但无数据的视图（这些视图没有自定义空状态，使用通用提示）
+    const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'visualization', 'metrics', 'chart-center'];
     if (needsDataViews.includes(viewMode) && !parsedData) {
       return (
         <div className="flex flex-col items-center justify-center py-20">
@@ -835,12 +838,30 @@ export default function HomePage() {
                 <FileText className="w-3.5 h-3.5 mr-1" />
                 分析报告
               </TabsTrigger>
+              <TabsTrigger value="data-story">数据故事</TabsTrigger>
+              <TabsTrigger value="industry">行业场景</TabsTrigger>
             </TabsList>
             <TabsContent value="insights">
               <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
             </TabsContent>
             <TabsContent value="report">
               <InsightReportGenerator analysis={analysis} fileName={parsedData?.fileName} />
+            </TabsContent>
+            <TabsContent value="data-story">
+              <DataStorytelling
+                data={parsedData}
+                fieldStats={analysis?.fieldStats || []}
+                modelConfig={activeModelConfig || undefined}
+                insights={analysis?.insights}
+              />
+            </TabsContent>
+            <TabsContent value="industry">
+              <IndustryScenario
+                data={parsedData}
+                fieldStats={analysis?.fieldStats || []}
+                modelConfig={activeModelConfig || undefined}
+                onNavigate={(view: string) => setViewMode(view as ViewMode)}
+              />
             </TabsContent>
           </Tabs>
           <SceneAgentPanel sceneId="data-analyze" sceneName="数据分析" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
@@ -944,9 +965,32 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 问答数据
+    // 问答数据 (AI问数)
     // ========================================
-    if (viewMode === 'chat' && analysis) {
+    if (viewMode === 'chat' || viewMode === 'ai-assistant') {
+      if (!parsedData) {
+        return (
+          <Card className="text-center py-16">
+            <CardContent>
+              <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-2">AI问数 - 用自然语言查询和分析数据</p>
+              <p className="text-sm text-muted-foreground/60 mb-4">上传数据后，即可通过对话方式查询、统计、分析数据</p>
+              <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+            </CardContent>
+          </Card>
+        );
+      }
+      if (!analysis) {
+        return (
+          <Card className="text-center py-16">
+            <CardContent className="space-y-4">
+              <MessageSquare className="w-12 h-12 text-primary mx-auto mb-2 animate-pulse" />
+              <p className="text-lg font-medium">数据正在分析中...</p>
+              <p className="text-sm text-muted-foreground">分析完成后即可使用AI问数</p>
+            </CardContent>
+          </Card>
+        );
+      }
       return (
         <div className="grid lg:grid-cols-2 gap-6">
           <GlobalAgentAssistant
@@ -993,49 +1037,26 @@ export default function HomePage() {
     }
 
     // ========================================
-    // 数据故事 (Data Storytelling)
+    // 数据故事 & 行业场景已合并到智能洞察Tab内
     // ========================================
-    if (viewMode === 'data-story' && parsedData) {
-      return (
-        <div className="relative">
-          <ErrorBoundary moduleName="数据故事">
-            <DataStorytelling
-              data={parsedData}
-              fieldStats={analysis?.fieldStats || []}
-              modelConfig={activeModelConfig || undefined}
-              insights={analysis?.insights}
-            />
-          </ErrorBoundary>
-          <SceneAgentPanel sceneId="data-story" sceneName="数据故事" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
-
-    // ========================================
-    // 行业场景
-    // ========================================
-    if (viewMode === 'industry-scenario' && parsedData) {
-      return (
-        <div className="relative">
-          <ErrorBoundary moduleName="行业场景">
-            <IndustryScenario
-              data={parsedData}
-              fieldStats={analysis?.fieldStats || []}
-              modelConfig={activeModelConfig || undefined}
-              onNavigate={(view: string) => setViewMode(view as ViewMode)}
-            />
-          </ErrorBoundary>
-          <SceneAgentPanel sceneId="industry-scenario" sceneName="行业场景" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
-
-
 
     // ========================================
     // SQL 查询
     // ========================================
-    if (viewMode === 'sql-lab' && parsedData) {
+    if (viewMode === 'sql-lab') {
+      if (!parsedData) {
+        return (
+          <Card className="text-center py-16">
+            <CardContent>
+              <Code2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-2">SQL查询 - 使用SQL语句分析数据</p>
+              <p className="text-sm text-muted-foreground/60 mb-2">支持对已上传的数据表执行SQL查询（浏览器端SQLite引擎）</p>
+              <p className="text-xs text-muted-foreground/40 mb-4">数据源：上传的Excel/CSV文件会自动创建SQLite内存数据库</p>
+              <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+            </CardContent>
+          </Card>
+        );
+      }
       return (
         <div className="relative">
           <SqlLab data={parsedData} />
@@ -1059,7 +1080,19 @@ export default function HomePage() {
     // ========================================
     // 导出分享（整合：生成报告 + 导出图表 + 分享管理）
     // ========================================
-    if (viewMode === 'report-export' && parsedData) {
+    if (viewMode === 'report-export') {
+      if (!parsedData) {
+        return (
+          <Card className="text-center py-16">
+            <CardContent>
+              <Download className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-2">报表导出 - 生成和导出分析报告</p>
+              <p className="text-sm text-muted-foreground/60 mb-4">上传数据后，可生成报告、导出图表、分享数据</p>
+              <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+            </CardContent>
+          </Card>
+        );
+      }
       return (
         <div className="relative">
           <Tabs defaultValue="report" key="report" className="space-y-4">
@@ -1151,7 +1184,7 @@ export default function HomePage() {
     const titles: Record<string, string> = {
       'home': '工作台', 'ai-table-builder': 'AI生成表格',
       'data-table': '数据预览', 'data-prep': '数据工作台',
-      'insights': '自动分析', 'data-story': '数据故事', 'industry-scenario': '行业场景', 'visualization': '仪表盘',
+      'insights': '智能洞察', 'visualization': '可视化',
       'metrics': '指标中心', 'chart-center': '图表库',
       'chat': '问答数据', 'sql-lab': 'SQL 查询',
       'report-export': '导出分享', 'spreadsheet-agent': 'AI 表格助手',

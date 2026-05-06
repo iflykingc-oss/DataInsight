@@ -48,11 +48,9 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { id: 'insights', label: '智能洞察', icon: Brain, badge: 'AI' },
-      { id: 'dashboard', label: '可视化', icon: LayoutDashboard },
+      { id: 'visualization', label: '可视化', icon: LayoutDashboard },
       { id: 'metrics', label: '指标体系', icon: Layers },
-      { id: 'charts', label: '图表中心', icon: BarChart3 },
-      { id: 'data-story', label: '数据故事', icon: FileText, badge: 'NEW' },
-      { id: 'industry-scenario', label: '行业场景', icon: Shield, badge: 'NEW' },
+      { id: 'chart-center', label: '图表中心', icon: BarChart3 },
     ],
   },
   {
@@ -63,9 +61,9 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'ai-assistant', label: 'AI问数', icon: MessageSquare, badge: 'AI' },
       { id: 'multimodal', label: 'AI多模态', icon: Image },
-      { id: 'form-builder', label: '表单收集', icon: FileSpreadsheet },
+      { id: 'form-collection', label: '表单收集', icon: FileSpreadsheet },
       { id: 'sql-lab', label: 'SQL查询', icon: Code2 },
-      { id: 'report', label: '报表导出', icon: Download },
+      { id: 'report-export', label: '报表导出', icon: Download },
     ],
   },
 ];

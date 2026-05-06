@@ -339,12 +339,30 @@ export function SqlLab({ data, className }: SqlLabProps) {
     setSql(examples[type] || examples.basic);
   };
 
-  if (!data?.headers?.length) {
+  if (error) {
+    return (
+      <Card className={className}>
+        <CardContent className="p-8 text-center space-y-4">
+          <Database className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground font-medium">{error}</p>
+          <div className="text-xs text-muted-foreground/60 space-y-1">
+            <p>数据源：上传的 Excel/CSV 文件会自动创建 SQLite 内存数据库</p>
+            <p>支持标准 SQL 语法（SELECT, JOIN, GROUP BY, 子查询等）</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            重新加载
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!db) {
     return (
       <Card className={className}>
         <CardContent className="p-8 text-center">
-          <Database className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">请先上传数据文件以使用 SQL Lab</p>
+          <Loader2 className="w-8 h-8 text-muted-foreground mx-auto mb-3 animate-spin" />
+          <p className="text-muted-foreground">正在加载 SQL 引擎...</p>
         </CardContent>
       </Card>
     );

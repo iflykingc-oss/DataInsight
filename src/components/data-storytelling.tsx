@@ -16,6 +16,61 @@ import { ParsedData } from '@/lib/data-processor/types';
 import { streamRequest } from '@/lib/request';
 import { safeSetItem, safeGetItem } from '@/lib/safe-storage';
 
+/** Inline markdown: bold, italic, inline code */
+function inlineMd(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let remaining = text;
+  let k = 0;
+  while (remaining) {
+    const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+    const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
+    const codeMatch = remaining.match(/`([^`]+)`/);
+    const matches = [
+      boldMatch ? { type: 'bold' as const, match: boldMatch, index: boldMatch.index! } : null,
+      italicMatch ? { type: 'italic' as const, match: italicMatch, index: italicMatch.index! } : null,
+      codeMatch ? { type: 'code' as const, match: codeMatch, index: codeMatch.index! } : null,
+    ].filter(Boolean).sort((a, b) => a!.index - b!.index);
+    if (matches.length === 0) { parts.push(remaining); break; }
+    const first = matches[0]!;
+    if (first.index > 0) parts.push(remaining.slice(0, first.index));
+    if (first.type === 'bold') parts.push(<strong key={k++} className="font-semibold text-foreground">{first.match![1]}</strong>);
+    else if (first.type === 'italic') parts.push(<em key={k++}>{first.match![1]}</em>);
+    else if (first.type === 'code') parts.push(<code key={k++} className="bg-muted px-1 py-0.5 rounded text-xs font-mono">{first.match![1]}</code>);
+    remaining = remaining.slice(first.index + first.match![0].length);
+  }
+  return <>{parts}</>;
+}
+
+/** 简易 Markdown 渲染：支持加粗、斜体、列表、标题、代码块 */
+function renderMarkdown(text: string): React.ReactNode {
+  if (!text) return null;
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let inCodeBlock = false;
+  let codeLines: string[] = [];
+  let key = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        elements.push(<pre key={key++} className="bg-muted rounded-md p-3 my-2 text-xs overflow-x-auto"><code>{codeLines.join('\n')}</code></pre>);
+        codeLines = []; inCodeBlock = false;
+      } else { inCodeBlock = true; }
+      continue;
+    }
+    if (inCodeBlock) { codeLines.push(line); continue; }
+    if (/^---+$/.test(line.trim())) { elements.push(<hr key={key++} className="my-3 border-border" />); continue; }
+    if (line.startsWith('### ')) { elements.push(<h4 key={key++} className="font-semibold mt-3 mb-1">{inlineMd(line.slice(4))}</h4>); continue; }
+    if (line.startsWith('## ')) { elements.push(<h3 key={key++} className="font-semibold mt-4 mb-1">{inlineMd(line.slice(3))}</h3>); continue; }
+    if (line.startsWith('# ')) { elements.push(<h2 key={key++} className="font-bold mt-4 mb-1">{inlineMd(line.slice(2))}</h2>); continue; }
+    if (/^[-*]\s/.test(line.trim())) { elements.push(<li key={key++} className="ml-4 list-disc">{inlineMd(line.trim().replace(/^[-*]\s+/, ''))}</li>); continue; }
+    if (/^\d+\.\s/.test(line.trim())) { elements.push(<li key={key++} className="ml-4 list-decimal">{inlineMd(line.trim().replace(/^\d+\.\s+/, ''))}</li>); continue; }
+    if (!line.trim()) { elements.push(<div key={key++} className="h-2" />); continue; }
+    elements.push(<p key={key++} className="my-0.5">{inlineMd(line)}</p>);
+  }
+  return <>{elements}</>;
+}
+
 interface DataStorytellingProps {
   data: ParsedData;
   fieldStats: Array<{ field: string; type: string; stats?: Record<string, number> }>;
@@ -452,8 +507,8 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
                         <Badge variant="outline" className="text-[10px]">{currentSlideData.type}</Badge>
                       </div>
                       <h2 className="text-2xl md:text-3xl font-bold leading-tight">{currentSlideData.title}</h2>
-                      <div className="text-sm md:text-base leading-relaxed whitespace-pre-wrap text-muted-foreground">
-                        {currentSlideData.content}
+                      <div className="text-sm md:text-base leading-relaxed text-muted-foreground">
+                        {renderMarkdown(currentSlideData.content)}
                       </div>
                     </div>
                   )}

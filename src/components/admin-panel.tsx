@@ -41,6 +41,8 @@ import {
   KeyRound,
   LayoutGrid,
   Settings2,
+  Lock,
+  Zap,
 } from 'lucide-react';
 import { ROLE_TEMPLATES, PERMISSION_LABELS, type Role } from '@/lib/auth';
 
@@ -74,8 +76,8 @@ interface AdminPanelProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const ROLE_OPTIONS: { value: Role; label: string; desc: string }[] = [
-  { value: 'admin', label: '管理员', desc: '全部权限' },
+const ROLE_OPTIONS: { value: Role; label: string; desc: string; restricted?: boolean }[] = [
+  { value: 'admin', label: '管理员', desc: '全部权限（系统保留，不可创建）', restricted: true },
   { value: 'editor', label: '编辑者', desc: '可上传、分析、建表、仪表盘' },
   { value: 'analyst', label: '分析师', desc: '可分析、图表、SQL查询' },
   { value: 'viewer', label: '查看者', desc: '仅查看仪表盘和报表' },
@@ -179,7 +181,11 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   }, [open, user, fetchUsers, fetchLoginLogs, fetchAIConfig]);
 
   const applyRoleTemplate = (role: Role) => {
-    if (role === 'custom') return;
+    if (role === 'custom') {
+      // 自定义角色：保留当前权限设置，仅切换角色标识
+      setFormData((prev) => ({ ...prev, role: 'custom' }));
+      return;
+    }
     setFormData((prev) => ({
       ...prev,
       role,
@@ -301,6 +307,31 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       }
     } catch {
       showMessage('网络错误', 'error');
+    } finally {
+      setAiConfigLoading(false);
+    }
+  };
+
+  const handleTestAIConnection = async () => {
+    if (!aiConfig.apiKey || !aiConfig.baseUrl) {
+      showMessage('请先填写 API Key 和 Base URL', 'error');
+      return;
+    }
+    setAiConfigLoading(true);
+    try {
+      const res = await fetch('/api/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(aiConfig),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showMessage(`连接成功！模型: ${data.model || aiConfig.modelName}`, 'success');
+      } else {
+        showMessage(data.error || '连接失败，请检查配置', 'error');
+      }
+    } catch {
+      showMessage('网络错误，无法测试连接', 'error');
     } finally {
       setAiConfigLoading(false);
     }
@@ -533,16 +564,22 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() => applyRoleTemplate(opt.value)}
+                          onClick={() => !opt.restricted && applyRoleTemplate(opt.value)}
+                          disabled={opt.restricted}
                           className={`relative flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
-                            formData.role === opt.value
-                              ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                              : 'border-border hover:border-muted-foreground/30'
+                            opt.restricted
+                              ? 'border-border/50 bg-muted/30 opacity-50 cursor-not-allowed'
+                              : formData.role === opt.value
+                                ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                : 'border-border hover:border-muted-foreground/30'
                           }`}
                         >
                           <span className="text-sm font-medium">{opt.label}</span>
                           <span className="text-xs text-muted-foreground mt-0.5">{opt.desc}</span>
-                          {formData.role === opt.value && (
+                          {opt.restricted && (
+                            <Lock className="w-3 h-3 text-muted-foreground absolute top-2 right-2" />
+                          )}
+                          {!opt.restricted && formData.role === opt.value && (
                             <CheckCircle2 className="w-4 h-4 text-primary absolute top-2 right-2" />
                           )}
                         </button>
@@ -687,19 +724,36 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                     onChange={(e) => setAiConfig({ ...aiConfig, baseUrl: e.target.value })}
                     placeholder="https://api.openai.com/v1"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    支持 OpenAI 兼容接口格式，如：DeepSeek、通义千问、Moonshot、GLM 等
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>模型名称</Label>
                   <Input
                     value={aiConfig.modelName}
                     onChange={(e) => setAiConfig({ ...aiConfig, modelName: e.target.value })}
-                    placeholder="gpt-4o"
+                    placeholder="gpt-4o / deepseek-chat / qwen-plus ..."
                   />
+                  <p className="text-xs text-muted-foreground">
+                    常见模型：gpt-4o、gpt-4o-mini、deepseek-chat、qwen-plus、moonshot-v1-8k、glm-4-flash
+                  </p>
                 </div>
-                <Button onClick={handleSaveAIConfig} disabled={aiConfigLoading}>
-                  {aiConfigLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  保存配置
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleSaveAIConfig} disabled={aiConfigLoading} className="flex-1">
+                    {aiConfigLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    保存配置
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleTestAIConnection}
+                    disabled={aiConfigLoading || !aiConfig.apiKey || !aiConfig.baseUrl}
+                    className="gap-1.5"
+                  >
+                    <Zap className="w-4 h-4" />
+                    测试连接
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
