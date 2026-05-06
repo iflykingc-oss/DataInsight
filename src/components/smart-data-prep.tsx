@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sparkles, Loader2, AlertTriangle, CheckCircle, XCircle, RefreshCw,
-  Trash2, FileSpreadsheet, Shield, Zap, ArrowRight,
+  Trash2, FileSpreadsheet, Shield, Zap, ArrowRight, Download,
 } from 'lucide-react';
 import { ParsedData } from '@/lib/data-processor/types';
 import { request } from '@/lib/request';
@@ -220,6 +220,7 @@ export function SmartDataPrep({ data, fieldStats, modelConfig, onDataReady }: Sm
   const [applied, setApplied] = useState(false);
   const [activeTab, setActiveTab] = useState('issues');
   const [savedTemplates, setSavedTemplates] = useState<CleanTemplate[]>([]);
+  const [cleanedDataForExport, setCleanedDataForExport] = useState<ParsedData | null>(null);
 
   const hasData = data?.headers?.length > 0;
 
@@ -257,12 +258,53 @@ export function SmartDataPrep({ data, fieldStats, modelConfig, onDataReady }: Sm
     setTimeout(() => {
       const cleaned = applyFixes(data, selectedFixes, issues);
       onDataReady(cleaned);
+      setCleanedDataForExport(cleaned);
       setApplied(true);
       setIsApplying(false);
       // 重新检测
       setIssues(detectQualityIssues(cleaned));
     }, 500);
   }, [data, selectedFixes, issues, onDataReady]);
+
+  const handleExportCleaned = useCallback((format: 'csv' | 'json') => {
+    if (!cleanedDataForExport) return;
+    const { headers, rows } = cleanedDataForExport;
+    let content: string;
+    let mimeType: string;
+    let extension: string;
+
+    if (format === 'csv') {
+      const csvRows = [
+        headers.join(','),
+        ...rows.map(row =>
+          headers.map(h => {
+            const val = row[h] ?? '';
+            const str = String(val);
+            return str.includes(',') || str.includes('"') || str.includes('\n')
+              ? `"${str.replace(/"/g, '""')}"`
+              : str;
+          }).join(',')
+        ),
+      ];
+      content = csvRows.join('\n');
+      mimeType = 'text/csv;charset=utf-8;';
+      extension = 'csv';
+    } else {
+      content = JSON.stringify({ headers, rows, rowCount: rows.length }, null, 2);
+      mimeType = 'application/json;charset=utf-8;';
+      extension = 'json';
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `清洗数据_${Date.now()}.${extension}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [cleanedDataForExport]);
 
   const handleSaveTemplate = useCallback(() => {
     const steps = issues.filter(i => selectedFixes.has(i.id)).map(i => i.autoFix);
@@ -320,6 +362,52 @@ export function SmartDataPrep({ data, fieldStats, modelConfig, onDataReady }: Sm
           </div>
         </CardContent>
       </Card>
+
+      {/* 清洗完成导出区 */}
+      {applied && cleanedDataForExport && (
+        <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-800">
+          <CardContent className="flex items-center justify-between gap-4 p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-foreground">数据清洗完成</p>
+                <p className="text-xs text-muted-foreground">
+                  已生成 {cleanedDataForExport.rows.length} 行清洗后数据，支持导出继续使用
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleExportCleaned('csv')}
+                className="gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                导出 CSV
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleExportCleaned('json')}
+                className="gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                导出 JSON
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => { setApplied(false); setSelectedFixes(new Set()); setCleanedDataForExport(null); }}
+                className="gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                重新清洗
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>

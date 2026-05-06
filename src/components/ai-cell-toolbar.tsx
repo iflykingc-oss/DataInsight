@@ -80,7 +80,10 @@ export function AICellToolbar({ selectedText, cellValue, modelConfig, onApply, o
     try {
       const response = await fetch('/api/ai-formula', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           requirement: prompts[tool],
           headers: ['content'],

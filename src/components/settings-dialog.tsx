@@ -90,7 +90,11 @@ export default function SettingsDialog({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    fetch('/api/admin/ai-config')
+    fetch('/api/admin/ai-config', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+      },
+    })
       .then(r => r.json())
       .then(data => {
         if (data.success) setAdminConfig(data.config || {});

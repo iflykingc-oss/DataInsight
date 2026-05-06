@@ -319,7 +319,10 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
         try {
           const response = await fetch('/api/export/pdf', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+            },
             body: JSON.stringify({
               title: reportTitle,
               subtitle: `${reportAuthor} • ${new Date().toLocaleDateString()}`,

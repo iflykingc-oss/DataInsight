@@ -404,7 +404,10 @@ export function EnhancedLLMAssistant({
 
       const response = await fetch(apiPath, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify(requestBody),
         signal: abortRef.current.signal
       });

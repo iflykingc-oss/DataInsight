@@ -356,7 +356,10 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
 
       const response = await fetch('/api/nl2-dashboard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           userMessage: isGuided
             ? `业务场景：${guidedAnswers.scenario || ''}，核心指标：${guidedAnswers.metrics || ''}，时间维度：${guidedAnswers.dimension || ''}`
@@ -451,7 +454,10 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
     try {
       const response = await fetch('/api/nl2-dashboard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           userMessage: instruction,
           data,
@@ -521,7 +527,10 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
     try {
       const response = await fetch('/api/nl2-dashboard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           userMessage: instruction,
           data,

@@ -162,7 +162,10 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
     try {
       const response = await fetch('/api/metric-ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           headers: data.headers,
           rows: data.rows,
@@ -259,7 +262,10 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
     try {
       const response = await fetch('/api/metric-ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           headers: data.headers,
           rows: data.rows,

@@ -42,6 +42,37 @@ import {
   AlignLeft,
   Database,
   Wand2,
+  TrendingUp,
+  AlertTriangle,
+  Shield,
+  Target,
+  Grid,
+  GitBranch,
+  Map,
+  Users,
+  CreditCard,
+  Calendar,
+  BarChart,
+  Banknote,
+  Stethoscope,
+  GraduationCap,
+  Wifi,
+  Hash,
+  Package,
+  User,
+  Building,
+  Cloud,
+  Heart,
+  Tag,
+  Smartphone,
+  Smile,
+  DollarSign,
+  Mail,
+  Link,
+  CheckCircle,
+  Send,
+  Zap,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CellValue } from '@/lib/data-processor';
@@ -50,6 +81,7 @@ import {
   type AIField,
   type AIFieldTemplate,
   AI_FIELD_TEMPLATES,
+  AI_FIELD_CATEGORIES,
   createAIField,
   getAIFieldTypeIcon,
   getAIFieldTypeLabel,
@@ -63,6 +95,11 @@ import {
 const ICON_MAP: Record<string, React.ElementType> = {
   Phone, MapPin, Tags, MessageSquare, FileText, CheckSquare,
   Languages, Globe, PenTool, Star, AlignLeft, Database,
+  TrendingUp, AlertTriangle, Shield, Target, Grid, GitBranch,
+  Map, Users, CreditCard, Calendar, BarChart, Banknote,
+  Stethoscope, GraduationCap, Wifi, Hash, Package, User,
+  Building, Cloud, Heart, Tag, Smartphone, Smile,
+  DollarSign, Mail, Link, CheckCircle, Send, Zap,
 };
 
 interface AIFieldPanelProps {
@@ -92,6 +129,8 @@ export function AIFieldPanel({
   const [runningFieldId, setRunningFieldId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('templates');
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // 智能推荐
   const recommendations = useMemo(() => {
@@ -115,6 +154,22 @@ export function AIFieldPanel({
     });
     return recommendAIFields(columnFeatures);
   }, [data]);
+
+  // 筛选后的模板列表
+  const filteredTemplates = useMemo(() => {
+    return AI_FIELD_TEMPLATES.filter(t => {
+      const matchCategory = selectedCategory === 'all' || t.category === selectedCategory;
+      if (!matchCategory) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        t.name.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q) ||
+        t.tags.some(tag => tag.toLowerCase().includes(q)) ||
+        getAIFieldTypeLabel(t.type).toLowerCase().includes(q)
+      );
+    });
+  }, [searchQuery, selectedCategory]);
 
   const updateFields = useCallback((newFields: AIField[]) => {
     setFields(newFields);
@@ -151,7 +206,10 @@ export function AIFieldPanel({
     try {
       const response = await fetch('/api/ai-field', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           action: 'execute',
           field: {
@@ -244,7 +302,10 @@ export function AIFieldPanel({
     try {
       const response = await fetch('/api/ai-field', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           action: 'execute',
           field: tempField,
@@ -482,9 +543,48 @@ export function AIFieldPanel({
                   </TabsTrigger>
                 </TabsList>
                 <ScrollArea className="h-[400px] mt-4">
-                  <TabsContent value="templates" className="m-0">
+                  <TabsContent value="templates" className="m-0 space-y-3">
+                    {/* 搜索框 */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="搜索字段名称、描述、标签..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="pl-9 h-9"
+                      />
+                    </div>
+                    {/* 分类筛选 */}
+                    <ScrollArea className="pb-1">
+                      <div className="flex gap-2 min-w-max">
+                        <Badge
+                          variant={selectedCategory === 'all' ? 'default' : 'secondary'}
+                          className="cursor-pointer text-xs"
+                          onClick={() => setSelectedCategory('all')}
+                        >
+                          全部({AI_FIELD_TEMPLATES.length})
+                        </Badge>
+                        {AI_FIELD_CATEGORIES.map(cat => (
+                          <Badge
+                            key={cat.id}
+                            variant={selectedCategory === cat.id ? 'default' : 'secondary'}
+                            className="cursor-pointer text-xs"
+                            onClick={() => setSelectedCategory(cat.id)}
+                          >
+                            {cat.label}({AI_FIELD_TEMPLATES.filter(t => t.category === cat.id).length})
+                          </Badge>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    {/* 结果统计 */}
+                    <p className="text-xs text-muted-foreground">
+                      {filteredTemplates.length === AI_FIELD_TEMPLATES.length
+                        ? `共 ${AI_FIELD_TEMPLATES.length} 个字段模板`
+                        : `找到 ${filteredTemplates.length} / ${AI_FIELD_TEMPLATES.length} 个字段模板`}
+                    </p>
+                    {/* 模板列表 */}
                     <div className="grid grid-cols-2 gap-3">
-                      {AI_FIELD_TEMPLATES.map(template => (
+                      {filteredTemplates.length > 0 ? filteredTemplates.map(template => (
                         <button
                           key={template.id}
                           onClick={() => handleSelectTemplate(template)}
@@ -495,8 +595,20 @@ export function AIFieldPanel({
                             <span className="font-medium text-sm">{template.name}</span>
                           </div>
                           <p className="text-xs text-muted-foreground">{template.description}</p>
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            <Badge variant="outline" className="text-xs px-1 py-0">{getAIFieldTypeLabel(template.type)}</Badge>
+                            {template.tags.slice(0, 2).map(tag => (
+                              <Badge key={tag} variant="secondary" className="text-xs px-1 py-0">{tag}</Badge>
+                            ))}
+                          </div>
                         </button>
-                      ))}
+                      )) : (
+                        <div className="col-span-2 text-center py-8 text-muted-foreground">
+                          <Search className="w-8 h-8 mx-auto mb-2" />
+                          <p>未找到匹配的字段模板</p>
+                          <p className="text-xs mt-1">尝试调整搜索词或分类筛选</p>
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                   <TabsContent value="recommend" className="m-0">

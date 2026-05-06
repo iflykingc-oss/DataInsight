@@ -254,7 +254,10 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
     try {
       const response = await fetch('/api/llm-insight', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           message: `请总结这条记录的关键信息，生成一句话概括和关键洞察：\n${
             data.headers.map(h => `${h}: ${data.rows[rowIndex][h] ?? ''}`).join('\n')
@@ -320,7 +323,10 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
     try {
       const response = await fetch('/api/llm-insight', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           message: aiAnalyzeQuery,
           data: { headers: data.headers, rows: selectedData },

@@ -30,7 +30,8 @@ import {
   Layers,
   Loader2,
   Brain,
-  Compass
+  Compass,
+  Download
 } from 'lucide-react';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import type { AnalysisPlan } from '@/lib/data-processor/types';
@@ -70,6 +71,71 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
   const [expandedAiStep, setExpandedAiStep] = useState<string | null>(null);
   const [analysisPlan, setAnalysisPlan] = useState<{ plan: AnalysisPlan; reasoning: string } | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
+
+  // 导出分析结果
+  const handleExportInsights = useCallback((format: 'csv' | 'json') => {
+    const deep = analysis?.deepAnalysis;
+    if (!deep) return;
+
+    const keyFindings = deep.keyFindings || [];
+    const correlations = deep.correlations || [];
+
+    let content: string;
+    let mimeType: string;
+    let extension: string;
+
+    if (format === 'csv') {
+      const rows = [
+        ['类别', '标题', '严重程度', '详情', '影响', '建议', '相关字段', '可信度'].join(','),
+        ...keyFindings.map((f) => [
+          f.category,
+          `"${(f.title || '').replace(/"/g, '""')}"`,
+          f.severity,
+          `"${(f.detail || '').replace(/"/g, '""')}"`,
+          `"${(f.impact || '').replace(/"/g, '""')}"`,
+          `"${(f.suggestion || '').replace(/"/g, '""')}"`,
+          `"${(f.relatedFields || []).join(';')}"`,
+          f.confidence,
+        ].join(',')),
+        ...correlations.map((c) => [
+          'correlation',
+          `${c.field1} ↔ ${c.field2}`,
+          c.strength,
+          `系数: ${c.coefficient}`,
+          c.direction === 'positive' ? '正相关' : '负相关',
+          '相关性分析',
+          `${c.field1};${c.field2}`,
+          '',
+        ].join(',')),
+      ];
+      content = rows.join('\n');
+      mimeType = 'text/csv;charset=utf-8;';
+      extension = 'csv';
+    } else {
+      content = JSON.stringify({
+        summary: analysis?.summary,
+        fieldStats: analysis?.fieldStats,
+        healthScore: deep.healthScore,
+        keyFindings,
+        correlations,
+        distributions: deep.distributions,
+        trends: deep.trends,
+        exportTime: new Date().toISOString(),
+      }, null, 2);
+      mimeType = 'application/json;charset=utf-8;';
+      extension = 'json';
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `数据分析报告_${Date.now()}.${extension}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [analysis]);
   const deep = analysis?.deepAnalysis;
 
   useEffect(() => {
@@ -108,7 +174,10 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
     try {
       const plan = await fetch('/api/analysis-planner', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           fieldStats: analysis.fieldStats.map(f => ({
             field: f.field,
@@ -513,11 +582,35 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
       {/* 3. 关键发现 */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-primary" />
-            关键发现
-            <Badge variant="secondary">{deep.keyFindings.length}</Badge>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-primary" />
+              关键发现
+              <Badge variant="secondary">{deep.keyFindings.length}</Badge>
+            </CardTitle>
+            {analysis?.deepAnalysis && deep.keyFindings.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleExportInsights('csv')}
+                  className="gap-1.5 h-8"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  导出 CSV
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleExportInsights('json')}
+                  className="gap-1.5 h-8"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  导出 JSON
+                </Button>
+              </div>
+            )}
+          </div>
           <CardDescription>AI 自动发现数据中的问题和机会</CardDescription>
         </CardHeader>
         <CardContent>

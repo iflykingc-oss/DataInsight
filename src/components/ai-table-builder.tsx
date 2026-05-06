@@ -215,7 +215,10 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   useEffect(() => {
     fetch('/api/ai-table-builder', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+      },
       body: JSON.stringify({ action: 'list-templates' }),
     })
       .then(res => {
@@ -363,7 +366,10 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
 
       const response = await fetch('/api/ai-table-builder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           action: 'generate',
           sceneId: selectedScene?.id,
@@ -460,7 +466,10 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     try {
       const response = await fetch('/api/ai-table-builder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           action: 'iterate',
           currentScheme,
@@ -513,7 +522,10 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
     try {
       const response = await fetch('/api/ai-table-builder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({ action: 'confirm', scheme: currentScheme }),
       });
 

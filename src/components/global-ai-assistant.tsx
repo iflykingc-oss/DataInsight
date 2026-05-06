@@ -187,7 +187,10 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
 
       const response = await fetch('/api/llm-insight', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}`,
+        },
         body: JSON.stringify({
           message: userMessage,
           data: data ? { headers: data.headers, rows: data.rows.slice(0, 200), rowCount: data.rowCount, columnCount: data.columnCount } : undefined,
