@@ -80,6 +80,9 @@ const AIFormulaGenerator = dynamic(() => import('@/components/ai-formula-generat
 const InsightReportGenerator = dynamic(() => import('@/components/insight-report-generator').then(m => ({ default: m.InsightReportGenerator })), { ssr: false });
 const PivotTable = dynamic(() => import('@/components/pivot-table').then(m => ({ default: m.PivotTable })), { ssr: false });
 const KanbanView = dynamic(() => import('@/components/view-kanban').then(m => ({ default: m.KanbanView })), { ssr: false });
+const DataAlerting = dynamic(() => import('@/components/data-alerting').then(m => ({ default: m.DataAlerting })), { ssr: false });
+const VersionHistory = dynamic(() => import('@/components/version-history').then(m => ({ default: m.VersionHistory })), { ssr: false });
+const TemplateManager = dynamic(() => import('@/components/template-manager').then(m => ({ default: m.TemplateManager })), { ssr: false });
 const CalendarView = dynamic(() => import('@/components/view-calendar').then(m => ({ default: m.CalendarView })), { ssr: false });
 const GanttView = dynamic(() => import('@/components/view-gantt').then(m => ({ default: m.GanttView })), { ssr: false });
 const LinkedTablesManager = dynamic(() => import('@/components/linked-tables').then(m => ({ default: m.LinkedTablesManager })), { ssr: false });
@@ -595,7 +598,7 @@ export default function HomePage() {
     }
 
     // 需要数据但无数据的视图（这些视图没有自定义空状态，使用通用提示）
-    const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'visualization'];
+    const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'visualization', 'alerting'];
     if (needsDataViews.includes(viewMode) && !parsedData) {
       return (
         <div className="flex flex-col items-center justify-center py-20">
@@ -1166,6 +1169,33 @@ export default function HomePage() {
             }}
           />
           <SceneAgentPanel sceneId="multimodal" sceneName="图片处理" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    if (viewMode === 'alerting') {
+      return (
+        <div className="relative">
+          <DataAlerting data={parsedData!} fieldStats={analysis?.fieldStats || []} />
+          <SceneAgentPanel sceneId="alerting" sceneName="数据预警" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    if (viewMode === 'version-history') {
+      return (
+        <div className="relative">
+          <VersionHistory />
+          <SceneAgentPanel sceneId="version-history" sceneName="版本快照" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    if (viewMode === 'template-manager') {
+      return (
+        <div className="relative">
+          <TemplateManager />
+          <SceneAgentPanel sceneId="template-manager" sceneName="模板管理" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
         </div>
       );
     }

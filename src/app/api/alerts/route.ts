@@ -136,6 +136,50 @@ async function sendNotification(channel: NotificationChannel, ruleName: string, 
   }
 }
 
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    data: [
+      {
+        id: 'sales-drop',
+        name: '销售额下降预警',
+        description: '当月销售额环比下降超过20%时触发',
+        category: '销售指标',
+      },
+      {
+        id: 'cost-overrun',
+        name: '成本超支预警',
+        description: '实际成本超过预算的110%时触发',
+        category: '成本控制',
+      },
+      {
+        id: 'inventory-low',
+        name: '库存不足预警',
+        description: '库存量低于安全库存线时触发',
+        category: '库存管理',
+      },
+      {
+        id: 'customer-churn',
+        name: '客户流失预警',
+        description: '客户活跃度连续30天下降时触发',
+        category: '客户关系',
+      },
+      {
+        id: 'revenue-target',
+        name: '营收目标预警',
+        description: '季度营收进度低于目标的80%时触发',
+        category: '财务指标',
+      },
+      {
+        id: 'data-quality',
+        name: '数据质量预警',
+        description: '数据缺失率超过5%时触发',
+        category: '数据质量',
+      },
+    ],
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
