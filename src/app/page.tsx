@@ -143,6 +143,28 @@ export default function HomePage() {
   // 多表数据存储（仅当前会话内存，不持久化）
   const [multiTableData, setMultiTableData] = useState<ParsedData[]>([]);
 
+  // 子Tab状态（解决首次渲染Tabs内容不显示问题）
+  const [dataPrepTab, setDataPrepTab] = useState('smart');
+  const [insightsTab, setInsightsTab] = useState('analysis');
+  const [vizTab, setVizTab] = useState('dashboard');
+  const [chartTab, setChartTab] = useState('recommend');
+  const [metricsTab, setMetricsTab] = useState('ai');
+  const [reportTab, setReportTab] = useState('report');
+  const [dataSourceTab, setDataSourceTab] = useState('sources');
+  const [multimodalTab, setMultimodalTab] = useState('image-gen');
+
+  // 视图切换时重置子Tab到默认值
+  useEffect(() => {
+    if (viewMode === 'data-prep') setDataPrepTab('smart');
+    if (viewMode === 'insights') setInsightsTab('analysis');
+    if (viewMode === 'visualization') setVizTab('dashboard');
+    if (viewMode === 'chart-center') setChartTab('recommend');
+    if (viewMode === 'metrics') setMetricsTab('ai');
+    if (viewMode === 'report-export') setReportTab('report');
+    if (viewMode === 'data-source') setDataSourceTab('sources');
+    if (viewMode === 'multimodal') setMultimodalTab('image-gen');
+  }, [viewMode]);
+
 
   // 模型配置状态 - 初始为null避免SSR不一致
   const [activeModelConfig, setActiveModelConfig] = useState<{
@@ -617,7 +639,7 @@ export default function HomePage() {
     if (viewMode === 'data-table' && parsedData) {
       return (
         <div className="relative">
-          <Tabs defaultValue="table" className="space-y-4">
+          <Tabs defaultValue="table" key="table" className="space-y-4">
           <TabsList>
             <TabsTrigger value="table">数据视图</TabsTrigger>
             <TabsTrigger value="linked">关联表</TabsTrigger>
@@ -744,7 +766,7 @@ export default function HomePage() {
     if (viewMode === 'data-prep') {
       return (
         <div className="relative">
-          <Tabs defaultValue="smart" className="space-y-4">
+          <Tabs value={dataPrepTab} onValueChange={setDataPrepTab} className="space-y-4">
             <TabsList>
               <TabsTrigger value="smart" disabled={!parsedData}>智能准备</TabsTrigger>
               <TabsTrigger value="clean" disabled={!parsedData}>数据清洗</TabsTrigger>
@@ -806,7 +828,7 @@ export default function HomePage() {
       }
       return (
         <div className="relative">
-          <Tabs defaultValue="insights" className="space-y-4">
+          <Tabs defaultValue="insights" key="insights" className="space-y-4">
             <TabsList>
               <TabsTrigger value="insights">深度分析</TabsTrigger>
               <TabsTrigger value="report">
@@ -833,7 +855,7 @@ export default function HomePage() {
       return (
         <div className="relative">
           <ErrorBoundary moduleName="仪表盘">
-            <Tabs defaultValue="dashboard" className="space-y-4">
+            <Tabs defaultValue="dashboard" key="dashboard" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="dashboard">快速看板</TabsTrigger>
                 <TabsTrigger value="nl2dash">AI 建看板</TabsTrigger>
@@ -876,7 +898,7 @@ export default function HomePage() {
       return (
         <div className="relative">
           <ErrorBoundary moduleName="指标中心">
-            <Tabs defaultValue="ai-metric" className="space-y-4">
+            <Tabs defaultValue="ai-metric" key="ai-metric" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="ai-metric">AI 建指标</TabsTrigger>
                 <TabsTrigger value="metric-lib">指标列表</TabsTrigger>
@@ -900,7 +922,7 @@ export default function HomePage() {
     if (viewMode === 'chart-center' && parsedData && analysis) {
       return (
         <div className="relative">
-          <Tabs defaultValue="ai-chart" className="space-y-4">
+          <Tabs defaultValue="ai-chart" key="ai-chart" className="space-y-4">
             <TabsList>
               <TabsTrigger value="ai-chart">AI 选图</TabsTrigger>
               <TabsTrigger value="advanced">高级图表</TabsTrigger>
@@ -1040,7 +1062,7 @@ export default function HomePage() {
     if (viewMode === 'report-export' && parsedData) {
       return (
         <div className="relative">
-          <Tabs defaultValue="report" className="space-y-4">
+          <Tabs defaultValue="report" key="report" className="space-y-4">
             <TabsList>
               <TabsTrigger value="report" disabled={!analysis}>生成报告</TabsTrigger>
               <TabsTrigger value="export">导出图表</TabsTrigger>
