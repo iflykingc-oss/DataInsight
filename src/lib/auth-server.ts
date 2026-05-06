@@ -48,6 +48,16 @@ if (!g.__PERSISTENT_AUTH_INIT__) {
           for (const u of parsed.users) {
             // 向后兼容：旧role 'member' -> 'editor'
             if (u.role === 'member') u.role = 'editor';
+            // 如果用户没有passwordHash，重新生成（从旧版本升级）
+            if (!u.passwordHash) {
+              if (u.username === 'admin') {
+                u.passwordHash = bcrypt.hashSync('admin123', 12);
+              } else if (u.username === 'demo') {
+                u.passwordHash = bcrypt.hashSync('demo123', 12);
+              } else {
+                u.passwordHash = bcrypt.hashSync('password123', 12);
+              }
+            }
             this.users.set(u.id, u);
             if (u.id >= this.userIdCounter) this.userIdCounter = u.id + 1;
           }
