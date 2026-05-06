@@ -123,10 +123,15 @@ export function FileUploader({
   // 使用ref保存最新的回调，避免useEffect依赖导致重复创建Worker
   const onFileUploadRef = useRef(onFileUpload);
   const onParseProgressRef = useRef(onParseProgress);
+  const onCacheHitRef = useRef(onCacheHit);
 
   useEffect(() => {
     onFileUploadRef.current = onFileUpload;
   }, [onFileUpload]);
+
+  useEffect(() => {
+    onCacheHitRef.current = onCacheHit;
+  }, [onCacheHit]);
 
   useEffect(() => {
     onParseProgressRef.current = onParseProgress;
@@ -395,7 +400,7 @@ export function FileUploader({
         ));
 
         // D-05 修复：缓存命中时通知父组件，以便显示 toast
-        onCacheHit?.(uploadFile.file.name);
+        onCacheHitRef.current?.(uploadFile.file.name);
 
         // 缓存命中也需上报，使用ref避免依赖
         if (!reportedFileIdsRef.current.has(uploadFile.id)) {

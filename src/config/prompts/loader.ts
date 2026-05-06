@@ -65,8 +65,8 @@ class PromptLoader {
   private async loadAllPrompts() {
     const loadPrompts = Array.from(this.loaders.entries()).map(async ([id, loader]) => {
       try {
-        const module = await loader();
-        const prompt = module.default;
+        const mod = await loader();
+        const prompt = mod.default;
         this.prompts.set(id, prompt);
         this.lastModified.set(id, Date.now());
       } catch (error) {
@@ -86,8 +86,8 @@ class PromptLoader {
     }
 
     try {
-      const module = await loader();
-      const prompt = module.default;
+      const mod = await loader();
+      const prompt = mod.default;
       this.prompts.set(id, prompt);
       this.lastModified.set(id, Date.now());
 

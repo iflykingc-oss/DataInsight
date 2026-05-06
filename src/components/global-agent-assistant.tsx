@@ -22,7 +22,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn, generateId } from '@/lib/utils';
 import { callLLMStream, LLMModelConfig } from '@/lib/llm';
-import { classifyAndRoute } from '@/lib/agent/core/intent-router';
 import { FieldStat, ParsedData } from '@/lib/data-processor';
 import { createOrchestrator, ExecutionPlan } from '@/lib/orchestrator-agent';
 
@@ -144,108 +143,79 @@ export function GlobalAgentAssistant({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // -- 自动滚动 --
+  // -- 发送逻辑 refs（供内部函数引用最新值） --
+  const loadingRef = useRef(loading);
+  const messagesRef = useRef(messages);
+  const streamingIdRef = useRef(streamingId);
+  const inputRef = useRef(input);
+  const modelConfigRef = useRef(modelConfig);
+  const dataRef = useRef(data);
+  const hasDataRef = useRef(hasData);
+  const currentViewRef = useRef(currentView);
+  const orchestratorRef = useRef<ReturnType<typeof createOrchestrator> | null>(null);
+
+  // 保持 refs 与 state 同步
+  useEffect(() => { loadingRef.current = loading; }, [loading]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { streamingIdRef.current = streamingId; }, [streamingId]);
+  useEffect(() => { inputRef.current = input; }, [input]);
+  useEffect(() => { modelConfigRef.current = modelConfig; }, [modelConfig]);
+  useEffect(() => { dataRef.current = data; }, [data]);
+  useEffect(() => { hasDataRef.current = hasData; }, [hasData]);
+  useEffect(() => { currentViewRef.current = currentView; }, [currentView]);
+
+  // 初始化 orchestrator
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamingId]);
+    orchestratorRef.current = createOrchestrator({
+      currentView: currentViewRef.current || 'home',
+      hasData: hasDataRef.current,
+      dataInfo: dataRef.current ? {
+        fileName: dataRef.current.fileName || '',
+        rowCount: dataRef.current.rowCount || 0,
+        columnCount: dataRef.current.columnCount || 0,
+      } : undefined,
+      isLoggedIn: true,
+    });
+  }, [currentView, hasData, data]);
 
-  // -- 全局快捷键 --
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (mode === 'floating') setIsOpen(false);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [mode]);
+  // -- 统一发送逻辑（供快捷操作和表单提交共用） --
+  const doSend = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || loadingRef.current) return;
 
-  // -- 流式响应处理 --
-  const processStreamResponse = useCallback(async (
-    stream: ReadableStream<Uint8Array>,
-    assistantId: string
-  ) => {
-    let fullContent = '';
-    try {
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const parsed = JSON.parse(line.slice(6));
-              if (parsed.content) {
-                fullContent += parsed.content;
-                setMessages(prev =>
-                  prev.map(m =>
-                    m.id === assistantId
-                      ? { ...m, content: fullContent }
-                      : m
-                  )
-                );
-              }
-            } catch { /* ignore parse error */ }
-          }
-        }
-      }
-      reader.releaseLock();
-    } catch {
-      fullContent += '\n\n[流式输出中断]';
-      setMessages(prev =>
-        prev.map(m =>
-          m.id === assistantId ? { ...m, content: fullContent } : m
-        )
-      );
-    } finally {
-      setStreamingId(null);
-    }
-  }, []);
-
-  // -- 发送消息 --
-  const handleSend = useCallback(async () => {
-    const text = input.trim();
-    if (!text || loading) return;
-
+    const assistantId = generateId('msg');
     const userMsg: ChatMessage = {
       id: generateId('msg'),
       role: 'user',
-      content: text,
+      content: trimmed,
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, userMsg]);
+    const loadingMsg: ChatMessage = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMsg, loadingMsg]);
     setInput('');
     setLoading(true);
-
-    const assistantId = generateId('msg');
     setStreamingId(assistantId);
-    setMessages(prev => [
-      ...prev,
-      {
-        id: assistantId,
-        role: 'assistant',
-        content: '',
-        timestamp: new Date(),
-      },
-    ]);
 
     try {
-      // === 全局调度智能体（确定性规则优先）===
-      const orchestrator = createOrchestrator({
-        currentView: currentView || 'home',
-        hasData: hasData,
-        dataInfo: data ? { fileName: data.fileName || '', rowCount: data.rowCount || 0, columnCount: data.columnCount || 0 } : undefined,
+      const orchestrator = orchestratorRef.current || createOrchestrator({
+        currentView: currentViewRef.current || 'home',
+        hasData: hasDataRef.current,
+        dataInfo: dataRef.current ? {
+          fileName: dataRef.current.fileName || '',
+          rowCount: dataRef.current.rowCount || 0,
+          columnCount: dataRef.current.columnCount || 0,
+        } : undefined,
         isLoggedIn: true,
       });
 
-      const plan = orchestrator.parseRequest(text);
+      const plan = orchestrator.parseRequest(trimmed);
 
-      // 如果有建议操作，直接展示调度结果
       if (plan.suggestedActions.length > 0) {
         const actionMsg: ChatMessage = {
           id: assistantId,
@@ -269,149 +239,134 @@ export function GlobalAgentAssistant({
           const filtered = prev.filter(m => m.id !== assistantId);
           return [...filtered, actionMsg];
         });
-
-        // 自动执行导航类操作
-        const navigateAction = plan.suggestedActions.find(a => a.action === 'navigate');
-        if (navigateAction && navigateAction.params?.view && onAction) {
-          setTimeout(() => {
-            onAction('navigate', { view: navigateAction.params!.view });
-          }, 500);
-        }
-
         setLoading(false);
         setStreamingId(null);
         return;
       }
 
-      // === 兜底：原有LLM流程 ===
-      // 1. 意图识别（规则+轻量LLM）
-      const intent = await classifyAndRoute(
-        text,
-        {
-          id: generateId('sess'),
-          scene: currentView || '',
-          messages: [],
-          createdAt: Date.now(),
-          lastActivityAt: Date.now(),
-          modelConfig: modelConfig ?? undefined,
-        } as import('@/lib/agent/core/types').AgentContext
-      );
+      // 无路由结果，降级为普通对话（使用 LLM 流式响应）
+      // 此处逻辑保持与原 handleSend 一致
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.id !== assistantId);
+        return [...filtered, { id: assistantId, role: 'assistant', content: '', timestamp: new Date() }];
+      });
 
-      // 2. 如果意图置信度高且对应场景有导航映射，给出路由建议
-      if (intent.confidence >= 0.6 && SCENE_ROUTE_MAP[intent.sceneId]) {
-        const route = SCENE_ROUTE_MAP[intent.sceneId];
-        const routeMsg: ChatMessage = {
-          id: generateId('msg'),
+      const model = modelConfigRef.current;
+      if (!model) {
+        const errMsg: ChatMessage = {
+          id: assistantId,
           role: 'assistant',
-          content: `我识别到您的需求属于 **${SCENE_LABELS[intent.sceneId] || intent.sceneId}** 场景。\n\n建议您切换到「${route.label}」页面以获得更好的体验。是否立即跳转？`,
+          content: '请先在设置中配置 AI 模型（API Key、Base URL、模型名称），才能使用 AI 问数功能。',
           timestamp: new Date(),
-          metadata: {
-            type: 'route',
-            intent: {
-              scene: intent.sceneId,
-              confidence: intent.confidence,
-              matchedKeywords: intent.matchedKeywords || [],
-            },
-          },
-          suggestions: [`跳转到${route.label}`, '继续在这里对话'],
         };
         setMessages(prev => {
           const filtered = prev.filter(m => m.id !== assistantId);
-          return [...filtered, routeMsg];
+          return [...filtered, errMsg];
         });
         setLoading(false);
         setStreamingId(null);
         return;
       }
 
-      // 3. 产品答疑/功能引导：直接走规则+LLM兜底
-      if (intent.sceneId === 'unknown' || intent.confidence < 0.4) {
-        const stream = await callLLMStream(
-          modelConfig || { apiKey: '', baseUrl: '', model: '' },
-          [
-            {
-              role: 'system',
-              content: `你是 DataInsight 平台的智能助手。用户数据仅存在于当前页面内存，不做任何持久化存储。
-
-平台功能：
-- 数据表格：上传Excel/CSV，AI字段、AI公式、关联表、自动化、评论
-- 智能洞察：7大分析模块、深度数据报告
-- 可视化：交互式仪表盘、AI生成、设计器
-- 指标体系：18个预置指标、AI指标生成
-- 图表中心：10种ECharts高级图表
-- AI问数：自然语言数据查询
-- AI多模态：生图、图转文、文转图、图转表
-- 表单收集：15种字段、二维码、主题、规则
-- SQL查询：浏览器端SQLite
-- 报表导出：多模板、导出、分享
-
-请简洁回答用户问题，不要编造功能。`,
-            },
-            ...messages.slice(-6).map(m => ({
-              role: m.role as 'user' | 'assistant',
-              content: m.content,
-            })),
-            { role: 'user', content: text },
-          ]
-        );
-        await processStreamResponse(stream, assistantId);
-        setLoading(false);
-        return;
-      }
-
-      // 4. 场景内智能体调度（模型主导回答）
-      const sceneLabel = SCENE_LABELS[intent.sceneId] || intent.sceneId;
-      const contextData = data
-        ? { headers: data.headers, rows: data.rows.slice(0, 5) }
-        : undefined;
+      const sessionMessages = messagesRef.current
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .slice(-10)
+        .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
       const stream = await callLLMStream(
-        modelConfig || { apiKey: '', baseUrl: '', model: '' },
+        model,
         [
           {
-            role: 'system',
-            content: `你是 DataInsight 平台的 **${sceneLabel}** 场景智能助手。
-
-当前场景能力：
-- 可调用本场景绑定的原子技能
-- 可推荐预制工作流
-- 可引导用户到对应Tab执行操作
-
-规则：
-1. 不跨场景回答，超出当前场景范围时礼貌引导用户到对应功能Tab
-2. 数据仅存在于页面内存，不做持久化
-3. 回答简洁、结构化、可操作`,
+            role: 'user',
+            content: `你是一个数据分析助手。用户数据信息：${JSON.stringify({
+              fileName: dataRef.current?.fileName,
+              rowCount: dataRef.current?.rowCount,
+              columnCount: dataRef.current?.columnCount,
+            })}\n用户问题是：${trimmed}`,
           },
-          {
-            role: 'system',
-            content: `当前数据概览：${contextData ? `\n- 字段：${contextData.headers.join(', ')}\n- 样本行数：${contextData.rows.length}` : '无数据'}`,
-          },
-          ...messages.slice(-6).map(m => ({
-            role: m.role as 'user' | 'assistant',
-            content: m.content,
-          })),
-          { role: 'user', content: text },
+          ...sessionMessages,
         ]
       );
-      await processStreamResponse(stream, assistantId);
-    } catch {
-      setMessages(prev =>
-        prev.map(m =>
-          m.id === assistantId
-            ? {
-                ...m,
-                content:
-                  '抱歉，智能助手暂时无法处理您的请求。您可以：\n\n1. 检查AI模型配置（设置 → AI模型）\n2. 尝试简化问题描述\n3. 直接切换到对应功能Tab操作',
-                metadata: { type: 'error' },
-              }
-            : m
-        )
-      );
+
+      // 内联处理 SSE 流式响应
+      let fullContent = '';
+      try {
+        const reader = stream.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                if (parsed.content) {
+                  fullContent += parsed.content;
+                  setMessages(prev =>
+                    prev.map(m =>
+                      m.id === assistantId
+                        ? { ...m, content: fullContent }
+                        : m
+                    )
+                  );
+                }
+              } catch { /* ignore parse error */ }
+            }
+          }
+        }
+        reader.releaseLock();
+      } catch {
+        fullContent += '\n\n[流式输出中断]';
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === assistantId ? { ...m, content: fullContent } : m
+          )
+        );
+      }
+    } catch (err) {
+      const errMsg: ChatMessage = {
+        id: assistantId,
+        role: 'assistant',
+        content: `处理请求时出错：${err instanceof Error ? err.message : '未知错误'}`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.id !== assistantId);
+        return [...filtered, errMsg];
+      });
     } finally {
       setLoading(false);
       setStreamingId(null);
     }
-  }, [input, loading, messages, modelConfig, data, currentView, hasData, onAction, processStreamResponse]);
+  }, []);
+
+  // -- 自动滚动 --
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingId]);
+
+  // -- 全局快捷键 --
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (mode === 'floating') setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mode]);
+
+  // -- 发送消息（表单回车/点击按钮） --
+  const handleSend = useCallback(async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    await doSend(text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input, loading]);
 
   // -- 快捷操作 --
   const handleQuickAction = useCallback((action: string) => {
@@ -433,9 +388,13 @@ export function GlobalAgentAssistant({
       'sql查询': 'sql-lab',
       '表单收集': 'form-builder',
       '分析数据洞察': 'data-insights',
-      '生成仪表盘': 'dashboard',
-      '数据清洗': 'data-cleaner',
-      '创建报表': 'report',
+      '分析数据趋势': 'insights',
+      '生成仪表盘': 'visualization',
+      '创建可视化图表': 'visualization',
+      '生成异常报告': 'insights',
+      '对比分析不同维度': 'insights',
+      '数据清洗': 'data-prep',
+      '创建报表': 'report-export',
       '去上传': 'home',
       '去上传数据': 'home',
       '浏览模板': 'ai-table-builder',
@@ -450,8 +409,9 @@ export function GlobalAgentAssistant({
       return;
     }
 
-    setInput(action);
-  }, [onAction]);
+    // 通用快捷操作：发送到对话处理
+    doSend(action);
+  }, [onAction, doSend]);
 
   // -- 复制消息 --
   const copyMessage = useCallback((content: string) => {

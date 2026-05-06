@@ -373,6 +373,8 @@ export function SceneAgentPanel({
               className="text-[10px] px-2 py-0.5 rounded-full bg-background border hover:bg-muted transition-colors"
               onClick={() => {
                 setInput(s);
+                // 延迟调用以确保 input 已更新
+                setTimeout(() => handleSend(), 0);
               }}
             >
               {s}

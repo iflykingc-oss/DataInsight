@@ -37,7 +37,7 @@ export interface ConditionBranch {
   steps: string[];
 }
 
-export interface WorkflowExecutor {
+export interface IWorkflowExecutor {
   execute(plan: WorkflowPlan, context: WorkflowContext): Promise<WorkflowResult>;
   canExecute(step: WorkflowStep): boolean;
   getProgress(): number;

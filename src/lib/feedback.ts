@@ -7,8 +7,12 @@
 // 安全导入 toast，如果不存在则提供降级方案
 let toastModule: typeof import('sonner').toast | null = null;
 try {
-  const sonner = require('sonner');
-  toastModule = sonner.toast;
+  // 使用 import() 动态导入而非 require
+  import('sonner').then((sonner) => {
+    toastModule = sonner.toast;
+  }).catch(() => {
+    // sonner 未安装，使用 console 降级
+  });
 } catch {
   // sonner 未安装，使用 console 降级
 }
