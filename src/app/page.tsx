@@ -46,7 +46,7 @@ import { useAuth, type PermissionKey } from '@/lib/use-auth';
 import { LoginDialog } from '@/components/login-dialog';
 import { UserMenu } from '@/components/user-menu';
 const AdminPanel = dynamic(() => import('@/components/admin-panel').then(m => ({ default: m.default })), { ssr: false });
-import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
+import type { ParsedData, DataAnalysis, CellValue } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
 import { checkTTLWarning } from '@/lib/data-lifecycle';
 
@@ -103,6 +103,7 @@ const SpreadsheetAgentPage = dynamic(() => import('@/components/SpreadsheetAgent
 	  | 'alerting' | 'version-history' | 'template-manager'
 	  | 'data-source'
 	  | 'pivot-table'
+	  | 'multimodal'
 	
 
 
@@ -1139,6 +1140,32 @@ export default function HomePage() {
         <div className="relative">
           <FormBuilder data={parsedData} onDataChange={setParsedData} />
           <SceneAgentPanel sceneId="general" sceneName="通用" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // AI多模态（图片处理：图转表/图转文/AI生图/语音）
+    // ========================================
+    if (viewMode === 'multimodal') {
+      return (
+        <div className="relative">
+          <MultimodalFields
+            data={parsedData}
+            modelConfig={activeModelConfig}
+            onImageToTable={(result) => {
+              const typedRows = result.rows.map(row => {
+                const typed: Record<string, CellValue> = {};
+                for (const key of Object.keys(row)) {
+                  typed[key] = row[key] as CellValue;
+                }
+                return typed;
+              });
+              setParsedData({ headers: result.headers, rows: typedRows, fileName: 'from-image.xlsx', rowCount: result.rows.length, columnCount: result.headers.length });
+              setViewMode('data-table');
+            }}
+          />
+          <SceneAgentPanel sceneId="multimodal" sceneName="图片处理" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
         </div>
       );
     }
