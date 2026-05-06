@@ -614,10 +614,10 @@ export function AIFieldPanel({
                   <TabsContent value="recommend" className="m-0">
                     {recommendations.length > 0 ? (
                       <div className="grid grid-cols-2 gap-3">
-                        {recommendations.map(template => (
+                        {recommendations.filter(Boolean).map((template: typeof recommendations[number]) => (
                           <button
-                            key={template.id}
-                            onClick={() => handleSelectTemplate(template)}
+                            key={template!.id}
+                            onClick={() => handleSelectTemplate(template!)}
                             className="text-left p-3 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
                           >
                             <div className="flex items-center gap-2 mb-1">

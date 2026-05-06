@@ -275,8 +275,11 @@ export function recommendAIFields(columns: ColumnFeature[]): AIFieldTemplate[] {
 
     // 高缺失率 → 推荐补全
     if ((col.nullRate ?? 0) > 0.3 && !usedIds.has('clean-fill')) {
-      recommendations.push(AI_FIELD_TEMPLATES.find(t => t.id === 'clean-fill')!);
-      usedIds.add('clean-fill');
+      const cleanFillTemplate = AI_FIELD_TEMPLATES.find(t => t.id === 'clean-fill-forward');
+      if (cleanFillTemplate) {
+        recommendations.push(cleanFillTemplate);
+        usedIds.add('clean-fill');
+      }
     }
   }
 
