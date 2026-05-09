@@ -16,7 +16,9 @@ import { useAuth } from '@/lib/use-auth';
 import {
   LogIn, Loader2, AlertCircle, Shield, UserPlus, Mail,
   KeyRound, ArrowLeft, Eye, EyeOff, Lock, HelpCircle,
+  FileText, ShieldCheck,
 } from 'lucide-react';
+import { LegalDocumentDialog } from '@/components/legal-dialog';
 
 type AuthMode = 'login' | 'register' | 'init' | 'reset';
 
@@ -56,6 +58,11 @@ export function LoginDialog() {
   const [resetQuestion, setResetQuestion] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
+  // 隐私政策/服务条款
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [legalDocOpen, setLegalDocOpen] = useState(false);
+  const [legalDocType, setLegalDocType] = useState<'privacy' | 'terms'>('privacy');
+
   // 重置表单状态
   const resetForm = useCallback(() => {
     setUsername('');
@@ -70,6 +77,7 @@ export function LoginDialog() {
     setResetStep(1);
     setResetQuestion('');
     setNewPassword('');
+    setAgreedToTerms(false);
   }, []);
 
   // 切换模式时重置
@@ -115,6 +123,10 @@ export function LoginDialog() {
       setError('请设置安全问题答案');
       return;
     }
+    if (!agreedToTerms) {
+      setError('请阅读并同意隐私政策和服务条款');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -133,6 +145,9 @@ export function LoginDialog() {
 
       if (data.success) {
         localStorage.setItem('datainsight_token', data.token);
+        if (data.refreshToken) {
+          localStorage.setItem('datainsight_refresh_token', data.refreshToken);
+        }
         window.location.reload();
       } else {
         setError(data.error || '注册失败');
@@ -266,6 +281,9 @@ export function LoginDialog() {
         const data = await res.json();
         if (data.success) {
           localStorage.setItem('datainsight_token', data.token);
+          if (data.refreshToken) {
+            localStorage.setItem('datainsight_refresh_token', data.refreshToken);
+          }
           window.location.reload();
         } else {
           setError(data.error || '初始化失败');
@@ -450,6 +468,35 @@ export function LoginDialog() {
                 <li>安全问题用于验证身份和重置密码，请选择只有您知道答案的问题</li>
                 <li>安全问题答案不区分大小写</li>
               </ul>
+            </div>
+
+            {/* 隐私政策与服务条款同意 */}
+            <div className="flex items-start gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="agree-terms"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 rounded border-input"
+              />
+              <label htmlFor="agree-terms" className="text-xs text-muted-foreground leading-relaxed">
+                我已阅读并同意
+                <button
+                  type="button"
+                  onClick={() => { setLegalDocType('privacy'); setLegalDocOpen(true); }}
+                  className="text-primary hover:underline mx-0.5"
+                >
+                  隐私政策
+                </button>
+                和
+                <button
+                  type="button"
+                  onClick={() => { setLegalDocType('terms'); setLegalDocOpen(true); }}
+                  className="text-primary hover:underline mx-0.5"
+                >
+                  服务条款
+                </button>
+              </label>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
@@ -719,6 +766,13 @@ export function LoginDialog() {
           </form>
         )}
       </DialogContent>
+
+      {/* 隐私政策/服务条款弹窗 */}
+      <LegalDocumentDialog
+        open={legalDocOpen}
+        onOpenChange={setLegalDocOpen}
+        type={legalDocType}
+      />
     </Dialog>
   );
 }

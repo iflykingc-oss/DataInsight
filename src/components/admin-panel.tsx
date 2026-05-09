@@ -60,7 +60,6 @@ interface LoginLog {
   id: number;
   userId: number;
   username: string;
-  ip: string;
   status: string;
   createdAt: string;
 }
@@ -655,7 +654,6 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>账户</TableHead>
-                    <TableHead>IP地址</TableHead>
                     <TableHead>状态</TableHead>
                     <TableHead>时间</TableHead>
                   </TableRow>
@@ -664,7 +662,6 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                   {loginLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="text-xs">{log.username}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{log.ip}</TableCell>
                       <TableCell>
                         {log.status === 'success' ? (
                           <Badge variant="outline" className="text-green-600 border-green-200 text-xs">

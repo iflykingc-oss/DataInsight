@@ -29,16 +29,6 @@ export const users = pgTable("users", {
 		check("users_status_check", sql`(status)::text = ANY ((ARRAY['active'::character varying, 'disabled'::character varying])::text[])`),
 ]);
 
-export const verificationCodes = pgTable("verification_codes", {
-	id: serial().primaryKey().notNull(),
-	email: varchar({ length: 255 }).notNull(),
-	code: varchar({ length: 6 }).notNull(),
-	type: varchar({ length: 20 }).default('register'),
-	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
-	used: boolean().default(false),
-	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
-});
-
 export const healthCheck = pgTable("health_check", {
 	id: serial().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
@@ -47,8 +37,6 @@ export const healthCheck = pgTable("health_check", {
 export const loginLogs = pgTable("login_logs", {
 	id: serial().primaryKey().notNull(),
 	userId: integer("user_id"),
-	ip: varchar({ length: 50 }),
-	userAgent: text("user_agent"),
 	status: varchar({ length: 50 }).default('success'),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [

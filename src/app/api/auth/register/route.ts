@@ -5,6 +5,7 @@ import {
   getSecurityQuestionAsync,
   verifySecurityAnswerAsync,
 } from '@/lib/auth-server';
+import { checkRateLimit, resetRateLimit } from '@/lib/rate-limiter';
 
 /** POST /api/auth/register - 邮箱注册（安全问题验证） */
 export async function POST(request: NextRequest) {
@@ -18,11 +19,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { action } = body;
+    const { action, email } = body;
+
+    // 限流检查（所有操作都基于邮箱限频）
+    const rateLimitKey = email ? `register:${email.toLowerCase()}` : 'register:anonymous';
+    const rateLimit = checkRateLimit(rateLimitKey, 5, 5 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      const retrySeconds = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: `操作过于频繁，请 ${retrySeconds} 秒后重试` },
+        { status: 429, headers: { 'Retry-After': String(retrySeconds) } }
+      );
+    }
 
     // 获取安全问题（密码重置时使用）
     if (action === 'get-question') {
-      const { email } = body;
       if (!email) {
         return NextResponse.json({ error: '请输入邮箱' }, { status: 400 });
       }
@@ -35,9 +46,19 @@ export async function POST(request: NextRequest) {
 
     // 验证安全问题答案（密码重置步骤2）
     if (action === 'verify-answer') {
-      const { email, answer } = body;
+      const { answer } = body;
       if (!email || !answer) {
         return NextResponse.json({ error: '请填写所有字段' }, { status: 400 });
+      }
+      // 安全问题答案验证更严格：3次/5分钟
+      const answerRateKey = `security-answer:${email.toLowerCase()}`;
+      const answerRateLimit = checkRateLimit(answerRateKey, 3, 5 * 60 * 1000);
+      if (!answerRateLimit.allowed) {
+        const retrySeconds = Math.ceil((answerRateLimit.resetAt - Date.now()) / 1000);
+        return NextResponse.json(
+          { error: `验证尝试过多，请 ${retrySeconds} 秒后重试` },
+          { status: 429, headers: { 'Retry-After': String(retrySeconds) } }
+        );
       }
       const result = await verifySecurityAnswerAsync(email, answer);
       if (!result.valid) {
@@ -48,9 +69,19 @@ export async function POST(request: NextRequest) {
 
     // 密码重置
     if (action === 'reset-password') {
-      const { email, securityAnswer, newPassword } = body;
+      const { securityAnswer, newPassword } = body;
       if (!email || !securityAnswer || !newPassword) {
         return NextResponse.json({ error: '请填写所有字段' }, { status: 400 });
+      }
+      // 密码重置更严格：3次/5分钟
+      const resetRateKey = `reset-password:${email.toLowerCase()}`;
+      const resetRateLimit = checkRateLimit(resetRateKey, 3, 5 * 60 * 1000);
+      if (!resetRateLimit.allowed) {
+        const retrySeconds = Math.ceil((resetRateLimit.resetAt - Date.now()) / 1000);
+        return NextResponse.json(
+          { error: `重置尝试过多，请 ${retrySeconds} 秒后重试` },
+          { status: 429, headers: { 'Retry-After': String(retrySeconds) } }
+        );
       }
       const result = await resetPasswordAsync({ email, securityAnswer, newPassword });
       if (!result.success) {
@@ -60,9 +91,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 默认：邮箱注册
-    const { email, password, name, securityQuestion, securityAnswer } = body;
+    const { password, name, securityQuestion, securityAnswer } = body;
     if (!email || !password || !name || !securityQuestion || !securityAnswer) {
       return NextResponse.json({ error: '请填写所有必填项' }, { status: 400 });
+    }
+
+    // 注册更严格：同一邮箱 3次/10分钟
+    const regRateKey = `register-attempt:${email.toLowerCase()}`;
+    const regRateLimit = checkRateLimit(regRateKey, 3, 10 * 60 * 1000);
+    if (!regRateLimit.allowed) {
+      const retrySeconds = Math.ceil((regRateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: `注册尝试过多，请 ${retrySeconds} 秒后重试` },
+        { status: 429, headers: { 'Retry-After': String(retrySeconds) } }
+      );
     }
 
     const { user, token } = await registerByEmailAsync({
@@ -72,6 +114,10 @@ export async function POST(request: NextRequest) {
       securityQuestion,
       securityAnswer,
     });
+
+    // 注册成功，重置限流
+    resetRateLimit(rateLimitKey);
+    resetRateLimit(regRateKey);
 
     const { sanitizeUser } = await import('@/lib/auth');
     return NextResponse.json({

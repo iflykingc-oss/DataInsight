@@ -46,8 +46,6 @@ export interface LoginLog {
   id: number;
   userId: number;
   username: string;
-  ip: string;
-  userAgent: string;
   status: 'success' | 'failed';
   createdAt: string;
 }
@@ -308,8 +306,6 @@ export function sanitizeUser(user: User): Omit<User, 'passwordHash' | 'securityA
 export function addLoginLog(data: {
   userId: number;
   username: string;
-  ip: string;
-  userAgent: string;
   status: 'success' | 'failed';
 }): void {
   const s = getStorage();
@@ -542,8 +538,6 @@ export function syncLoginLogsFromDB(dbLogs: Array<{
   id: number;
   user_id: number;
   username: string;
-  ip: string;
-  user_agent: string;
   status: string;
   created_at: string;
 }>): void {
@@ -552,8 +546,6 @@ export function syncLoginLogsFromDB(dbLogs: Array<{
       id: l.id,
       userId: l.user_id,
       username: l.username,
-      ip: l.ip,
-      userAgent: l.user_agent,
       status: l.status as 'success' | 'failed',
       createdAt: l.created_at,
     });

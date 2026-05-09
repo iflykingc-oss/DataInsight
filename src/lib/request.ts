@@ -3,6 +3,32 @@
  * 增强版：统一超时、重试、错误分类
  */
 
+/** 刷新 Token（返回是否成功） */
+async function tryRefreshToken(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  const refreshToken = localStorage.getItem('datainsight_refresh_token');
+  if (!refreshToken) return false;
+
+  try {
+    const response = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    if (data.success && data.token && data.refreshToken) {
+      localStorage.setItem('datainsight_token', data.token);
+      localStorage.setItem('datainsight_refresh_token', data.refreshToken);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 /** 获取认证头 */
 export function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -63,6 +89,30 @@ export async function request<T>(
           const parsed = JSON.parse(errorBody);
           errorMessage = parsed.error || errorMessage;
         } catch { /* use default message */ }
+
+        // 401 尝试刷新 Token
+        if (response.status === 401) {
+          const refreshed = await tryRefreshToken();
+          if (refreshed && attempt < maxRetries) {
+            // 用新 Token 重试
+            const newHeaders = getAuthHeaders();
+            const retryResponse = await fetchWithTimeout(url, {
+              ...fetchOptions,
+              headers: { ...newHeaders, ...(fetchOptions.headers as Record<string, string> || {}) },
+              timeout,
+            });
+            if (retryResponse.ok) {
+              return await retryResponse.json();
+            }
+          }
+          // 刷新失败，清除登录态
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('datainsight_token');
+            localStorage.removeItem('datainsight_refresh_token');
+            window.dispatchEvent(new CustomEvent('auth:expired'));
+          }
+          throw new Error('登录已过期，请重新登录');
+        }
 
         // 4xx 错误不重试
         if (response.status >= 400 && response.status < 500) {

@@ -75,8 +75,6 @@ function mapDbToLoginLog(row: Record<string, unknown>): LoginLog {
     id: row.id as number,
     userId: row.user_id as number,
     username: '', // login_logs 表无 username 字段，需 join
-    ip: row.ip as string,
-    userAgent: (row.user_agent as string) || '',
     status: (row.status as 'success' | 'failed') || 'failed',
     createdAt: (row.created_at as string) || new Date().toISOString(),
   };
@@ -332,8 +330,6 @@ class SupabaseAuthStorage implements AuthStorage {
     const supabase = getSupabaseClient();
     await supabase.from('login_logs').insert({
       user_id: log.userId,
-      ip: log.ip,
-      user_agent: log.userAgent,
       status: log.status,
     });
   }
@@ -461,6 +457,26 @@ class SupabaseAuthStorage implements AuthStorage {
       await supabase.from('admin_ai_config').insert(dbData);
     }
   }
+
+  // ==================== 登录日志清理（90天TTL） ====================
+
+  async cleanupExpiredLoginLogsAsync(): Promise<number> {
+    const supabase = getSupabaseClient();
+    const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+    const { count, error } = await supabase
+      .from('login_logs')
+      .delete({ count: 'exact' })
+      .lt('created_at', cutoff);
+
+    if (error) {
+      console.error('[SupabaseAuth] 清理过期登录日志失败:', error);
+      return 0;
+    }
+    if (count && count > 0) {
+      console.log(`[SupabaseAuth] 已清理 ${count} 条过期登录日志（90天前）`);
+    }
+    return count || 0;
+  }
 }
 
 // ==================== 导出异步操作辅助函数 ====================
@@ -582,8 +598,6 @@ export async function getLoginLogsAsync(limit = 50): Promise<LoginLog[]> {
 export async function addLoginLogAsync(data: {
   userId: number;
   username: string;
-  ip: string;
-  userAgent: string;
   status: 'success' | 'failed';
 }): Promise<void> {
   const storage = new SupabaseAuthStorage();
@@ -592,6 +606,33 @@ export async function addLoginLogAsync(data: {
     ...data,
     createdAt: new Date().toISOString(),
   });
+}
+
+/** 异步按用户名获取登录日志（数据导出用） */
+export async function getLoginLogsByUsernameAsync(username: string): Promise<LoginLog[]> {
+  const supabase = getSupabaseClient();
+  // 先获取用户ID
+  const { data: user } = await supabase
+    .from('users')
+    .select('id')
+    .eq('username', username)
+    .single();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('login_logs')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error || !data) return [];
+  return (data as Record<string, unknown>[]).map(row => ({
+    id: row.id as number,
+    userId: row.user_id as number,
+    username,
+    status: (row.status as 'success' | 'failed') || 'failed',
+    createdAt: (row.created_at as string) || new Date().toISOString(),
+  }));
 }
 
 /** 异步获取使用统计 */
@@ -868,4 +909,25 @@ if (!g.__SUPABASE_AUTH_INIT__) {
   g.__SUPABASE_AUTH_INIT__ = true;
   setAuthStorage(new SupabaseAuthStorage());
   console.log('[SupabaseAuth] 已初始化，使用 Supabase PostgreSQL 存储');
+  // 启动登录日志自动清理
+  startLoginLogCleanup();
+}
+
+/** 异步清理过期登录日志（90天TTL） */
+export async function cleanupExpiredLoginLogsAsync(): Promise<number> {
+  const storage = new SupabaseAuthStorage();
+  return storage.cleanupExpiredLoginLogsAsync();
+}
+
+// 启动时自动清理过期日志，并每24小时执行一次
+let cleanupStarted = false;
+export function startLoginLogCleanup(): void {
+  if (cleanupStarted) return;
+  cleanupStarted = true;
+  // 立即执行一次
+  cleanupExpiredLoginLogsAsync().catch(() => {});
+  // 每24小时执行一次
+  setInterval(() => {
+    cleanupExpiredLoginLogsAsync().catch(() => {});
+  }, 24 * 60 * 60 * 1000);
 }

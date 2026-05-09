@@ -92,6 +92,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         setUser(data.user);
         setInitialized(true);
+      } else if (res.status === 401) {
+        // Token 过期，尝试刷新
+        const refreshToken = localStorage.getItem('datainsight_refresh_token');
+        if (refreshToken) {
+          try {
+            const refreshRes = await fetch('/api/auth/refresh', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refreshToken }),
+            });
+            if (refreshRes.ok) {
+              const refreshData = await refreshRes.json();
+              if (refreshData.success) {
+                localStorage.setItem('datainsight_token', refreshData.token);
+                localStorage.setItem('datainsight_refresh_token', refreshData.refreshToken);
+                // 用新 Token 重试
+                const retryRes = await fetch('/api/auth/me', {
+                  headers: { Authorization: `Bearer ${refreshData.token}` },
+                });
+                if (retryRes.ok) {
+                  const retryData = await retryRes.json();
+                  setUser(retryData.user);
+                  setInitialized(true);
+                  setIsLoading(false);
+                  return;
+                }
+              }
+            }
+          } catch { /* refresh failed */ }
+        }
+        localStorage.removeItem('datainsight_token');
+        localStorage.removeItem('datainsight_refresh_token');
+        setUser(null);
       } else {
         localStorage.removeItem('datainsight_token');
         setUser(null);
@@ -118,6 +151,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (res.ok && data.success) {
         localStorage.setItem('datainsight_token', data.token);
+        if (data.refreshToken) {
+          localStorage.setItem('datainsight_refresh_token', data.refreshToken);
+        }
         setUser(data.user);
         setInitialized(true);
         showSuccess('登录成功', `欢迎回来，${data.user.name}`);
@@ -141,9 +177,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem('datainsight_token');
+    localStorage.removeItem('datainsight_refresh_token');
     setUser(null);
     showSuccess('已退出登录');
     window.location.reload();
+  }, []);
+
+  // 监听 Token 过期事件（由 request.ts 触发）
+  useEffect(() => {
+    const handleExpired = () => {
+      localStorage.removeItem('datainsight_token');
+      localStorage.removeItem('datainsight_refresh_token');
+      setUser(null);
+      setLoginDialogOpen(true);
+      showError('登录已过期，请重新登录');
+    };
+    window.addEventListener('auth:expired', handleExpired);
+    return () => window.removeEventListener('auth:expired', handleExpired);
   }, []);
 
   const onLoginRequired = useCallback(() => {

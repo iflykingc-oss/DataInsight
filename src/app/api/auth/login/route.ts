@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/auth-server';
 import { verifyPassword, sanitizeUser } from '@/lib/auth';
-import { signToken } from '@/lib/auth-middleware';
+import { signToken, signRefreshToken } from '@/lib/auth-middleware';
 import {
   getUserByUsernameAsync,
   getUserByEmailAsync,
@@ -9,6 +9,7 @@ import {
   isInitializedAsync,
   initializeAdminAsync,
 } from '@/lib/auth-server';
+import { checkRateLimit, resetRateLimit } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,10 +25,16 @@ export async function POST(request: NextRequest) {
           username: user.username,
           role: user.role,
         });
+        const refreshToken = await signRefreshToken({
+          userId: user.id,
+          username: user.username,
+          role: user.role,
+        });
 
         return NextResponse.json({
           success: true,
           token,
+          refreshToken,
           user: sanitizeUser(user),
           initialized: true,
         });
@@ -49,28 +56,32 @@ export async function POST(request: NextRequest) {
     }
 
     if (!username || !password) {
-      await addLoginLogAsync({
-        userId: 0,
-        username: username || 'unknown',
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
-        status: 'failed',
-      });
       return NextResponse.json({ error: '请输入账户和密码' }, { status: 400 });
+    }
+
+    // 限流检查：同一账号 5次失败/5分钟
+    const rateLimitKey = `login:${username.toLowerCase()}`;
+    const rateLimit = checkRateLimit(rateLimitKey, 5, 5 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      const retrySeconds = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: `登录尝试过于频繁，请 ${retrySeconds} 秒后重试` },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(retrySeconds) },
+        }
+      );
     }
 
     // 支持用户名或邮箱登录
     let user = await getUserByUsernameAsync(username);
     if (!user && username.includes('@')) {
-      // 如果输入包含@，尝试按邮箱查找
       user = await getUserByEmailAsync(username);
     }
     if (!user) {
       await addLoginLogAsync({
         userId: 0,
         username,
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
         status: 'failed',
       });
       return NextResponse.json({ error: '账户或密码错误' }, { status: 401 });
@@ -80,8 +91,6 @@ export async function POST(request: NextRequest) {
       await addLoginLogAsync({
         userId: user.id,
         username,
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
         status: 'failed',
       });
       return NextResponse.json({ error: '账号已被禁用，请联系管理员' }, { status: 403 });
@@ -92,14 +101,20 @@ export async function POST(request: NextRequest) {
       await addLoginLogAsync({
         userId: user.id,
         username,
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
         status: 'failed',
       });
       return NextResponse.json({ error: '账户或密码错误' }, { status: 401 });
     }
 
+    // 登录成功，重置限流计数
+    resetRateLimit(rateLimitKey);
+
     const token = await signToken({
+      userId: user.id,
+      username: user.username,
+      role: user.role,
+    });
+    const refreshToken = await signRefreshToken({
       userId: user.id,
       username: user.username,
       role: user.role,
@@ -108,20 +123,17 @@ export async function POST(request: NextRequest) {
     await addLoginLogAsync({
       userId: user.id,
       username,
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
       status: 'success',
     });
 
     return NextResponse.json({
       success: true,
       token,
+      refreshToken,
       user: sanitizeUser(user),
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : '登录失败' },
-      { status: 500 }
-    );
+    console.error('[Auth] Login error:', error);
+    return NextResponse.json({ error: '登录失败，请稍后重试' }, { status: 500 });
   }
 }
