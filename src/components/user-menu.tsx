@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/use-auth';
-import { LogIn, LogOut, Settings, Users, Shield, Brain } from 'lucide-react';
+import { LogIn, LogOut, Settings, Users, Shield } from 'lucide-react';
 
 interface UserMenuProps {
   onOpenSettings?: () => void;
@@ -74,22 +74,10 @@ export function UserMenu({ onOpenSettings, onOpenAdmin }: UserMenuProps) {
         </DropdownMenuItem>
 
         {isAdmin && (
-          <>
-            <DropdownMenuItem onClick={onOpenAdmin} className="cursor-pointer">
-              <Users className="w-4 h-4 mr-2" />
-              权限管理
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                // 打开AI模型配置（管理员专用）
-                if (onOpenAdmin) onOpenAdmin();
-              }}
-              className="cursor-pointer"
-            >
-              <Brain className="w-4 h-4 mr-2" />
-              AI模型配置
-            </DropdownMenuItem>
-          </>
+          <DropdownMenuItem onClick={onOpenAdmin} className="cursor-pointer">
+            <Users className="w-4 h-4 mr-2" />
+            权限管理
+          </DropdownMenuItem>
         )}
 
         <DropdownMenuSeparator />
