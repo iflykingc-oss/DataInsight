@@ -4,6 +4,7 @@ import { verifyPassword, sanitizeUser } from '@/lib/auth';
 import { signToken } from '@/lib/auth-middleware';
 import {
   getUserByUsernameAsync,
+  getUserByEmailAsync,
   addLoginLogAsync,
   isInitializedAsync,
   initializeAdminAsync,
@@ -58,7 +59,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '请输入账户和密码' }, { status: 400 });
     }
 
-    const user = await getUserByUsernameAsync(username);
+    // 支持用户名或邮箱登录
+    let user = await getUserByUsernameAsync(username);
+    if (!user && username.includes('@')) {
+      // 如果输入包含@，尝试按邮箱查找
+      user = await getUserByEmailAsync(username);
+    }
     if (!user) {
       await addLoginLogAsync({
         userId: 0,

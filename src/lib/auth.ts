@@ -30,6 +30,7 @@ export interface UserPermissions {
 export interface User {
   id: number;
   username: string;
+  email?: string;
   passwordHash: string;
   name: string;
   role: Role;

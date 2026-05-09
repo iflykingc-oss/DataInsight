@@ -53,6 +53,7 @@
 src/
 ├── app/
 │   ├── api/
+│   │   ├── auth/              # 认证 API（登录/注册/验证码/登出）
 │   │   ├── upload/            # 文件上传 API
 │   │   ├── analyze/           # 数据分析 API（含深度分析引擎）
 │   │   ├── metric-ai/         # AI 指标生成 API（调用 LLM 生成业务指标体系）
@@ -389,9 +390,11 @@ AI 模型连接测试
 ## 权限管理系统
 
 ### 账号体系
-- **管理员分配账号**：用户账户由管理员创建，无公开注册
-- **登录方式**：用户名 + 密码登录
+- **邮箱注册**：用户通过邮箱验证码自助注册，注册后默认为 `editor` 角色
+- **管理员分配账号**：管理员也可在权限管理中创建用户
+- **登录方式**：用户名/邮箱 + 密码登录
 - **默认管理员**：首次部署时通过环境变量 `INIT_ADMIN_USERNAME` + `INIT_ADMIN_PASSWORD` 创建（必须设置，否则不创建默认账号）
+- **注册开关**：管理员可通过环境变量 `DISABLE_REGISTRATION=true` 关闭公开注册
 
 ### 权限控制（6个功能开关）
 | 权限Key | 说明 | 默认值 |
@@ -410,7 +413,7 @@ AI 模型连接测试
 ### 认证 API
 
 #### POST /api/auth/login
-用户名密码登录
+用户名或邮箱登录
 
 **请求**:
 ```json
@@ -419,6 +422,7 @@ AI 模型连接测试
   "password": "<your-password>"
 }
 ```
+支持用户名或邮箱作为 `username` 字段登录。
 
 **响应**:
 ```json
@@ -428,6 +432,7 @@ AI 模型连接测试
   "user": {
     "id": 1,
     "username": "admin",
+    "email": "admin@example.com",
     "name": "管理员",
     "role": "admin",
     "status": "active",
@@ -450,6 +455,59 @@ AI 模型连接测试
 
 #### POST /api/auth/logout
 登出
+
+#### POST /api/auth/send-code
+发送邮箱验证码
+
+**请求**:
+```json
+{
+  "email": "user@example.com",
+  "type": "register"
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "message": "验证码已发送"
+}
+```
+
+**防刷机制**: 同一邮箱60秒内只能发送1次，验证码5分钟有效
+
+#### POST /api/auth/register
+邮箱注册（验证码验证后创建用户，自动登录）
+
+**请求**:
+```json
+{
+  "email": "user@example.com",
+  "code": "123456",
+  "password": "Password123",
+  "name": "用户名"
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "id": 7,
+    "username": "user",
+    "email": "user@example.com",
+    "name": "用户名",
+    "role": "editor",
+    "status": "active",
+    "permissions": { ... }
+  }
+}
+```
+
+**注册后默认**: role=`editor`, status=`active`
 
 ### 管理员 API
 
@@ -560,3 +618,5 @@ AI 模型连接测试
 15. **工作流引擎**: 102个预制工作流 + 双引擎（固化+动态编排），支持串行/分支/并行执行
 16. **AI多模态**: 图片生成使用 pollinations.ai CDN，无需API Key；图转文/图转表/语音转写需要配置AI模型
 17. **API鉴权**: 所有数据处理API路由已添加 `verifyAuth` 中间件，需携带 Bearer Token
+18. **邮箱注册**: 支持 SMTP 邮件发送验证码（环境变量 `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`SMTP_FROM`），未配置 SMTP 时验证码输出到服务器日志（开发模式）
+19. **注册开关**: 环境变量 `DISABLE_REGISTRATION=true` 可关闭公开注册

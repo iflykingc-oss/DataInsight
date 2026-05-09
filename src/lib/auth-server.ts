@@ -8,6 +8,7 @@
  */
 
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 import {
   type Role,
   type User,
@@ -38,6 +39,7 @@ function mapDbToUser(row: Record<string, unknown>): User {
   return {
     id: row.id as number,
     username: row.username as string,
+    email: (row.email as string) || undefined,
     passwordHash: row.password_hash as string,
     name: row.name as string,
     role: role as Role,
@@ -53,6 +55,7 @@ function mapUserToDbInsert(user: Omit<User, 'id'>): Record<string, unknown> {
   const dbRole = user.role === 'editor' ? 'member' : user.role;
   return {
     username: user.username,
+    email: user.email || null,
     password_hash: user.passwordHash,
     name: user.name,
     role: dbRole,
@@ -240,6 +243,7 @@ class SupabaseAuthStorage implements AuthStorage {
     const supabase = getSupabaseClient();
     const dbData = {
       username: user.username,
+      email: user.email || null,
       password_hash: user.passwordHash,
       name: user.name,
       role: user.role === 'editor' ? 'member' : user.role,
@@ -496,6 +500,7 @@ export async function getUserByIdAsync(id: number): Promise<User | null> {
 /** 异步创建用户 */
 export async function createUserAsync(data: {
   username: string;
+  email?: string;
   name: string;
   role?: Role;
   password?: string;
@@ -505,6 +510,7 @@ export async function createUserAsync(data: {
   const storage = new SupabaseAuthStorage();
   return storage.createUserAsync({
     username: data.username,
+    email: data.email,
     passwordHash: await bcrypt.hash(data.password || 'changeme123', 12),
     name: data.name,
     role: data.role || 'editor',
@@ -518,6 +524,7 @@ export async function createUserAsync(data: {
 /** 异步更新用户 */
 export async function updateUserAsync(id: number, data: Partial<{
   username: string;
+  email: string;
   name: string;
   role: Role;
   status: 'active' | 'disabled';
@@ -527,6 +534,7 @@ export async function updateUserAsync(id: number, data: Partial<{
   const supabase = getSupabaseClient();
   const updates: Record<string, unknown> = {};
   if (data.username) updates.username = data.username;
+  if (data.email !== undefined) updates.email = data.email || null;
   if (data.name) updates.name = data.name;
   if (data.role) updates.role = data.role === 'editor' ? 'member' : data.role;
   if (data.status) updates.status = data.status;
@@ -652,6 +660,259 @@ export async function initializeAdminAsync(
 
 /** 兼容导出 auth.ts 中的同步版本（仅用于类型兼容，不推荐使用） */
 export { isInitialized, initializeAdmin } from './auth';
+
+// ==================== 邮箱注册功能 ====================
+
+/** 生成6位数字验证码 */
+function generateCode(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+/** 发送邮箱验证码（存入DB，由邮件服务或控制台输出） */
+export async function sendVerificationCodeAsync(email: string, type: string = 'register'): Promise<{ success: boolean; error?: string }> {
+  const supabase = getSupabaseClient();
+
+  // 校验邮箱格式
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return { success: false, error: '邮箱格式不正确' };
+  }
+
+  // 注册场景：检查邮箱是否已被注册
+  if (type === 'register') {
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .limit(1)
+      .single();
+
+    if (existingUser) {
+      return { success: false, error: '该邮箱已注册，请直接登录' };
+    }
+  }
+
+  // 防刷：60秒内不能重复发送
+  const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+  const { data: recentCodes } = await supabase
+    .from('verification_codes')
+    .select('id, created_at')
+    .eq('email', email)
+    .eq('type', type)
+    .gte('created_at', oneMinuteAgo)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (recentCodes && recentCodes.length > 0) {
+    const lastSent = new Date(recentCodes[0].created_at as string).getTime();
+    const waitSeconds = Math.max(0, 60 - Math.floor((Date.now() - lastSent) / 1000));
+    return { success: false, error: `操作过于频繁，请${waitSeconds}秒后再试` };
+  }
+
+  // 生成验证码
+  const code = generateCode();
+  const expiresAt = new Date(Date.now() + 5 * 60_000).toISOString(); // 5分钟过期
+
+  // 使旧验证码失效
+  await supabase
+    .from('verification_codes')
+    .update({ used: true })
+    .eq('email', email)
+    .eq('type', type)
+    .eq('used', false);
+
+  // 插入新验证码
+  const { error: insertError } = await supabase
+    .from('verification_codes')
+    .insert({
+      email,
+      code,
+      type,
+      expires_at: expiresAt,
+      used: false,
+    });
+
+  if (insertError) {
+    console.error('[Auth] 验证码插入失败:', insertError);
+    return { success: false, error: '发送验证码失败，请稍后重试' };
+  }
+
+  // 发送邮件：优先使用环境变量配置的SMTP，否则输出到控制台
+  const emailSent = await sendEmail(email, code, type);
+  if (!emailSent) {
+    // 开发环境：验证码输出到控制台（生产环境应配置SMTP）
+    console.log(`[Auth] 验证码（${type}）: ${email} → ${code}（5分钟内有效）`);
+  }
+
+  return { success: true };
+}
+
+/** 邮件发送（SMTP配置时实际发送，否则返回false） */
+async function sendEmail(to: string, code: string, type: string): Promise<boolean> {
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  const smtpFrom = process.env.SMTP_FROM || smtpUser;
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    return false; // 未配置SMTP，走控制台输出
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: Number(smtpPort) || 465,
+      secure: Number(smtpPort) === 465,
+      auth: { user: smtpUser, pass: smtpPass },
+    });
+
+    const typeLabel = type === 'register' ? '注册' : type === 'reset' ? '重置密码' : '验证';
+    await transporter.sendMail({
+      from: `"DataInsight" <${smtpFrom}>`,
+      to,
+      subject: `DataInsight ${typeLabel}验证码`,
+      html: `
+        <div style="max-width:480px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+          <div style="background:#f8f9fa;border-radius:12px;padding:32px;text-align:center;">
+            <h2 style="margin:0 0 8px;color:#1a1a1a;font-size:20px;">DataInsight</h2>
+            <p style="margin:0 0 24px;color:#666;font-size:14px;">${typeLabel}验证码</p>
+            <div style="background:#fff;border-radius:8px;padding:16px;display:inline-block;">
+              <span style="font-size:32px;font-weight:700;letter-spacing:8px;color:#1a1a1a;">${code}</span>
+            </div>
+            <p style="margin:24px 0 0;color:#999;font-size:12px;">验证码5分钟内有效，请勿泄露给他人</p>
+          </div>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error('[Auth] 邮件发送失败:', err);
+    return false;
+  }
+}
+
+/** 校验验证码 */
+export async function verifyCodeAsync(email: string, code: string, type: string = 'register'): Promise<{ valid: boolean; error?: string }> {
+  const supabase = getSupabaseClient();
+
+  const { data, error } = await supabase
+    .from('verification_codes')
+    .select('*')
+    .eq('email', email)
+    .eq('code', code)
+    .eq('type', type)
+    .eq('used', false)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !data) {
+    return { valid: false, error: '验证码不正确' };
+  }
+
+  // 检查是否过期
+  const expiresAt = new Date(data.expires_at as string).getTime();
+  if (Date.now() > expiresAt) {
+    return { valid: false, error: '验证码已过期，请重新获取' };
+  }
+
+  // 标记为已使用
+  await supabase
+    .from('verification_codes')
+    .update({ used: true })
+    .eq('id', data.id);
+
+  return { valid: true };
+}
+
+/** 邮箱注册（验证码验证后创建用户） */
+export async function registerByEmailAsync(data: {
+  email: string;
+  code: string;
+  password: string;
+  name: string;
+}): Promise<{ user: User; token: string }> {
+  const { email, code, password, name } = data;
+
+  // 1. 校验输入
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) throw new Error('邮箱格式不正确');
+  if (!name || name.trim().length < 1) throw new Error('请输入姓名');
+  if (password.length < 8) throw new Error('密码至少8位字符');
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+    throw new Error('密码必须包含字母和数字');
+  }
+
+  // 2. 验证码校验
+  const codeResult = await verifyCodeAsync(email, code, 'register');
+  if (!codeResult.valid) throw new Error(codeResult.error || '验证码校验失败');
+
+  // 3. 检查邮箱是否已被注册（双重校验）
+  const supabase = getSupabaseClient();
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .limit(1)
+    .single();
+
+  if (existingUser) throw new Error('该邮箱已注册');
+
+  // 4. 检查username（邮箱前缀）是否冲突，冲突则追加随机数
+  const baseUsername = email.split('@')[0];
+  let username = baseUsername;
+  let suffix = 1;
+  while (true) {
+    const { data: conflictUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .limit(1)
+      .single();
+    if (!conflictUser) break;
+    username = `${baseUsername}_${suffix++}`;
+  }
+
+  // 5. 创建用户
+  const passwordHash = await bcrypt.hash(password, 12);
+  const storage = new SupabaseAuthStorage();
+  const user = await storage.createUserAsync({
+    username,
+    email,
+    passwordHash,
+    name: name.trim(),
+    role: 'editor',
+    status: 'active',
+    permissions: ROLE_TEMPLATES.editor,
+    createdBy: null,
+    createdAt: new Date().toISOString(),
+  });
+
+  // 6. 生成JWT token
+  const { signToken } = await import('@/lib/auth-middleware');
+  const token = await signToken({
+    userId: user.id,
+    username: user.username,
+    role: user.role,
+  });
+
+  return { user, token };
+}
+
+/** 按邮箱查询用户 */
+export async function getUserByEmailAsync(email: string): Promise<User | null> {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', email)
+    .limit(1)
+    .single();
+
+  if (error || !data) return null;
+  return mapDbToUser(data as Record<string, unknown>);
+}
 
 // ==================== 初始化 ====================
 

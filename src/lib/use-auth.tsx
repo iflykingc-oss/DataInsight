@@ -27,6 +27,7 @@ export interface UserPermissions {
 export interface User {
   id: number;
   username: string;
+  email?: string;
   name: string;
   role: UserRole;
   status: 'active' | 'disabled';

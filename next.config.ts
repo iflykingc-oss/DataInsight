@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  serverExternalPackages: ['nodemailer'],
   allowedDevOrigins: ['*.dev.coze.site'],
   images: {
     remotePatterns: [
