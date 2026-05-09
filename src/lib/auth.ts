@@ -32,6 +32,8 @@ export interface User {
   username: string;
   email?: string;
   passwordHash: string;
+  securityQuestion?: string;
+  securityAnswer?: string;
   name: string;
   role: Role;
   status: 'active' | 'disabled';
@@ -297,8 +299,8 @@ export async function verifyPassword(user: User, password: string): Promise<bool
   return bcrypt.compare(password, user.passwordHash);
 }
 
-export function sanitizeUser(user: User): Omit<User, 'passwordHash'> {
-  const { passwordHash, ...sanitized } = user;
+export function sanitizeUser(user: User): Omit<User, 'passwordHash' | 'securityAnswer'> {
+  const { passwordHash, securityAnswer, ...sanitized } = user;
   return sanitized;
 }
 

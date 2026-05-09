@@ -5,7 +5,8 @@ import {
   Database, BarChart3, Wrench, Settings, LayoutDashboard, Table2,
   Brain, FileSpreadsheet, Sparkles, MessageSquare, Image,
   FileText, Code2, Download, ChevronDown, ChevronRight,
-  Home, Shield, LucideIcon
+  Home, Shield, Target, LineChart, BookOpen, Building2,
+  LucideIcon
 } from 'lucide-react';
 
 // ---- Types ----
@@ -16,7 +17,6 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   badge?: string;
-  badgeColor?: string;
 }
 
 interface NavGroup {
@@ -27,7 +27,7 @@ interface NavGroup {
   defaultOpen?: boolean;
 }
 
-// ---- Navigation Definition ----
+// ---- Navigation Definition (4 groups, 12 items) ----
 const NAV_GROUPS: NavGroup[] = [
   {
     key: 'data',
@@ -35,7 +35,6 @@ const NAV_GROUPS: NavGroup[] = [
     icon: Database,
     defaultOpen: true,
     items: [
-      { id: 'home', label: '工作台', icon: Home },
       { id: 'ai-table-builder', label: 'AI建表', icon: Sparkles, badge: 'AI' },
       { id: 'data-table', label: '数据表格', icon: Table2 },
       { id: 'data-prep', label: '数据准备', icon: FileSpreadsheet },
@@ -49,6 +48,10 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'insights', label: '智能洞察', icon: Brain, badge: 'AI' },
       { id: 'visualization', label: '可视化', icon: LayoutDashboard },
+      { id: 'metric-system', label: '指标体系', icon: Target },
+      { id: 'chart-center', label: '图表中心', icon: LineChart },
+      { id: 'data-story', label: '数据故事', icon: BookOpen },
+      { id: 'industry-scenario', label: '行业场景', icon: Building2 },
     ],
   },
   {
@@ -58,8 +61,8 @@ const NAV_GROUPS: NavGroup[] = [
     defaultOpen: true,
     items: [
       { id: 'ai-assistant', label: 'AI问数', icon: MessageSquare, badge: 'AI' },
+      { id: 'multimodal', label: 'AI多模态', icon: Image },
       { id: 'form-collection', label: '表单收集', icon: FileSpreadsheet },
-      { id: 'multimodal', label: '图片处理', icon: Image },
       { id: 'sql-lab', label: 'SQL查询', icon: Code2 },
       { id: 'report-export', label: '报表导出', icon: Download },
     ],
@@ -103,6 +106,8 @@ export default function Sidebar({
     });
   };
 
+  const isHomeActive = activeView === 'home';
+
   return (
     <aside
       className={`flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-200 ease-in-out ${
@@ -125,6 +130,31 @@ export default function Sidebar({
 
       {/* ---- Navigation ---- */}
       <nav className="flex-1 overflow-y-auto py-2 px-1.5 sidebar-scrollbar">
+        {/* 工作台 - Top level, always visible */}
+        <button
+          onClick={() => onViewChange('home')}
+          title={collapsed ? '工作台' : undefined}
+          className={`
+            group relative flex items-center gap-2 w-full rounded-md text-[13px] transition-all duration-150 mb-1
+            ${collapsed ? 'justify-center px-0 py-2' : 'px-2.5 py-[7px]'}
+            ${
+              isHomeActive
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+            }
+          `}
+        >
+          {isHomeActive && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-primary" />
+          )}
+          <Home className={`w-[16px] h-[16px] shrink-0 ${isHomeActive ? 'text-primary' : ''}`} />
+          {!collapsed && <span className="truncate flex-1">工作台</span>}
+        </button>
+
+        {/* Divider */}
+        <div className="my-1.5 mx-2 border-t border-sidebar-border/50" />
+
+        {/* Grouped navigation */}
         {NAV_GROUPS.map(group => {
           const isExpanded = expandedGroups.has(group.key);
           return (

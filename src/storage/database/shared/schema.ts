@@ -14,6 +14,8 @@ export const users = pgTable("users", {
 	createdBy: integer("created_by"),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	securityQuestion: varchar("security_question", { length: 500 }),
+	securityAnswer: varchar("security_answer", { length: 255 }),
 	permissions: jsonb().default({"form":true,"share":true,"export":true,"upload":true,"dashboard":true,"ai_analyze":true,"custom_ai_model":false}),
 }, (table) => [
 	foreignKey({

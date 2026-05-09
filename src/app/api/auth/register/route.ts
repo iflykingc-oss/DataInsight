@@ -1,38 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { registerByEmailAsync, addLoginLogAsync } from '@/lib/auth-server';
-import { sanitizeUser } from '@/lib/auth';
+import {
+  registerByEmailAsync,
+  resetPasswordAsync,
+  getSecurityQuestionAsync,
+  verifySecurityAnswerAsync,
+} from '@/lib/auth-server';
 
+/** POST /api/auth/register - 邮箱注册（安全问题验证） */
 export async function POST(request: NextRequest) {
   try {
-    // 管理员可通过环境变量 DISABLE_REGISTRATION=true 禁用注册
+    // 检查注册是否被管理员关闭
     if (process.env.DISABLE_REGISTRATION === 'true') {
-      return NextResponse.json({ error: '注册功能已关闭，请联系管理员' }, { status: 403 });
+      return NextResponse.json(
+        { error: '管理员已关闭公开注册，请联系管理员创建账号' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
-    const { email, code, password, name } = body;
+    const { action } = body;
 
-    if (!email || !code || !password || !name) {
+    // 获取安全问题（密码重置时使用）
+    if (action === 'get-question') {
+      const { email } = body;
+      if (!email) {
+        return NextResponse.json({ error: '请输入邮箱' }, { status: 400 });
+      }
+      const result = await getSecurityQuestionAsync(email);
+      if (result.error) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ success: true, question: result.question });
+    }
+
+    // 验证安全问题答案（密码重置步骤2）
+    if (action === 'verify-answer') {
+      const { email, answer } = body;
+      if (!email || !answer) {
+        return NextResponse.json({ error: '请填写所有字段' }, { status: 400 });
+      }
+      const result = await verifySecurityAnswerAsync(email, answer);
+      if (!result.valid) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ success: true, verified: true });
+    }
+
+    // 密码重置
+    if (action === 'reset-password') {
+      const { email, securityAnswer, newPassword } = body;
+      if (!email || !securityAnswer || !newPassword) {
+        return NextResponse.json({ error: '请填写所有字段' }, { status: 400 });
+      }
+      const result = await resetPasswordAsync({ email, securityAnswer, newPassword });
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({ success: true, message: '密码重置成功' });
+    }
+
+    // 默认：邮箱注册
+    const { email, password, name, securityQuestion, securityAnswer } = body;
+    if (!email || !password || !name || !securityQuestion || !securityAnswer) {
       return NextResponse.json({ error: '请填写所有必填项' }, { status: 400 });
     }
 
-    const result = await registerByEmailAsync({ email, code, password, name });
-
-    // 记录登录日志
-    await addLoginLogAsync({
-      userId: result.user.id,
-      username: result.user.username,
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      status: 'success',
+    const { user, token } = await registerByEmailAsync({
+      email,
+      password,
+      name,
+      securityQuestion,
+      securityAnswer,
     });
 
+    const { sanitizeUser } = await import('@/lib/auth');
     return NextResponse.json({
       success: true,
-      token: result.token,
-      user: sanitizeUser(result.user),
+      token,
+      user: sanitizeUser(user),
     });
-  } catch (err) {
+  } catch (err: unknown) {
     const message = err instanceof Error ? err.message : '注册失败';
     return NextResponse.json({ error: message }, { status: 400 });
   }
