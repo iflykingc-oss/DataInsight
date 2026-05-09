@@ -391,7 +391,7 @@ AI 模型连接测试
 ### 账号体系
 - **管理员分配账号**：用户账户由管理员创建，无公开注册
 - **登录方式**：用户名 + 密码登录
-- **默认管理员**：`admin` / `admin123`
+- **默认管理员**：首次部署时通过环境变量 `INIT_ADMIN_USERNAME` + `INIT_ADMIN_PASSWORD` 创建（必须设置，否则不创建默认账号）
 
 ### 权限控制（6个功能开关）
 | 权限Key | 说明 | 默认值 |
@@ -416,7 +416,7 @@ AI 模型连接测试
 ```json
 {
   "username": "admin",
-  "password": "admin123"
+  "password": "<your-password>"
 }
 ```
 

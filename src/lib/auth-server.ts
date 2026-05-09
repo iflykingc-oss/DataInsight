@@ -139,7 +139,11 @@ class SupabaseAuthStorage implements AuthStorage {
       console.log('[SupabaseAuth] 检测到空用户表，开始初始化...');
 
       const adminUsername = process.env.INIT_ADMIN_USERNAME || 'admin';
-      const adminPassword = process.env.INIT_ADMIN_PASSWORD || 'admin123';
+      const adminPassword = process.env.INIT_ADMIN_PASSWORD;
+      if (!adminPassword) {
+        console.warn('[SupabaseAuth] ⚠️ 未设置 INIT_ADMIN_PASSWORD 环境变量，跳过默认管理员创建。请在部署时设置该变量。');
+        return;
+      }
       const adminName = process.env.INIT_ADMIN_NAME || '管理员';
 
       // 创建默认管理员
