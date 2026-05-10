@@ -902,6 +902,9 @@ export async function getUserByEmailAsync(email: string): Promise<User | null> {
   return mapDbToUser(data as Record<string, unknown>);
 }
 
+// 登录日志清理状态（必须在调用前声明，避免TDZ）
+let cleanupStarted = false;
+
 // ==================== 初始化 ====================
 
 const g = globalThis as Record<string, unknown>;
@@ -920,7 +923,6 @@ export async function cleanupExpiredLoginLogsAsync(): Promise<number> {
 }
 
 // 启动时自动清理过期日志，并每24小时执行一次
-let cleanupStarted = false;
 export function startLoginLogCleanup(): void {
   if (cleanupStarted) return;
   cleanupStarted = true;
