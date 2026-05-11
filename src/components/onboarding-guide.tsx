@@ -28,35 +28,35 @@ const GUIDE_STEPS: GuideStep[] = [
     id: 'import',
     title: '导入您的数据',
     description: '支持本地上传或从飞书、钉钉等平台导入',
-    icon: <Upload className="w-12 h-12 text-blue-500" />,
+    icon: <Upload className="w-12 h-12 text-primary" />,
     tips: ['拖拽或点击上传文件', '支持 .xlsx, .xls, .csv 格式', '最大支持 50MB 文件']
   },
   {
     id: 'ai-table',
     title: 'AI 智能建表',
     description: '没有数据？让 AI 帮你生成表格模板',
-    icon: <Wand2 className="w-12 h-12 text-purple-500" />,
+    icon: <Wand2 className="w-12 h-12 text-chart-4" />,
     tips: ['选择行业模板快速开始', '描述需求，AI 自动生成', '生成后可调整结构']
   },
   {
     id: 'analyze',
     title: '智能数据分析',
     description: '上传数据后，自动进行深度分析',
-    icon: <BarChart3 className="w-12 h-12 text-green-500" />,
+    icon: <BarChart3 className="w-12 h-12 text-success" />,
     tips: ['自动识别字段类型', '数据质量健康评分', '异常值检测与提示']
   },
   {
     id: 'insight',
     title: 'AI 自动分析',
     description: '用自然语言与数据对话，获取洞察',
-    icon: <MessageSquare className="w-12 h-12 text-orange-500" />,
+    icon: <MessageSquare className="w-12 h-12 text-warning" />,
     tips: ['问任何关于数据的问题', '多轮对话持续分析', '支持趋势预测与原因分析']
   },
   {
     id: 'complete',
     title: '准备就绪',
     description: '开始探索数据的价值吧！',
-    icon: <CheckCircle2 className="w-12 h-12 text-emerald-500" />,
+    icon: <CheckCircle2 className="w-12 h-12 text-success" />,
     tips: []
   }
 ];

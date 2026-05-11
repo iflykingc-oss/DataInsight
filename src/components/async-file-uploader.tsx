@@ -469,9 +469,9 @@ export function FileUploader({
       pending: { label: '等待中', color: 'bg-muted text-foreground' },
       checking: { label: '预检中', color: 'bg-chart-4/10 text-chart-4' },
       parsing: { label: '解析中', color: 'bg-primary/10 text-primary' },
-      analyzing: { label: '分析中', color: 'bg-cyan-100 text-cyan-600' },
+      analyzing: { label: '分析中', color: 'bg-primary/10 text-primary' },
       completed: { label: '已完成', color: 'bg-success/10 text-success' },
-      cached: { label: '缓存命中', color: 'bg-emerald-100 text-emerald-600' },
+      cached: { label: '缓存命中', color: 'bg-success/10 text-success' },
       error: { label: '有问题', color: 'bg-destructive/10 text-destructive' }
     };
     const { label, color } = statusMap[status] || statusMap.pending;
@@ -505,9 +505,9 @@ export function FileUploader({
     <div className={cn('w-full', className)}>
       <div
         className={cn(
-          'relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200',
+          'relative border border-dashed rounded-md p-6 text-center transition-all duration-200',
           dragActive
-            ? 'border-primary bg-primary/5 shadow-lg'
+            ? 'border-primary bg-primary/5 shadow-float'
             : 'border-border hover:border-primary hover:bg-primary/5'
         )}
         onDragEnter={handleDrag}
@@ -524,30 +524,30 @@ export function FileUploader({
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
 
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-2">
           <div className={cn(
-            'p-4 rounded-full transition-all duration-200',
-            dragActive ? 'bg-primary/10 scale-110' : 'bg-muted'
+            'p-3 rounded-sm transition-all duration-200',
+            dragActive ? 'bg-primary/10 scale-105' : 'bg-muted/50'
           )}>
             <Upload className={cn(
-              'w-8 h-8 transition-colors',
+              'w-5 h-5 transition-colors',
               dragActive ? 'text-primary' : 'text-muted-foreground'
             )} />
           </div>
 
-          <div>
-            <p className="text-lg font-medium text-foreground">
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground">
               {dragActive ? '松开手指上传文件' : '拖拽文件到此处，或点击上传'}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              支持 Excel (.xlsx/.xls)、CSV、TXT 格式，{multiple ? '可批量上传，' : ''}单文件最大 {maxSize}MB
+            <p className="text-xs text-muted-foreground mt-1">
+              支持 Excel (.xlsx/.xls)、CSV 格式，单文件最大 {maxSize}MB
             </p>
           </div>
 
           {enableAIHealing && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-primary bg-primary/8 px-3 py-1.5 rounded-full">
+            <div className="flex items-center gap-1 text-xs text-primary bg-primary/5 px-2 py-1 rounded-sm">
               <Sparkles className="w-3 h-3" />
-              <span>支持 AI 智能修复表格问题</span>
+              <span>AI 智能修复表格问题</span>
             </div>
           )}
         </div>
@@ -644,7 +644,7 @@ export function FileUploader({
 
               {uploadFile.status === 'cached' && (
                 <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs text-emerald-600 mb-1">
+                  <div className="flex items-center justify-between text-xs text-success mb-1">
                     <span className="flex items-center gap-1">
                       <CheckCircle className="w-3 h-3" />
                       已从缓存加载
@@ -661,9 +661,9 @@ export function FileUploader({
                       key={idx}
                       className={cn(
                         'flex items-start gap-2 text-xs p-2 rounded',
-                        issue.type === 'error' ? 'bg-red-50 text-red-600' :
-                          issue.type === 'warning' ? 'bg-yellow-50 text-yellow-600' :
-                            'bg-blue-50 text-blue-600'
+                        issue.type === 'error' ? 'bg-red-50 text-destructive' :
+                          issue.type === 'warning' ? 'bg-warning/10 text-warning' :
+                            'bg-primary/10 text-primary'
                       )}
                     >
                       <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
@@ -674,7 +674,7 @@ export function FileUploader({
               )}
 
               {uploadFile.status === 'error' && uploadFile.errorMessage && (
-                <div className="mt-3 p-2 bg-red-50 text-red-600 text-xs rounded flex items-center gap-2">
+                <div className="mt-3 p-2 bg-red-50 text-destructive text-xs rounded flex items-center gap-2">
                   <AlertCircle className="w-3 h-3 flex-shrink-0" />
                   <span>{uploadFile.errorMessage}</span>
                 </div>
@@ -701,23 +701,23 @@ export function FileUploader({
               <div className={cn(
                 'p-4 rounded-lg flex items-center gap-3',
                 selectedFileForCheck.validationResult.isValid
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
+                  ? 'bg-success/5 border border-success/20'
+                  : 'bg-destructive/5 border border-destructive/20'
               )}>
                 {selectedFileForCheck.validationResult.isValid ? (
                   <>
-                    <CheckCircle className="w-6 h-6 text-green-600" />
+                    <CheckCircle className="w-6 h-6 text-success" />
                     <div>
-                      <p className="font-medium text-green-700">预检通过</p>
-                      <p className="text-sm text-green-600">文件可以正常导入分析</p>
+                      <p className="font-medium text-success">预检通过</p>
+                      <p className="text-sm text-success">文件可以正常导入分析</p>
                     </div>
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="w-6 h-6 text-red-600" />
+                    <AlertCircle className="w-6 h-6 text-destructive" />
                     <div>
-                      <p className="font-medium text-red-700">发现问题</p>
-                      <p className="text-sm text-red-600">需要处理以下问题后才能分析</p>
+                      <p className="font-medium text-destructive">发现问题</p>
+                      <p className="text-sm text-destructive">需要处理以下问题后才能分析</p>
                     </div>
                   </>
                 )}
@@ -760,10 +760,10 @@ export function FileUploader({
               {enableAIHealing && selectedFileForCheck.validationResult.suggestedFix && (
                 <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
                   <div className="flex items-start gap-3">
-                    <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
+                    <Sparkles className="w-5 h-5 text-chart-4 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-purple-700">AI 智能修复</p>
-                      <p className="text-xs text-purple-600 mt-1">
+                      <p className="text-sm font-medium text-chart-4">AI 智能修复</p>
+                      <p className="text-xs text-chart-4 mt-1">
                         {selectedFileForCheck.validationResult.suggestedFix}
                       </p>
                       <Button size="sm" variant="outline" className="mt-2" disabled>

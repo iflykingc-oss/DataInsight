@@ -281,13 +281,14 @@ export function SceneAgentPanel({
         variant="outline"
         size="sm"
         className={cn(
-          'fixed right-4 top-1/2 -translate-y-1/2 z-40 gap-1.5 shadow-md border-primary/30 bg-background/95 backdrop-blur',
+          'fixed right-4 top-1/2 -translate-y-1/2 z-40 gap-1 shadow-float border-primary/20 bg-background/95 backdrop-blur rounded-[6px]',
+          'hover:border-primary/40 hover:shadow-hover',
           className
         )}
         onClick={() => setOpen(true)}
       >
         <Sparkles className="w-3.5 h-3.5 text-primary" />
-        <span className="text-xs font-medium">{sceneName}智能体</span>
+        <span className="text-xs">{sceneName}</span>
       </Button>
     );
   }
@@ -295,20 +296,20 @@ export function SceneAgentPanel({
   return (
     <div
       className={cn(
-        'fixed right-0 top-16 bottom-0 w-80 border-l bg-background/95 backdrop-blur z-40',
-        'flex flex-col shadow-xl transition-transform duration-300',
+        'fixed right-0 top-16 bottom-0 w-80 border-l border-border bg-background/95 backdrop-blur z-40',
+        'flex flex-col shadow-float transition-transform duration-300',
         className
       )}
     >
       {/* 头部 */}
-      <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-[4px] bg-primary/10 flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
           </div>
           <div>
-            <div className="text-xs font-semibold">{sceneName}智能体</div>
-            <div className="text-xs text-muted-foreground">场景隔离 · 技能就绪</div>
+            <div className="text-sm font-semibold">{sceneName}智能体</div>
+            <div className="text-xs text-muted-foreground">场景技能就绪</div>
           </div>
         </div>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setOpen(false)}>

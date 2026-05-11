@@ -540,84 +540,83 @@ export default function HomePage() {
       );
     }
 
-    // 首页（工作台）- 规范: 页面外层24px边距, 模块间16px分割
+    // 首页（工作台）- 规范: 页面外层左右24px上下20px, 模块间24px分割
     if (viewMode === 'home') {
       const hasData = !!parsedData;
       return (
-        <div className="w-full space-y-4">
-          {/* 数据获取入口 - 规范: 16px模块标题, 卡片6px圆角, 8px间距 */}
-          <div className="space-y-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">获取数据</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-              {/* 上传文件 - 规范: 图标统一主色系, 4px圆角标签 */}
-              <div className={cn(
-                'rounded-sm border transition-all hover:shadow-float cursor-pointer',
-                hasData ? 'bg-success/4 border-success/20' : 'border-dashed border-border hover:border-primary/40'
-              )}>
-                <div className="py-4 px-4">
-                  {hasData ? (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-sm bg-success/8 flex items-center justify-center">
-                          <FileSpreadsheet className="w-4 h-4 text-success" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{parsedData.fileName}</p>
-                          <p className="text-xs text-muted-foreground">{parsedData?.rowCount?.toLocaleString() ?? '0'} 行 &middot; {parsedData?.columnCount ?? 0} 列</p>
-                        </div>
-                      </div>
-                      <button onClick={handleGoHome} className="h-6 w-6 rounded-sm flex items-center justify-center text-destructive/60 hover:text-destructive hover:bg-destructive/8 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1">
-                        <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
-                          <Upload className="w-4 h-4 text-primary" />
-                        </div>
-                        <span className="text-sm font-semibold">上传文件</span>
-                      </div>
-                      <div className="w-full"><AsyncFileUploader onFileUpload={handleFileUpload} /></div>
-                      <p className="text-xs text-muted-foreground">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
-                    </div>
-                  )}
+        <div className="w-full px-6 py-5">
+          {/* 页面标题区 - 规范: 20px加粗主标题 + 14px辅助说明 */}
+          <div className="mb-6">
+            <h1 className="text-xl font-bold text-foreground">工作台</h1>
+            <p className="text-sm text-muted-foreground mt-1">上传数据，开始智能分析</p>
+          </div>
+
+          {/* 已有数据 - 紧凑信息条 + 上传新数据入口 */}
+          {hasData && (
+            <div className="mb-6 p-4 rounded-sm border border-success/20 bg-success/4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-sm bg-success/10 flex items-center justify-center">
+                  <FileSpreadsheet className="w-4 h-4 text-success" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{parsedData.fileName}</p>
+                  <p className="text-xs text-muted-foreground">{parsedData?.rowCount?.toLocaleString() ?? '0'} 行 · {parsedData?.columnCount ?? 0} 列</p>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setViewMode('data-table')} className="h-8 px-4 rounded-sm text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                  查看表格
+                </button>
+                <button onClick={handleGoHome} className="h-8 px-3 rounded-sm text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-colors border border-border">
+                  清除数据
+                </button>
+              </div>
+            </div>
+          )}
 
-              {/* 连接数据源 - 规范: 图标统一主色 */}
-              <div className="rounded-sm border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all hover:shadow-float" onClick={() => setViewMode('data-source')}>
-                <div className="py-4 px-4 flex flex-col justify-center h-full">
-                  <div className="flex items-center gap-1 mb-2">
-                    <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
-                      <Database className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-semibold">连接数据源</span>
+          {/* 数据获取区 - 上传文件为独立行，数据源+AI并排 */}
+          <div className="mb-6">
+            <h2 className="text-base font-semibold text-foreground mb-4">获取数据</h2>
+            {/* 上传文件 - 独占一行，左侧上传区右侧拖拽提示 */}
+            <div className="mb-2 rounded-sm border border-border bg-card overflow-hidden">
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
+                    <Upload className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <p className="text-xs text-muted-foreground ml-7">连接数据库或API，实时同步数据</p>
+                  <span className="text-sm font-semibold text-foreground">上传文件</span>
+                  <span className="text-xs text-muted-foreground">支持 Excel (.xlsx/.xls)、CSV，单文件最大 50MB</span>
                 </div>
+                <AsyncFileUploader onFileUpload={handleFileUpload} />
               </div>
-
-              {/* AI生成表格 - 规范: AI标签4px圆角, 12px字号 */}
-              <div className="rounded-sm border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all hover:shadow-float" onClick={() => {
+            </div>
+            {/* 数据源 + AI生成 并排 */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-sm border border-border bg-card hover:border-primary/30 cursor-pointer transition-all hover:shadow-float p-4" onClick={() => setViewMode('data-source')}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
+                    <Database className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">连接数据源</span>
+                </div>
+                <p className="text-xs text-muted-foreground">连接数据库或API，实时同步数据</p>
+              </div>
+              <div className="rounded-sm border border-border bg-card hover:border-primary/30 cursor-pointer transition-all hover:shadow-float p-4" onClick={() => {
                 if (!isLoggedIn) { setLoginDialogOpen(true); return; }
                 setViewMode('ai-table-builder');
               }}>
-                <div className="py-4 px-4 flex flex-col justify-center h-full">
-                  <div className="flex items-center gap-1 mb-2">
-                    <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-semibold">AI 生成表格</span>
-                    <span className="text-xs font-semibold px-1 rounded-sm bg-primary/8 text-primary leading-5">AI</span>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <p className="text-xs text-muted-foreground ml-7">描述你的需求，AI 自动创建表格模板</p>
+                  <span className="text-sm font-semibold text-foreground">AI 生成表格</span>
+                  <span className="text-xs font-semibold px-1.5 rounded-sm bg-primary/8 text-primary leading-5">AI</span>
                 </div>
+                <p className="text-xs text-muted-foreground">描述需求，AI自动创建表格模板</p>
               </div>
             </div>
           </div>
 
-          <OnboardingGuide />
           <HomeCards
             hasData={!!parsedData}
             onViewChange={(v) => setViewMode(v as ViewMode)}
@@ -1045,8 +1044,8 @@ export default function HomePage() {
                 </ul>
               </div>
               <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
-                <h4 className="font-medium text-emerald-700 dark:text-emerald-400 mb-2">试试这些问题</h4>
-                <div className="space-y-2 text-sm text-emerald-600/80 dark:text-emerald-400/80">
+                <h4 className="font-medium text-success mb-2">试试这些问题</h4>
+                <div className="space-y-2 text-sm text-success/80">
                   <p>&ldquo;哪些产品销量最高？&rdquo;</p>
                   <p>&ldquo;月度收入变化趋势如何？&rdquo;</p>
                   <p>&ldquo;用户年龄分布是什么样的？&rdquo;</p>

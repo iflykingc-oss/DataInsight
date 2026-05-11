@@ -168,7 +168,7 @@ function Sidebar({
               {!collapsed && (
                 <button
                   onClick={() => toggleGroup(group.key)}
-                  className="flex items-center w-full px-2 py-1.5 text-[12px] font-medium text-sidebar-foreground/35 uppercase tracking-wider hover:text-sidebar-foreground/55 transition-colors rounded"
+                  className="flex items-center w-full px-2 py-1.5 text-xs font-medium text-sidebar-foreground/35 uppercase tracking-wider hover:text-sidebar-foreground/55 transition-colors rounded"
                 >
                   <span className="flex-1 text-left">{group.label}</span>
                   {isExpanded ? (
@@ -307,7 +307,7 @@ function Sidebar({
           onClick={onToggleCollapse}
           title={collapsed ? '展开侧边栏' : '收起侧边栏'}
           className={`
-            flex items-center gap-2 w-full rounded-md text-[12px] transition-colors duration-150
+            flex items-center gap-2 w-full rounded-md text-xs transition-colors duration-150
             text-sidebar-foreground/25 hover:text-sidebar-foreground/45 hover:bg-sidebar-accent/30
             ${collapsed ? 'justify-center px-0 py-1' : 'px-2 py-1'}
           `}

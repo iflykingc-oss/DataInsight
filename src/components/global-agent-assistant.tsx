@@ -427,19 +427,19 @@ export function GlobalAgentAssistant({
 
     return (
       <>
-        {/* 悬浮按钮 */}
+        {/* 悬浮按钮 - 低噪极简风格 */}
         {!isOpen && (
           <button
             onClick={() => setIsOpen(true)}
             className={cn(
-              'fixed z-50 flex items-center gap-2 rounded-full px-4 py-3 text-white shadow-lg',
-              'bg-gradient-to-r from-primary to-primary/80 hover:shadow-xl',
+              'fixed z-50 flex items-center gap-1.5 rounded-[6px] px-3 py-2 text-white shadow-float',
+              'bg-primary hover:shadow-hover',
               'transition-all duration-200',
               positionClasses
             )}
           >
-            <Brain className="h-5 w-5" />
-            <span className="text-sm font-medium">智能助手</span>
+            <Brain className="h-4 w-4" />
+            <span className="text-xs font-medium">AI助手</span>
           </button>
         )}
 
@@ -448,8 +448,8 @@ export function GlobalAgentAssistant({
           <div
             ref={containerRef}
             className={cn(
-              'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-200',
-              isMinimized ? 'h-14 w-80' : 'h-[600px] w-[420px]',
+              'fixed z-50 flex flex-col overflow-hidden rounded-[6px] border border-border bg-card shadow-float transition-all duration-200',
+              isMinimized ? 'h-12 w-60' : 'h-[560px] w-[400px]',
               positionClasses
             )}
           >
