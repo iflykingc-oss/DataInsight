@@ -315,7 +315,8 @@ class SupabaseAuthStorage implements AuthStorage {
 
     return data.map(row => {
       const log = mapDbToLoginLog(row as Record<string, unknown>);
-      log.username = (row as Record<string, unknown>).users as unknown as string || '';
+      const usersObj = (row as Record<string, unknown>).users as Record<string, unknown> | null;
+      log.username = (usersObj?.username as string) || '';
       return log;
     });
   }

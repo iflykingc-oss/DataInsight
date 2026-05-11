@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, memo } from 'react';
 import {
   Database, BarChart3, Wrench, Settings, LayoutDashboard, Table2,
   Brain, FileSpreadsheet, Sparkles, MessageSquare, Image,
@@ -76,7 +76,7 @@ interface SidebarProps {
   onLogout?: () => void;
 }
 
-export default function Sidebar({
+function Sidebar({
   activeView,
   onViewChange,
   collapsed,
@@ -323,3 +323,5 @@ export default function Sidebar({
     </aside>
   );
 }
+
+export default memo(Sidebar);

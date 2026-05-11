@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import {
   Users, LogIn, Brain, BarChart3, Plus, Edit3, Trash2, Shield,
   CheckCircle2, AlertCircle, Lock, LayoutGrid, Settings2,
-  RefreshCw, Activity, TrendingUp, Database
+  RefreshCw, Activity, TrendingUp, Database, CreditCard,
+  Star, Zap, Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,7 +90,7 @@ interface AdminContentProps {
   activeTab: string;
 }
 
-export default function AdminContent({ activeTab }: AdminContentProps) {
+function AdminContent({ activeTab }: AdminContentProps) {
   const { user } = useAuth();
   const token = typeof window !== 'undefined' ? localStorage.getItem('datainsight_token') ?? '' : '';
   const [users, setUsers] = useState<UserData[]>([]);
@@ -109,6 +110,16 @@ export default function AdminContent({ activeTab }: AdminContentProps) {
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsPage, setLogsPage] = useState(0);
   const [logsTotal, setLogsTotal] = useState(0);
+
+  // Plans management state
+  const [plans, setPlans] = useState([
+    { id: 'free', name: '免费版', price: 0, period: '永久', features: ['基础数据表格', '5 个仪表盘', '基础图表'], active: true, users: 128 },
+    { id: 'pro', name: '专业版', price: 29, period: '月', features: ['全部 AI 功能', '无限仪表盘', '高级图表', '数据导出', '团队协作'], active: true, users: 56 },
+    { id: 'team', name: '团队版', price: 99, period: '月', features: ['专业版全部功能', '成员管理', '权限控制', 'API 接入', '优先支持'], active: true, users: 12 },
+    { id: 'enterprise', name: '企业版', price: 299, period: '月', features: ['团队版全部功能', '私有化部署', '定制开发', 'SLA 保障', '专属客服'], active: false, users: 0 },
+  ]);
+  const [planFormOpen, setPlanFormOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<any>(null);
 
   const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     setError('');
@@ -397,9 +408,9 @@ export default function AdminContent({ activeTab }: AdminContentProps) {
                   </TableRow>
                 ) : users.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.name}</TableCell>
-                    <TableCell className="text-sm font-mono">{u.username}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{u.email || '-'}</TableCell>
+                    <TableCell className="font-medium">{typeof u.name === 'string' ? u.name : String(u.name ?? '')}</TableCell>
+                    <TableCell className="text-sm font-mono">{typeof u.username === 'string' ? u.username : String(u.username ?? '')}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{typeof u.email === 'string' ? u.email : '-'}</TableCell>
                     <TableCell>{getRoleBadge(u.role)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {u.createdAt ? new Date(u.createdAt).toLocaleDateString('zh-CN') : '-'}
@@ -467,7 +478,7 @@ export default function AdminContent({ activeTab }: AdminContentProps) {
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(log.created_at).toLocaleString('zh-CN')}
                     </TableCell>
-                    <TableCell className="text-sm font-mono">{log.username}</TableCell>
+                    <TableCell className="text-sm font-mono">{typeof log.username === 'string' ? log.username : String(log.username ?? '')}</TableCell>
                     <TableCell>
                       <Badge variant={log.status === 'success' ? 'default' : 'destructive'} className="text-xs">
                         {log.status === 'success' ? '成功' : '失败'}
@@ -506,45 +517,52 @@ export default function AdminContent({ activeTab }: AdminContentProps) {
 
       {/* AI配置 */}
       {activeTab === 'ai-config' && (
-        <div className="max-w-xl">
-          <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Base URL</Label>
-                <Input
-                  value={aiConfig.baseUrl}
-                  onChange={(e) => setAiConfig({ ...aiConfig, baseUrl: e.target.value })}
-                  placeholder="https://api.deepseek.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>API Key</Label>
-                <Input
-                  type="password"
-                  value={aiConfig.apiKey}
-                  onChange={(e) => setAiConfig({ ...aiConfig, apiKey: e.target.value })}
-                  placeholder="sk-..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>模型名称</Label>
-                <Input
-                  value={aiConfig.modelName}
-                  onChange={(e) => setAiConfig({ ...aiConfig, modelName: e.target.value })}
-                  placeholder="deepseek-chat"
-                />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button onClick={handleSaveAIConfig} disabled={aiConfigLoading}>
-                  <CheckCircle2 className="w-4 h-4 mr-1" />
-                  保存配置
-                </Button>
-                <Button variant="outline" onClick={handleTestAIConnection} disabled={aiConfigLoading}>
-                  <Brain className="w-4 h-4 mr-1" />
-                  测试连接
-                </Button>
-              </div>
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-6">
+            <h3 className="text-base font-medium">AI 模型配置</h3>
+            <p className="text-sm text-muted-foreground mt-1">配置全局 AI 模型，所有用户将共用此配置</p>
+          </div>
+          <div className="space-y-5 bg-card border rounded-xl p-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">接口地址（Base URL）</Label>
+              <Input
+                value={aiConfig.baseUrl}
+                onChange={(e) => setAiConfig({ ...aiConfig, baseUrl: e.target.value })}
+                placeholder="https://api.deepseek.com"
+              />
+              <p className="text-xs text-muted-foreground">OpenAI 兼容格式的 API 接口地址</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">密钥（API Key）</Label>
+              <Input
+                type="password"
+                value={aiConfig.apiKey}
+                onChange={(e) => setAiConfig({ ...aiConfig, apiKey: e.target.value })}
+                placeholder="sk-..."
+              />
+              <p className="text-xs text-muted-foreground">从模型服务商获取的 API Key</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">模型名称（Model Name）</Label>
+              <Input
+                value={aiConfig.modelName}
+                onChange={(e) => setAiConfig({ ...aiConfig, modelName: e.target.value })}
+                placeholder="deepseek-chat"
+              />
+              <p className="text-xs text-muted-foreground">例如：gpt-3.5-turbo、deepseek-chat、claude-3-sonnet</p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button onClick={handleSaveAIConfig} disabled={aiConfigLoading} className="min-w-[100px]">
+                <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                保存配置
+              </Button>
+              <Button variant="outline" onClick={handleTestAIConnection} disabled={aiConfigLoading}>
+                <Brain className="w-4 h-4 mr-1.5" />
+                测试连接
+              </Button>
             </div>
           </div>
+        </div>
       )}
 
       {/* 使用统计 */}
@@ -598,16 +616,90 @@ export default function AdminContent({ activeTab }: AdminContentProps) {
         </>
       )}
 
+      {/* 套餐管理 */}
+      {activeTab === 'plans' && (
+        <>
+          <div className="flex justify-between items-center mb-5">
+            <div>
+              <h3 className="text-base font-medium">订阅套餐管理</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">配置用户订阅套餐、价格与功能权限</p>
+            </div>
+            <Button size="sm" onClick={() => { setEditingPlan(null); setPlanFormOpen(true); }}>
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              新增套餐
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {plans.map((plan) => (
+              <div key={plan.id} className={`relative rounded-xl border p-5 transition-all hover:shadow-md ${
+                plan.active ? 'border-primary/20 bg-card' : 'border-border/60 bg-muted/30 opacity-70'
+              }`}>
+                {plan.id === 'pro' && (
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
+                      <Star className="w-3 h-3 mr-0.5" />
+                      推荐
+                    </Badge>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    plan.active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {plan.id === 'free' ? <Zap className="w-4 h-4" /> : plan.id === 'enterprise' ? <Crown className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium truncate">{plan.name}</h4>
+                    <p className="text-xs text-muted-foreground">{plan.users} 位用户</p>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <span className="text-2xl font-semibold">${plan.price}</span>
+                  <span className="text-xs text-muted-foreground ml-1">/ {plan.period}</span>
+                </div>
+                <div className="space-y-1.5 mb-4">
+                  {plan.features.map((f, i) => (
+                    <div key={i} className="flex items-start gap-1.5 text-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                      <span className="text-muted-foreground">{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs h-8"
+                    onClick={() => { setEditingPlan(plan); setPlanFormOpen(true); }}
+                  >
+                    <Settings2 className="w-3 h-3 mr-1" />
+                    配置
+                  </Button>
+                  <Button
+                    variant={plan.active ? 'outline' : 'default'}
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => {
+                      setPlans(plans.map((p) => p.id === plan.id ? { ...p, active: !p.active } : p));
+                      showMessage(`${plan.name} 已${plan.active ? '下架' : '上架'}`);
+                    }}
+                  >
+                    {plan.active ? '下架' : '上架'}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       {/* 添加/编辑用户弹窗 */}
       <Dialog open={userFormOpen} onOpenChange={setUserFormOpen}>
-        <DialogContent showCloseButton={false} className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="flex flex-row items-start justify-between">
+        <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
             <DialogTitle>{editingUser ? '编辑用户' : '添加用户'}</DialogTitle>
-            <button onClick={() => setUserFormOpen(false)} className="rounded-sm opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
           </DialogHeader>
-          <div className="space-y-5">
+          <div className="space-y-5 overflow-y-auto pr-1">
             {!editingUser && (
               <div className="space-y-2">
                 <Label>账户 *</Label>
@@ -693,3 +785,5 @@ export default function AdminContent({ activeTab }: AdminContentProps) {
     </div>
   );
 }
+
+export default memo(AdminContent);

@@ -141,7 +141,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
   // 数据库配置 - 简化版
   const [dbConfig, setDbConfig] = useState({
     name: '我的数据库',
-    type: 'postgresql' as 'postgresql' | 'mysql',
+    type: 'postgresql' as 'postgresql' | 'mysql' | 'mongodb' | 'sqlserver' | 'snowflake' | 'bigquery' | 'redshift' | 'sqlite',
     host: '',
     port: '',
     database: '',
@@ -152,9 +152,15 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
   });
 
   // 常用端口预设
-  const commonPorts = {
+  const commonPorts: Record<string, string> = {
     postgresql: '5432',
-    mysql: '3306'
+    mysql: '3306',
+    mongodb: '27017',
+    sqlserver: '1433',
+    snowflake: '443',
+    bigquery: '443',
+    redshift: '5439',
+    sqlite: ''
   };
 
   // 切换数据库类型时自动设置端口
@@ -387,25 +393,31 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               {/* 数据库类型 */}
               <div className="space-y-2">
                 <Label>数据库类型</Label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={dbConfig.type === 'postgresql' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setDbConfig(prev => ({ ...prev, type: 'postgresql' }))}
-                    className="flex-1"
-                  >
-                    <Database className="w-4 h-4 mr-2" />
-                    PostgreSQL
-                  </Button>
-                  <Button
-                    variant={dbConfig.type === 'mysql' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setDbConfig(prev => ({ ...prev, type: 'mysql' }))}
-                    className="flex-1"
-                  >
-                    <Database className="w-4 h-4 mr-2" />
-                    MySQL
-                  </Button>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { key: 'postgresql', label: 'PostgreSQL', desc: '开源关系型数据库' },
+                    { key: 'mysql', label: 'MySQL', desc: '最流行的开源数据库' },
+                    { key: 'mongodb', label: 'MongoDB', desc: '文档型NoSQL数据库' },
+                    { key: 'sqlserver', label: 'SQL Server', desc: '微软关系型数据库' },
+                    { key: 'snowflake', label: 'Snowflake', desc: '云原生数据仓库' },
+                    { key: 'bigquery', label: 'BigQuery', desc: 'Google数据仓库' },
+                    { key: 'redshift', label: 'Redshift', desc: 'AWS数据仓库' },
+                    { key: 'sqlite', label: 'SQLite', desc: '嵌入式数据库' },
+                  ].map(db => (
+                    <button
+                      key={db.key}
+                      onClick={() => setDbConfig(prev => ({ ...prev, type: db.key as typeof dbConfig.type }))}
+                      className={cn(
+                        "text-left px-3 py-2 rounded-lg border transition-all text-sm",
+                        dbConfig.type === db.key
+                          ? "border-primary bg-primary/5 text-primary shadow-sm"
+                          : "border-border bg-card hover:border-primary/30 hover:bg-muted/50"
+                      )}
+                    >
+                      <div className="font-medium">{db.label}</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">{db.desc}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
 

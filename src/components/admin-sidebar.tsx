@@ -2,12 +2,12 @@
 
 import {
   Users, LogIn, Brain, BarChart3, Settings2,
-  ArrowLeft, Shield
+  ArrowLeft, Shield, CreditCard
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // ---- Types ----
-export type AdminTab = 'users' | 'logs' | 'ai-config' | 'stats';
+export type AdminTab = 'users' | 'logs' | 'ai-config' | 'stats' | 'plans';
 
 interface AdminNavItem {
   id: AdminTab;
@@ -20,6 +20,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { id: 'logs', label: '登录日志', icon: LogIn },
   { id: 'ai-config', label: 'AI模型配置', icon: Brain },
   { id: 'stats', label: '使用统计', icon: BarChart3 },
+  { id: 'plans', label: '套餐配置', icon: CreditCard },
 ];
 
 interface AdminSidebarProps {

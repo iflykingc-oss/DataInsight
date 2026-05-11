@@ -153,6 +153,7 @@ export default function HomePage() {
     logs: '登录记录',
     'ai-config': 'AI模型配置',
     stats: '使用统计',
+    plans: '套餐管理',
   };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [tableView, setTableView] = useState<'table' | 'kanban' | 'calendar' | 'gantt'>('table');
@@ -523,11 +524,11 @@ export default function HomePage() {
     if (viewMode === 'home') {
       const hasData = !!parsedData;
       return (
-        <div className="max-w-6xl mx-auto space-y-8">
+        <div className="w-full space-y-8">
           {/* 数据获取入口：3种平行的数据接入方式 */}
           <div className="space-y-3">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">获取数据</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {/* 上传文件 */}
               <Card className={cn(
                 'border transition-all hover:shadow-sm cursor-pointer',

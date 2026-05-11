@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import {
   Brain, MessageSquare, LayoutGrid, Table2, Database, Target, PieChart,
   Wrench, FileText, Sparkles, ArrowRight, ShoppingCart, DollarSign,
@@ -119,7 +120,7 @@ interface HomeCardsProps {
   hasPermission?: (permission: string) => boolean;
 }
 
-export default function HomeCards({ hasData, onViewChange, fileName, rowCount, isLoggedIn = false, onLoginRequired, hasPermission }: HomeCardsProps) {
+function HomeCards({ hasData, onViewChange, fileName, rowCount, isLoggedIn = false, onLoginRequired, hasPermission }: HomeCardsProps) {
   const checkPermission = (permission: string) => {
     if (!isLoggedIn && onLoginRequired) {
       onLoginRequired();
@@ -326,3 +327,4 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount, i
     </div>
   );
 }
+export default memo(HomeCards);
