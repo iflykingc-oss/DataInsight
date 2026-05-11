@@ -432,7 +432,7 @@ export function SmartDataPrep({ data, fieldStats, modelConfig, onDataReady }: Sm
                     onCheckedChange={() => toggleFix(issue.id)}
                     disabled={!issue.fixable}
                   />
-                  <Badge variant={issue.severity === 'high' ? 'destructive' : issue.severity === 'medium' ? 'secondary' : 'outline'} className="text-[10px]">
+                  <Badge variant={issue.severity === 'high' ? 'destructive' : issue.severity === 'medium' ? 'secondary' : 'outline'} className="text-xs">
                     {issue.severity === 'high' ? '严重' : issue.severity === 'medium' ? '中等' : '轻微'}
                   </Badge>
                   <div className="flex-1 min-w-0">
@@ -478,7 +478,7 @@ export function SmartDataPrep({ data, fieldStats, modelConfig, onDataReady }: Sm
                   <p className="text-sm font-medium">{tmpl.name}</p>
                   <p className="text-xs text-muted-foreground">{tmpl.description}</p>
                   <div className="flex gap-1 mt-1.5">
-                    {tmpl.steps.map(s => <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>)}
+                    {tmpl.steps.map(s => <Badge key={s} variant="outline" className="text-xs">{s}</Badge>)}
                   </div>
                 </CardContent>
               </Card>
@@ -493,7 +493,7 @@ export function SmartDataPrep({ data, fieldStats, modelConfig, onDataReady }: Sm
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">{tmpl.name}</p>
-                    <Badge variant="secondary" className="text-[10px]">自定义</Badge>
+                    <Badge variant="secondary" className="text-xs">自定义</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{tmpl.description}</p>
                 </CardContent>

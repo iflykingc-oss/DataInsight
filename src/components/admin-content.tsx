@@ -25,32 +25,32 @@ type Role = 'admin' | 'editor' | 'analyst' | 'viewer' | 'custom';
 
 // Announcement helper maps
 const announcementTypeColor: Record<string, string> = {
-  info: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  warning: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-  urgent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  maintenance: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  info: 'bg-primary/10 text-primary',
+  warning: 'bg-warning/10 text-warning',
+  urgent: 'bg-destructive/10 text-destructive',
+  maintenance: 'bg-chart-4/10 text-chart-4',
 };
 const announcementTypeLabel: Record<string, string> = { info: '通知', warning: '警告', urgent: '紧急', maintenance: '维护' };
 const announcementPriorityLabel: Record<string, string> = { low: '低', normal: '普通', high: '高' };
 const announcementStatusColor: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
-  scheduled: 'bg-yellow-100 text-yellow-700',
-  published: 'bg-green-100 text-green-700',
-  expired: 'bg-red-100 text-red-700',
+  scheduled: 'bg-warning/10 text-warning',
+  published: 'bg-success/10 text-success',
+  expired: 'bg-destructive/10 text-destructive',
 };
 const announcementStatusLabel: Record<string, string> = { draft: '草稿', scheduled: '已计划', published: '已发布', expired: '已过期' };
 
 // Activity event helpers
 const getActivityEventColor = (type: string): string => {
   const colorMap: Record<string, string> = {
-    login: 'bg-green-100 text-green-700', logout: 'bg-gray-100 text-gray-700',
-    login_failed: 'bg-red-100 text-red-700', register: 'bg-blue-100 text-blue-700',
-    bind_email: 'bg-cyan-100 text-cyan-700', bind_phone: 'bg-cyan-100 text-cyan-700',
-    permission_change: 'bg-amber-100 text-amber-700', role_change: 'bg-amber-100 text-amber-700',
-    payment_init: 'bg-purple-100 text-purple-700', payment_success: 'bg-green-100 text-green-700',
-    payment_failed: 'bg-red-100 text-red-700', export: 'bg-indigo-100 text-indigo-700',
-    share: 'bg-pink-100 text-pink-700', ai_analyze: 'bg-violet-100 text-violet-700',
-    upload: 'bg-teal-100 text-teal-700', dashboard_create: 'bg-blue-100 text-blue-700',
+    login: 'bg-success/10 text-success', logout: 'bg-muted text-muted-foreground',
+    login_failed: 'bg-destructive/10 text-destructive', register: 'bg-primary/10 text-primary',
+    bind_email: 'bg-primary/10 text-primary', bind_phone: 'bg-primary/10 text-primary',
+    permission_change: 'bg-warning/10 text-warning', role_change: 'bg-warning/10 text-warning',
+    payment_init: 'bg-chart-4/10 text-chart-4', payment_success: 'bg-success/10 text-success',
+    payment_failed: 'bg-destructive/10 text-destructive', export: 'bg-primary/10 text-primary',
+    share: 'bg-primary/10 text-primary', ai_analyze: 'bg-chart-4/10 text-chart-4',
+    upload: 'bg-success/10 text-success', dashboard_create: 'bg-primary/10 text-primary',
   };
   return colorMap[type] || 'bg-muted text-muted-foreground';
 };
@@ -557,8 +557,8 @@ function AdminContent({ activeTab }: AdminContentProps) {
         </Alert>
       )}
       {success && (
-        <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
-          <CheckCircle2 className="w-4 h-4 text-green-600" />
+        <Alert className="mb-4 bg-success/8 text-success border-success/20">
+          <CheckCircle2 className="w-4 h-4 text-success" />
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}
@@ -912,7 +912,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                       value={announcementForm.scheduled_at}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnouncementForm(prev => ({ ...prev, scheduled_at: e.target.value }))}
                     />
-                    <p className="text-[10px] text-muted-foreground">留空则立即发布</p>
+                    <p className="text-xs text-muted-foreground">留空则立即发布</p>
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-medium">过期时间（可选）</Label>
@@ -921,7 +921,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                       value={announcementForm.expires_at}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnouncementForm(prev => ({ ...prev, expires_at: e.target.value }))}
                     />
-                    <p className="text-[10px] text-muted-foreground">过期后自动下线</p>
+                    <p className="text-xs text-muted-foreground">过期后自动下线</p>
                   </div>
                 </div>
               </div>
@@ -1006,7 +1006,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
               }`}>
                 {plan.id === 'pro' && (
                   <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
+                    <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">
                       <Star className="w-3 h-3 mr-0.5" />
                       推荐
                     </Badge>
@@ -1203,20 +1203,20 @@ function AdminContent({ activeTab }: AdminContentProps) {
                       <div className="font-medium">{(log.users as Record<string, string>)?.name || (log.users as Record<string, string>)?.username || `#${log.user_id}`}</div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="text-[10px]">
+                      <Badge variant="secondary" className="text-xs">
                         {String(log.event_category)}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={`text-[10px] ${getActivityEventColor(String(log.event_type))}`}>
+                      <Badge className={`text-xs ${getActivityEventColor(String(log.event_type))}`}>
                         {getActivityEventLabel(String(log.event_type))}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-[10px] font-mono text-muted-foreground max-w-[100px] truncate" title={String(log.device_id_hash || '')}>
+                    <TableCell className="text-xs font-mono text-muted-foreground max-w-[100px] truncate" title={String(log.device_id_hash || '')}>
                       {log.device_id_hash ? `${String(log.device_id_hash).slice(0, 8)}...` : '-'}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">{String(log.ip_address || '-')}</TableCell>
-                    <TableCell className="text-[10px] max-w-[160px] truncate text-muted-foreground" title={log.metadata ? JSON.stringify(log.metadata) : ''}>
+                    <TableCell className="text-xs max-w-[160px] truncate text-muted-foreground" title={log.metadata ? JSON.stringify(log.metadata) : ''}>
                       {log.metadata && typeof log.metadata === 'object' ? Object.entries(log.metadata as Record<string, unknown>).map(([k, v]) => `${k}=${v}`).join(', ') || '-' : '-'}
                     </TableCell>
                   </TableRow>

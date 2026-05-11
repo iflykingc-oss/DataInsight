@@ -665,7 +665,7 @@ export function EnhancedLLMAssistant({
                       <p className="text-xs font-medium truncate">{session.title}</p>
                       <p className="text-xs text-muted-foreground truncate">{session.lastMessage}</p>
                     </div>
-                    <Badge variant="outline" className="text-[10px] h-5 shrink-0">
+                    <Badge variant="outline" className="text-xs h-5 shrink-0">
                       {AI_MODES.find(m => m.id === session.mode)?.label}
                     </Badge>
                     <button
@@ -693,7 +693,7 @@ export function EnhancedLLMAssistant({
                 const categories = [...new Set(contextRecommendations.map(r => r.category))];
                 return categories.map(cat => (
                   <div key={cat}>
-                    <p className="text-[10px] text-muted-foreground/70 mb-1 font-medium">{cat}</p>
+                    <p className="text-xs text-muted-foreground/70 mb-1 font-medium">{cat}</p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {contextRecommendations.filter(r => r.category === cat).map((rec, i) => (
                         <Button
@@ -721,7 +721,7 @@ export function EnhancedLLMAssistant({
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
               <p className="text-xs text-muted-foreground">更多操作</p>
-              <Badge variant="outline" className="text-[10px] h-5">
+              <Badge variant="outline" className="text-xs h-5">
                 {currentModeConfig.label}
               </Badge>
             </div>

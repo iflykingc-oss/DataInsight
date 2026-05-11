@@ -339,7 +339,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
 
           <div className="mt-2 flex items-center gap-1 flex-wrap">
             {metric.tags.map(tag => (
-              <span key={tag} className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              <span key={tag} className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                 {tag}
               </span>
             ))}

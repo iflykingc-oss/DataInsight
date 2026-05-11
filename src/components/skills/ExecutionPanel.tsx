@@ -80,9 +80,9 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
       case 'skipped':
         return <AlertCircle className="w-4 h-4 text-yellow-500" />;
       case 'pending':
-        return <Clock className="w-4 h-4 text-gray-400" />;
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-400" />;
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -97,7 +97,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
       case 'low':
         return 'text-blue-600 bg-blue-50 border-blue-200';
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+        return 'text-foreground bg-muted/30 border-border';
     }
   };
 
@@ -128,7 +128,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
 
   return (
     <div className={cn('flex flex-col bg-white rounded-lg border shadow-sm', className)}>
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-lg">
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30 rounded-t-lg">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-500" />
           <span className="font-medium text-sm">
@@ -152,7 +152,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
                   'px-2 py-1 text-xs',
                   detailLevel === level
                     ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                    : 'bg-white text-foreground hover:bg-muted'
                 )}
               >
                 {level === 'summary' ? '简' : level === 'detailed' ? '详' : '全'}
@@ -162,13 +162,13 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-4 px-4 py-2 border-b bg-gray-50/50">
+      <div className="flex items-center gap-4 px-4 py-2 border-b bg-muted/30/50">
         <div className="flex-1">
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
             <span>执行进度</span>
             <span>{completedSteps}/{totalSteps} 步骤</span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
               className={cn(
                 'h-full transition-all duration-300',
@@ -205,7 +205,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
               'flex-1 px-4 py-2 text-sm font-medium transition-colors',
               viewMode === mode
                 ? 'text-blue-600 border-b-2 border-blue-500 bg-blue-50/50'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {mode === 'steps' ? '执行步骤' : mode === 'changes' ? '数据变更' : '数据预览'}
@@ -234,8 +234,8 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
       </div>
 
       {result && result.summary && (
-        <div className="px-4 py-3 border-t bg-gray-50">
-          <p className="text-sm text-gray-700">{result.summary}</p>
+        <div className="px-4 py-3 border-t bg-muted/30">
+          <p className="text-sm text-foreground">{result.summary}</p>
           {result.partialErrors && result.partialErrors.length > 0 && (
             <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
               <p className="text-xs text-red-600 font-medium">部分错误：</p>
@@ -252,7 +252,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
         </div>
       )}
 
-      <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50 rounded-b-lg">
+      <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/30 rounded-b-lg">
         <div className="flex items-center gap-2">
           {hasWarnings && (
             <span className="flex items-center gap-1 text-xs text-yellow-600">
@@ -266,7 +266,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
           {onUndo && result && (
             <button
               onClick={onUndo}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded border transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-foreground hover:text-foreground hover:bg-muted rounded border transition-colors"
             >
               <RotateCcw className="w-3 h-3" />
               撤销
@@ -299,7 +299,7 @@ const ExecutionStepsView: React.FC<ExecutionStepsViewProps> = ({
 }) => {
   if (logs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
         <Clock className="w-8 h-8 mb-2" />
         <p className="text-sm">暂无执行记录</p>
       </div>
@@ -315,17 +315,17 @@ const ExecutionStepsView: React.FC<ExecutionStepsViewProps> = ({
             'border rounded-lg overflow-hidden transition-colors',
             log.status === 'error' ? 'border-red-200 bg-red-50' :
             log.status === 'done' ? 'border-green-200 bg-green-50' :
-            'border-gray-200 bg-white'
+            'border-border bg-white'
           )}
         >
           <div
-            className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100/50"
+            className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/50"
             onClick={() => onToggleExpand(log.id)}
           >
             {expandedSteps.has(log.id) ? (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
             ) : (
-              <ChevronRight className="w-4 h-4 text-gray-400" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             )}
 
             {getStatusIcon(log.status)}
@@ -335,7 +335,7 @@ const ExecutionStepsView: React.FC<ExecutionStepsViewProps> = ({
             </span>
 
             {log.duration && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 {log.duration}ms
               </span>
             )}
@@ -351,14 +351,14 @@ const ExecutionStepsView: React.FC<ExecutionStepsViewProps> = ({
             <div className="px-4 py-3 bg-white border-t">
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-gray-500">操作：</span>
-                  <span className="text-gray-800">{log.action}</span>
+                  <span className="text-muted-foreground">操作：</span>
+                  <span className="text-foreground">{log.action}</span>
                 </div>
 
                 {log.detail && (
                   <div>
-                    <span className="text-gray-500">详情：</span>
-                    <span className="text-gray-800">{log.detail}</span>
+                    <span className="text-muted-foreground">详情：</span>
+                    <span className="text-foreground">{log.detail}</span>
                   </div>
                 )}
 
@@ -377,9 +377,9 @@ const ExecutionStepsView: React.FC<ExecutionStepsViewProps> = ({
                 )}
 
                 {detailLevel === 'verbose' && log.dataSnapshot && (
-                  <div className="p-2 bg-gray-50 rounded border border-gray-200">
-                    <span className="text-gray-500">数据快照：</span>
-                    <code className="text-xs text-gray-600 block mt-1 whitespace-pre-wrap">
+                  <div className="p-2 bg-muted/30 rounded border border-border">
+                    <span className="text-muted-foreground">数据快照：</span>
+                    <code className="text-xs text-foreground block mt-1 whitespace-pre-wrap">
                       {log.dataSnapshot}
                     </code>
                   </div>
@@ -400,7 +400,7 @@ interface ChangesViewProps {
 const ChangesView: React.FC<ChangesViewProps> = ({ changes }) => {
   if (!changes || changes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+      <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
         <CheckCircle className="w-8 h-8 mb-2" />
         <p className="text-sm">暂无数据变更</p>
       </div>
@@ -420,7 +420,7 @@ const ChangesView: React.FC<ChangesViewProps> = ({ changes }) => {
               change.type === 'rows' ? 'bg-purple-100 text-purple-700' :
               change.type === 'columns' ? 'bg-blue-100 text-blue-700' :
               change.type === 'cells' ? 'bg-green-100 text-green-700' :
-              'bg-gray-100 text-gray-700'
+              'bg-muted text-foreground'
             )}>
               {change.type === 'rows' ? '行' :
                change.type === 'columns' ? '列' :
@@ -430,17 +430,17 @@ const ChangesView: React.FC<ChangesViewProps> = ({ changes }) => {
           </div>
 
           <div className="flex items-center gap-4 text-sm">
-            <span className="text-gray-500">
+            <span className="text-muted-foreground">
               变更前：<span className="text-red-600 font-medium">{change.before}</span>
             </span>
-            <span className="text-gray-300">→</span>
-            <span className="text-gray-500">
+            <span className="text-muted-foreground/50">→</span>
+            <span className="text-muted-foreground">
               变更后：<span className="text-green-600 font-medium">{change.after}</span>
             </span>
           </div>
 
           {change.affectedRows && change.affectedRows.length > 0 && (
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-xs text-muted-foreground">
               影响行数：{change.affectedRows.length} 行
               {change.affectedRows.length <= 5 && (
                 <span className="ml-2">
@@ -451,7 +451,7 @@ const ChangesView: React.FC<ChangesViewProps> = ({ changes }) => {
           )}
 
           {change.affectedCols && change.affectedCols.length > 0 && (
-            <div className="mt-1 text-xs text-gray-500">
+            <div className="mt-1 text-xs text-muted-foreground">
               影响列：{change.affectedCols.join(', ')}
             </div>
           )}
@@ -473,11 +473,11 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
     <div>
       <div className="flex items-center gap-2 mb-3">
         <Info className="w-4 h-4 text-blue-500" />
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-foreground">
           数据预览：{data.rows.length} 行 × {data.headers.length} 列
         </span>
         {hasMoreRows && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground">
             (显示前 5 行)
           </span>
         )}
@@ -485,12 +485,12 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
 
       <div className="overflow-auto border rounded-lg">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-muted/30">
             <tr>
               {data.headers.map((header) => (
                 <th
                   key={header}
-                  className="px-3 py-2 text-left font-medium text-gray-700 border-b"
+                  className="px-3 py-2 text-left font-medium text-foreground border-b"
                 >
                   {header}
                 </th>
@@ -499,11 +499,11 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
           </thead>
           <tbody>
             {previewRows.map((row, rowIndex) => (
-              <tr key={rowIndex} className="hover:bg-gray-50">
+              <tr key={rowIndex} className="hover:bg-muted/30">
                 {data.headers.map((header) => (
                   <td
                     key={header}
-                    className="px-3 py-2 text-gray-600 border-b"
+                    className="px-3 py-2 text-foreground border-b"
                   >
                     {String(row[header] ?? '')}
                   </td>
@@ -528,7 +528,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ onExport }) => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded border transition-colors"
+        className="flex items-center gap-1 px-3 py-1.5 text-sm text-foreground hover:text-foreground hover:bg-muted rounded border transition-colors"
       >
         导出
         <ChevronDown className="w-3 h-3" />
@@ -543,19 +543,19 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ onExport }) => {
           <div className="absolute right-0 mt-1 w-32 bg-white rounded border shadow-lg z-20">
             <button
               onClick={() => { onExport('csv'); setIsOpen(false); }}
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 rounded-t"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-t"
             >
               CSV 格式
             </button>
             <button
               onClick={() => { onExport('xlsx'); setIsOpen(false); }}
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-muted"
             >
               Excel 格式
             </button>
             <button
               onClick={() => { onExport('json'); setIsOpen(false); }}
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 rounded-b"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-muted rounded-b"
             >
               JSON 格式
             </button>
@@ -592,7 +592,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
   return (
     <div className={cn('bg-white rounded-lg border shadow-lg', className)}>
-      <div className="px-4 py-3 border-b bg-gray-50 rounded-t-lg">
+      <div className="px-4 py-3 border-b bg-muted/30 rounded-t-lg">
         <div className="flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-yellow-500" />
           <span className="font-medium">确认执行 {skill.name}</span>
@@ -601,15 +601,15 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
       <div className="p-4 space-y-4">
         <div>
-          <p className="text-sm text-gray-600 mb-2">{skill.description}</p>
+          <p className="text-sm text-foreground mb-2">{skill.description}</p>
         </div>
 
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="p-3 bg-muted/30 rounded-lg">
           <div className="text-sm font-medium mb-2">执行步骤（共 {skill.execution.steps.length} 步）：</div>
-          <ul className="space-y-1 text-sm text-gray-600">
+          <ul className="space-y-1 text-sm text-foreground">
             {skill.execution.steps.map((step, index) => (
               <li key={step.id} className="flex items-center gap-2">
-                <span className="text-gray-400">{index + 1}.</span>
+                <span className="text-muted-foreground">{index + 1}.</span>
                 <span>{step.name}</span>
                 {step.estimatedImpact === 'high' && (
                   <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded">
@@ -636,16 +636,16 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         )}
 
         {data && (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             当前数据：{data.rows.length} 行 × {data.headers.length} 列
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-2 px-4 py-3 border-t bg-gray-50 rounded-b-lg">
+      <div className="flex items-center justify-end gap-2 px-4 py-3 border-t bg-muted/30 rounded-b-lg">
         <button
           onClick={onCancel}
-          className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded border transition-colors"
+          className="px-4 py-2 text-sm text-foreground hover:text-foreground hover:bg-muted rounded border transition-colors"
         >
           取消
         </button>
@@ -691,7 +691,7 @@ export const SkillCard: React.FC<SkillCardProps> = ({
         'p-4 rounded-lg border cursor-pointer transition-all',
         isSelected
           ? 'border-blue-500 bg-blue-50 shadow-md'
-          : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm',
+          : 'border-border bg-white hover:border-blue-300 hover:shadow-sm',
         className
       )}
     >
@@ -706,12 +706,12 @@ export const SkillCard: React.FC<SkillCardProps> = ({
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{skill.description}</p>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{skill.description}</p>
           <div className="flex items-center gap-2 mt-2">
             <span className={cn('px-2 py-0.5 text-xs rounded', categoryColors[skill.category])}>
               {skill.category}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-muted-foreground">
               {skill.execution.steps.length} 步骤
             </span>
           </div>
@@ -778,12 +778,12 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
         <div className="flex-1">
           <p className="font-medium text-sm">{title}</p>
           {message && (
-            <p className="text-sm text-gray-600 mt-1">{message}</p>
+            <p className="text-sm text-foreground mt-1">{message}</p>
           )}
         </div>
         <button
           onClick={() => { setIsVisible(false); onClose?.(); }}
-          className="text-gray-400 hover:text-gray-600"
+          className="text-muted-foreground hover:text-foreground"
         >
           ×
         </button>

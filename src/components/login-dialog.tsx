@@ -438,7 +438,7 @@ export function LoginDialog() {
                 autoComplete="off"
                 minLength={2}
               />
-              <p className="text-[11px] text-muted-foreground">答案不区分大小写，请牢记此答案以便日后重置密码</p>
+              <p className="text-xs text-muted-foreground">答案不区分大小写，请牢记此答案以便日后重置密码</p>
             </div>
 
             <div className="space-y-2">
@@ -612,7 +612,7 @@ export function LoginDialog() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-[11px] text-muted-foreground">密码至少8位字符，同时包含字母和数字</p>
+                <p className="text-xs text-muted-foreground">密码至少8位字符，同时包含字母和数字</p>
               </div>
             )}
 

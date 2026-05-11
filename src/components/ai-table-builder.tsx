@@ -137,7 +137,7 @@ const CATEGORIES = [
   { id: 'admin', name: '办公行政', icon: Building2, color: 'text-slate-600' },
   { id: 'marketing', name: '市场营销', icon: Target, color: 'text-pink-600' },
   { id: 'supply', name: '供应链物流', icon: Layers, color: 'text-amber-600' },
-  { id: 'manufacturing', name: '制造业', icon: Zap, color: 'text-gray-600' },
+  { id: 'manufacturing', name: '制造业', icon: Zap, color: 'text-foreground' },
   { id: 'realty', name: '地产物业', icon: Building2, color: 'text-stone-600' },
   { id: 'hotel', name: '酒店旅游', icon: Layers, color: 'text-cyan-600' },
   { id: 'media', name: '媒体娱乐', icon: Target, color: 'text-fuchsia-600' },

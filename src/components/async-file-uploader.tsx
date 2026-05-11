@@ -460,19 +460,19 @@ export function FileUploader({
 
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
-    if (ext === 'txt') return <FileText className="w-5 h-5 text-blue-500" />;
-    return <FileSpreadsheet className="w-5 h-5 text-green-600" />;
+    if (ext === 'txt') return <FileText className="w-5 h-5 text-primary" />;
+    return <FileSpreadsheet className="w-5 h-5 text-success" />;
   };
 
   const getStatusBadge = (status: UploadFile['status']) => {
     const statusMap: Record<string, { label: string; color: string }> = {
-      pending: { label: '等待中', color: 'bg-gray-100 text-gray-600' },
-      checking: { label: '预检中', color: 'bg-purple-100 text-purple-600' },
-      parsing: { label: '解析中', color: 'bg-blue-100 text-blue-600' },
+      pending: { label: '等待中', color: 'bg-muted text-foreground' },
+      checking: { label: '预检中', color: 'bg-chart-4/10 text-chart-4' },
+      parsing: { label: '解析中', color: 'bg-primary/10 text-primary' },
       analyzing: { label: '分析中', color: 'bg-cyan-100 text-cyan-600' },
-      completed: { label: '已完成', color: 'bg-green-100 text-green-600' },
+      completed: { label: '已完成', color: 'bg-success/10 text-success' },
       cached: { label: '缓存命中', color: 'bg-emerald-100 text-emerald-600' },
-      error: { label: '有问题', color: 'bg-red-100 text-red-600' }
+      error: { label: '有问题', color: 'bg-destructive/10 text-destructive' }
     };
     const { label, color } = statusMap[status] || statusMap.pending;
     return <Badge className={cn('text-xs', color)}>{label}</Badge>;
@@ -508,7 +508,7 @@ export function FileUploader({
           'relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200',
           dragActive
             ? 'border-primary bg-primary/5 shadow-lg'
-            : 'border-gray-300 hover:border-primary hover:bg-primary/5'
+            : 'border-border hover:border-primary hover:bg-primary/5'
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -527,25 +527,25 @@ export function FileUploader({
         <div className="flex flex-col items-center gap-4">
           <div className={cn(
             'p-4 rounded-full transition-all duration-200',
-            dragActive ? 'bg-primary/10 scale-110' : 'bg-gray-100'
+            dragActive ? 'bg-primary/10 scale-110' : 'bg-muted'
           )}>
             <Upload className={cn(
               'w-8 h-8 transition-colors',
-              dragActive ? 'text-primary' : 'text-gray-500'
+              dragActive ? 'text-primary' : 'text-muted-foreground'
             )} />
           </div>
 
           <div>
-            <p className="text-lg font-medium text-gray-700">
+            <p className="text-lg font-medium text-foreground">
               {dragActive ? '松开手指上传文件' : '拖拽文件到此处，或点击上传'}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               支持 Excel (.xlsx/.xls)、CSV、TXT 格式，{multiple ? '可批量上传，' : ''}单文件最大 {maxSize}MB
             </p>
           </div>
 
           {enableAIHealing && (
-            <div className="flex items-center gap-2 mt-2 text-xs text-purple-600 bg-purple-50 px-3 py-1.5 rounded-full">
+            <div className="flex items-center gap-2 mt-2 text-xs text-primary bg-primary/8 px-3 py-1.5 rounded-full">
               <Sparkles className="w-3 h-3" />
               <span>支持 AI 智能修复表格问题</span>
             </div>
@@ -558,34 +558,34 @@ export function FileUploader({
           {files.map((uploadFile) => (
             <div
               key={uploadFile.id}
-              className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              className="bg-white border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <div className="p-2 bg-gray-50 rounded-lg">
+                  <div className="p-2 bg-muted/30 rounded-lg">
                     {getFileIcon(uploadFile.file.name)}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-700 truncate">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {uploadFile.file.name}
                       </p>
                       {getStatusBadge(uploadFile.status)}
                       {uploadFile.cacheHit && (
-                        <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200">
+                        <Badge className="text-xs bg-success/10 text-success border-success/20">
                           极速加载
                         </Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {formatFileSize(uploadFile.file.size)}
                       </span>
                       {uploadFile.validationResult && (
                         <span className={cn(
                           'text-xs',
-                          uploadFile.validationResult.isValid ? 'text-green-600' : 'text-red-600'
+                          uploadFile.validationResult.isValid ? 'text-success' : 'text-destructive'
                         )}>
                           {uploadFile.validationResult.issues.filter(i => i.type === 'error').length > 0
                             ? `${uploadFile.validationResult.issues.filter(i => i.type === 'error').length} 个问题待处理`
@@ -622,16 +622,16 @@ export function FileUploader({
 
                   <button
                     onClick={() => removeFile(uploadFile.id)}
-                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-1.5 hover:bg-muted rounded-lg transition-colors"
                   >
-                    <Trash2 className="w-4 h-4 text-gray-500" />
+                    <Trash2 className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
               </div>
 
               {(uploadFile.status === 'checking' || uploadFile.status === 'parsing' || uploadFile.status === 'analyzing') && (
                 <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                     <span className="flex items-center gap-1">
                       <Loader2 className="w-3 h-3 animate-spin" />
                       {getProgressText(uploadFile)}
@@ -725,30 +725,30 @@ export function FileUploader({
 
               {selectedFileForCheck.validationResult.issues.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-700">问题详情</h4>
+                  <h4 className="text-sm font-medium text-foreground">问题详情</h4>
                   {selectedFileForCheck.validationResult.issues.map((issue, idx) => (
                     <div
                       key={idx}
                       className={cn(
                         'p-3 rounded-lg border',
-                        issue.type === 'error' ? 'bg-red-50 border-red-100' :
-                          issue.type === 'warning' ? 'bg-yellow-50 border-yellow-100' :
-                            'bg-blue-50 border-blue-100'
+                        issue.type === 'error' ? 'bg-destructive/5 border-destructive/10' :
+                          issue.type === 'warning' ? 'bg-warning/5 border-warning/10' :
+                            'bg-primary/5 border-primary/10'
                       )}
                     >
                       <div className="flex items-start gap-2">
                         <span className={cn(
                           'px-1.5 py-0.5 rounded text-xs font-medium',
-                          issue.type === 'error' ? 'bg-red-100 text-red-700' :
-                            issue.type === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-blue-100 text-blue-700'
+                          issue.type === 'error' ? 'bg-destructive/10 text-destructive' :
+                            issue.type === 'warning' ? 'bg-warning/10 text-warning' :
+                              'bg-primary/10 text-primary'
                         )}>
                           {issue.type === 'error' ? '错误' : issue.type === 'warning' ? '警告' : '提示'}
                         </span>
                         <div>
-                          <p className="text-sm font-medium text-gray-800">{issue.message}</p>
+                          <p className="text-sm font-medium text-foreground">{issue.message}</p>
                           {issue.suggestion && (
-                            <p className="text-xs text-gray-600 mt-1">{issue.suggestion}</p>
+                            <p className="text-xs text-foreground mt-1">{issue.suggestion}</p>
                           )}
                         </div>
                       </div>
@@ -758,7 +758,7 @@ export function FileUploader({
               )}
 
               {enableAIHealing && selectedFileForCheck.validationResult.suggestedFix && (
-                <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
+                <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
                   <div className="flex items-start gap-3">
                     <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
                     <div>

@@ -66,7 +66,7 @@ const BUSINESS_SCENARIOS = [
   { id: 'marketing', label: '市场营销', icon: '📢', color: 'bg-pink-100 text-pink-700', keywords: ['营销', '推广', '广告', 'ROI', '曝光'] },
   { id: 'supply_chain', label: '供应链/库存', icon: '📦', color: 'bg-amber-100 text-amber-700', keywords: ['库存', '周转', '补货', '物流'] },
   { id: 'education', label: '教育/培训', icon: '🎓', color: 'bg-cyan-100 text-cyan-700', keywords: ['学员', '课程', '续班', '师资'] },
-  { id: 'general', label: '通用业务', icon: '📊', color: 'bg-gray-100 text-gray-700', keywords: [] },
+  { id: 'general', label: '通用业务', icon: '📊', color: 'bg-muted text-foreground', keywords: [] },
 ];
 
 // 指标类别配置
@@ -401,7 +401,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
         <CardContent className="space-y-4">
           {/* 业务场景快速选择 */}
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
+            <label className="text-sm font-medium text-foreground mb-2 block">
               选择业务场景（可选）
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
@@ -412,7 +412,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                   className={`px-3 py-1.5 rounded-full text-sm transition-all ${
                     businessScenario === scenario.id
                       ? `${scenario.color} ring-2 ring-offset-1 ring-gray-300`
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      : 'bg-muted/30 text-foreground hover:bg-muted'
                   }`}
                 >
                   <span className="mr-1">{scenario.icon}</span>
@@ -430,7 +430,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
 
           {/* 业务需求描述 */}
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">
+            <label className="text-sm font-medium text-foreground mb-2 block">
               描述您的业务需求（可选，越详细越精准）
             </label>
             <div className="flex gap-2">
@@ -455,7 +455,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                 )}
               </Button>
             </div>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               示例：分析用户留存和转化、分析销售业绩、分析营销投放ROI...
             </p>
           </div>
@@ -466,7 +466,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
               <button
                 key={hint}
                 onClick={() => setCustomDescription(hint)}
-                className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                className="text-xs px-2 py-1 bg-muted hover:bg-muted rounded transition-colors"
               >
                 {hint}
               </button>
@@ -505,14 +505,14 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                 {Object.entries(groupedMetrics).map(([cat, metrics]) => {
                   const config = METRIC_CATEGORIES[cat as keyof typeof METRIC_CATEGORIES];
                   return (
-                    <div key={cat} className="bg-gray-50 rounded-lg p-3">
+                    <div key={cat} className="bg-muted/30 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs px-2 py-0.5 rounded ${config?.color || 'bg-gray-100 text-gray-600'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded ${config?.color || 'bg-muted text-foreground'}`}>
                           {config?.label || cat}
                         </span>
                         <span className="text-lg font-bold">{metrics.length}</span>
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {cat === 'kpi' ? '核心KPI指标' :
                          cat === 'process' ? '业务过程指标' :
                          cat === 'composite' ? '复合计算指标' : '趋势对比指标'}
@@ -543,7 +543,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                       <div key={cat} className="space-y-2">
                         <button
                           onClick={() => toggleCategory(cat)}
-                          className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                          className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-foreground"
                         >
                           {expandedCategories[cat] ? (
                             <ChevronUp className="w-4 h-4" />
@@ -608,14 +608,14 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                   {savedMetrics.map((metric, idx) => {
                     const config = METRIC_CATEGORIES[metric.category as keyof typeof METRIC_CATEGORIES];
                     return (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div key={idx} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                         <div className="flex items-center gap-3">
                           <Badge variant="outline" className={`text-xs ${config?.color || ''}`}>
                             {config?.label}
                           </Badge>
                           <div>
                             <p className="text-sm font-medium">{metric.name}</p>
-                            <p className="text-xs text-gray-500 font-mono">{metric.expression}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{metric.expression}</p>
                           </div>
                         </div>
                         <div className="flex gap-1">
@@ -641,7 +641,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Info className="w-5 h-5 text-gray-500" />
+              <Info className="w-5 h-5 text-muted-foreground" />
               可用字段参考
             </CardTitle>
           </CardHeader>
@@ -650,7 +650,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
               {data.headers.map((header, idx) => {
                 const stats = fieldStats?.find(s => s.field === header);
                 return (
-                  <div key={idx} className="flex items-center gap-2 p-2 bg-gray-50 rounded text-xs">
+                  <div key={idx} className="flex items-center gap-2 p-2 bg-muted/30 rounded text-xs">
                     <span className="font-mono font-medium">{header}</span>
                     <Badge variant="outline" className="text-xs">
                       {stats?.type === 'id' ? 'ID' : stats?.type === 'number' ? '数值' : stats?.type === 'date' ? '日期' : '文本'}
@@ -686,22 +686,22 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
             <div className="bg-gradient-to-r from-muted/50 to-muted rounded-lg p-4 space-y-2">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">计算公式：</span>
+                  <span className="text-muted-foreground">计算公式：</span>
                   <code className="ml-1 bg-background px-2 py-0.5 rounded text-primary">{selectedMetric.expression}</code>
                 </div>
                 <div>
-                  <span className="text-gray-500">类别：</span>
+                  <span className="text-muted-foreground">类别：</span>
                   <Badge variant="outline" className="ml-1 text-xs">
                     {METRIC_CATEGORIES[selectedMetric.category as keyof typeof METRIC_CATEGORIES]?.label}
                   </Badge>
                 </div>
               </div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-foreground">
                 <span className="font-medium">业务含义：</span>
                 {selectedMetric.businessMeaning || selectedMetric.description}
               </p>
               {selectedMetric.usageSuggestion && (
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-foreground">
                   <span className="font-medium">使用建议：</span>
                   {selectedMetric.usageSuggestion}
                 </p>
@@ -710,7 +710,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
           )}
 
           {/* 对话历史 */}
-          <ScrollArea className="flex-1 min-h-[200px] max-h-[300px] border rounded-lg p-3 bg-gray-50">
+          <ScrollArea className="flex-1 min-h-[200px] max-h-[300px] border rounded-lg p-3 bg-muted/30">
             <div className="space-y-3">
               {insightMessages.map((msg, idx) => (
                 <div
@@ -721,7 +721,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                     className={`max-w-[85%] rounded-lg p-3 text-sm whitespace-pre-wrap ${
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-white border text-gray-800'
+                        : 'bg-white border text-foreground'
                     }`}
                   >
                     {msg.content}
@@ -730,7 +730,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
               ))}
               {isAnalyzing && (
                 <div className="flex justify-start">
-                  <div className="bg-white border rounded-lg p-3 text-sm text-gray-500 flex items-center gap-2">
+                  <div className="bg-white border rounded-lg p-3 text-sm text-muted-foreground flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     AI 正在分析...
                   </div>
@@ -784,7 +784,7 @@ function MetricCard({
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-            config?.color || 'bg-gray-100'
+            config?.color || 'bg-muted'
           }`}>
             <Icon className="w-5 h-5" />
           </div>
@@ -795,7 +795,7 @@ function MetricCard({
                 {metric.expression}
               </code>
             </div>
-            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
               {metric.businessMeaning || metric.description}
             </p>
             {metric.businessValue && (
@@ -813,7 +813,7 @@ function MetricCard({
             <div className="flex items-center gap-1">
               {calculation.trend === 'up' && <TrendingUp className="w-4 h-4 text-red-500" />}
               {calculation.trend === 'down' && <TrendingDown className="w-4 h-4 text-green-500" />}
-              {calculation.trend === 'stable' && <Activity className="w-4 h-4 text-gray-400" />}
+              {calculation.trend === 'stable' && <Activity className="w-4 h-4 text-muted-foreground" />}
             </div>
           </div>
           <div className="flex gap-1">
@@ -844,7 +844,7 @@ function MetricCard({
           {metric.dataQuality === '中' && <AlertCircle className="w-3 h-3" />}
           {metric.dataQuality === '低' && <AlertCircle className="w-3 h-3" />}
           数据质量: {metric.dataQuality}
-          {metric.dataQualityReason && <span className="text-gray-400">({metric.dataQualityReason})</span>}
+          {metric.dataQualityReason && <span className="text-muted-foreground">({metric.dataQualityReason})</span>}
         </div>
       )}
     </div>

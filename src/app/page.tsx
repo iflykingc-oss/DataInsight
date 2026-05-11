@@ -540,78 +540,80 @@ export default function HomePage() {
       );
     }
 
-    // 首页（工作台）- 始终展示所有功能卡片
+    // 首页（工作台）- 规范: 页面外层24px边距, 模块间16px分割
     if (viewMode === 'home') {
       const hasData = !!parsedData;
       return (
-        <div className="w-full space-y-8">
-          {/* 数据获取入口：3种平行的数据接入方式 */}
-          <div className="space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">获取数据</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* 上传文件 */}
-              <Card className={cn(
-                'border transition-all hover:shadow-sm cursor-pointer',
-                hasData ? 'bg-emerald-500/5 border-emerald-500/20' : 'border-dashed border-border hover:border-primary/40'
+        <div className="w-full space-y-4">
+          {/* 数据获取入口 - 规范: 16px模块标题, 卡片6px圆角, 8px间距 */}
+          <div className="space-y-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">获取数据</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+              {/* 上传文件 - 规范: 图标统一主色系, 4px圆角标签 */}
+              <div className={cn(
+                'rounded-sm border transition-all hover:shadow-float cursor-pointer',
+                hasData ? 'bg-success/4 border-success/20' : 'border-dashed border-border hover:border-primary/40'
               )}>
-                <CardContent className="py-5">
+                <div className="py-4 px-4">
                   {hasData ? (
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-emerald-500/10 rounded-lg"><FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /></div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-sm bg-success/8 flex items-center justify-center">
+                          <FileSpreadsheet className="w-4 h-4 text-success" />
+                        </div>
                         <div>
                           <p className="font-medium text-sm">{parsedData.fileName}</p>
                           <p className="text-xs text-muted-foreground">{parsedData?.rowCount?.toLocaleString() ?? '0'} 行 &middot; {parsedData?.columnCount ?? 0} 列</p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleGoHome} className="text-destructive/70 hover:text-destructive hover:bg-destructive/10">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      <button onClick={handleGoHome} className="h-6 w-6 rounded-sm flex items-center justify-center text-destructive/60 hover:text-destructive hover:bg-destructive/8 transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="p-2 bg-primary/10 rounded-lg">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1">
+                        <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
                           <Upload className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="font-medium text-sm">上传文件</span>
+                        <span className="text-sm font-semibold">上传文件</span>
                       </div>
                       <div className="w-full"><AsyncFileUploader onFileUpload={handleFileUpload} /></div>
-                      <p className="text-xs text-muted-foreground/70">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
+                      <p className="text-xs text-muted-foreground">支持 Excel (.xlsx/.xls) 和 CSV 文件，最大 50MB</p>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {/* 连接数据源 */}
-              <Card className="border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all hover:shadow-sm" onClick={() => setViewMode('data-source')}>
-                <CardContent className="py-5 flex flex-col justify-center h-full">
-                  <div className="flex items-center gap-2.5 mb-2">
-                    <div className="p-2 bg-blue-500/10 rounded-lg">
-                      <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              {/* 连接数据源 - 规范: 图标统一主色 */}
+              <div className="rounded-sm border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all hover:shadow-float" onClick={() => setViewMode('data-source')}>
+                <div className="py-4 px-4 flex flex-col justify-center h-full">
+                  <div className="flex items-center gap-1 mb-2">
+                    <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
+                      <Database className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="font-medium text-sm">连接数据源</span>
+                    <span className="text-sm font-semibold">连接数据源</span>
                   </div>
-                  <p className="text-xs text-muted-foreground/70 ml-[42px]">连接数据库或API，实时同步数据</p>
-                </CardContent>
-              </Card>
+                  <p className="text-xs text-muted-foreground ml-7">连接数据库或API，实时同步数据</p>
+                </div>
+              </div>
 
-              {/* AI生成表格 */}
-              <Card className="border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all hover:shadow-sm" onClick={() => {
+              {/* AI生成表格 - 规范: AI标签4px圆角, 12px字号 */}
+              <div className="rounded-sm border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all hover:shadow-float" onClick={() => {
                 if (!isLoggedIn) { setLoginDialogOpen(true); return; }
                 setViewMode('ai-table-builder');
               }}>
-                <CardContent className="py-5 flex flex-col justify-center h-full">
-                  <div className="flex items-center gap-2.5 mb-2">
-                    <div className="p-2 bg-violet-500/10 rounded-lg">
-                      <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                <div className="py-4 px-4 flex flex-col justify-center h-full">
+                  <div className="flex items-center gap-1 mb-2">
+                    <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="font-medium text-sm">AI 生成表格</span>
-                    <Badge variant="secondary" className="text-[9px] h-4 px-1.5 bg-primary/10 text-primary">AI</Badge>
+                    <span className="text-sm font-semibold">AI 生成表格</span>
+                    <span className="text-xs font-semibold px-1 rounded-sm bg-primary/8 text-primary leading-5">AI</span>
                   </div>
-                  <p className="text-xs text-muted-foreground/70 ml-[42px]">描述你的需求，AI 自动创建表格模板</p>
-                </CardContent>
-              </Card>
+                  <p className="text-xs text-muted-foreground ml-7">描述你的需求，AI 自动创建表格模板</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -631,17 +633,19 @@ export default function HomePage() {
       );
     }
 
-    // 需要数据但无数据的视图（这些视图没有自定义空状态，使用通用提示）
+    // 需要数据但无数据的视图 - 规范: 居中对齐, 20px主标题, 14px正文
     const needsDataViews: ViewMode[] = ['data-table', 'data-prep', 'insights', 'visualization', 'alerting'];
     if (needsDataViews.includes(viewMode) && !parsedData) {
       return (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
-            <Upload className="w-10 h-10 text-muted-foreground/50" />
+        <div className="flex flex-col items-center justify-center py-24">
+          <div className="w-12 h-12 bg-muted/50 rounded-sm flex items-center justify-center mb-4">
+            <Upload className="w-6 h-6 text-muted-foreground/40" />
           </div>
-          <h3 className="text-lg font-medium text-muted-foreground mb-2">请先上传数据</h3>
-          <p className="text-sm text-muted-foreground/60 mb-6">此功能需要加载数据后才能使用</p>
-          <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+          <h3 className="text-xl font-bold text-foreground mb-2">请先上传数据</h3>
+          <p className="text-sm text-muted-foreground mb-4">此功能需要加载数据后才能使用</p>
+          <button onClick={() => setViewMode('home')} className="h-8 px-4 rounded-sm bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+            去上传数据
+          </button>
         </div>
       );
     }
@@ -1317,51 +1321,51 @@ export default function HomePage() {
 
       {/* ===== 右侧主区域 ===== */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* 顶部栏 */}
-        <header className="h-12 bg-card/80 backdrop-blur-sm border-b border-border flex items-center justify-between px-5 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            {/* 面包屑 */}
+        {/* 顶部栏 - 规范: 高度40px, 边框#E5E6EB, 左右24px边距 */}
+        <header className="h-10 bg-card/80 backdrop-blur-sm border-b border-border flex items-center justify-between px-6 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            {/* 面包屑 - 规范: 12px辅助文字, 14px当前项 */}
             <button
               onClick={() => setViewMode('home')}
-              className="text-sm text-muted-foreground/60 hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               工作台
             </button>
             {viewMode !== 'home' && (
               <>
-                <span className="text-muted-foreground/30">/</span>
+                <span className="text-muted-foreground/30 text-xs">/</span>
                 <span className="text-sm font-medium text-foreground">{getCurrentViewTitle()}</span>
               </>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            {/* 模型未配置警告 */}
+            {/* 模型未配置警告 - 规范: 24px高度标签, 4px圆角 */}
             {!activeModelConfig && (
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-primary-tint text-primary border border-primary/15 hover:bg-primary/12 transition-colors cursor-pointer"
+                className="flex items-center gap-1 text-xs h-6 px-2 rounded-sm bg-primary/8 text-primary border border-primary/15 hover:bg-primary/12 transition-colors cursor-pointer"
               >
                 <AlertCircle className="w-3 h-3" />
                 配置AI模型
               </button>
             )}
-            {/* 数据状态指示 */}
+            {/* 数据状态指示 - 规范: 24px标签, 12px文字 */}
             {parsedData && (
-              <Badge variant="secondary" className="flex items-center gap-1 text-xs cursor-pointer hover:bg-muted" onClick={handleGoHome}>
+              <span className="flex items-center gap-1 text-xs h-6 px-2 rounded-sm bg-muted cursor-pointer hover:bg-muted/80 transition-colors" onClick={handleGoHome}>
                 <CheckCircle className="w-3 h-3 text-primary" />
                 {parsedData.fileName}
-                <span className="text-muted-foreground/50 ml-0.5">{parsedData.rowCount?.toLocaleString() ?? '0'}行</span>
-              </Badge>
+                <span className="text-muted-foreground ml-0.5">{parsedData.rowCount?.toLocaleString() ?? '0'}行</span>
+              </span>
             )}
 
             <Separator orientation="vertical" className="h-4 mx-0.5" />
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSettings(true)}>
-                  <Settings className="w-3.5 h-3.5 text-muted-foreground" />
-                </Button>
+                <button className="h-7 w-7 rounded-sm flex items-center justify-center hover:bg-muted transition-colors" onClick={() => setShowSettings(true)}>
+                  <Settings className="w-4 h-4 text-muted-foreground" />
+                </button>
               </TooltipTrigger>
               <TooltipContent>设置</TooltipContent>
             </Tooltip>
@@ -1373,8 +1377,8 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* 主内容区 */}
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* 主内容区 - 规范: 左右24px, 上下20px边距 */}
+        <main className="flex-1 overflow-y-auto px-6 py-5">
           {renderMainContent()}
         </main>
       </div>

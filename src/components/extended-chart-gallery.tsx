@@ -133,7 +133,7 @@ export function ExtendedChartGallery({ data }: ExtendedChartGalleryProps) {
             onClick={() => setSelectedChart(chart.id)}
           >
             <span className="text-lg">{chart.icon}</span>
-            <span className="text-[10px]">{chart.name}</span>
+            <span className="text-xs">{chart.name}</span>
           </Button>
         ))}
       </div>

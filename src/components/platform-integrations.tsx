@@ -168,7 +168,7 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           <div className="space-y-2">
             <Label htmlFor="feishu-token">多维表格 App Token</Label>
             <Input id="feishu-token" placeholder="BxxxxxxxxxxRxxxx" value={appToken} onChange={e => setAppToken(e.target.value)} />
-            <p className="text-xs text-gray-500">在飞书多维表格 URL 中获取</p>
+            <p className="text-xs text-muted-foreground">在飞书多维表格 URL 中获取</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="feishu-tableid">数据表 ID</Label>
@@ -219,11 +219,11 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
       <TabsContent value="guide" className="space-y-4">
         <div className="space-y-4">
           {guideSteps.map(item => (
-            <div key={item.step} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
               <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">{item.step}</div>
               <div className="flex-1">
                 <h4 className="font-medium">{item.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">{item.desc}</p>
+                <p className="text-sm text-foreground mt-1">{item.desc}</p>
                 {item.link && (
                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-blue-500 hover:underline mt-2">
                     前往飞书开放平台 <ExternalLink className="w-3 h-3" />
@@ -231,7 +231,7 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
                 )}
                 {item.perms && (
                   <div className="mt-2">
-                    <p className="text-xs text-gray-500 mb-1">所需权限：</p>
+                    <p className="text-xs text-muted-foreground mb-1">所需权限：</p>
                     <div className="flex flex-wrap gap-1">
                       {item.perms.map(perm => (
                         <Badge key={perm} variant="outline" className="text-xs font-mono">{perm}</Badge>
@@ -393,7 +393,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           <div className="space-y-2">
             <Label htmlFor="wx-corpid">企业 ID (Corp ID)</Label>
             <Input id="wx-corpid" placeholder="wwxxxxxxxxxxxxxx" value={corpId} onChange={e => setCorpId(e.target.value)} />
-            <p className="text-xs text-gray-500">在微信企业微信管理后台 → 我的企业中获取</p>
+            <p className="text-xs text-muted-foreground">在微信企业微信管理后台 → 我的企业中获取</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="wx-secret">应用密钥 (Secret)</Label>
@@ -402,7 +402,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           <div className="space-y-2">
             <Label htmlFor="wx-agentid">应用 ID (Agent ID)</Label>
             <Input id="wx-agentid" placeholder="1000001" value={agentId} onChange={e => setAgentId(e.target.value)} />
-            <p className="text-xs text-gray-500">在应用管理页面获取</p>
+            <p className="text-xs text-muted-foreground">在应用管理页面获取</p>
           </div>
 
           <Button className="w-full" disabled={!corpId || !corpSecret || isConnecting} onClick={handleConnect}>
@@ -418,7 +418,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
               <p className="text-sm text-green-600 mt-2">已成功连接到微信企业版</p>
               {departments.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs text-gray-500">选择部门：</p>
+                  <p className="text-xs text-muted-foreground">选择部门：</p>
                   <select
                     className="w-full mt-1 p-2 border rounded"
                     onChange={(e) => handleSync(e.target.value)}
@@ -467,11 +467,11 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
             { step: 3, title: '获取企业 ID', desc: '在"我的企业" → "企业信息"中获取 CorpId' },
             { step: 4, title: '配置应用权限', desc: '添加"查看企业通讯录"等接口权限' },
           ].map(item => (
-            <div key={item.step} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
               <div className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">{item.step}</div>
               <div className="flex-1">
                 <h4 className="font-medium">{item.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">{item.desc}</p>
+                <p className="text-sm text-foreground mt-1">{item.desc}</p>
                 {item.link && (
                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-green-600 hover:underline mt-2">
                     前往企业微信管理后台 <ExternalLink className="w-3 h-3" />
@@ -615,7 +615,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
           <div className="space-y-2">
             <Label htmlFor="dt-appkey">App Key</Label>
             <Input id="dt-appkey" placeholder="dingxxxxxxxxxxxxxx" value={appKey} onChange={e => setAppKey(e.target.value)} />
-            <p className="text-xs text-gray-500">在钉钉开放平台 → 应用开发 → 内部应用创建后获取</p>
+            <p className="text-xs text-muted-foreground">在钉钉开放平台 → 应用开发 → 内部应用创建后获取</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="dt-secret">App Secret</Label>
@@ -675,11 +675,11 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
             { step: 3, title: '配置权限', desc: '添加"考勤数据"、"审批数据"、"任务数据"等权限' },
             { step: 4, title: '开发调试', desc: '使用钉钉提供的 API 拉取组织成员和业务数据' },
           ].map(item => (
-            <div key={item.step} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
               <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">{item.step}</div>
               <div className="flex-1">
                 <h4 className="font-medium">{item.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">{item.desc}</p>
+                <p className="text-sm text-foreground mt-1">{item.desc}</p>
                 {item.link && (
                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mt-2">
                     前往钉钉开放平台 <ExternalLink className="w-3 h-3" />
@@ -825,7 +825,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
           <div className="space-y-2">
             <Label htmlFor="wps-apikey">API Key</Label>
             <Input id="wps-apikey" placeholder="请输入 API Key" value={apiKey} onChange={e => setApiKey(e.target.value)} />
-            <p className="text-xs text-gray-500">在金山文档开放平台获取</p>
+            <p className="text-xs text-muted-foreground">在金山文档开放平台获取</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="wps-secret">API Secret</Label>
@@ -834,7 +834,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
           <div className="space-y-2">
             <Label htmlFor="wps-docid">文档 ID</Label>
             <Input id="wps-docid" placeholder="金山文档链接中的文档ID" value={docId} onChange={e => setDocId(e.target.value)} />
-            <p className="text-xs text-gray-500">在金山文档 URL 中获取，例如：https://kdocs.cn/office/xxx/document</p>
+            <p className="text-xs text-muted-foreground">在金山文档 URL 中获取，例如：https://kdocs.cn/office/xxx/document</p>
           </div>
 
           <Button className="w-full" disabled={!apiKey || !apiSecret || isConnecting} onClick={handleConnect}>
@@ -895,11 +895,11 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
             { step: 3, title: '配置应用权限', desc: '添加文档读取权限，获取文档数据接口访问权限' },
             { step: 4, title: '连接数据', desc: '输入文档 ID，导入金山文档中的表格数据' },
           ].map(item => (
-            <div key={item.step} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
               <div className="flex-shrink-0 w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold">{item.step}</div>
               <div className="flex-1">
                 <h4 className="font-medium">{item.title}</h4>
-                <p className="text-sm text-gray-600 mt-1">{item.desc}</p>
+                <p className="text-sm text-foreground mt-1">{item.desc}</p>
                 {item.link && (
                   <a href={item.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-amber-600 hover:underline mt-2">
                     前往金山文档 <ExternalLink className="w-3 h-3" />
@@ -986,9 +986,9 @@ export function PlatformIntegrations({ onImportData }: PlatformIntegrationProps)
           <CardContent>
             <div className="space-y-2">
               {savedConnections.map(conn => (
-                <div key={conn.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={conn.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <Link2 className="w-4 h-4 text-gray-500" />
+                    <Link2 className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium">{conn.name}</span>
                     <Badge variant="outline" className="text-xs">{conn.type}</Badge>
                     {conn.status === 'connected' ? (
@@ -1047,7 +1047,7 @@ function PlatformCard({ name, badge, badgeColor, desc, icon }: {
             <span className="font-medium text-sm">{name}</span>
             <span className={`text-xs px-1.5 py-0.5 rounded ${badgeColor}`}>{badge}</span>
           </div>
-          <p className="text-xs text-gray-500">{desc}</p>
+          <p className="text-xs text-muted-foreground">{desc}</p>
         </button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
@@ -1056,7 +1056,7 @@ function PlatformCard({ name, badge, badgeColor, desc, icon }: {
           <DialogDescription>填写以下信息连接到 {name}</DialogDescription>
         </DialogHeader>
         <div className="py-2">
-          <p className="text-sm text-gray-600">请在下方「连接配置」标签页中填写 {name} 的凭证信息，完成连接配置。</p>
+          <p className="text-sm text-foreground">请在下方「连接配置」标签页中填写 {name} 的凭证信息，完成连接配置。</p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsDialogOpen(false)}>关闭</Button>

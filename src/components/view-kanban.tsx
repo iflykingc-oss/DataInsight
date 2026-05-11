@@ -126,7 +126,7 @@ export function KanbanView({ data }: KanbanViewProps) {
                       .filter(h => h !== groupField && h !== cardTitleField && h !== metricField)
                       .slice(0, 2)
                       .map(h => (
-                        <span key={h} className="text-[10px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground truncate max-w-[100px]">
+                        <span key={h} className="text-xs px-1.5 py-0.5 bg-muted rounded text-muted-foreground truncate max-w-[100px]">
                           {h}: {String(row[h] ?? '-').substring(0, 15)}
                         </span>
                       ))

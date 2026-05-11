@@ -75,7 +75,7 @@ export function GlobalErrorBoundary({ children }: { children: React.ReactNode })
 
   if (hasError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <Card className="max-w-md w-full mx-4 border-destructive/30 bg-white shadow-lg">
           <CardContent className="py-8 px-6">
             <div className="text-center space-y-4">
@@ -83,7 +83,7 @@ export function GlobalErrorBoundary({ children }: { children: React.ReactNode })
                 <XCircle className="h-8 w-8 text-destructive" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-foreground">
                   应用出现错误
                 </h2>
                 <p className="text-sm text-muted-foreground mt-2">
@@ -94,7 +94,7 @@ export function GlobalErrorBoundary({ children }: { children: React.ReactNode })
                     <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
                       错误详情（开发模式）
                     </summary>
-                    <pre className="mt-2 p-3 bg-gray-100 rounded-lg text-xs overflow-auto max-h-40 text-destructive">
+                    <pre className="mt-2 p-3 bg-muted rounded-lg text-xs overflow-auto max-h-40 text-destructive">
                       {error.message}
                       {'\n\n'}
                       {error.stack}
@@ -202,7 +202,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                   <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
                     错误详情
                   </summary>
-                  <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-32">
+                  <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto max-h-32">
                     {this.state.error.stack}
                   </pre>
                 </details>
@@ -356,7 +356,7 @@ export function EmptyState({
         <Icon className="w-6 h-6 text-muted-foreground" />
       </div>
       <div className="text-center">
-        <h3 className="font-medium text-gray-900">{title}</h3>
+        <h3 className="font-medium text-foreground">{title}</h3>
         {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
       </div>
       {action && (

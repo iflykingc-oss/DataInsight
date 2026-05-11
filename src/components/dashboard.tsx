@@ -240,8 +240,8 @@ export function Dashboard({ data, analysis }: DashboardProps) {
     return (
       <Card className="text-center py-12">
         <CardContent>
-          <LayoutGrid className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">需要至少1个数值字段才能生成仪表盘</p>
+          <LayoutGrid className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">需要至少1个数值字段才能生成仪表盘</p>
         </CardContent>
       </Card>
     );
@@ -256,11 +256,11 @@ export function Dashboard({ data, analysis }: DashboardProps) {
             <Card key={widget.id} className="hover:shadow-md transition-shadow border-l-4 border-l-primary">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-500">{widget.title}</span>
+                  <span className="text-sm text-muted-foreground">{widget.title}</span>
                   <Activity className="w-4 h-4 text-primary" />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{widget.data[0]?.value as string || '-'}</div>
-                <p className="text-xs text-gray-400 mt-1">{widget.data[0]?.sub as string || ''}</p>
+                <div className="text-2xl font-bold text-foreground">{widget.data[0]?.value as string || '-'}</div>
+                <p className="text-xs text-muted-foreground mt-1">{widget.data[0]?.sub as string || ''}</p>
               </CardContent>
             </Card>
           ))}
@@ -298,7 +298,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                             {v}
                           </button>
                         ))}
-                        {values.length > 6 && <span className="text-[10px] text-muted-foreground self-center">+{values.length - 6}</span>}
+                        {values.length > 6 && <span className="text-xs text-muted-foreground self-center">+{values.length - 6}</span>}
                       </div>
                     </div>
                   );
@@ -531,7 +531,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                   {/* 搜索栏 */}
                   <div className="flex items-center gap-2 mb-3">
                     <div className="relative flex-1 max-w-xs">
-                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                       <Input
                         placeholder="搜索数据..."
                         value={detailSearch}
@@ -544,11 +544,11 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                   <div className="overflow-x-auto border rounded-lg">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="bg-gray-50">
+                        <tr className="bg-muted/30">
                           {data.headers.map(h => (
                             <th
                               key={h}
-                              className="px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-100"
+                              className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap cursor-pointer hover:bg-muted"
                               onClick={() => {
                                 if (detailSortField === h) {
                                   setDetailSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
@@ -563,7 +563,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                                 {detailSortField === h ? (
                                   detailSortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
                                 ) : (
-                                  <ArrowUpDown className="w-3 h-3 text-gray-300" />
+                                  <ArrowUpDown className="w-3 h-3 text-muted-foreground/50" />
                                 )}
                               </span>
                             </th>
@@ -586,7 +586,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                   {/* 分页 */}
                   {detailTotalPages > 1 && (
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         第 {detailPage + 1}/{detailTotalPages} 页，共 {searchedDetailRows.length} 条
                       </span>
                       <div className="flex items-center gap-1">
@@ -627,7 +627,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                       
                       const rankIcons = [
                         <Crown key="crown" className="w-4 h-4 text-yellow-500" />,
-                        <Medal key="medal" className="w-4 h-4 text-gray-400" />,
+                        <Medal key="medal" className="w-4 h-4 text-muted-foreground" />,
                         <Medal key="medal2" className="w-4 h-4 text-amber-600" />,
                       ];
                       
@@ -821,10 +821,10 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                       <span className="text-xs w-12 text-right">{promoterPct.toFixed(1)}%</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-20 text-xs text-gray-600 flex items-center gap-1">
+                      <div className="w-20 text-xs text-foreground flex items-center gap-1">
                         <Minus className="w-3 h-3" /> 被动者
                       </div>
-                      <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
                         <div className="h-full bg-gray-400" style={{ width: `${passivePct}%` }} />
                       </div>
                       <span className="text-xs w-12 text-right">{passivePct.toFixed(1)}%</span>
@@ -863,7 +863,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
           // ==================== 预测分析组件 ====================
           if (widget.type === 'forecast') {
             const { forecastValue, forecastTrend, forecastGrowth } = widget;
-            const trendColor = forecastTrend === 'up' ? 'text-green-600' : forecastTrend === 'down' ? 'text-red-600' : 'text-gray-600';
+            const trendColor = forecastTrend === 'up' ? 'text-green-600' : forecastTrend === 'down' ? 'text-red-600' : 'text-foreground';
             const trendIcon = forecastTrend === 'up' ? <TrendingUp className="w-4 h-4" /> : forecastTrend === 'down' ? <TrendingDown className="w-4 h-4" /> : <Minus className="w-4 h-4" />;
             const trendLabel = forecastTrend === 'up' ? '上升' : forecastTrend === 'down' ? '下降' : '平稳';
 
@@ -1001,10 +1001,10 @@ function PivotTableView({
     <div className="overflow-x-auto border rounded-lg">
       <table className="w-full text-xs">
         <thead>
-          <tr className="bg-gray-50">
-            <th className="px-3 py-2 text-left font-medium text-gray-600 border-r">{rowField}</th>
+          <tr className="bg-muted/30">
+            <th className="px-3 py-2 text-left font-medium text-foreground border-r">{rowField}</th>
             {colValues.map(cv => (
-              <th key={cv} className="px-3 py-2 text-right font-medium text-gray-600 whitespace-nowrap">{cv}</th>
+              <th key={cv} className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">{cv}</th>
             ))}
             <th className="px-3 py-2 text-right font-medium text-blue-600 whitespace-nowrap border-l">合计</th>
           </tr>
@@ -1012,9 +1012,9 @@ function PivotTableView({
         <tbody>
           {rowValues.map(rv => (
             <tr key={rv} className="border-t hover:bg-blue-50/30">
-              <td className="px-3 py-1.5 font-medium text-gray-700 border-r whitespace-nowrap">{rv}</td>
+              <td className="px-3 py-1.5 font-medium text-foreground border-r whitespace-nowrap">{rv}</td>
               {colValues.map(cv => (
-                <td key={cv} className="px-3 py-1.5 text-right text-gray-600">
+                <td key={cv} className="px-3 py-1.5 text-right text-foreground">
                   {aggregate(matrix[rv]?.[cv] || [])}
                 </td>
               ))}
@@ -1022,7 +1022,7 @@ function PivotTableView({
             </tr>
           ))}
           {/* 合计行 */}
-          <tr className="border-t bg-gray-50 font-medium">
+          <tr className="border-t bg-muted/30 font-medium">
             <td className="px-3 py-1.5 text-blue-600 border-r">合计</td>
             {colValues.map(cv => (
               <td key={cv} className="px-3 py-1.5 text-right text-blue-600">{colTotals[cv]}</td>
@@ -1123,7 +1123,7 @@ function renderChart(widget: ChartWidget, onDataPointClick?: (field: string, val
         </RadarChart>
       );
     default:
-      return <div className="flex items-center justify-center h-full text-gray-400">不支持的图表类型</div>;
+      return <div className="flex items-center justify-center h-full text-muted-foreground">不支持的图表类型</div>;
   }
 }
 

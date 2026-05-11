@@ -219,7 +219,7 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
                   </div>
                 </div>
                 {activeTable?.fileName === table.fileName && (
-                  <Badge variant="default" className="text-[10px]">当前</Badge>
+                  <Badge variant="default" className="text-xs">当前</Badge>
                 )}
               </div>
             </Card>

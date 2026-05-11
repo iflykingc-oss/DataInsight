@@ -491,7 +491,7 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
                     <SlideIcon type={slide.type} />
                     <span className="font-medium truncate">{slide.title}</span>
                   </div>
-                  <span className="text-muted-foreground text-[10px] ml-5">{slide.type}</span>
+                  <span className="text-muted-foreground text-xs ml-5">{slide.type}</span>
                 </button>
               ))}
             </div>
@@ -504,7 +504,7 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
                     <div className="space-y-4 animate-in fade-in-0 duration-300">
                       <div className="flex items-center gap-2">
                         <SlideIcon type={currentSlideData.type} />
-                        <Badge variant="outline" className="text-[10px]">{currentSlideData.type}</Badge>
+                        <Badge variant="outline" className="text-xs">{currentSlideData.type}</Badge>
                       </div>
                       <h2 className="text-2xl md:text-3xl font-bold leading-tight">{currentSlideData.title}</h2>
                       <div className="text-sm md:text-base leading-relaxed text-muted-foreground">

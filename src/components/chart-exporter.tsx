@@ -540,12 +540,12 @@ export function ChartExporter({
                       'p-4 rounded-lg border text-left transition-all',
                       isSelected
                         ? 'border-primary bg-primary/10 ring-1 ring-primary'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-border hover:border-border'
                     )}
                   >
                     <FormatIcon className={cn(
                       'w-6 h-6 mb-2',
-                      isSelected ? 'text-primary' : 'text-gray-600'
+                      isSelected ? 'text-primary' : 'text-foreground'
                     )} />
                     <p className={cn(
                       'font-medium text-sm',
@@ -553,7 +553,7 @@ export function ChartExporter({
                     )}>
                       {preset.label}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {preset.extensions.join(', ')}
                     </p>
                   </button>
@@ -566,14 +566,14 @@ export function ChartExporter({
           <Card className="border-dashed">
             <CardContent className="pt-4">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gray-100 rounded-lg">
-                  <Icon className="w-8 h-8 text-gray-600" />
+                <div className="p-3 bg-muted rounded-lg">
+                  <Icon className="w-8 h-8 text-foreground" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium">{selectedPreset?.label}</p>
-                  <p className="text-sm text-gray-500">{selectedPreset?.description}</p>
+                  <p className="text-sm text-muted-foreground">{selectedPreset?.description}</p>
                 </div>
-                <div className="text-right text-sm text-gray-400">
+                <div className="text-right text-sm text-muted-foreground">
                   <p>{config.scale}x 分辨率</p>
                   <p>质量 {config.quality}%</p>
                 </div>
@@ -644,11 +644,11 @@ export function ChartExporter({
                     'flex-1 p-3 rounded-lg border text-center transition-all',
                     config.quality === preset.value
                       ? 'border-primary bg-primary/10'
-                      : 'border-gray-200 hover:border-gray-300'
+                      : 'border-border hover:border-border'
                   )}
                 >
                   <p className="font-medium">{preset.label}</p>
-                  <p className="text-xs text-gray-500">{preset.description}</p>
+                  <p className="text-xs text-muted-foreground">{preset.description}</p>
                 </button>
               ))}
             </div>
@@ -687,11 +687,11 @@ export function ChartExporter({
                     'flex-1 p-3 rounded-lg border text-center transition-all',
                     config.scale === scale
                       ? 'border-primary bg-primary/10'
-                      : 'border-gray-200 hover:border-gray-300'
+                      : 'border-border hover:border-border'
                   )}
                 >
                   <p className="font-medium">{scale}x</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {scale === 1 ? '标准' : scale === 2 ? 'Retina' : '超高清'}
                   </p>
                 </button>
@@ -761,9 +761,9 @@ export function ChartExporter({
           {exportHistory.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">暂无导出历史</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <Clock className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground">暂无导出历史</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   导出文件后会显示在这里
                 </p>
               </CardContent>
@@ -771,26 +771,26 @@ export function ChartExporter({
           ) : (
             <div className="space-y-2">
               {exportHistory.map(task => (
-                <Card key={task.id} className="hover:bg-gray-50 transition-colors">
+                <Card key={task.id} className="hover:bg-muted/30 transition-colors">
                   <CardContent className="p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           'p-2 rounded-lg',
                           task.status === 'completed' ? 'bg-green-100' :
-                          task.status === 'failed' ? 'bg-red-100' : 'bg-gray-100'
+                          task.status === 'failed' ? 'bg-red-100' : 'bg-muted'
                         )}>
                           {task.status === 'completed' ? (
                             <CheckCircle2 className="w-4 h-4 text-green-600" />
                           ) : task.status === 'failed' ? (
                             <FileText className="w-4 h-4 text-red-600" />
                           ) : (
-                            <Loader2 className="w-4 h-4 text-gray-600 animate-spin" />
+                            <Loader2 className="w-4 h-4 text-foreground animate-spin" />
                           )}
                         </div>
                         <div>
                           <p className="font-medium text-sm">{task.name}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             {FORMAT_PRESETS.find(f => f.format === task.format)?.label} · 
                             {new Date(task.createdAt).toLocaleTimeString()}
                           </p>
@@ -817,7 +817,7 @@ export function ChartExporter({
                     
                     {task.status === 'exporting' && (
                       <div className="mt-2">
-                        <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-1 bg-muted rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-primary transition-all"
                             style={{ width: `${task.progress}%` }}

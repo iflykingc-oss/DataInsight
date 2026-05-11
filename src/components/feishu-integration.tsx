@@ -130,7 +130,7 @@ export function FeishuIntegration({ onImportData }: FeishuIntegrationProps) {
                     value={tableId}
                     onChange={e => setTableId(e.target.value)}
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     在飞书多维表格 URL 中获取，例如：https://xxx.feishu.cn/base/BxxxxxxxxxxRxxxx
                   </p>
                 </div>
@@ -161,13 +161,13 @@ export function FeishuIntegration({ onImportData }: FeishuIntegrationProps) {
             <TabsContent value="guide" className="space-y-4">
               <div className="space-y-4">
                 {integrationGuide.map(item => (
-                  <div key={item.step} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
                     <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
                       {item.step}
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium">{item.title}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                      <p className="text-sm text-foreground mt-1">{item.description}</p>
                       {item.link && (
                         <a
                           href={item.link}
@@ -181,7 +181,7 @@ export function FeishuIntegration({ onImportData }: FeishuIntegrationProps) {
                       )}
                       {item.permissions && (
                         <div className="mt-2">
-                          <p className="text-xs text-gray-500 mb-1">所需权限：</p>
+                          <p className="text-xs text-muted-foreground mb-1">所需权限：</p>
                           <div className="flex flex-wrap gap-1">
                             {item.permissions.map(perm => (
                               <Badge key={perm} variant="outline" className="text-xs font-mono">
@@ -272,7 +272,7 @@ const data = await response.json();`)}
                 </Table>
               </div>
               
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 连接飞书后，可以直接导入真实的多维表格数据
               </p>
             </TabsContent>

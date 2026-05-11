@@ -308,7 +308,7 @@ export function SceneAgentPanel({
           </div>
           <div>
             <div className="text-xs font-semibold">{sceneName}智能体</div>
-            <div className="text-[10px] text-muted-foreground">场景隔离 · 技能就绪</div>
+            <div className="text-xs text-muted-foreground">场景隔离 · 技能就绪</div>
           </div>
         </div>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setOpen(false)}>
@@ -338,14 +338,14 @@ export function SceneAgentPanel({
                 msg.content
               )}
               {msg.metadata?.type === 'skill' && (
-                <div className="mt-1.5 flex items-center gap-1 text-[10px] opacity-70">
+                <div className="mt-1.5 flex items-center gap-1 text-xs opacity-70">
                   <Wrench className="w-3 h-3" />
                   <span>技能: {msg.metadata.skillId}</span>
                   {msg.metadata.status === 'error' && <AlertTriangle className="w-3 h-3 text-destructive" />}
                 </div>
               )}
               {msg.metadata?.type === 'workflow' && (
-                <div className="mt-1.5 flex items-center gap-1 text-[10px] opacity-70">
+                <div className="mt-1.5 flex items-center gap-1 text-xs opacity-70">
                   <Workflow className="w-3 h-3" />
                   <span>工作流: {msg.metadata.workflowId}</span>
                 </div>
@@ -370,7 +370,7 @@ export function SceneAgentPanel({
           {['快速分析', '推荐图表', '生成公式'].map((s) => (
             <button
               key={s}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-background border hover:bg-muted transition-colors"
+              className="text-xs px-2 py-0.5 rounded-full bg-background border hover:bg-muted transition-colors"
               onClick={() => {
                 setInput(s);
                 // 延迟调用以确保 input 已更新

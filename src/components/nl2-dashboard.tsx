@@ -776,12 +776,12 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
           <TabsTrigger value="preview" className="flex items-center gap-1 text-xs">
             <LayoutDashboard className="w-3.5 h-3.5" />
             仪表盘
-            {currentDashboard && <Badge className="ml-1 h-4 w-4 p-0 text-[10px] justify-center bg-purple-500">{currentDashboard.charts.length}</Badge>}
+            {currentDashboard && <Badge className="ml-1 h-4 w-4 p-0 text-xs justify-center bg-purple-500">{currentDashboard.charts.length}</Badge>}
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-1 text-xs">
             <History className="w-3.5 h-3.5" />
             历史
-            {history.length > 0 && <Badge className="ml-1 h-4 w-4 p-0 text-[10px] justify-center">{history.length}</Badge>}
+            {history.length > 0 && <Badge className="ml-1 h-4 w-4 p-0 text-xs justify-center">{history.length}</Badge>}
           </TabsTrigger>
         </TabsList>
 
@@ -808,10 +808,10 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                       </div>
                       <span className="font-medium text-sm">{tpl.name}</span>
                     </div>
-                    <p className="text-xs text-gray-500 line-clamp-2">{tpl.description}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{tpl.description}</p>
                     <div className="flex items-center gap-1 mt-1.5">
-                      <Badge variant="outline" className="text-[10px] h-4">{tpl.chartsCount}个图表</Badge>
-                      <ArrowRight className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Badge variant="outline" className="text-xs h-4">{tpl.chartsCount}个图表</Badge>
+                      <ArrowRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </button>
                 ))}
@@ -849,8 +849,8 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                     <div className="text-center py-6 space-y-3">
                       <Sparkles className="w-10 h-10 mx-auto text-purple-300" />
                       <div>
-                        <p className="text-sm font-medium text-gray-700">用自然语言描述你的需求</p>
-                        <p className="text-xs text-gray-400 mt-1">或者从上方选择一个模板快速开始</p>
+                        <p className="text-sm font-medium text-foreground">用自然语言描述你的需求</p>
+                        <p className="text-xs text-muted-foreground mt-1">或者从上方选择一个模板快速开始</p>
                       </div>
                       {/* 示例提示 */}
                       <div className="flex flex-wrap justify-center gap-1.5 mt-2">
@@ -874,15 +874,15 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                           <Sparkles className="w-3.5 h-3.5 text-purple-600" />
                         </div>
                       )}
-                      <div className={cn('max-w-[85%] rounded-xl p-3', msg.role === 'user' ? 'bg-purple-500 text-white' : 'bg-gray-50 border')}>
+                      <div className={cn('max-w-[85%] rounded-xl p-3', msg.role === 'user' ? 'bg-purple-500 text-white' : 'bg-muted/30 border')}>
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                         {msg.dashboard && (
                           <div className="mt-2 space-y-1.5">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Badge className="text-[10px] h-4 bg-purple-500">{msg.dashboard.scenario}</Badge>
-                              <Badge variant="outline" className="text-[10px] h-4">{msg.dashboard.charts.length}个图表</Badge>
+                              <Badge className="text-xs h-4 bg-purple-500">{msg.dashboard.scenario}</Badge>
+                              <Badge variant="outline" className="text-xs h-4">{msg.dashboard.charts.length}个图表</Badge>
                               {msg.dashboard.kpis?.slice(0, 3).map((kpi, i) => (
-                                <Badge key={i} variant="secondary" className="text-[10px] h-4">{kpi.icon} {kpi.label}</Badge>
+                                <Badge key={i} variant="secondary" className="text-xs h-4">{kpi.icon} {kpi.label}</Badge>
                               ))}
                             </div>
                             <Button
@@ -910,8 +910,8 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                       <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
                         <Sparkles className="w-3.5 h-3.5 text-purple-600" />
                       </div>
-                      <div className="bg-gray-50 border rounded-xl p-3">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="bg-muted/30 border rounded-xl p-3">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           {generationStep || 'AI 正在生成中...'}
                         </div>
@@ -972,8 +972,8 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
           {!currentDashboard ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <LayoutDashboard className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500 text-sm">暂无仪表盘</p>
+                <LayoutDashboard className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground text-sm">暂无仪表盘</p>
                 <Button variant="outline" className="mt-3" onClick={() => setActiveTab('create')}>
                   <Wand2 className="w-4 h-4 mr-1" />
                   去生成
@@ -986,7 +986,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-base">{currentDashboard.name}</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{currentDashboard.scenarioDescription}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{currentDashboard.scenarioDescription}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setActiveTab('history')}>
@@ -1015,12 +1015,12 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                     <Card key={idx} className="border-l-4" style={{ borderLeftColor: themeColor }}>
                       <CardContent className="pt-3 pb-3">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-500">{kpi.label}</span>
+                          <span className="text-xs text-muted-foreground">{kpi.label}</span>
                           {kpi.icon && <span className="text-sm">{kpi.icon}</span>}
                         </div>
                         <div className="text-lg font-bold">{kpi.value}</div>
                         {kpi.change && (
-                          <div className={cn('flex items-center gap-0.5 text-xs mt-0.5', kpi.changeType === 'up' ? 'text-green-600' : kpi.changeType === 'down' ? 'text-red-600' : 'text-gray-500')}>
+                          <div className={cn('flex items-center gap-0.5 text-xs mt-0.5', kpi.changeType === 'up' ? 'text-green-600' : kpi.changeType === 'down' ? 'text-red-600' : 'text-muted-foreground')}>
                             {kpi.changeType === 'up' ? <TrendingUp className="w-3 h-3" /> : kpi.changeType === 'down' ? <TrendingDown className="w-3 h-3" /> : null}
                             {kpi.change}
                           </div>
@@ -1073,7 +1073,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                           </Tooltip>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[10px] h-4 mt-0.5">{getChartTypeLabel(chart.type)} · {chart.recommendation}</Badge>
+                      <Badge variant="outline" className="text-xs h-4 mt-0.5">{getChartTypeLabel(chart.type)} · {chart.recommendation}</Badge>
                     </CardHeader>
                     <CardContent className="pt-2 pb-3 px-4">
                       {/* 图表渲染 */}
@@ -1085,7 +1085,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                         <div className="mt-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100">
                           <div className="flex items-start gap-1.5">
                             <Lightbulb className="w-3 h-3 text-blue-500 mt-0.5 shrink-0" />
-                            <p className="text-[11px] text-blue-800 leading-relaxed line-clamp-3">{chart.insight}</p>
+                            <p className="text-xs text-blue-800 leading-relaxed line-clamp-3">{chart.insight}</p>
                           </div>
                         </div>
                       )}
@@ -1118,10 +1118,10 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                     </Button>
                   </div>
                   <div className="flex gap-1.5 mt-2 flex-wrap">
-                    <Button size="sm" variant="secondary" className="h-6 text-[10px]" onClick={() => batchAdjust('增加一个复购率折线图')}>+ 复购率</Button>
-                    <Button size="sm" variant="secondary" className="h-6 text-[10px]" onClick={() => batchAdjust('增加一个毛利率饼图')}>+ 毛利率</Button>
-                    <Button size="sm" variant="secondary" className="h-6 text-[10px]" onClick={() => batchAdjust('添加同比数据')}>+ 同比</Button>
-                    <Button size="sm" variant="secondary" className="h-6 text-[10px]" onClick={() => batchAdjust('给所有图表添加数据标签')}>+ 数据标签</Button>
+                    <Button size="sm" variant="secondary" className="h-6 text-xs" onClick={() => batchAdjust('增加一个复购率折线图')}>+ 复购率</Button>
+                    <Button size="sm" variant="secondary" className="h-6 text-xs" onClick={() => batchAdjust('增加一个毛利率饼图')}>+ 毛利率</Button>
+                    <Button size="sm" variant="secondary" className="h-6 text-xs" onClick={() => batchAdjust('添加同比数据')}>+ 同比</Button>
+                    <Button size="sm" variant="secondary" className="h-6 text-xs" onClick={() => batchAdjust('给所有图表添加数据标签')}>+ 数据标签</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1134,9 +1134,9 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
           {history.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500 text-sm">暂无历史记录</p>
-                <p className="text-xs text-gray-400 mt-1">生成仪表盘后会保存在这里</p>
+                <History className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground text-sm">暂无历史记录</p>
+                <p className="text-xs text-muted-foreground mt-1">生成仪表盘后会保存在这里</p>
               </CardContent>
             </Card>
           ) : (
@@ -1160,10 +1160,10 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                         <div className="min-w-0">
                           <h4 className="font-medium text-sm truncate">{version.name}</h4>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <Badge variant="secondary" className="text-[10px] h-4">{version.scenario}</Badge>
-                            <span className="text-[10px] text-gray-400">{version.dashboard.charts.length}个图表</span>
-                            <span className="text-[10px] text-gray-400">·</span>
-                            <span className="text-[10px] text-gray-400">{new Date(version.createdAt).toLocaleDateString()}</span>
+                            <Badge variant="secondary" className="text-xs h-4">{version.scenario}</Badge>
+                            <span className="text-xs text-muted-foreground">{version.dashboard.charts.length}个图表</span>
+                            <span className="text-xs text-muted-foreground">·</span>
+                            <span className="text-xs text-muted-foreground">{new Date(version.createdAt).toLocaleDateString()}</span>
                           </div>
                         </div>
                       </div>
@@ -1202,7 +1202,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
             <div className="space-y-3">
               {/* 图表类型切换 */}
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1.5 block">图表类型</label>
+                <label className="text-xs font-medium text-foreground mb-1.5 block">图表类型</label>
                 <Select
                   value={editingChart.type}
                   onValueChange={type => {
@@ -1231,7 +1231,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
               </div>
               {/* 标题修改 */}
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1.5 block">图表标题</label>
+                <label className="text-xs font-medium text-foreground mb-1.5 block">图表标题</label>
                 <Input
                   value={editingChart.title}
                   onChange={e => {
@@ -1246,7 +1246,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
               </div>
               {/* 业务解读 */}
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1.5 block">业务解读</label>
+                <label className="text-xs font-medium text-foreground mb-1.5 block">业务解读</label>
                 <textarea
                   value={editingChart.insight}
                   onChange={e => {
@@ -1313,7 +1313,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                         {getChartIcon(chart.type)}
                         <span className="text-xs font-medium truncate">{chart.title}</span>
                       </div>
-                      <p className="text-[10px] text-gray-500 line-clamp-2">{chart.insight}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{chart.insight}</p>
                     </Card>
                   ))}
                 </div>

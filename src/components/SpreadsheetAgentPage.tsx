@@ -311,7 +311,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
     .filter(Boolean) as SkillDefinition[];
 
   return (
-    <div className={cn('flex flex-col h-full bg-gray-50', className)}>
+    <div className={cn('flex flex-col h-full bg-muted/30', className)}>
       <header className="flex items-center justify-between px-4 py-3 bg-white border-b">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -337,8 +337,8 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                 onClick={handleUndo}
                 disabled={!canUndo}
                 className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 text-sm border rounded hover:bg-gray-50',
-                  canUndo ? 'text-gray-700' : 'text-gray-300 cursor-not-allowed'
+                  'flex items-center gap-1 px-3 py-1.5 text-sm border rounded hover:bg-muted/30',
+                  canUndo ? 'text-foreground' : 'text-muted-foreground/50 cursor-not-allowed'
                 )}
                 title={sessionManager.getUndoDescription() || '撤销'}
               >
@@ -349,15 +349,15 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                 onClick={handleRedo}
                 disabled={!canRedo}
                 className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 text-sm border rounded hover:bg-gray-50',
-                  canRedo ? 'text-gray-700' : 'text-gray-300 cursor-not-allowed'
+                  'flex items-center gap-1 px-3 py-1.5 text-sm border rounded hover:bg-muted/30',
+                  canRedo ? 'text-foreground' : 'text-muted-foreground/50 cursor-not-allowed'
                 )}
                 title={sessionManager.getRedoDescription() || '重做'}
               >
                 <Redo2 className="w-4 h-4" />
                 重做
               </button>
-              <div className="w-px h-6 bg-gray-300" />
+              <div className="w-px h-6 bg-border" />
             </>
           )}
 
@@ -377,7 +377,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
             <>
               <button
                 onClick={() => setShowExportPanel(!showExportPanel)}
-                className="flex items-center gap-2 px-3 py-2 text-sm border rounded hover:bg-gray-50"
+                className="flex items-center gap-2 px-3 py-2 text-sm border rounded hover:bg-muted/30"
               >
                 <Download className="w-4 h-4" />
                 导出
@@ -386,7 +386,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
 
               <button
                 onClick={handleReset}
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded"
                 title="重置数据"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -400,7 +400,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
         <div className="absolute right-4 top-16 z-30 bg-white rounded-lg border shadow-lg p-4 w-72">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-medium">导出数据</h3>
-            <button onClick={() => setShowExportPanel(false)} className="text-gray-400 hover:text-gray-600">
+            <button onClick={() => setShowExportPanel(false)} className="text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -409,10 +409,10 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
               <button
                 key={preset.id}
                 onClick={() => handleExport(preset.options.format as 'csv' | 'xlsx' | 'json')}
-                className="w-full p-3 text-left border rounded-lg hover:bg-gray-50"
+                className="w-full p-3 text-left border rounded-lg hover:bg-muted/30"
               >
                 <div className="font-medium text-sm">{preset.name}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{preset.description}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{preset.description}</div>
               </button>
             ))}
           </div>
@@ -434,7 +434,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                           'px-4 py-1.5 text-sm',
                           viewMode === mode
                             ? 'bg-blue-500 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                            : 'bg-white text-foreground hover:bg-muted/30'
                         )}
                       >
                         {mode === 'table' ? '数据表' : mode === 'analysis' ? '问题分析' : '导出'}
@@ -455,7 +455,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                         健康度: {problemReport.grade} ({problemReport.totalScore}/100)
                       </span>
                       {problemReport.problems.length > 0 && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           发现 {problemReport.problems.length} 个问题
                         </span>
                       )}
@@ -463,7 +463,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                   )}
                 </div>
 
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   {data.headers.length} 列 × {data.rows.length} 行
                   {data.fileName && <span className="ml-2">| {data.fileName}</span>}
                 </div>
@@ -492,23 +492,23 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                     <h2 className="text-lg font-medium mb-4">数据健康度报告</h2>
 
                     <div className="grid grid-cols-4 gap-4 mb-6">
-                      <div className="p-4 bg-gray-50 rounded-lg text-center">
+                      <div className="p-4 bg-muted/30 rounded-lg text-center">
                         <div className="text-2xl font-bold text-blue-600">{problemReport.totalScore}</div>
-                        <div className="text-sm text-gray-500">健康度得分</div>
+                        <div className="text-sm text-muted-foreground">健康度得分</div>
                       </div>
-                      <div className="p-4 bg-gray-50 rounded-lg text-center">
+                      <div className="p-4 bg-muted/30 rounded-lg text-center">
                         <div className="text-2xl font-bold text-green-600">{problemReport.statistics.totalRows}</div>
-                        <div className="text-sm text-gray-500">数据行数</div>
+                        <div className="text-sm text-muted-foreground">数据行数</div>
                       </div>
-                      <div className="p-4 bg-gray-50 rounded-lg text-center">
+                      <div className="p-4 bg-muted/30 rounded-lg text-center">
                         <div className="text-2xl font-bold text-orange-600">{problemReport.problems.length}</div>
-                        <div className="text-sm text-gray-500">发现问题</div>
+                        <div className="text-sm text-muted-foreground">发现问题</div>
                       </div>
-                      <div className="p-4 bg-gray-50 rounded-lg text-center">
+                      <div className="p-4 bg-muted/30 rounded-lg text-center">
                         <div className="text-2xl font-bold text-purple-600">
                           {problemReport.problems.filter(p => p.autoFixable).length}
                         </div>
-                        <div className="text-sm text-gray-500">可自动修复</div>
+                        <div className="text-sm text-muted-foreground">可自动修复</div>
                       </div>
                     </div>
 
@@ -527,7 +527,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                           <div className="flex items-start justify-between">
                             <div>
                               <h3 className="font-medium">{problem.title}</h3>
-                              <p className="text-sm text-gray-600 mt-1">{problem.description}</p>
+                              <p className="text-sm text-foreground mt-1">{problem.description}</p>
                             </div>
                             {problem.autoFixable && (
                               <button
@@ -537,14 +537,14 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                                     handleSkillSelect(skill);
                                   }
                                 }}
-                                className="px-3 py-1 text-sm bg-white border rounded hover:bg-gray-50"
+                                className="px-3 py-1 text-sm bg-white border rounded hover:bg-muted/30"
                               >
                                 一键修复
                               </button>
                             )}
                           </div>
                           {problem.suggestions.length > 0 && (
-                            <div className="mt-2 text-sm text-gray-500">
+                            <div className="mt-2 text-sm text-muted-foreground">
                               建议: {problem.suggestions[0]}
                             </div>
                           )}
@@ -553,11 +553,11 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                     </div>
 
                     {problemReport.recommendations.length > 0 && (
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                      <div className="mt-6 p-4 bg-muted/30 rounded-lg">
                         <h3 className="font-medium mb-2">优化建议</h3>
                         <ul className="space-y-1">
                           {problemReport.recommendations.map((rec, i) => (
-                            <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                            <li key={i} className="text-sm text-foreground flex items-start gap-2">
                               <Sparkles className="w-4 h-4 text-blue-500 mt-0.5" />
                               {rec}
                             </li>
@@ -573,7 +573,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                 <div className="flex-1 overflow-auto">
                   <div className="bg-white rounded-lg border p-6">
                     <h2 className="text-lg font-medium mb-4">导出数据</h2>
-                    <p className="text-sm text-gray-500 mb-6">
+                    <p className="text-sm text-muted-foreground mb-6">
                       选择导出格式后，数据将下载到您的设备。注意：导出的数据不包含任何隐私追踪信息。
                     </p>
 
@@ -585,7 +585,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                           className="p-4 border rounded-lg text-left hover:border-blue-500 hover:bg-blue-50 transition-colors"
                         >
                           <div className="font-medium mb-1">{preset.name}</div>
-                          <div className="text-sm text-gray-500">{preset.description}</div>
+                          <div className="text-sm text-muted-foreground">{preset.description}</div>
                         </button>
                       ))}
                     </div>
@@ -605,7 +605,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                 </div>
               )}
 
-              <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <span>{operationDescription}</span>
                 {isExecuting && <Loader2 className="w-4 h-4 animate-spin" />}
               </div>
@@ -620,7 +620,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                   <h2 className="font-medium">技能面板</h2>
                   <button
                     onClick={() => setShowSkillPanel(false)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -647,7 +647,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
               <div className="flex-1 overflow-auto p-4 space-y-4">
                 {recommendedSkills && recommendedSkills.length > 0 && (
                   <div>
-                    <h3 className="text-xs font-medium text-gray-500 uppercase mb-2">推荐技能</h3>
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase mb-2">推荐技能</h3>
                     <div className="space-y-2">
                       {recommendedSkills.slice(0, 3).map((skill) => (
                         <SkillCard
@@ -663,7 +663,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                 )}
 
                 <div>
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-2">数据处理</h3>
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase mb-2">数据处理</h3>
                   <div className="space-y-2">
                     {SKILL_REGISTRY.filter(s => s.category === 'data').map((skill) => (
                       <SkillCard
@@ -677,7 +677,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-2">格式化</h3>
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase mb-2">格式化</h3>
                   <div className="space-y-2">
                     {SKILL_REGISTRY.filter(s => s.category === 'format').map((skill) => (
                       <SkillCard
@@ -691,7 +691,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-2">分析与导出</h3>
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase mb-2">分析与导出</h3>
                   <div className="space-y-2">
                     {SKILL_REGISTRY.filter(s => ['analysis', 'export'].includes(s.category)).map((skill) => (
                       <SkillCard
@@ -735,9 +735,9 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="text-center">
-              <FileSpreadsheet className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-medium text-gray-700 mb-2">上传您的表格文件</h2>
-              <p className="text-sm text-gray-500 mb-6">
+              <FileSpreadsheet className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+              <h2 className="text-xl font-medium text-foreground mb-2">上传您的表格文件</h2>
+              <p className="text-sm text-muted-foreground mb-6">
                 支持 Excel (.xlsx, .xls) 和 CSV 文件
               </p>
               <label className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700">
@@ -758,21 +758,21 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                   <span className="text-2xl">🔍</span>
                 </div>
                 <h3 className="font-medium mb-1">智能检测</h3>
-                <p className="text-xs text-gray-500">自动识别数据问题并提供修复建议</p>
+                <p className="text-xs text-muted-foreground">自动识别数据问题并提供修复建议</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">⚡</span>
                 </div>
                 <h3 className="font-medium mb-1">一键处理</h3>
-                <p className="text-xs text-gray-500">复杂的表格操作一句话就能完成</p>
+                <p className="text-xs text-muted-foreground">复杂的表格操作一句话就能完成</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">🔒</span>
                 </div>
                 <h3 className="font-medium mb-1">隐私保护</h3>
-                <p className="text-xs text-gray-500">数据本地处理，不上传服务器</p>
+                <p className="text-xs text-muted-foreground">数据本地处理，不上传服务器</p>
               </div>
             </div>
           </div>
@@ -789,7 +789,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
               </div>
             </div>
             <div className="p-4">
-              <p className="text-sm text-gray-600 mb-4">{selectedSkill.description}</p>
+              <p className="text-sm text-foreground mb-4">{selectedSkill.description}</p>
               <div className="space-y-2 mb-4">
                 <div className="text-sm font-medium">将执行以下 {selectedSkill.execution.steps.length} 个步骤：</div>
                 {selectedSkill.execution.steps.map((step, i) => (
@@ -808,7 +808,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
             <div className="p-4 border-t flex justify-end gap-2">
               <button
                 onClick={handleSkillCancel}
-                className="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+                className="px-4 py-2 text-sm border rounded hover:bg-muted/30"
               >
                 取消
               </button>

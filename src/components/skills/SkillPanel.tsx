@@ -48,9 +48,9 @@ export function SkillPanel({
                       problem.severity === 'info' && 'bg-blue-500'
                     )}
                   />
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-foreground">
                     {problem.type}
-                    <span className="text-gray-400 ml-1">({problem.count})</span>
+                    <span className="text-muted-foreground ml-1">({problem.count})</span>
                   </span>
                 </div>
                 {problem.autoFixable && onProblemFix && (
@@ -75,11 +75,11 @@ export function SkillPanel({
             className={cn(
               'flex flex-col items-center justify-center gap-1 p-3 rounded-lg border',
               'transition-all duration-150 hover:shadow-md',
-              'bg-white hover:bg-gray-50 border-gray-200'
+              'bg-white hover:bg-muted/30 border-border'
             )}
           >
             <span className="text-xl">{skill.icon}</span>
-            <span className="text-sm font-medium text-gray-700">{skill.name}</span>
+            <span className="text-sm font-medium text-foreground">{skill.name}</span>
           </button>
         ))}
       </div>
@@ -111,8 +111,8 @@ export function ExecutionLog({ log, className }: ExecutionLogProps) {
   }
 
   return (
-    <div className={cn('bg-gray-50 rounded-lg p-3', className)}>
-      <h4 className="text-sm font-medium text-gray-700 mb-2">执行日志</h4>
+    <div className={cn('bg-muted/30 rounded-lg p-3', className)}>
+      <h4 className="text-sm font-medium text-foreground mb-2">执行日志</h4>
       <div className="space-y-1">
         {log.map((entry, index) => (
           <div key={index} className="flex items-center gap-2 text-sm">
@@ -122,14 +122,14 @@ export function ExecutionLog({ log, className }: ExecutionLogProps) {
                 entry.status === 'done' && 'bg-green-100 text-green-600',
                 entry.status === 'running' && 'bg-blue-100 text-blue-600',
                 entry.status === 'error' && 'bg-red-100 text-red-600',
-                entry.status === 'pending' && 'bg-gray-100 text-gray-400'
+                entry.status === 'pending' && 'bg-muted text-muted-foreground'
               )}
             >
               {entry.status === 'done' ? '✓' : entry.status === 'running' ? '⟳' : entry.status === 'error' ? '✗' : '○'}
             </span>
-            <span className="text-gray-600">{entry.stepName}</span>
+            <span className="text-foreground">{entry.stepName}</span>
             {entry.detail && (
-              <span className="text-gray-400 text-xs ml-auto">{entry.detail}</span>
+              <span className="text-muted-foreground text-xs ml-auto">{entry.detail}</span>
             )}
           </div>
         ))}
@@ -161,14 +161,14 @@ export function ConfirmationDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
       <div className="relative bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-gray-600 mb-4">{message}</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+        <p className="text-foreground mb-4">{message}</p>
         {details && details.length > 0 && (
-          <div className="bg-gray-50 rounded-lg p-3 mb-4">
-            <ul className="text-sm text-gray-600 space-y-1">
+          <div className="bg-muted/30 rounded-lg p-3 mb-4">
+            <ul className="text-sm text-foreground space-y-1">
               {details.map((detail, index) => (
                 <li key={index} className="flex items-center gap-2">
-                  <span className="text-gray-400">•</span>
+                  <span className="text-muted-foreground">•</span>
                   {detail}
                 </li>
               ))}
@@ -178,7 +178,7 @@ export function ConfirmationDialog({
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+            className="px-4 py-2 text-sm font-medium text-foreground bg-muted rounded-lg hover:bg-muted"
           >
             {cancelLabel}
           </button>
@@ -231,7 +231,7 @@ export function ExportReminder({
             </button>
             <button
               onClick={onContinue}
-              className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="px-3 py-1.5 text-sm font-medium text-foreground bg-muted rounded-lg hover:bg-muted"
             >
               继续处理
             </button>
@@ -240,7 +240,7 @@ export function ExportReminder({
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-muted-foreground hover:text-foreground"
           >
             ✕
           </button>

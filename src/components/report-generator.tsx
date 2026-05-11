@@ -142,7 +142,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                 <div className="text-6xl font-bold" style={{ color: getScoreColor(deep.healthScore.overall) }}>
                   {deep.healthScore.overall}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">综合评分</p>
+                <p className="text-sm text-muted-foreground mt-1">综合评分</p>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-3">
@@ -154,7 +154,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
               ].map(item => (
                 <div key={item.label} className="text-center">
                   <Progress value={item.value} className="h-2 mb-1" />
-                  <p className="text-xs text-gray-500">{item.label}: {item.value}</p>
+                  <p className="text-xs text-muted-foreground">{item.label}: {item.value}</p>
                 </div>
               ))}
             </div>
@@ -190,7 +190,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                   </Badge>
                   <span className="font-medium text-sm">{finding.title}</span>
                 </div>
-                <p className="text-xs text-gray-600">{finding.detail}</p>
+                <p className="text-xs text-foreground">{finding.detail}</p>
                 <p className="text-xs text-green-600 mt-1">建议: {finding.suggestion}</p>
               </div>
             ))}
@@ -209,12 +209,12 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
             {deep.trends.map((trend, idx) => (
               <div key={idx} className={`p-3 rounded-lg ${
                 trend.direction === 'up' ? 'bg-green-50' :
-                trend.direction === 'down' ? 'bg-red-50' : 'bg-gray-50'
+                trend.direction === 'down' ? 'bg-red-50' : 'bg-muted/30'
               }`}>
                 <div className="flex items-center gap-2">
                   <TrendingUp className={`w-4 h-4 ${
                     trend.direction === 'up' ? 'text-green-600' :
-                    trend.direction === 'down' ? 'text-red-600' : 'text-gray-600'
+                    trend.direction === 'down' ? 'text-red-600' : 'text-foreground'
                   }`} />
                   <span className="font-medium text-sm">{trend.field}</span>
                   <Badge variant="outline" className="text-xs">
@@ -224,7 +224,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                     {trend.changeRate !== 0 && ` ${Math.abs(trend.changeRate)}%`}
                   </Badge>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{trend.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">{trend.description}</p>
               </div>
             ))}
           </div>
@@ -251,7 +251,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                   </Badge>
                   <span className="font-medium text-sm">{item.action}</span>
                 </div>
-                <p className="text-xs text-gray-600">{item.detail}</p>
+                <p className="text-xs text-foreground">{item.detail}</p>
                 <p className="text-xs text-green-600 mt-1">预期收益: {item.expectedBenefit}</p>
               </div>
             ))}
@@ -268,7 +268,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50">
+              <tr className="border-b bg-muted/30">
                 <th className="text-left py-2 px-3 font-medium">字段</th>
                 <th className="text-left py-2 px-3 font-medium">类型</th>
                 <th className="text-right py-2 px-3 font-medium">非空</th>
@@ -482,7 +482,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                       <Icon className="w-4 h-4" />
                     </div>
                     <p className="font-medium text-sm">{template.name}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{template.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{template.description}</p>
                     {isSelected && <CheckCircle className="w-4 h-4 text-primary mt-1" />}
                   </div>
                 );
@@ -497,7 +497,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
             {isExporting ? (
               <div className="space-y-2">
                 <Progress value={exportProgress} />
-                <p className="text-sm text-gray-500 text-center">正在生成报表... {exportProgress}%</p>
+                <p className="text-sm text-muted-foreground text-center">正在生成报表... {exportProgress}%</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-3">
@@ -534,8 +534,8 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
           <div ref={reportRef} className="border rounded-lg p-6 bg-white space-y-6 print:shadow-none">
             {/* 报告头 */}
             <div className="border-b pb-4">
-              <h1 className="text-2xl font-bold text-gray-900">{reportTitle}</h1>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+              <h1 className="text-2xl font-bold text-foreground">{reportTitle}</h1>
+              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date().toLocaleDateString()}</span>
                 <span className="flex items-center gap-1"><User className="w-3 h-3" />{reportAuthor}</span>
                 <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{data.fileName}</span>
@@ -547,7 +547,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
               const Icon = section.icon;
               return (
                 <div key={idx}>
-                  <h2 className="text-lg font-semibold flex items-center gap-2 mb-3 text-gray-800">
+                  <h2 className="text-lg font-semibold flex items-center gap-2 mb-3 text-foreground">
                     <Icon className="w-5 h-5 text-primary" />
                     {idx + 1}. {section.title}
                   </h2>
@@ -557,7 +557,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
             })}
 
             {/* 报告尾 */}
-            <div className="border-t pt-4 text-center text-xs text-gray-400">
+            <div className="border-t pt-4 text-center text-xs text-muted-foreground">
               <p>本报告由 DataInsight Pro 自动生成 | {new Date().toLocaleString()}</p>
               <p>数据来源: {data.fileName} | 行数: {data.rowCount} | 列数: {data.columnCount}</p>
             </div>

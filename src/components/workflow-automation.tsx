@@ -345,7 +345,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium truncate">{rule.name}</p>
                           {rule.description && (
-                            <Badge variant="outline" className="text-[10px] h-5 truncate max-w-[200px]">
+                            <Badge variant="outline" className="text-xs h-5 truncate max-w-[200px]">
                               {rule.description}
                             </Badge>
                           )}
@@ -468,7 +468,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                                 <span className="text-muted-foreground">{i + 1}.</span>
                                 <ActionIcon className="w-3 h-3 mt-0.5 shrink-0" />
                                 <div>
-                                  <Badge variant="outline" className="text-[10px]">
+                                  <Badge variant="outline" className="text-xs">
                                     {ACTION_OPTIONS.find(a => a.value === action.type)?.label}
                                   </Badge>
                                   {action.notifyMessage && (
@@ -542,11 +542,11 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                     <p className="font-medium text-sm">{template.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{template.description}</p>
                     <div className="flex items-center gap-1 mt-2">
-                      <Badge variant="outline" className="text-[10px] h-5">
+                      <Badge variant="outline" className="text-xs h-5">
                         {TRIGGER_OPTIONS.find(t => t.value === template.trigger.type)?.label}
                       </Badge>
                       <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                      <Badge variant="outline" className="text-[10px] h-5">
+                      <Badge variant="outline" className="text-xs h-5">
                         {ACTION_OPTIONS.find(a => a.value === template.actions[0].type)?.label}
                       </Badge>
                     </div>

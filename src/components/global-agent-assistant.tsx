@@ -626,7 +626,7 @@ function MessageBubble({
           <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
             <Compass className="h-3 w-3" />
             <span>识别到场景：{SCENE_LABELS[msg.metadata.intent.scene] || msg.metadata.intent.scene}</span>
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-xs">
               置信度 {Math.round(msg.metadata.intent.confidence * 100)}%
             </Badge>
           </div>
@@ -687,7 +687,7 @@ function MessageBubble({
         )}
 
         {/* 时间戳 */}
-        <div className="mt-1 text-right text-[10px] text-muted-foreground/60">
+        <div className="mt-1 text-right text-xs text-muted-foreground/60">
           {msg.timestamp.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
         </div>
       </div>

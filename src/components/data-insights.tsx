@@ -215,8 +215,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
     return (
       <Card className="text-center py-12">
         <CardContent>
-          <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">正在分析数据...</p>
+          <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">正在分析数据...</p>
         </CardContent>
       </Card>
     );
@@ -226,8 +226,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
     return (
       <Card className="text-center py-12">
         <CardContent>
-          <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 mb-4">深度分析不可用，请重新分析</p>
+          <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground mb-4">深度分析不可用，请重新分析</p>
           <Button onClick={onAnalyze}>重新分析</Button>
         </CardContent>
       </Card>
@@ -414,7 +414,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600 mb-4">{deep.dataProfile.summary}</p>
+            <p className="text-sm text-foreground mb-4">{deep.dataProfile.summary}</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <div className="bg-blue-50 rounded-lg p-3">
                 <p className="text-xs text-blue-600 mb-1">数据类型</p>
@@ -482,7 +482,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                 { label: '可用性', value: deep.healthScore.usability, tip: '分析友好程度' },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-12">{item.label}</span>
+                  <span className="text-xs text-muted-foreground w-12">{item.label}</span>
                   <Progress value={item.value} className="flex-1 h-2" />
                   <span className="text-xs font-medium w-8 text-right">{item.value}</span>
                   <span className="text-xs text-muted-foreground w-24">{item.tip}</span>
@@ -512,7 +512,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
           <CardContent className="space-y-5">
             {/* 推荐 KPI */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+              <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
                 <Target className="w-4 h-4 text-blue-500" />
                 推荐核心指标
               </h4>
@@ -529,8 +529,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                         {kpi.priority === 'p0' ? 'P0' : kpi.priority === 'p1' ? 'P1' : 'P2'}
                       </Badge>
                     </div>
-                    <code className="text-xs text-gray-500 block mb-1">{kpi.expression}</code>
-                    <p className="text-xs text-gray-600">{kpi.description}</p>
+                    <code className="text-xs text-muted-foreground block mb-1">{kpi.expression}</code>
+                    <p className="text-xs text-foreground">{kpi.description}</p>
                   </div>
                 ))}
               </div>
@@ -538,7 +538,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
 
             {/* 推荐维度 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+              <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
                 <Layers className="w-4 h-4 text-purple-500" />
                 推荐分析维度
               </h4>
@@ -553,7 +553,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
 
             {/* 行业化建议 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+              <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
                 <Lightbulb className="w-4 h-4 text-yellow-500" />
                 行业化分析建议
               </h4>
@@ -566,7 +566,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                   }`}>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{s.title}</p>
-                      <p className="text-xs text-gray-600 mt-1">{s.description}</p>
+                      <p className="text-xs text-foreground mt-1">{s.description}</p>
                     </div>
                     <Badge variant="outline" className="text-xs py-0 flex-shrink-0">
                       {s.priority === 'high' ? '高优先级' : s.priority === 'medium' ? '中优先级' : '低优先级'}
@@ -641,30 +641,30 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                         </Badge>
                         <span className="font-medium text-sm">{finding.title}</span>
                       </div>
-                      <p className="text-xs text-gray-600">{finding.detail}</p>
+                      <p className="text-xs text-foreground">{finding.detail}</p>
                     </div>
-                    {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                   </div>
                   {isExpanded && (
-                    <div className="px-3 pb-3 pt-0 ml-8 border-t border-gray-100">
+                    <div className="px-3 pb-3 pt-0 ml-8 border-t border-border">
                       <div className="mt-2 space-y-2">
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs font-medium text-gray-700">影响</p>
-                            <p className="text-xs text-gray-500">{finding.impact}</p>
+                            <p className="text-xs font-medium text-foreground">影响</p>
+                            <p className="text-xs text-muted-foreground">{finding.impact}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-2">
                           <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs font-medium text-gray-700">建议</p>
-                            <p className="text-xs text-gray-500">{finding.suggestion}</p>
+                            <p className="text-xs font-medium text-foreground">建议</p>
+                            <p className="text-xs text-muted-foreground">{finding.suggestion}</p>
                           </div>
                         </div>
                         {finding.relatedFields.length > 0 && (
                           <div className="flex items-center gap-1 mt-1">
-                            <span className="text-xs text-gray-400">相关字段:</span>
+                            <span className="text-xs text-muted-foreground">相关字段:</span>
                             {finding.relatedFields.map(f => (
                               <Badge key={f} variant="outline" className="text-xs py-0">{f}</Badge>
                             ))}
@@ -700,10 +700,10 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                                      trend.direction === 'volatile' ? Activity : Minus;
                   const trendColor = trend.direction === 'up' ? 'text-green-600' :
                                      trend.direction === 'down' ? 'text-red-600' :
-                                     trend.direction === 'volatile' ? 'text-orange-600' : 'text-gray-600';
+                                     trend.direction === 'volatile' ? 'text-orange-600' : 'text-foreground';
                   const trendBg = trend.direction === 'up' ? 'bg-green-50' :
                                   trend.direction === 'down' ? 'bg-red-50' :
-                                  trend.direction === 'volatile' ? 'bg-orange-50' : 'bg-gray-50';
+                                  trend.direction === 'volatile' ? 'bg-orange-50' : 'bg-muted/30';
                   // 业务化趋势描述
                   const bizDirection = trend.direction === 'up' ? '增长' :
                                        trend.direction === 'down' ? '下降' :
@@ -725,7 +725,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                               {bizDirection} {trend.changeRate !== 0 && `${Math.abs(trend.changeRate).toFixed(1)}%`}
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-600">{trend.description}</p>
+                          <p className="text-xs text-foreground">{trend.description}</p>
                           <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                             <Lightbulb className="w-3 h-3" /> {bizAction}
                           </p>
@@ -793,7 +793,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
           <CardContent className="space-y-6">
             {/* 异常指标 */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+              <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
                 <Flame className="w-4 h-4 text-orange-500" />
                 异常指标检测
               </h4>
@@ -835,17 +835,17 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {/* 维度拆解 */}
             {deep.attribution.dimensionBreakdowns.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
                   <BarChart3 className="w-4 h-4 text-blue-500" />
                   维度拆解
                 </h4>
                 <div className="space-y-4">
                   {deep.attribution.dimensionBreakdowns.slice(0, 4).map((breakdown, idx) => (
-                    <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                    <div key={idx} className="p-3 bg-muted/30 rounded-lg">
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-sm font-medium">{breakdown.metricField}</span>
-                        <ArrowRight className="w-3 h-3 text-gray-400" />
-                        <span className="text-sm text-gray-600">按 {breakdown.dimensionField} 拆解</span>
+                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-sm text-foreground">按 {breakdown.dimensionField} 拆解</span>
                         <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs ml-auto">
                           核心驱动: {breakdown.keyDriver} ({Math.abs(breakdown.keyDriverContribution).toFixed(1)}%)
                         </Badge>
@@ -853,10 +853,10 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                       <div className="space-y-2">
                         {breakdown.segments.slice(0, 6).map((seg, si) => (
                           <div key={si} className="flex items-center gap-3">
-                            <span className="text-xs text-gray-600 w-24 truncate" title={seg.segmentValue}>
+                            <span className="text-xs text-foreground w-24 truncate" title={seg.segmentValue}>
                               {seg.segmentValue}
                             </span>
-                            <div className="flex-1 h-5 bg-gray-200 rounded-full overflow-hidden relative">
+                            <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden relative">
                               <div
                                 className={`h-full rounded-full ${seg.isKeyDriver ? 'bg-blue-500' : Math.abs(seg.contribution) > 20 ? 'bg-blue-300' : 'bg-gray-400'}`}
                                 style={{ width: `${Math.min(Math.abs(seg.contribution), 100)}%` }}
@@ -880,7 +880,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {/* 根因分析 */}
             {deep.attribution.rootCauses.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-1">
+                <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
                   <Crosshair className="w-4 h-4 text-red-500" />
                   根因定位
                 </h4>
@@ -898,21 +898,21 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                             置信度: {rc.confidence === 'high' ? '高' : rc.confidence === 'medium' ? '中' : '低'}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700 mb-2">{rc.cause}</p>
+                        <p className="text-sm text-foreground mb-2">{rc.cause}</p>
                         {/* 证据链 */}
                         <div className="mb-2">
-                          <p className="text-xs text-gray-500 mb-1">证据链:</p>
+                          <p className="text-xs text-muted-foreground mb-1">证据链:</p>
                           {rc.evidence.map((ev, ei) => (
                             <div key={ei} className="flex items-start gap-1 ml-2">
-                              <span className="text-xs text-gray-400 mt-0.5">•</span>
-                              <span className="text-xs text-gray-600">{ev}</span>
+                              <span className="text-xs text-muted-foreground mt-0.5">•</span>
+                              <span className="text-xs text-foreground">{ev}</span>
                             </div>
                           ))}
                         </div>
                         {/* 相关维度 */}
                         {rc.relatedDimensions.length > 0 && (
                           <div className="flex items-center gap-1 mb-2">
-                            <span className="text-xs text-gray-400">相关维度:</span>
+                            <span className="text-xs text-muted-foreground">相关维度:</span>
                             {rc.relatedDimensions.map(d => (
                               <Badge key={d} variant="outline" className="text-xs py-0">{d}</Badge>
                             ))}
@@ -921,7 +921,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                         {/* 建议 */}
                         <div className="flex items-start gap-1.5 mt-2 p-2 bg-green-50/50 rounded">
                           <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-xs text-gray-700">{rc.suggestion}</span>
+                          <span className="text-xs text-foreground">{rc.suggestion}</span>
                         </div>
                       </div>
                     );
@@ -1015,8 +1015,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                       <span className="font-medium text-sm">{rec.title}</span>
                     </div>
                     <Badge variant="outline" className="text-xs mb-2">{chartLabel}</Badge>
-                    <p className="text-xs text-gray-500 mt-2">{rec.reason}</p>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground mt-2">{rec.reason}</p>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                       <span>X: {rec.xField}</span>
                       {rec.yField && <><ArrowRight className="w-3 h-3" /><span>Y: {rec.yField}</span></>}
                     </div>
@@ -1052,7 +1052,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className="bg-red-100 text-red-700 hover:bg-red-100">本周可落地</Badge>
-                    <span className="text-xs text-gray-500">低成本、零依赖、立刻执行</span>
+                    <span className="text-xs text-muted-foreground">低成本、零依赖、立刻执行</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'high').map((item, idx) => (
@@ -1061,7 +1061,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                           <Zap className="w-3.5 h-3.5 text-red-500" />
                           <span className="font-medium text-sm">{item.action}</span>
                         </div>
-                        <p className="text-xs text-gray-600 ml-5">{item.detail}</p>
+                        <p className="text-xs text-foreground ml-5">{item.detail}</p>
                         <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
                       </div>
                     ))}
@@ -1073,7 +1073,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">本月内落地</Badge>
-                    <span className="text-xs text-gray-500">需要少量资源和协调</span>
+                    <span className="text-xs text-muted-foreground">需要少量资源和协调</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'medium').map((item, idx) => (
@@ -1082,7 +1082,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                           <Target className="w-3.5 h-3.5 text-orange-500" />
                           <span className="font-medium text-sm">{item.action}</span>
                         </div>
-                        <p className="text-xs text-gray-600 ml-5">{item.detail}</p>
+                        <p className="text-xs text-foreground ml-5">{item.detail}</p>
                         <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
                       </div>
                     ))}
@@ -1094,7 +1094,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">本季度规划</Badge>
-                    <span className="text-xs text-gray-500">需要系统建设和资源投入</span>
+                    <span className="text-xs text-muted-foreground">需要系统建设和资源投入</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'low').map((item, idx) => (
@@ -1103,7 +1103,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                           <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
                           <span className="font-medium text-sm">{item.action}</span>
                         </div>
-                        <p className="text-xs text-gray-600 ml-5">{item.detail}</p>
+                        <p className="text-xs text-foreground ml-5">{item.detail}</p>
                         <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
                       </div>
                     ))}
@@ -1164,7 +1164,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                 <div className="p-4 bg-muted/50 rounded-lg text-center">
                   <p className="text-xs text-muted-foreground mb-1">预计变化</p>
                   <div className={`flex items-center justify-center gap-1 text-2xl font-bold ${
-                    trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                    trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-foreground'
                   }`}>
                     {trend === 'up' ? <TrendingUp className="w-5 h-5" /> : trend === 'down' ? <TrendingDown className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
                     {Number(changePct) > 0 ? '+' : ''}{changePct}%
@@ -1192,19 +1192,19 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 px-3 font-medium text-gray-600">字段</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-600">类型</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-600">非空</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-600">唯一值</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-600">最小值</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-600">最大值</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-600">均值</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-600">示例</th>
+                  <th className="text-left py-2 px-3 font-medium text-foreground">字段</th>
+                  <th className="text-left py-2 px-3 font-medium text-foreground">类型</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">非空</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">唯一值</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">最小值</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">最大值</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">均值</th>
+                  <th className="text-left py-2 px-3 font-medium text-foreground">示例</th>
                 </tr>
               </thead>
               <tbody>
                 {analysis.fieldStats.map((stat, idx) => (
-                  <tr key={idx} className="border-b hover:bg-gray-50">
+                  <tr key={idx} className="border-b hover:bg-muted/30">
                     <td className="py-2 px-3 font-medium">{stat.field}</td>
                     <td className="py-2 px-3">
                       <Badge variant="outline" className="text-xs">
@@ -1220,7 +1220,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                     <td className="py-2 px-3 text-right">{stat.numericStats?.min ?? '-'}</td>
                     <td className="py-2 px-3 text-right">{stat.numericStats?.max ?? '-'}</td>
                     <td className="py-2 px-3 text-right">{stat.numericStats?.mean?.toFixed(2) ?? '-'}</td>
-                    <td className="py-2 px-3 text-gray-400 truncate max-w-[120px]">
+                    <td className="py-2 px-3 text-muted-foreground truncate max-w-[120px]">
                       {stat.sampleValues.slice(0, 2).join(', ')}
                     </td>
                   </tr>

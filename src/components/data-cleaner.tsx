@@ -679,14 +679,14 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                         置信度 {Math.round(aiIntent.confidence * 100)}%
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600">{aiIntent.explanation}</p>
+                    <p className="text-sm text-foreground">{aiIntent.explanation}</p>
                   </div>
                 )}
               </div>
               
               {/* 快捷指令 */}
               <div>
-                <Label className="text-sm text-gray-500 mb-2 block">常用指令</Label>
+                <Label className="text-sm text-muted-foreground mb-2 block">常用指令</Label>
                 <div className="flex flex-wrap gap-2">
                   {QUICK_ACTIONS.map((action) => (
                     <Tooltip key={action.label}>
@@ -820,7 +820,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                     <Copy className="w-4 h-4 text-orange-500" />
                     <div>
                       <p className="text-sm font-medium">去除完全重复的行</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         当前数据 {data.rowCount} 行，预计去除 {data.rowCount - new Set(data.rows.map(r => JSON.stringify(r))).size} 行重复
                       </p>
                     </div>
@@ -835,8 +835,8 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
             
             {/* 高级配置 */}
             <TabsContent value="advanced" className="space-y-4">
-              <div className="text-center py-8 text-gray-500">
-                <Settings className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-muted-foreground">
+                <Settings className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
                 <p>高级配置面板</p>
                 <p className="text-sm">支持自定义清洗规则和批量处理</p>
               </div>
@@ -846,7 +846,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
           {/* 清洗步骤列表 */}
           {cleaningSteps.length > 0 && (
             <div className="border rounded-lg">
-              <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
+              <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
                 <span className="text-sm font-medium">清洗步骤 ({cleaningSteps.length})</span>
                 <div className="flex gap-2">
                   <Button size="sm" variant="ghost" onClick={resetCleaning}>
@@ -888,17 +888,17 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                       key={step.id}
                       className={cn(
                         'flex items-center gap-2 p-2 rounded-lg mb-1',
-                        step.enabled ? 'bg-white border border-gray-200' : 'bg-gray-50 opacity-60'
+                        step.enabled ? 'bg-white border border-border' : 'bg-muted/30 opacity-60'
                       )}
                     >
-                      <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
+                      <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
                       <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
                         {index + 1}
                       </span>
-                      <OpInfo.icon className="w-4 h-4 text-gray-500" />
+                      <OpInfo.icon className="w-4 h-4 text-muted-foreground" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{OpInfo.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{getStepDetail()}</p>
+                        <p className="text-xs text-muted-foreground truncate">{getStepDetail()}</p>
                       </div>
                       <Checkbox 
                         checked={step.enabled}
@@ -935,9 +935,9 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
           {/* 数据预览 */}
           {showPreview && (
             <div className="border rounded-lg overflow-hidden">
-              <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
+              <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-gray-500" />
+                  <Eye className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-medium">数据预览</span>
                   <Badge variant="outline" className="text-xs">
                     {previewData.before.rowCount} → {previewData.after.rowCount} 行

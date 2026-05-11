@@ -470,28 +470,28 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                       <TableCell>{getRoleBadge(u.role)}</TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {u.permissions.upload && <Badge variant="outline" className="text-[10px] h-5">上传</Badge>}
-                          {u.permissions.export && <Badge variant="outline" className="text-[10px] h-5">导出</Badge>}
+                          {u.permissions.upload && <Badge variant="outline" className="text-xs h-5">上传</Badge>}
+                          {u.permissions.export && <Badge variant="outline" className="text-xs h-5">导出</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {u.permissions.ai_analyze && <Badge variant="outline" className="text-[10px] h-5">分析</Badge>}
-                          {u.permissions.ai_table_builder && <Badge variant="outline" className="text-[10px] h-5">建表</Badge>}
-                          {u.permissions.ai_formula && <Badge variant="outline" className="text-[10px] h-5">公式</Badge>}
+                          {u.permissions.ai_analyze && <Badge variant="outline" className="text-xs h-5">分析</Badge>}
+                          {u.permissions.ai_table_builder && <Badge variant="outline" className="text-xs h-5">建表</Badge>}
+                          {u.permissions.ai_formula && <Badge variant="outline" className="text-xs h-5">公式</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {u.permissions.dashboard && <Badge variant="outline" className="text-[10px] h-5">仪表盘</Badge>}
-                          {u.permissions.share && <Badge variant="outline" className="text-[10px] h-5">分享</Badge>}
-                          {u.permissions.report && <Badge variant="outline" className="text-[10px] h-5">报表</Badge>}
+                          {u.permissions.dashboard && <Badge variant="outline" className="text-xs h-5">仪表盘</Badge>}
+                          {u.permissions.share && <Badge variant="outline" className="text-xs h-5">分享</Badge>}
+                          {u.permissions.report && <Badge variant="outline" className="text-xs h-5">报表</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {u.permissions.admin_user && <Badge variant="outline" className="text-[10px] h-5">用户管理</Badge>}
-                          {u.permissions.admin_ai_config && <Badge variant="outline" className="text-[10px] h-5">AI配置</Badge>}
+                          {u.permissions.admin_user && <Badge variant="outline" className="text-xs h-5">用户管理</Badge>}
+                          {u.permissions.admin_ai_config && <Badge variant="outline" className="text-xs h-5">AI配置</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>

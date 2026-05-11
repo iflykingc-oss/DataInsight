@@ -209,7 +209,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
                   </Badge>
                 );
               })}
-              {aiDetected && <Badge variant="secondary" className="text-[10px]">AI识别</Badge>}
+              {aiDetected && <Badge variant="secondary" className="text-xs">AI识别</Badge>}
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -361,7 +361,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
                 >
                   <Icon className={`w-6 h-6 mx-auto mb-1.5 ${isActive ? 'text-primary' : ind.color}`} />
                   <p className="text-xs font-medium">{ind.name}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{ind.metrics.length}个指标</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{ind.metrics.length}个指标</p>
                 </button>
               );
             })}

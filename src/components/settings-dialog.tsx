@@ -417,7 +417,7 @@ export default function SettingsDialog({
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-colors',
+                    'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors',
                     isActive
                       ? 'bg-accent text-accent-foreground font-medium'
                       : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'

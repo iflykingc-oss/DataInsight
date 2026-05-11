@@ -429,7 +429,7 @@ export function TemplateManager({
           {/* 搜索和筛选 */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="搜索模板..."
                 value={searchQuery}
@@ -481,7 +481,7 @@ export function TemplateManager({
                     'px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex items-center gap-1',
                     selectedCategory === cat.id
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-gray-100 hover:bg-gray-200'
+                      : 'bg-muted hover:bg-muted'
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -498,8 +498,8 @@ export function TemplateManager({
           {filteredTemplates.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <Bookmark className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">没有找到匹配的模板</p>
+                <Bookmark className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground">没有找到匹配的模板</p>
               </CardContent>
             </Card>
           ) : viewMode === 'grid' ? (
@@ -519,7 +519,7 @@ export function TemplateManager({
                     <CardContent className="p-4">
                       {/* 缩略图占位 */}
                       <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-3 flex items-center justify-center">
-                        <Icon className="w-8 h-8 text-gray-400" />
+                        <Icon className="w-8 h-8 text-muted-foreground" />
                       </div>
                       
                       <div className="space-y-2">
@@ -530,21 +530,21 @@ export function TemplateManager({
                               e.stopPropagation();
                               handleToggleFavorite(template.id);
                             }}
-                            className="p-1 hover:bg-gray-100 rounded"
+                            className="p-1 hover:bg-muted rounded"
                           >
                             {template.isFavorite ? (
                               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                             ) : (
-                              <StarOff className="w-4 h-4 text-gray-400" />
+                              <StarOff className="w-4 h-4 text-muted-foreground" />
                             )}
                           </button>
                         </div>
                         
-                        <p className="text-xs text-gray-500 line-clamp-2">
+                        <p className="text-xs text-muted-foreground line-clamp-2">
                           {template.description}
                         </p>
                         
-                        <div className="flex items-center justify-between text-xs text-gray-400">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Badge variant="outline" className="text-xs">
                               {template.type}
@@ -576,11 +576,11 @@ export function TemplateManager({
                       <div className="flex items-center gap-4">
                         <div className={cn(
                           'p-3 rounded-lg',
-                          template.isBuiltIn ? 'bg-blue-100' : 'bg-gray-100'
+                          template.isBuiltIn ? 'bg-blue-100' : 'bg-muted'
                         )}>
                           <Icon className={cn(
                             'w-6 h-6',
-                            template.isBuiltIn ? 'text-blue-600' : 'text-gray-600'
+                            template.isBuiltIn ? 'text-blue-600' : 'text-foreground'
                           )} />
                         </div>
                         
@@ -591,10 +591,10 @@ export function TemplateManager({
                               <Badge variant="secondary" className="text-xs">内置</Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-500 truncate">
+                          <p className="text-sm text-muted-foreground truncate">
                             {template.description}
                           </p>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Tag className="w-3 h-3" />
                               {template.type}
@@ -621,7 +621,7 @@ export function TemplateManager({
                                 {template.isFavorite ? (
                                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                                 ) : (
-                                  <StarOff className="w-4 h-4 text-gray-400" />
+                                  <StarOff className="w-4 h-4 text-muted-foreground" />
                                 )}
                               </Button>
                             </TooltipTrigger>
@@ -679,9 +679,9 @@ export function TemplateManager({
           {templates.filter(t => !t.isBuiltIn).length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <Bookmark className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">暂无自定义模板</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <Bookmark className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground">暂无自定义模板</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   将常用的仪表盘或报表保存为模板，方便复用
                 </p>
                 <Button className="mt-4" onClick={handleCreateTemplate}>
@@ -699,13 +699,13 @@ export function TemplateManager({
                   <Card key={template.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gray-100 rounded-lg">
-                          <Icon className="w-6 h-6 text-gray-600" />
+                        <div className="p-3 bg-muted rounded-lg">
+                          <Icon className="w-6 h-6 text-foreground" />
                         </div>
                         
                         <div className="flex-1">
                           <h4 className="font-medium">{template.name}</h4>
-                          <p className="text-sm text-gray-500">{template.description}</p>
+                          <p className="text-sm text-muted-foreground">{template.description}</p>
                         </div>
 
                         <div className="flex items-center gap-1">

@@ -548,7 +548,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
       <div
         key={`${rowIndex}-${colIndex}`}
         className={cn(
-          'spreadsheet-cell relative border-r border-b border-gray-200 flex items-center px-2 text-sm',
+          'spreadsheet-cell relative border-r border-b border-border flex items-center px-2 text-sm',
           'transition-colors duration-75 select-none',
           isSelected && 'bg-blue-50 outline outline-2 outline-blue-500 z-10',
           validationError && 'bg-red-50 border-red-300'
@@ -593,8 +593,8 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
       <div
         key={`header-${colIndex}`}
         className={cn(
-          'spreadsheet-header border-r border-b border-gray-300 flex items-center px-2 text-sm font-medium',
-          'bg-gray-100 cursor-pointer select-none hover:bg-gray-200 transition-colors',
+          'spreadsheet-header border-r border-b border-border flex items-center px-2 text-sm font-medium',
+          'bg-muted cursor-pointer select-none hover:bg-muted transition-colors',
           isSorted && 'bg-blue-100',
           isFiltered && 'bg-green-100'
         )}
@@ -617,7 +617,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
       <div key={`frozen-row-${rowIndex}`} className="flex">
         {showLineNumbers && (
           <div
-            className="spreadsheet-line-number border-r border-b border-gray-200 flex items-center justify-center text-xs text-gray-400 bg-gray-50"
+            className="spreadsheet-line-number border-r border-b border-border flex items-center justify-center text-xs text-muted-foreground bg-muted/30"
             style={{ width: 50, height: DEFAULT_ROW_HEIGHT }}
           >
             {rowIndex + 1}
@@ -633,7 +633,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
       <div key={`frozen-col-${rowIndex}`} className="flex">
         {showLineNumbers && (
           <div
-            className="spreadsheet-line-number border-r border-b border-gray-200 flex items-center justify-center text-xs text-gray-400 bg-gray-50"
+            className="spreadsheet-line-number border-r border-b border-border flex items-center justify-center text-xs text-muted-foreground bg-muted/30"
             style={{ width: 50, height: DEFAULT_ROW_HEIGHT }}
           >
             {startRow + rowIndex + 1}
@@ -646,10 +646,10 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
   if (showToolbar) {
     return (
       <div className={cn('flex flex-col bg-white rounded-lg border shadow-sm', className)}>
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-lg">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30 rounded-t-lg">
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">数据表格</span>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-muted-foreground">
               {processedData.rows.length} 行 × {processedData.headers.length} 列
             </span>
             {state.filterCondition && (
@@ -666,7 +666,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
 
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="搜索..."
@@ -701,7 +701,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
 
             <button
               onClick={() => setState((prev) => ({ ...prev, isFullScreen: !prev.isFullScreen }))}
-              className="p-1.5 hover:bg-gray-100 rounded"
+              className="p-1.5 hover:bg-muted rounded"
             >
               {state.isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
@@ -720,10 +720,10 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
           tabIndex={0}
         >
           <div className="min-w-full inline-block">
-            <div className="sticky top-0 z-20 flex bg-gray-100">
+            <div className="sticky top-0 z-20 flex bg-muted">
               {showLineNumbers && (
                 <div
-                  className="border-r border-b border-gray-300 flex items-center justify-center text-xs font-medium bg-gray-100"
+                  className="border-r border-b border-border flex items-center justify-center text-xs font-medium bg-muted"
                   style={{ width: 50, height: DEFAULT_ROW_HEIGHT }}
                 >
                   #
@@ -733,7 +733,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
             </div>
 
             {frozenRows > 0 && (
-              <div className="sticky top-0 z-10 bg-gray-50 border-b-2 border-gray-300">
+              <div className="sticky top-0 z-10 bg-muted/30 border-b-2 border-border">
                 {renderFrozenRows()}
               </div>
             )}
@@ -743,7 +743,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
                 <div key={`row-${rowIndex}`} className="flex">
                   {showLineNumbers && (
                     <div
-                      className="spreadsheet-line-number border-r border-b border-gray-200 flex items-center justify-center text-xs text-gray-400 bg-gray-50"
+                      className="spreadsheet-line-number border-r border-b border-border flex items-center justify-center text-xs text-muted-foreground bg-muted/30"
                       style={{ width: 50, height: DEFAULT_ROW_HEIGHT }}
                     >
                       {startRow + rowIndex + 1}
@@ -757,8 +757,8 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
         </div>
 
         {showFooter && (
-          <div className="flex items-center justify-between px-4 py-2 border-t bg-gray-50 rounded-b-lg">
-            <div className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 rounded-b-lg">
+            <div className="text-xs text-muted-foreground">
               第 {currentPage} / {totalPages} 页
             </div>
             <div className="flex items-center gap-2">
@@ -768,7 +768,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
                   bodyRef.current?.scrollTo({ top: newScroll });
                 }}
                 disabled={currentPage <= 1}
-                className="px-2 py-1 text-xs border rounded hover:bg-gray-100 disabled:opacity-50"
+                className="px-2 py-1 text-xs border rounded hover:bg-muted disabled:opacity-50"
               >
                 上一页
               </button>
@@ -778,7 +778,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
                   bodyRef.current?.scrollTo({ top: newScroll });
                 }}
                 disabled={currentPage >= totalPages}
-                className="px-2 py-1 text-xs border rounded hover:bg-gray-100 disabled:opacity-50"
+                className="px-2 py-1 text-xs border rounded hover:bg-muted disabled:opacity-50"
               >
                 下一页
               </button>
@@ -793,7 +793,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center gap-2"
+              className="w-full px-3 py-2 text-sm text-left hover:bg-muted flex items-center gap-2"
               onClick={() => {
                 const header = processedData.headers[state.contextMenu!.col];
                 const value = processedData.rows[state.contextMenu!.row]?.[header];
@@ -807,7 +807,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
             {editable && (
               <>
                 <button
-                  className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted flex items-center gap-2"
                   onClick={() => {
                     setState((prev) => ({ ...prev, contextMenu: null }));
                     handleCellDoubleClick(state.contextMenu!.row, state.contextMenu!.col);
@@ -817,7 +817,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
                   编辑
                 </button>
                 <button
-                  className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 flex items-center gap-2 text-red-600"
+                  className="w-full px-3 py-2 text-sm text-left hover:bg-muted flex items-center gap-2 text-red-600"
                   onClick={() => {
                     const newRows = [...processedData.rows];
                     newRows.splice(state.contextMenu!.row, 1);
@@ -847,16 +847,16 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
     >
       <table className="border-collapse min-w-full">
         <thead>
-          <tr className="bg-gray-100">
+          <tr className="bg-muted">
             {showLineNumbers && (
-              <th className="border border-gray-300 px-2 py-2 text-xs font-medium text-gray-500 bg-gray-100">
+              <th className="border border-border px-2 py-2 text-xs font-medium text-muted-foreground bg-muted">
                 #
               </th>
             )}
             {processedData.headers.map((header, colIndex) => (
               <th
                 key={header}
-                className="border border-gray-300 px-2 py-2 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-200"
+                className="border border-border px-2 py-2 text-sm font-medium text-foreground cursor-pointer hover:bg-muted"
                 onClick={() => handleSort(header)}
                 style={{ width: getColumnWidth(header) }}
               >
@@ -876,9 +876,9 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
         </thead>
         <tbody>
           {paginatedData.map((row, rowIndex) => (
-            <tr key={rowIndex} className="hover:bg-gray-50">
+            <tr key={rowIndex} className="hover:bg-muted/30">
               {showLineNumbers && (
-                <td className="border border-gray-200 px-2 py-2 text-xs text-gray-400 text-center bg-gray-50">
+                <td className="border border-border px-2 py-2 text-xs text-muted-foreground text-center bg-muted/30">
                   {startRow + rowIndex + 1}
                 </td>
               )}
@@ -888,7 +888,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
                   <td
                     key={colIndex}
                     className={cn(
-                      'border border-gray-200 px-2 py-2 text-sm',
+                      'border border-border px-2 py-2 text-sm',
                       isSelected && 'bg-blue-50 outline outline-1 outline-blue-500'
                     )}
                     style={{ width: getColumnWidth(processedData.headers[colIndex]) }}
@@ -931,7 +931,7 @@ export const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, values, onAp
     <div className="p-3 bg-white rounded-lg border shadow-lg w-64">
       <div className="flex items-center justify-between mb-3">
         <span className="font-medium text-sm">筛选: {column}</span>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -967,7 +967,7 @@ export const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, values, onAp
           </button>
           <button
             onClick={onClose}
-            className="flex-1 px-3 py-1.5 text-sm border rounded hover:bg-gray-50"
+            className="flex-1 px-3 py-1.5 text-sm border rounded hover:bg-muted/30"
           >
             取消
           </button>
@@ -1018,14 +1018,14 @@ export const ConditionalFormatEditor: React.FC<ConditionalFormatEditorProps> = (
     <div className="p-4 bg-white rounded-lg border shadow-lg w-96">
       <div className="flex items-center justify-between mb-4">
         <span className="font-medium">条件格式</span>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
           <X className="w-4 h-4" />
         </button>
       </div>
 
       <div className="space-y-3 mb-4">
         {formats.map((format) => (
-          <div key={format.id} className="p-3 bg-gray-50 rounded border">
+          <div key={format.id} className="p-3 bg-muted/30 rounded border">
             <div className="flex items-center gap-2 mb-2">
               <select
                 value={format.column}
@@ -1070,14 +1070,14 @@ export const ConditionalFormatEditor: React.FC<ConditionalFormatEditorProps> = (
                 onChange={(e) => updateFormat(format.id, { style: { ...format.style, backgroundColor: e.target.value } })}
                 className="w-8 h-8 rounded cursor-pointer"
               />
-              <span className="text-xs text-gray-500">背景色</span>
+              <span className="text-xs text-muted-foreground">背景色</span>
               <input
                 type="color"
                 value={format.style.textColor || '#991b1b'}
                 onChange={(e) => updateFormat(format.id, { style: { ...format.style, textColor: e.target.value } })}
                 className="w-8 h-8 rounded cursor-pointer"
               />
-              <span className="text-xs text-gray-500">文字色</span>
+              <span className="text-xs text-muted-foreground">文字色</span>
             </div>
           </div>
         ))}
@@ -1085,7 +1085,7 @@ export const ConditionalFormatEditor: React.FC<ConditionalFormatEditorProps> = (
 
       <button
         onClick={addFormat}
-        className="w-full px-3 py-2 text-sm border border-dashed border-gray-400 rounded hover:bg-gray-50"
+        className="w-full px-3 py-2 text-sm border border-dashed border-gray-400 rounded hover:bg-muted/30"
       >
         + 添加条件格式
       </button>
@@ -1099,7 +1099,7 @@ export const ConditionalFormatEditor: React.FC<ConditionalFormatEditorProps> = (
         </button>
         <button
           onClick={onClose}
-          className="flex-1 px-3 py-2 text-sm border rounded hover:bg-gray-50"
+          className="flex-1 px-3 py-2 text-sm border rounded hover:bg-muted/30"
         >
           取消
         </button>

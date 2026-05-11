@@ -73,7 +73,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
         </CardHeader>
         <CardContent>
           {recommendations.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">需要至少一个数值字段才能生成图表推荐</p>
+            <p className="text-muted-foreground text-center py-8">需要至少一个数值字段才能生成图表推荐</p>
           ) : (
             <div className="space-y-4">
               {/* 推荐选择器 */}
@@ -93,12 +93,12 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
                       className={`p-3 rounded-lg border text-left transition-all ${
                         isSelected 
                           ? 'border-primary bg-primary/5 shadow-sm' 
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          : 'border-border hover:border-border hover:bg-muted/30'
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-gray-400'}`} />
-                        <span className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-gray-600'}`}>
+                        <Icon className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <span className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                           {rec.type === 'bar' ? '柱状图' :
                            rec.type === 'line' ? '折线图' :
                            rec.type === 'pie' ? '饼图' :
@@ -107,7 +107,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
                         </span>
                         <Badge variant="outline" className="text-xs ml-auto">{rec.score}分</Badge>
                       </div>
-                      <p className="text-xs text-gray-500 truncate">{rec.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{rec.title}</p>
                     </button>
                   );
                 })}
@@ -118,7 +118,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <Lightbulb className="w-4 h-4 text-yellow-500" />
-                    <p className="text-sm text-gray-600">{currentRecommendation.reason}</p>
+                    <p className="text-sm text-foreground">{currentRecommendation.reason}</p>
                   </div>
                   <div className="bg-white border rounded-lg p-4">
                     <h4 className="font-medium text-sm mb-2">{currentRecommendation.title}</h4>
@@ -144,7 +144,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
         <CardContent>
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">图表类型</label>
+              <label className="text-xs text-muted-foreground mb-1 block">图表类型</label>
               <Select value={customChartType} onValueChange={v => setCustomChartType(v as ChartType)}>
                 <SelectTrigger><SelectValue placeholder="选择类型" /></SelectTrigger>
                 <SelectContent>
@@ -158,7 +158,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
               </Select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">X轴字段</label>
+              <label className="text-xs text-muted-foreground mb-1 block">X轴字段</label>
               <Select value={customXField} onValueChange={setCustomXField}>
                 <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
                 <SelectContent>
@@ -169,7 +169,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
               </Select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Y轴字段</label>
+              <label className="text-xs text-muted-foreground mb-1 block">Y轴字段</label>
               <Select value={customYField} onValueChange={setCustomYField}>
                 <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
                 <SelectContent>
@@ -195,7 +195,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
               </ResponsiveContainer>
             </div>
           ) : (
-            <p className="text-gray-400 text-center py-8">请选择X轴和Y轴字段</p>
+            <p className="text-muted-foreground text-center py-8">请选择X轴和Y轴字段</p>
           )}
         </CardContent>
       </Card>

@@ -95,11 +95,11 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
             ) : (
               rowComments.map(c => (
                 <div key={c.id} className="flex gap-2">
-                  <Avatar className="w-6 h-6"><AvatarFallback className="text-[10px]">{c.author.slice(0, 1)}</AvatarFallback></Avatar>
+                  <Avatar className="w-6 h-6"><AvatarFallback className="text-xs">{c.author.slice(0, 1)}</AvatarFallback></Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium">{c.author}</span>
-                      <span className="text-[10px] text-muted-foreground">{c.timestamp}</span>
+                      <span className="text-xs text-muted-foreground">{c.timestamp}</span>
                     </div>
                     <p className="text-xs mt-0.5">{c.content}</p>
                   </div>

@@ -356,7 +356,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
               </div>
               <div>
                 <p className="font-medium">{getActiveModel(configs)?.name || '未配置'}</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {getActiveModel(configs)?.provider || '请配置模型'}
                   {getActiveModel(configs)?.model && ` · ${getActiveModel(configs)!.model}`}
                 </p>
@@ -408,11 +408,11 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                               'p-2 rounded-lg border text-left transition-all',
                               editingConfig?.baseUrl === preset.baseUrl
                                 ? 'border-primary bg-primary/10'
-                                : 'border-gray-200 hover:border-primary/50'
+                                : 'border-border hover:border-primary/50'
                             )}
                           >
                             <p className="font-medium text-sm">{preset.name}</p>
-                            <p className="text-xs text-gray-500">{preset.provider}</p>
+                            <p className="text-xs text-muted-foreground">{preset.provider}</p>
                           </button>
                         ))}
                       </div>
@@ -449,7 +449,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                         value={editingConfig?.baseUrl || ''}
                         onChange={e => setEditingConfig(prev => prev ? { ...prev, baseUrl: e.target.value } : null)}
                       />
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         支持 OpenAI 兼容格式的 API 地址
                       </p>
                     </div>
@@ -532,17 +532,17 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                 key={config.id}
                 className={cn(
                   'flex items-center justify-between p-3 rounded-lg border transition-all',
-                  config.enabled ? 'bg-white' : 'bg-gray-50 opacity-60'
+                  config.enabled ? 'bg-white' : 'bg-muted/30 opacity-60'
                 )}
               >
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     'p-2 rounded-lg',
-                    config.enabled ? 'bg-gray-100' : 'bg-gray-200'
+                    config.enabled ? 'bg-muted' : 'bg-muted'
                   )}>
                     <Bot className={cn(
                       'w-5 h-5',
-                      config.enabled ? 'text-gray-700' : 'text-gray-400'
+                      config.enabled ? 'text-foreground' : 'text-muted-foreground'
                     )} />
                   </div>
                   <div>
@@ -552,7 +552,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                         <Badge variant="default" className="text-xs">默认</Badge>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {config.provider} · {config.model}
                     </p>
                   </div>
@@ -564,7 +564,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                     onClick={() => handleToggleEnabled(config.id)}
                     className={cn(
                       'relative w-10 h-6 rounded-full transition-colors',
-                      config.enabled ? 'bg-primary' : 'bg-gray-300'
+                      config.enabled ? 'bg-primary' : 'bg-border'
                     )}
                   >
                     <span
@@ -610,7 +610,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
             ))}
             
             {configs.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 <Bot className="w-12 h-12 mx-auto mb-3 opacity-30" />
                 <p>暂未配置任何 AI 模型</p>
                 <p className="text-sm">点击上方按钮添加</p>
@@ -621,12 +621,12 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
       </Card>
 
       {/* 使用说明 */}
-      <Card className="bg-gray-50 border-gray-200">
+      <Card className="bg-muted/30 border-border">
         <CardContent className="pt-4">
           <div className="flex items-start gap-3">
-            <Key className="w-5 h-5 text-gray-400 mt-0.5" />
-            <div className="space-y-2 text-sm text-gray-600">
-              <p className="font-medium text-gray-700">使用说明</p>
+            <Key className="w-5 h-5 text-muted-foreground mt-0.5" />
+            <div className="space-y-2 text-sm text-foreground">
+              <p className="font-medium text-foreground">使用说明</p>
               <ul className="space-y-1 list-disc list-inside">
                 <li>API Key 仅本地存储，不会上传到服务器</li>
                 <li>支持 OpenAI 兼容格式的模型接入</li>

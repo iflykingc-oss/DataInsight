@@ -415,7 +415,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                       )}
                     >
                       <div className="font-medium">{db.label}</div>
-                      <div className="text-[10px] text-muted-foreground mt-0.5">{db.desc}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{db.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -472,7 +472,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -537,7 +537,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                       {testResult.message}
                     </p>
                     {testResult.details && (
-                      <p className="text-sm text-gray-600 mt-1 whitespace-pre-line">
+                      <p className="text-sm text-foreground mt-1 whitespace-pre-line">
                         {testResult.details}
                       </p>
                     )}
@@ -650,9 +650,9 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                     </span>
                   </div>
                   <div className="bg-white rounded border p-2 max-h-32 overflow-auto">
-                    <p className="text-xs text-gray-500 mb-1">数据预览:</p>
+                    <p className="text-xs text-muted-foreground mb-1">数据预览:</p>
                     {apiTestResult.preview.map((item, idx) => (
-                      <pre key={idx} className="text-xs text-gray-600 whitespace-pre-wrap break-all">
+                      <pre key={idx} className="text-xs text-foreground whitespace-pre-wrap break-all">
                         {item.length > 100 ? item.substring(0, 100) + '...' : item}
                       </pre>
                     ))}
@@ -681,7 +681,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
           {/* 数据快照历史 */}
           <TabsContent value="history" className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {snapshots.length === 0 ? '暂无数据快照' : `已保存 ${snapshots.length} 个快照`}
               </p>
               <Button 
@@ -696,15 +696,15 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
             </div>
 
             {snapshots.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-muted-foreground">
+                <History className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
                 <p>暂无保存的快照</p>
                 <p className="text-sm">上传数据后可以保存数据快照，防止数据丢失</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {snapshots.map(snapshot => (
-                  <div key={snapshot.id} className="p-4 border rounded-lg hover:bg-gray-50">
+                  <div key={snapshot.id} className="p-4 border rounded-lg hover:bg-muted/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-100 rounded-lg">
@@ -712,7 +712,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                         </div>
                         <div>
                           <p className="font-medium">{snapshot.name}</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             {snapshot.rowCount} 行 · {snapshot.size}
                           </p>
                         </div>

@@ -172,7 +172,7 @@ export function RecordShareManager({
                 {shareConfig.isPublic ? (
                   <Globe className="w-5 h-5 text-green-500" />
                 ) : (
-                  <Lock className="w-5 h-5 text-gray-400" />
+                  <Lock className="w-5 h-5 text-muted-foreground" />
                 )}
                 <div>
                   <p className="text-sm font-medium">公开访问</p>
@@ -264,7 +264,7 @@ export function RecordShareManager({
           {shareConfig.link && (
             <div className="flex flex-col items-center gap-3 pt-4 border-t">
               <div className="p-4 bg-white rounded-lg">
-                <QrCode className="w-32 h-32 text-gray-400" />
+                <QrCode className="w-32 h-32 text-muted-foreground" />
                 <p className="text-xs text-center text-muted-foreground mt-2">
                   扫码查看记录
                 </p>

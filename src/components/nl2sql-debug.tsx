@@ -258,12 +258,12 @@ export function NL2SQLDebug({ data, modelConfig, onSQLResult }: NL2SQLDebugProps
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium">步骤 {step.step}</span>
-                    <Badge variant={step.status === 'success' ? 'default' : step.status === 'error' ? 'destructive' : 'secondary'} className="text-[10px] px-1.5 py-0">
+                    <Badge variant={step.status === 'success' ? 'default' : step.status === 'error' ? 'destructive' : 'secondary'} className="text-xs px-1.5 py-0">
                       {statusLabel[step.status]}
                     </Badge>
                   </div>
                   {step.sql && (
-                    <pre className="mt-1 p-2 bg-muted rounded text-[11px] font-mono overflow-x-auto max-h-20">
+                    <pre className="mt-1 p-2 bg-muted rounded text-xs font-mono overflow-x-auto max-h-20">
                       {step.sql}
                     </pre>
                   )}
@@ -273,7 +273,7 @@ export function NL2SQLDebug({ data, modelConfig, onSQLResult }: NL2SQLDebugProps
                   {step.fixedSQL && (
                     <div className="mt-1">
                       <span className="text-amber-500">修复后：</span>
-                      <pre className="p-2 bg-muted/50 rounded text-[11px] font-mono overflow-x-auto max-h-20">
+                      <pre className="p-2 bg-muted/50 rounded text-xs font-mono overflow-x-auto max-h-20">
                         {step.fixedSQL}
                       </pre>
                     </div>

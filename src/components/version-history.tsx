@@ -323,7 +323,7 @@ export function VersionHistory({
               </div>
 
               {currentContent && (
-                <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+                <div className="p-3 bg-muted/30 rounded-lg text-sm text-foreground">
                   <p>预估大小：约 {Math.ceil(JSON.stringify(currentContent).length / 1024)} KB</p>
                 </div>
               )}
@@ -345,14 +345,14 @@ export function VersionHistory({
       {/* 资源选择 */}
       {resources.length > 0 && (
         <div className="flex items-center gap-2 pb-2 border-b overflow-x-auto">
-          <span className="text-sm text-gray-500 whitespace-nowrap">资源：</span>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">资源：</span>
           <button
             onClick={() => setSelectedResourceId(null)}
             className={cn(
               'px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors',
               !selectedResourceId 
                 ? 'bg-blue-100 text-blue-700' 
-                : 'hover:bg-gray-100'
+                : 'hover:bg-muted'
             )}
           >
             全部
@@ -367,7 +367,7 @@ export function VersionHistory({
                   'px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors flex items-center gap-1',
                   selectedResourceId === resource.id 
                     ? 'bg-blue-100 text-blue-700' 
-                    : 'hover:bg-gray-100'
+                    : 'hover:bg-muted'
                 )}
               >
                 <Icon className="w-3 h-3" />
@@ -396,9 +396,9 @@ export function VersionHistory({
           {filteredSnapshots.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">暂无版本快照</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <History className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground">暂无版本快照</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   {currentContent ? '点击上方按钮创建第一个快照' : '加载数据后可以创建快照'}
                 </p>
               </CardContent>
@@ -422,11 +422,11 @@ export function VersionHistory({
                         <div className="flex items-start gap-3">
                           <div className={cn(
                             'p-2 rounded-lg',
-                            isLatest ? 'bg-blue-100' : 'bg-gray-100'
+                            isLatest ? 'bg-blue-100' : 'bg-muted'
                           )}>
                             <Icon className={cn(
                               'w-5 h-5',
-                              isLatest ? 'text-blue-600' : 'text-gray-600'
+                              isLatest ? 'text-blue-600' : 'text-foreground'
                             )} />
                           </div>
                           
@@ -442,12 +442,12 @@ export function VersionHistory({
                             </div>
                             
                             {snapshot.description && (
-                              <p className="text-sm text-gray-500 mt-1">
+                              <p className="text-sm text-muted-foreground mt-1">
                                 {snapshot.description}
                               </p>
                             )}
                             
-                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {formatTime(snapshot.createdAt)}
@@ -544,9 +544,9 @@ export function VersionHistory({
           {filteredSnapshots.length < 2 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <Copy className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">需要至少 2 个版本才能对比</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <Copy className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground">需要至少 2 个版本才能对比</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   创建更多快照后可以使用对比功能
                 </p>
               </CardContent>
@@ -571,7 +571,7 @@ export function VersionHistory({
                   </select>
                 </div>
                 <div className="flex items-center mt-6">
-                  <ChevronRight className="w-6 h-6 text-gray-400" />
+                  <ChevronRight className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <div className="flex-1">
                   <Label>选择版本 B</Label>

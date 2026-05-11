@@ -188,7 +188,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                 key={module.id}
                 className={cn(
                   'flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer',
-                  module.checked ? 'border-primary/30 bg-primary/5' : 'border-gray-100 hover:bg-muted'
+                  module.checked ? 'border-primary/30 bg-primary/5' : 'border-border hover:bg-muted'
                 )}
                 onClick={() => toggleModule(module.id)}
               >
@@ -379,7 +379,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                           <td className="py-2">
                             <Badge variant="outline" className={cn(
                               'text-xs',
-                              c.strength === 'strong' ? 'text-red-600' : c.strength === 'moderate' ? 'text-orange-600' : 'text-gray-600'
+                              c.strength === 'strong' ? 'text-red-600' : c.strength === 'moderate' ? 'text-orange-600' : 'text-foreground'
                             )}>
                               {c.strength === 'strong' ? '强' : c.strength === 'moderate' ? '中等' : '弱'}
                             </Badge>
@@ -438,7 +438,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                           t.direction === 'up' ? 'bg-green-100 text-green-700' :
                           t.direction === 'down' ? 'bg-red-100 text-red-700' :
                           t.direction === 'volatile' ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-100 text-gray-700'
+                          'bg-muted text-foreground'
                         )}>
                           {t.direction === 'up' ? '上升' : t.direction === 'down' ? '下降' : t.direction === 'volatile' ? '波动' : '稳定'}
                           {t.changeRate !== 0 && ` ${Math.abs(t.changeRate).toFixed(1)}%`}
@@ -464,7 +464,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                           <span className="font-medium text-sm">{chart.title}</span>
                           <Badge variant="outline" className={cn(
                             'text-xs',
-                            chart.priority === 'high' ? 'text-red-600' : chart.priority === 'medium' ? 'text-orange-600' : 'text-gray-600'
+                            chart.priority === 'high' ? 'text-red-600' : chart.priority === 'medium' ? 'text-orange-600' : 'text-foreground'
                           )}>
                             {chart.priority === 'high' ? '高优先级' : chart.priority === 'medium' ? '中优先级' : '低优先级'}
                           </Badge>
@@ -580,7 +580,7 @@ function ScoreBar({ label, score, color }: { label: string; score: number; color
         <span>{label}</span>
         <span className="font-medium">{score}</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div className={cn('h-full rounded-full', color)} style={{ width: `${score}%` }} />
       </div>
     </div>

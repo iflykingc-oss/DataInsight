@@ -414,7 +414,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
                       'w-full flex items-center gap-2 text-sm font-medium p-2 rounded-lg transition-colors',
                       selectedTable === schema.name
                         ? 'bg-blue-50 text-blue-700'
-                        : 'hover:bg-gray-50'
+                        : 'hover:bg-muted/30'
                     )}
                     onClick={() => setSelectedTable(schema.name)}
                   >
@@ -430,9 +430,9 @@ export function SqlLab({ data, className }: SqlLabProps) {
                   {selectedTable === schema.name && (
                     <div className="ml-6 mt-1 space-y-1">
                       {schema.columns.map(col => (
-                        <div key={col.name} className="flex items-center justify-between text-xs text-gray-500 py-0.5">
+                        <div key={col.name} className="flex items-center justify-between text-xs text-muted-foreground py-0.5">
                           <span>{col.name}</span>
-                          <Badge variant="outline" className="text-[10px] font-mono">
+                          <Badge variant="outline" className="text-xs font-mono">
                             {col.type}
                           </Badge>
                         </div>
@@ -454,12 +454,12 @@ export function SqlLab({ data, className }: SqlLabProps) {
             </CardHeader>
             <CardContent className="space-y-2 max-h-[300px] overflow-auto">
               {history.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-4">暂无查询记录</p>
+                <p className="text-xs text-muted-foreground text-center py-4">暂无查询记录</p>
               ) : (
                 history.map(entry => (
                   <div
                     key={entry.id}
-                    className="group flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="group flex items-start gap-2 p-2 rounded-lg hover:bg-muted/30 cursor-pointer transition-colors"
                   >
                     <button
                       className="flex-1 text-left"
@@ -471,11 +471,11 @@ export function SqlLab({ data, className }: SqlLabProps) {
                         ) : (
                           <AlertCircle className="w-3 h-3 text-red-500" />
                         )}
-                        <span className="text-xs font-mono text-gray-600 truncate">
+                        <span className="text-xs font-mono text-foreground truncate">
                           {entry.sql.slice(0, 40)}{entry.sql.length > 40 ? '...' : ''}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span>{entry.rowCount} 行</span>
                         <span>{entry.duration.toFixed(0)}ms</span>
                       </div>
@@ -510,7 +510,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">SQL 编辑器</CardTitle>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">示例:</span>
+                      <span className="text-xs text-muted-foreground">示例:</span>
                       <Select onValueChange={generateExample}>
                         <SelectTrigger className="w-[140px] h-7 text-xs">
                           <SelectValue placeholder="选择示例" />
@@ -532,7 +532,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
                   <textarea
                     value={sql}
                     onChange={e => setSql(e.target.value)}
-                    className="w-full h-40 p-3 font-mono text-sm bg-gray-50 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full h-40 p-3 font-mono text-sm bg-muted/30 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     placeholder="输入 SQL 查询语句..."
                     spellCheck={false}
                   />
@@ -613,7 +613,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
                   </CardHeader>
                   <CardContent>
                     {results.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center py-8">
+                      <p className="text-sm text-muted-foreground text-center py-8">
                         查询未返回任何数据
                       </p>
                     ) : (
@@ -634,7 +634,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
                                 {columns.map(col => (
                                   <TableCell key={col} className="text-xs">
                                     {row[col] === null || row[col] === undefined
-                                      ? <span className="text-gray-400">NULL</span>
+                                      ? <span className="text-muted-foreground">NULL</span>
                                       : String(row[col])}
                                   </TableCell>
                                 ))}
@@ -643,7 +643,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
                           </TableBody>
                         </Table>
                         {results.length > 100 && (
-                          <p className="text-xs text-gray-400 text-center py-2">
+                          <p className="text-xs text-muted-foreground text-center py-2">
                             仅显示前 100 行，共 {results.length} 行
                           </p>
                         )}

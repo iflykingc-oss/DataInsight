@@ -188,10 +188,10 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
           <TabsContent value="share" className="space-y-4">
             {/* 链接配置 */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 p-4 bg-muted/30 rounded-lg">
                 <div className="flex-1">
                   <p className="text-sm font-medium">分享链接</p>
-                  <p className="text-xs text-gray-500 truncate">{shareConfig.link}</p>
+                  <p className="text-xs text-muted-foreground truncate">{shareConfig.link}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={copyLink}>
                   {copied ? (
@@ -215,11 +215,11 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                     {shareConfig.isPublic ? (
                       <Globe className="w-5 h-5 text-green-500" />
                     ) : (
-                      <Lock className="w-5 h-5 text-gray-400" />
+                      <Lock className="w-5 h-5 text-muted-foreground" />
                     )}
                     <div>
                       <p className="text-sm font-medium">公开访问</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {shareConfig.isPublic ? '任何人可访问' : '仅限受邀人员'}
                       </p>
                     </div>
@@ -235,10 +235,10 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                 
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <Key className="w-5 h-5 text-gray-400" />
+                    <Key className="w-5 h-5 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">访问密码</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {shareConfig.password ? '已设置密码保护' : '未设置密码'}
                       </p>
                     </div>
@@ -276,10 +276,10 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                 
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-gray-400" />
+                    <Clock className="w-5 h-5 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">链接过期</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {shareConfig.expiresAt
                           ? `过期时间: ${new Date(shareConfig.expiresAt).toLocaleString()}`
                           : '永不过期'}
@@ -311,17 +311,17 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg text-center">
                   <p className="text-2xl font-bold text-blue-600">{shareConfig.viewCount}</p>
-                  <p className="text-xs text-gray-500">浏览次数</p>
+                  <p className="text-xs text-muted-foreground">浏览次数</p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg text-center">
                   <p className="text-2xl font-bold text-green-600">12</p>
-                  <p className="text-xs text-gray-500">独立访客</p>
+                  <p className="text-xs text-muted-foreground">独立访客</p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-lg text-center">
                   <p className="text-2xl font-bold text-purple-600">
                     {shareConfig.lastViewed ? '2分钟前' : '暂无'}
                   </p>
-                  <p className="text-xs text-gray-500">最后访问</p>
+                  <p className="text-xs text-muted-foreground">最后访问</p>
                 </div>
               </div>
             </div>
@@ -364,7 +364,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                       <span className="text-sm font-medium">
                         {member.name.charAt(0).toUpperCase()}
                       </span>
@@ -374,7 +374,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                         <p className="text-sm font-medium">{member.name}</p>
                         {getRoleBadge(member.role)}
                       </div>
-                      <p className="text-xs text-gray-500">{member.email}</p>
+                      <p className="text-xs text-muted-foreground">{member.email}</p>
                     </div>
                   </div>
                   {member.role !== 'owner' && (
@@ -434,12 +434,12 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
             {embedCode && (
               <div className="p-4 bg-gray-900 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-gray-400">嵌入代码</span>
+                  <span className="text-xs text-muted-foreground">嵌入代码</span>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => navigator.clipboard.writeText(embedCode)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-muted-foreground hover:text-white"
                   >
                     <Copy className="w-4 h-4 mr-1" />
                     复制
@@ -470,7 +470,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                     <Eye className="w-5 h-5 text-blue-500" />
                     <div>
                       <p className="text-sm font-medium">查看权限</p>
-                      <p className="text-xs text-gray-500">允许查看数据和图表</p>
+                      <p className="text-xs text-muted-foreground">允许查看数据和图表</p>
                     </div>
                   </div>
                   <Badge className="bg-green-100 text-green-700">已开启</Badge>
@@ -483,7 +483,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                     <Edit3 className="w-5 h-5 text-green-500" />
                     <div>
                       <p className="text-sm font-medium">编辑权限</p>
-                      <p className="text-xs text-gray-500">允许修改图表和仪表盘</p>
+                      <p className="text-xs text-muted-foreground">允许修改图表和仪表盘</p>
                     </div>
                   </div>
                   <Badge className="bg-green-100 text-green-700">已开启</Badge>
@@ -496,7 +496,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                     <Download className="w-5 h-5 text-purple-500" />
                     <div>
                       <p className="text-sm font-medium">导出权限</p>
-                      <p className="text-xs text-gray-500">允许导出数据和报表</p>
+                      <p className="text-xs text-muted-foreground">允许导出数据和报表</p>
                     </div>
                   </div>
                   <Badge variant="outline">未开启</Badge>
@@ -509,7 +509,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                     <Trash2 className="w-5 h-5 text-red-500" />
                     <div>
                       <p className="text-sm font-medium">删除权限</p>
-                      <p className="text-xs text-gray-500">允许删除仪表盘</p>
+                      <p className="text-xs text-muted-foreground">允许删除仪表盘</p>
                     </div>
                   </div>
                   <Badge variant="outline">仅所有者</Badge>

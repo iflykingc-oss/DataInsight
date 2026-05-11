@@ -5,15 +5,21 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   DataInsight Design Token System
-   Inspired by Hue Design Language + premium-ui-builder-skill
+   DataInsight Design Token System v2.0
    
-   Principles:
-   - Neutral base + single accent (teal-cyan, NOT blue/purple)
-   - 3-tier surface hierarchy (background → surface1 → surface2)
-   - 4-tier text hierarchy (primary → secondary → tertiary → disabled)
-   - Semantic shadows (subtle / medium / elevated)
-   - Consistent spacing scale (4px base)
+   融合五大行业顶级UI设计体系，专为Web表格数据处理工具定制：
+   - Premium UI：工程化极简Token、固定像素、开发低成本、统一无冗余
+   - Hue AI：低噪克制、弱化视觉干扰、AI交互轻量化、留白舒适
+   - shadcn/ui：原子化组件、纯净结构、高适配数据类组件
+   - 微软Fluent：表格流畅交互、规整数据排版、贴合办公习惯
+   - Airtable：多视图逻辑、看板卡片排布、数据层级可视化
+
+   强制原则：
+   1. 数据优先 — 所有视觉服务数据，不做多余装饰
+   2. 低噪极简 — 弱化线条/阴影/高亮，降低视觉疲劳
+   3. 交互统一 — 表格/AI/看板/筛选/图表交互逻辑一致
+   4. 自由适配 — 支持视图切换、拖拽排序、单元格自适应
+   5. AI轻量化 — AI对话/生成/加载简洁不突兀
    ============================================================ */
 
 @theme inline {
@@ -43,7 +49,7 @@
   --color-surface3: var(--surface3);
   --color-border-visible: var(--border-visible);
 
-  /* Status tokens */
+  /* Status tokens — 规范：#00B42A成功 / #FF7D00警告 / #F53F3F错误 */
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -61,20 +67,20 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Chart tokens */
+  /* Chart tokens — 规范：#4080FF / #00B42A / #FF7D00 / #722ED1 (4色循环) */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* ---- Radius Scale ---- */
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
+  /* ---- Radius Scale — 规范：仅2档 (4px单元格/6px容器) ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
+  --radius-3xl: 6px;
 
   /* ---- Font Families ---- */
   --font-sans:
@@ -88,146 +94,159 @@
     'Noto Serif SC', 'Songti SC', 'SimSun', ui-serif, Georgia, Cambria,
     'Times New Roman', Times, serif;
 
-  /* ---- Spacing Scale (4px base, following Hue's spacing system) ---- */
-  --spacing-2xs: 2px;
+  /* ---- Spacing Scale — 规范：仅4档 (4/8/16/24px) ---- */
+  --spacing-2xs: 4px;
   --spacing-xs: 4px;
   --spacing-sm: 8px;
-  --spacing-md: 12px;
+  --spacing-md: 16px;
   --spacing-lg: 16px;
   --spacing-xl: 24px;
-  --spacing-2xl: 32px;
-  --spacing-3xl: 48px;
-  --spacing-4xl: 64px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 24px;
+  --spacing-4xl: 24px;
 
-  /* ---- Shadow Scale ---- */
-  --shadow-xs: var(--shadow-xs-val);
-  --shadow-sm: var(--shadow-sm-val);
-  --shadow-md: var(--shadow-md-val);
-  --shadow-lg: var(--shadow-lg-val);
-  --shadow-xl: var(--shadow-xl-val);
+  /* ---- Font Size Scale — 规范：仅4档 (20/16/14/12px) ---- */
+  --font-size-xs: 12px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 20px;
+  --font-size-4xl: 20px;
+
+  /* ---- Shadow Scale — 规范：3级 (无/浅/浮) ---- */
+  --shadow-xs: none;
+  --shadow-sm: var(--shadow-float);
+  --shadow-md: var(--shadow-float);
+  --shadow-lg: var(--shadow-hover);
+  --shadow-xl: var(--shadow-hover);
+
+  /* Shadow value tokens */
+  --shadow-float: 0 2px 8px #00000008;
+  --shadow-hover: 0 4px 12px #00000012;
+
+  /* ---- Table Row Height — 规范：40px ---- */
+  --table-row-height: 40px;
+  --table-header-bg: var(--table-header-bg-val);
 }
 
 /* ============================================================
    Light Theme
-   Tone: Cool-warm neutral, teal accent, clean data aesthetic
-   Reference: Stripe Dashboard, Linear, Notion
+   主色#1677FF / 文本#1D2129+#86909C / 边框#E5E6EB
    ============================================================ */
 :root {
-  --radius: 0.5rem;
+  --radius: 6px;
 
   /* ---- Core Surfaces ---- */
   --background: #f7f8fa;
-  --foreground: #111318;
+  --foreground: #1D2129;
 
-  /* Surface hierarchy: bg < surface1 < surface2 < surface3 */
-  --surface1: #ffffff;        /* Cards, elevated containers */
-  --surface2: #f0f1f4;       /* Grouped backgrounds, secondary panels */
-  --surface3: #e8eaef;       /* Inset areas, tertiary surfaces */
+  /* Surface hierarchy: bg < surface1 < surface2 */
+  --surface1: #ffffff;
+  --surface2: #f2f3f5;
+  --surface3: #e5e6eb;
 
   --card: #ffffff;
-  --card-foreground: #111318;
+  --card-foreground: #1D2129;
   --popover: #ffffff;
-  --popover-foreground: #111318;
+  --popover-foreground: #1D2129;
 
-  /* ---- Primary Accent (Teal-Cyan: distinctive, NOT generic blue) ---- */
-  --primary: #0d9488;
+  /* ---- Primary — 规范品牌主色 #1677FF ---- */
+  --primary: #1677FF;
   --primary-foreground: #ffffff;
 
   /* ---- Secondary ---- */
-  --secondary: #f0f1f4;
-  --secondary-foreground: #111318;
+  --secondary: #f2f3f5;
+  --secondary-foreground: #1D2129;
 
-  /* ---- Muted ---- */
-  --muted: #f0f1f4;
-  --muted-foreground: #6b7084;
+  /* ---- Muted — 辅助浅灰文字 #86909C ---- */
+  --muted: #f2f3f5;
+  --muted-foreground: #86909C;
 
-  /* ---- Accent (for subtle highlights) ---- */
-  --accent: #e6f5f3;
-  --accent-foreground: #0d9488;
+  /* ---- Accent (primary低透明度, 数据工具场景弱高亮) ---- */
+  --accent: #e8f3ff;
+  --accent-foreground: #1677FF;
 
-  /* ---- Destructive ---- */
-  --destructive: #dc2626;
+  /* ---- Destructive — 规范错误色 #F53F3F ---- */
+  --destructive: #F53F3F;
 
-  /* ---- Borders ---- */
-  --border: #e2e4ea;
-  --border-visible: #c9ccd4;
+  /* ---- Borders — 规范 #E5E6EB ---- */
+  --border: #E5E6EB;
+  --border-visible: #C9CDD4;
 
   /* ---- Input ---- */
-  --input: #e2e4ea;
+  --input: #E5E6EB;
 
   /* ---- Ring ---- */
-  --ring: #0d9488;
+  --ring: #1677FF;
 
-  /* ---- Status Colors ---- */
-  --success: #059669;
+  /* ---- Status Colors — 规范三色 ---- */
+  --success: #00B42A;
   --success-foreground: #ffffff;
-  --warning: #d97706;
+  --warning: #FF7D00;
   --warning-foreground: #ffffff;
-  --error: #dc2626;
+  --error: #F53F3F;
   --error-foreground: #ffffff;
 
-  /* ---- Chart Colors (harmonious, accessible, teal-led) ---- */
-  --chart-1: #0d9488;
-  --chart-2: #6366f1;
-  --chart-3: #f59e0b;
-  --chart-4: #ec4899;
-  --chart-5: #8b5cf6;
+  /* ---- Chart Colors — 规范4色循环 ---- */
+  --chart-1: #4080FF;
+  --chart-2: #00B42A;
+  --chart-3: #FF7D00;
+  --chart-4: #722ED1;
+  --chart-5: #4080FF;
 
-  /* ---- Shadow System (layered, soft, not dirty) ---- */
-  --shadow-xs-val: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm-val: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md-val: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
-  --shadow-lg-val: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-xl-val: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  /* ---- Table Header Background — 规范 #F2F3F5 ---- */
+  --table-header-bg-val: #F2F3F5;
 
-  /* ---- Sidebar (dark, deep, refined) ---- */
-  --sidebar: #13161c;
-  --sidebar-foreground: #b0b5c3;
-  --sidebar-primary: #14b8a6;
+  /* ---- Sidebar (深色, 主色呼应#1677FF) ---- */
+  --sidebar: #1D2129;
+  --sidebar-foreground: #86909C;
+  --sidebar-primary: #1677FF;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.05);
-  --sidebar-accent-foreground: #e2e4ea;
+  --sidebar-accent: rgba(22, 119, 255, 0.08);
+  --sidebar-accent-foreground: #E5E6EB;
   --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: #14b8a6;
+  --sidebar-ring: #1677FF;
 }
 
 /* ============================================================
    Dark Theme
-   Tone: Deep cool-gray, teal accent, comfortable data reading
+   暗色按同比例映射，保持数据工具可读性
    ============================================================ */
 .dark {
   /* ---- Core Surfaces ---- */
   --background: #0c0e14;
-  --foreground: #dfe1e8;
+  --foreground: #C9CDD4;
 
   /* Surface hierarchy */
-  --surface1: #181b24;
+  --surface1: #171a22;
   --surface2: #1e2130;
   --surface3: #262a3a;
 
-  --card: #181b24;
-  --card-foreground: #dfe1e8;
-  --popover: #181b24;
-  --popover-foreground: #dfe1e8;
+  --card: #171a22;
+  --card-foreground: #C9CDD4;
+  --popover: #171a22;
+  --popover-foreground: #C9CDD4;
 
-  /* ---- Primary Accent ---- */
-  --primary: #14b8a6;
+  /* ---- Primary — 暗色模式下主色微提亮 ---- */
+  --primary: #4080FF;
   --primary-foreground: #ffffff;
 
   /* ---- Secondary ---- */
   --secondary: #1e2130;
-  --secondary-foreground: #dfe1e8;
+  --secondary-foreground: #C9CDD4;
 
   /* ---- Muted ---- */
   --muted: #1e2130;
-  --muted-foreground: #7b7f94;
+  --muted-foreground: #86909C;
 
   /* ---- Accent ---- */
-  --accent: #1a2d2a;
-  --accent-foreground: #14b8a6;
+  --accent: #1a2a44;
+  --accent-foreground: #4080FF;
 
   /* ---- Destructive ---- */
-  --destructive: #ef4444;
+  --destructive: #F53F3F;
 
   /* ---- Borders ---- */
   --border: rgba(255, 255, 255, 0.07);
@@ -237,39 +256,35 @@
   --input: rgba(255, 255, 255, 0.09);
 
   /* ---- Ring ---- */
-  --ring: #14b8a6;
+  --ring: #4080FF;
 
   /* ---- Status Colors ---- */
-  --success: #10b981;
+  --success: #00B42A;
   --success-foreground: #ffffff;
-  --warning: #f59e0b;
+  --warning: #FF7D00;
   --warning-foreground: #ffffff;
-  --error: #ef4444;
+  --error: #F53F3F;
   --error-foreground: #ffffff;
 
-  /* ---- Chart Colors ---- */
-  --chart-1: #2dd4bf;
-  --chart-2: #818cf8;
-  --chart-3: #fbbf24;
-  --chart-4: #f472b6;
-  --chart-5: #a78bfa;
+  /* ---- Chart Colors — 暗色微提亮 ---- */
+  --chart-1: #5A9AFF;
+  --chart-2: #2BD45A;
+  --chart-3: #FFA040;
+  --chart-4: #9254DE;
+  --chart-5: #5A9AFF;
 
-  /* ---- Shadow System (dark mode: deeper, cooler) ---- */
-  --shadow-xs-val: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm-val: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-md-val: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
-  --shadow-lg-val: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
-  --shadow-xl-val: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  /* ---- Table Header ---- */
+  --table-header-bg-val: #1e2130;
 
   /* ---- Sidebar ---- */
   --sidebar: #0a0c12;
-  --sidebar-foreground: #b0b5c3;
-  --sidebar-primary: #14b8a6;
+  --sidebar-foreground: #86909C;
+  --sidebar-primary: #4080FF;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.04);
-  --sidebar-accent-foreground: #dfe1e8;
+  --sidebar-accent: rgba(64, 128, 255, 0.1);
+  --sidebar-accent-foreground: #C9CDD4;
   --sidebar-border: rgba(255, 255, 255, 0.05);
-  --sidebar-ring: #14b8a6;
+  --sidebar-ring: #4080FF;
 }
 
 /* ============================================================
@@ -281,11 +296,13 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: 14px;
+    line-height: 1.5;
   }
 }
 
 /* ============================================================
-   Scrollbar Styles
+   Scrollbar Styles — 规范：极简4px
    ============================================================ */
 
 /* ---- Sidebar Scrollbar ---- */
@@ -297,7 +314,7 @@
 }
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 2px;
+  border-radius: 4px;
 }
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.12);
@@ -305,15 +322,15 @@
 
 /* ---- Main Content Scrollbar ---- */
 .thin-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 .thin-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .thin-scrollbar::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
@@ -323,29 +340,69 @@
    Utility Classes (Design Token derived)
    ============================================================ */
 
-/* Surface layers - use for background hierarchy */
+/* Surface layers */
 .surface-1 { background: var(--surface1); }
 .surface-2 { background: var(--surface2); }
 .surface-3 { background: var(--surface3); }
 
-/* Subtle border for elevated cards */
+/* Border */
 .border-subtle { border-color: var(--border); }
 .border-visible { border-color: var(--border-visible); }
 
-/* Status text colors */
+/* Status text */
 .text-success { color: var(--success); }
 .text-warning { color: var(--warning); }
 .text-error { color: var(--error); }
 
-/* Status background tints */
+/* Status background tints — 低饱和8%透明度 */
 .bg-success-tint { background: color-mix(in srgb, var(--success) 8%, transparent); }
 .bg-warning-tint { background: color-mix(in srgb, var(--warning) 8%, transparent); }
 .bg-error-tint { background: color-mix(in srgb, var(--error) 8%, transparent); }
 .bg-primary-tint { background: color-mix(in srgb, var(--primary) 8%, transparent); }
 
-/* Shadow utilities */
-.shadow-xs { box-shadow: var(--shadow-xs-val); }
-.shadow-sm { box-shadow: var(--shadow-sm-val); }
-.shadow-md { box-shadow: var(--shadow-md-val); }
-.shadow-lg { box-shadow: var(--shadow-lg-val); }
-.shadow-xl { box-shadow: var(--shadow-xl-val); }
+/* Shadow — 规范3级：无/浅/浮 */
+.shadow-xs { box-shadow: none; }
+.shadow-sm { box-shadow: var(--shadow-float); }
+.shadow-md { box-shadow: var(--shadow-float); }
+.shadow-lg { box-shadow: var(--shadow-hover); }
+.shadow-xl { box-shadow: var(--shadow-hover); }
+
+/* ---- Data Table Utilities — Fluent规整 ---- */
+.data-table-row {
+  height: var(--table-row-height);
+  border-bottom: 1px solid var(--border);
+}
+.data-table-header {
+  background: var(--table-header-bg-val);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+/* ---- 规范字号 Utilities ---- */
+.text-title { font-size: 20px; font-weight: 700; line-height: 1.4; }
+.text-heading { font-size: 16px; font-weight: 600; line-height: 1.5; }
+.text-body { font-size: 14px; font-weight: 400; line-height: 1.5; }
+.text-caption { font-size: 12px; font-weight: 400; line-height: 1.5; color: var(--muted-foreground); }
+
+/* ---- 规范间距 Utilities ---- */
+.gap-token-xs { gap: 4px; }
+.gap-token-sm { gap: 8px; }
+.gap-token-md { gap: 16px; }
+.gap-token-lg { gap: 24px; }
+
+.p-token-xs { padding: 4px; }
+.p-token-sm { padding: 8px; }
+.p-token-md { padding: 16px; }
+.p-token-lg { padding: 24px; }
+
+/* ---- Button Height Utilities — 规范3档 ---- */
+.btn-sm { height: 24px; font-size: 12px; }
+.btn-md { height: 32px; font-size: 14px; }
+.btn-lg { height: 40px; font-size: 14px; }
+
+/* ---- Input Height — 规范32px ---- */
+.input-md { height: 32px; font-size: 14px; }
+
+/* ---- Badge — 规范24px高/4px圆角 ---- */
+.badge-md { height: 24px; border-radius: 4px; font-size: 12px; }

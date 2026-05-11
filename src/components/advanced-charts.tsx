@@ -211,8 +211,8 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
         return (
           <div className="bg-white p-3 border rounded shadow-lg">
             <p className="font-medium">{String(data?.fullName || data?.name || '')}</p>
-            {data?.value !== undefined && <p className="text-sm text-gray-600">值: {Number(data.value).toLocaleString()}</p>}
-            {data?.avg !== undefined && <p className="text-sm text-gray-600">均值: {Number(data.avg).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>}
+            {data?.value !== undefined && <p className="text-sm text-foreground">值: {Number(data.value).toLocaleString()}</p>}
+            {data?.avg !== undefined && <p className="text-sm text-foreground">均值: {Number(data.avg).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>}
           </div>
         );
       }
@@ -463,7 +463,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
                     {CHART_TYPES.find(c => c.id === selectedChartType)?.name}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {CHART_TYPES.find(c => c.id === selectedChartType)?.description}
                 </p>
               </div>

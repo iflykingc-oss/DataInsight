@@ -136,7 +136,7 @@ const CHANNEL_CONFIG: Record<NotificationChannel, { label: string; icon: React.E
   in_app: { label: '应用内通知', icon: Bell, color: 'text-purple-600' },
   email: { label: '邮件', icon: Mail, color: 'text-blue-600' },
   feishu: { label: '飞书', icon: MessageSquare, color: 'text-green-600' },
-  webhook: { label: 'Webhook', icon: Webhook, color: 'text-gray-600' }
+  webhook: { label: 'Webhook', icon: Webhook, color: 'text-foreground' }
 };
 
 // ============================================
@@ -293,7 +293,7 @@ const TEMPLATE_CATEGORIES: Record<string, { label: string; color: string }> = {
   inventory: { label: '库存', color: 'bg-orange-100 text-orange-700' },
   user: { label: '用户', color: 'bg-green-100 text-green-700' },
   finance: { label: '财务', color: 'bg-purple-100 text-purple-700' },
-  general: { label: '通用', color: 'bg-gray-100 text-gray-700' },
+  general: { label: '通用', color: 'bg-muted text-foreground' },
 };
 
 interface DataAlertingProps {
@@ -934,7 +934,7 @@ export function DataAlerting({
                         'flex-1 p-3 rounded-lg border text-center transition-all',
                         editingRule?.severity === key
                           ? `border-2 ${config.color} ${config.bg}`
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-border hover:border-border'
                       )}
                     >
                       <p className="font-medium">{config.label}</p>
@@ -965,7 +965,7 @@ export function DataAlerting({
                           'flex items-center gap-2 p-3 rounded-lg border transition-all',
                           isSelected
                             ? 'border-primary bg-primary/10'
-                            : 'border-gray-200 hover:border-gray-300'
+                            : 'border-border hover:border-border'
                         )}
                       >
                         <Icon className={cn('w-4 h-4', config.color)} />
@@ -996,7 +996,7 @@ export function DataAlerting({
                       )}>
                         {previewResult.triggered ? '将会触发告警' : '不会触发告警'}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         当前值: {(previewResult.value ?? 0).toLocaleString()}
                       </p>
                     </div>
@@ -1058,9 +1058,9 @@ export function DataAlerting({
           {rules.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">暂未创建任何告警规则</p>
-                <p className="text-sm text-gray-400 mt-1">创建规则后，当数据满足条件时会自动通知你</p>
+                <Bell className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground">暂未创建任何告警规则</p>
+                <p className="text-sm text-muted-foreground mt-1">创建规则后，当数据满足条件时会自动通知你</p>
               </CardContent>
             </Card>
           ) : (
@@ -1079,7 +1079,7 @@ export function DataAlerting({
                         {rule.enabled ? (
                           <BellRing className="w-4 h-4 text-orange-500" />
                         ) : (
-                          <Bell className="w-4 h-4 text-gray-400" />
+                          <Bell className="w-4 h-4 text-muted-foreground" />
                         )}
                         <h4 className="font-medium">{rule.name}</h4>
                         <Badge className={SEVERITY_CONFIG[rule.severity].bg}>
@@ -1089,12 +1089,12 @@ export function DataAlerting({
                         </Badge>
                       </div>
                       
-                      <p className="text-sm text-gray-500 mb-2">
-                        当 <code className="bg-gray-100 px-1 rounded">{rule.field}</code>{' '}
+                      <p className="text-sm text-muted-foreground mb-2">
+                        当 <code className="bg-muted px-1 rounded">{rule.field}</code>{' '}
                         {getConditionText(rule)}
                       </p>
 
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           {CHANNEL_CONFIG[rule.channels[0]] && (
                             <>
@@ -1165,9 +1165,9 @@ export function DataAlerting({
           {history.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <History className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">暂无告警历史</p>
-                <p className="text-sm text-gray-400 mt-1">告警触发后会显示在这里</p>
+                <History className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground">暂无告警历史</p>
+                <p className="text-sm text-muted-foreground mt-1">告警触发后会显示在这里</p>
               </CardContent>
             </Card>
           ) : (
@@ -1184,7 +1184,7 @@ export function DataAlerting({
                         )} />
                         <div>
                           <p className="font-medium">{item.ruleName}</p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-muted-foreground">
                             触发值: {(item.value ?? 0).toLocaleString()} | 阈值: {item.threshold}
                           </p>
                         </div>
@@ -1193,7 +1193,7 @@ export function DataAlerting({
                         <Badge variant={item.status === 'firing' ? 'destructive' : 'secondary'}>
                           {item.status === 'firing' ? '进行中' : item.status === 'resolved' ? '已解决' : '已确认'}
                         </Badge>
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-muted-foreground">
                           {formatTime(item.triggeredAt)}
                         </span>
                       </div>
@@ -1211,7 +1211,7 @@ export function DataAlerting({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold text-base">通知渠道配置</h3>
-              <p className="text-xs text-gray-500 mt-0.5">配置告警通知的发送渠道和凭证，配置后自动保存</p>
+              <p className="text-xs text-muted-foreground mt-0.5">配置告警通知的发送渠道和凭证，配置后自动保存</p>
             </div>
           </div>
 
@@ -1261,7 +1261,7 @@ export function DataAlerting({
                 <CardContent className="space-y-4">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">SMTP 服务器</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">SMTP 服务器</label>
                       <Input
                         placeholder="smtp.example.com"
                         value={channelConfig.email?.smtpHost ?? ''}
@@ -1271,7 +1271,7 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">SMTP 端口</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">SMTP 端口</label>
                       <Input
                         placeholder="465"
                         type="number"
@@ -1282,7 +1282,7 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">用户名</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">用户名</label>
                       <Input
                         placeholder="your@email.com"
                         value={channelConfig.email?.username ?? ''}
@@ -1292,7 +1292,7 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">密码 / 授权码</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">密码 / 授权码</label>
                       <Input
                         type="password"
                         placeholder="邮箱密码或授权码"
@@ -1303,7 +1303,7 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">发件人名称</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">发件人名称</label>
                       <Input
                         placeholder="DataInsight"
                         value={channelConfig.email?.senderName ?? ''}
@@ -1313,7 +1313,7 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-gray-600 mb-1 block">发件人邮箱</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">发件人邮箱</label>
                       <Input
                         placeholder="sender@example.com"
                         value={channelConfig.email?.senderEmail ?? ''}
@@ -1324,7 +1324,7 @@ export function DataAlerting({
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">收件人邮箱 <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">收件人邮箱 <span className="text-red-500">*</span></label>
                     <Input
                       placeholder="receiver1@example.com, receiver2@example.com（多个用逗号分隔）"
                       value={channelConfig.email?.recipients ?? ''}
@@ -1332,7 +1332,7 @@ export function DataAlerting({
                       disabled={!channelConfig.email?.enabled}
                       className="text-sm h-9"
                     />
-                    <p className="text-[10px] text-gray-400 mt-1">支持多个收件人，用英文逗号分隔</p>
+                    <p className="text-xs text-muted-foreground mt-1">支持多个收件人，用英文逗号分隔</p>
                   </div>
                   <div className="flex justify-end pt-2 border-t">
                     <Button
@@ -1393,7 +1393,7 @@ export function DataAlerting({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">
+                    <label className="text-xs font-medium text-foreground mb-1 block">
                       Webhook 地址 <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -1405,7 +1405,7 @@ export function DataAlerting({
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">签名密钥（可选）</label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">签名密钥（可选）</label>
                     <Input
                       type="password"
                       placeholder="开启签名校验后填写密钥，否则留空"
@@ -1473,7 +1473,7 @@ export function DataAlerting({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">Webhook URL <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">Webhook URL <span className="text-red-500">*</span></label>
                     <Input
                       placeholder="https://your-server.com/api/alert"
                       value={channelConfig.webhook?.url ?? ''}
@@ -1483,7 +1483,7 @@ export function DataAlerting({
                     />
                     {/* 平台自动检测提示 */}
                     {channelConfig.webhook?.url && (
-                      <p className="text-[10px] mt-1 text-blue-600">
+                      <p className="text-xs mt-1 text-blue-600">
                         {channelConfig.webhook.url.includes('open.feishu.cn') || channelConfig.webhook.url.includes('open.larksuite.com')
                           ? '\u2713 检测到飞书 Webhook，将自动适配消息格式'
                           : channelConfig.webhook.url.includes('oapi.dingtalk.com')
@@ -1495,7 +1495,7 @@ export function DataAlerting({
                     )}
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">请求方法</label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">请求方法</label>
                     <Select
                       value={channelConfig.webhook?.method ?? 'POST'}
                       onValueChange={(v) => updateSubConfig('webhook', { method: v as 'POST' | 'GET' })}
@@ -1511,7 +1511,7 @@ export function DataAlerting({
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600 mb-1 block">自定义请求头</label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">自定义请求头</label>
                     <Textarea
                       placeholder='{"Authorization":"Bearer xxx","Content-Type":"application/json"}'
                       value={channelConfig.webhook?.headers ?? ''}
@@ -1519,11 +1519,11 @@ export function DataAlerting({
                       disabled={!channelConfig.webhook?.enabled}
                       className="text-xs h-20 font-mono"
                     />
-                    <p className="text-[10px] text-gray-400 mt-1">JSON 格式，填写 Authorization 等认证 header</p>
+                    <p className="text-xs text-muted-foreground mt-1">JSON 格式，填写 Authorization 等认证 header</p>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
                     <p className="text-xs text-blue-700 font-medium mb-1.5">POST 请求 Body 示例</p>
-                    <pre className="text-[10px] text-blue-600 font-mono whitespace-pre-wrap overflow-x-auto">
+                    <pre className="text-xs text-blue-600 font-mono whitespace-pre-wrap overflow-x-auto">
 {`{
   "alert_name": "销售额告警",
   "severity": "warning",
@@ -1570,7 +1570,7 @@ export function DataAlerting({
                       <Switch defaultChecked />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-gray-600">冷却时间</label>
+                      <label className="text-xs font-medium text-foreground">冷却时间</label>
                       <Select defaultValue="30">
                         <SelectTrigger className="h-9">
                           <SelectValue />
@@ -1596,7 +1596,7 @@ export function DataAlerting({
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium">启用静默时段</p>
-                        <p className="text-xs text-gray-500 mt-0.5">00:00 ~ 06:00 期间不发送告警</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">00:00 ~ 06:00 期间不发送告警</p>
                       </div>
                       <Switch />
                     </div>
@@ -1620,7 +1620,7 @@ export function DataAlerting({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-gray-500">应用内通知无需额外配置，告警实时显示。此功能始终启用。</p>
+                    <p className="text-xs text-muted-foreground">应用内通知无需额外配置，告警实时显示。此功能始终启用。</p>
                   </CardContent>
                 </Card>
               </div>
@@ -1636,7 +1636,7 @@ export function DataAlerting({
             <div className="p-4 border-b flex items-center justify-between">
               <div>
                 <h3 className="font-medium">从模板创建告警</h3>
-                <p className="text-xs text-gray-500 mt-0.5">选择预置模板快速创建告警规则</p>
+                <p className="text-xs text-muted-foreground mt-0.5">选择预置模板快速创建告警规则</p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setShowTemplates(false)}>
                 关闭
@@ -1678,12 +1678,12 @@ export function DataAlerting({
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <h4 className="font-medium text-sm">{template.name}</h4>
-                              <Badge className={cn('text-xs', category?.color || 'bg-gray-100')}>
+                              <Badge className={cn('text-xs', category?.color || 'bg-muted')}>
                                 {category?.label || template.category}
                               </Badge>
                             </div>
-                            <p className="text-xs text-gray-500 mb-2">{template.description}</p>
-                            <div className="flex items-center gap-4 text-xs text-gray-400">
+                            <p className="text-xs text-muted-foreground mb-2">{template.description}</p>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
                               <span>字段: {template.rule.field}</span>
                               <span>条件: {CONDITION_CONFIG.find(c => c.value === template.rule.condition)?.label} {template.rule.threshold}{template.rule.condition.includes('change') ? '%' : ''}</span>
                               <span className={cn(

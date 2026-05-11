@@ -148,7 +148,7 @@ export function GanttView({ rows, headers }: GanttViewProps) {
             <div className="w-[200px] flex-shrink-0 p-2 text-xs font-medium text-muted-foreground border-r">任务名称</div>
             <div className="flex-1 relative h-8">
               {ticks.map((t, i) => (
-                <div key={i} className="absolute top-0 text-[10px] text-muted-foreground border-l h-full pl-1 pt-1" style={{ left: `${(i * 7 / totalDays) * 100}%` }}>
+                <div key={i} className="absolute top-0 text-xs text-muted-foreground border-l h-full pl-1 pt-1" style={{ left: `${(i * 7 / totalDays) * 100}%` }}>
                   {t.label}
                 </div>
               ))}
@@ -163,7 +163,7 @@ export function GanttView({ rows, headers }: GanttViewProps) {
                   <div className="w-[200px] flex-shrink-0 p-2 text-xs truncate border-r" title={task.name}>{task.name}</div>
                   <div className="flex-1 relative h-10">
                     <div
-                      className="absolute top-2 h-5 bg-primary/80 rounded text-[10px] text-white flex items-center px-1.5 overflow-hidden"
+                      className="absolute top-2 h-5 bg-primary/80 rounded text-xs text-white flex items-center px-1.5 overflow-hidden"
                       style={{ left: style.left, width: style.width }}
                       title={`${task.name}: ${formatDateCN(task.start)} - ${formatDateCN(task.end)}`}
                     >

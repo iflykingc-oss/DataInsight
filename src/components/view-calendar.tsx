@@ -136,12 +136,12 @@ export function CalendarView({ rows, headers }: CalendarViewProps) {
                   <div className="text-xs font-medium text-muted-foreground mb-1">{cell.day}</div>
                   <div className="space-y-1">
                     {cell.events.slice(0, 3).map((evt, eidx) => (
-                      <div key={eidx} className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded truncate cursor-pointer hover:bg-primary/20">
+                      <div key={eidx} className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded truncate cursor-pointer hover:bg-primary/20">
                         {String(evt[titleField] ?? '-').substring(0, 12)}
                       </div>
                     ))}
                     {cell.events.length > 3 && (
-                      <div className="text-[10px] text-muted-foreground text-center">+{cell.events.length - 3}</div>
+                      <div className="text-xs text-muted-foreground text-center">+{cell.events.length - 3}</div>
                     )}
                   </div>
                 </>

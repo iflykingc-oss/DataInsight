@@ -639,7 +639,7 @@ export function DataQualityChecker({
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-500">综合质量评分</p>
+                      <p className="text-sm text-muted-foreground">综合质量评分</p>
                       <div className="flex items-baseline gap-2">
                         <span className={cn(
                           'text-5xl font-bold',
@@ -648,7 +648,7 @@ export function DataQualityChecker({
                         )}>
                           {report.overallScore}
                         </span>
-                        <span className="text-xl text-gray-400">/ 100</span>
+                        <span className="text-xl text-muted-foreground">/ 100</span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -694,19 +694,19 @@ export function DataQualityChecker({
                   <div className="grid grid-cols-4 gap-2 text-center">
                     <div className="p-2 bg-green-50 rounded-lg">
                       <p className="text-2xl font-bold text-green-600">{report.summary.passedFields}</p>
-                      <p className="text-xs text-gray-500">通过</p>
+                      <p className="text-xs text-muted-foreground">通过</p>
                     </div>
                     <div className="p-2 bg-yellow-50 rounded-lg">
                       <p className="text-2xl font-bold text-yellow-600">{report.summary.warningFields}</p>
-                      <p className="text-xs text-gray-500">警告</p>
+                      <p className="text-xs text-muted-foreground">警告</p>
                     </div>
                     <div className="p-2 bg-red-50 rounded-lg">
                       <p className="text-2xl font-bold text-red-600">{report.summary.failedFields}</p>
-                      <p className="text-xs text-gray-500">失败</p>
+                      <p className="text-xs text-muted-foreground">失败</p>
                     </div>
-                    <div className="p-2 bg-gray-50 rounded-lg">
-                      <p className="text-2xl font-bold text-gray-600">{report.summary.totalFields}</p>
-                      <p className="text-xs text-gray-500">总字段</p>
+                    <div className="p-2 bg-muted/30 rounded-lg">
+                      <p className="text-2xl font-bold text-foreground">{report.summary.totalFields}</p>
+                      <p className="text-xs text-muted-foreground">总字段</p>
                     </div>
                   </div>
                 </CardContent>
@@ -737,9 +737,9 @@ export function DataQualityChecker({
           ) : (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <Shield className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h4 className="font-medium text-gray-600">尚未进行数据质量检测</h4>
-                <p className="text-sm text-gray-400 mt-1 mb-4">
+                <Shield className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+                <h4 className="font-medium text-foreground">尚未进行数据质量检测</h4>
+                <p className="text-sm text-muted-foreground mt-1 mb-4">
                   点击上方按钮开始检测，系统将分析数据的完整性、准确性、一致性
                 </p>
                 <Button onClick={() => runQualityChecks()} disabled={isChecking}>
@@ -778,18 +778,18 @@ export function DataQualityChecker({
                               {check.checkType.replace('_check', '')}
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-500">{check.description}</p>
+                          <p className="text-sm text-muted-foreground">{check.description}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
                           <p className="text-sm font-medium">{check.details.failCount}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-muted-foreground">
                             / {check.details.totalCount} 条
                           </p>
                         </div>
                         <ChevronRight className={cn(
-                          'w-5 h-5 text-gray-400 transition-transform',
+                          'w-5 h-5 text-muted-foreground transition-transform',
                           expandedChecks.has(check.id) && 'rotate-90'
                         )} />
                       </div>
@@ -800,11 +800,11 @@ export function DataQualityChecker({
                       <div className="mt-4 pt-4 border-t space-y-3">
                         <div className="flex items-center gap-4">
                           <div className="flex-1">
-                            <p className="text-xs text-gray-500">失败率</p>
+                            <p className="text-xs text-muted-foreground">失败率</p>
                             <p className="font-medium">{(check.details.failRate * 100).toFixed(1)}%</p>
                           </div>
                           <div className="flex-1">
-                            <p className="text-xs text-gray-500">维度</p>
+                            <p className="text-xs text-muted-foreground">维度</p>
                             <Badge className={cn(
                               'text-xs',
                               DIMENSION_COLORS[check.dimension].bg,
@@ -826,10 +826,10 @@ export function DataQualityChecker({
 
                         {check.details.sampleFails && check.details.sampleFails.length > 0 && (
                           <div>
-                            <p className="text-xs text-gray-500 mb-2">失败样例</p>
+                            <p className="text-xs text-muted-foreground mb-2">失败样例</p>
                             <div className="space-y-1">
                               {check.details.sampleFails.slice(0, 3).map((sample, i) => (
-                                <code key={i} className="block text-xs bg-gray-100 p-2 rounded truncate">
+                                <code key={i} className="block text-xs bg-muted p-2 rounded truncate">
                                   {sample}
                                 </code>
                               ))}
@@ -854,7 +854,7 @@ export function DataQualityChecker({
                             <span className="font-medium">{check.field}</span>
                             <Badge variant="secondary" className="text-xs">AI生成</Badge>
                           </div>
-                          <p className="text-sm text-gray-600">{check.description}</p>
+                          <p className="text-sm text-foreground">{check.description}</p>
                         </div>
                       </div>
                       {getStatusIcon(check.status)}
@@ -910,7 +910,7 @@ export function DataQualityChecker({
 
               {/* 提示示例 */}
               <div className="space-y-2">
-                <p className="text-xs text-gray-500 font-medium">试试这样说：</p>
+                <p className="text-xs text-muted-foreground font-medium">试试这样说：</p>
                 <div className="flex flex-wrap gap-2">
                   {[
                     '检测所有文本字段的格式一致性',

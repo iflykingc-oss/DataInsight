@@ -80,7 +80,7 @@ export function RowPermissions({ headers }: { headers: string[] }) {
                     <div>
                       <p className="text-sm font-medium">{rule.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        <Badge variant="outline" className="text-[10px]">{typeLabels[rule.type]}</Badge>
+                        <Badge variant="outline" className="text-xs">{typeLabels[rule.type]}</Badge>
                         {' '}→ {rule.target}
                       </p>
                     </div>
@@ -133,7 +133,7 @@ export function RowPermissions({ headers }: { headers: string[] }) {
 
       <Card className="p-3">
         <h4 className="text-xs font-medium mb-2">权限说明</h4>
-        <div className="space-y-1 text-[11px] text-muted-foreground">
+        <div className="space-y-1 text-xs text-muted-foreground">
           <p><Eye className="w-3 h-3 inline mr-1" /> 字段级：隐藏敏感字段（如薪资、身份证号）</p>
           <p><Lock className="w-3 h-3 inline mr-1" /> 行级：按条件过滤可见行（如只看本部门）</p>
           <p><Shield className="w-3 h-3 inline mr-1" /> 视图级：禁用特定功能入口</p>

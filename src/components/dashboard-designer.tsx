@@ -175,7 +175,7 @@ function SortableWidget({ widget, onSelect, isSelected, onDelete }: SortableWidg
             <p className="text-4xl font-bold" style={{ color: widget.config.color || '#3b82f6' }}>
               {widget.data?.[0]?.value?.toLocaleString() || '0'}
             </p>
-            <p className="text-sm text-gray-500">{widget.title}</p>
+            <p className="text-sm text-muted-foreground">{widget.title}</p>
           </div>
         );
       case 'table':
@@ -209,7 +209,7 @@ function SortableWidget({ widget, onSelect, isSelected, onDelete }: SortableWidg
       ref={setNodeRef}
       style={style}
       className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-        isSelected ? 'border-blue-500 shadow-lg' : 'border-gray-200 hover:border-gray-300'
+        isSelected ? 'border-blue-500 shadow-lg' : 'border-border hover:border-border'
       }`}
       onClick={onSelect}
     >
@@ -390,8 +390,8 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
             <CardContent>
               {widgets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-lg">
-                  <LayoutGrid className="w-12 h-12 text-gray-300 mb-4" />
-                  <p className="text-gray-500 mb-4">还没有添加任何组件</p>
+                  <LayoutGrid className="w-12 h-12 text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground mb-4">还没有添加任何组件</p>
                   <Button onClick={() => setShowAddDialog(true)}>
                     <Plus className="w-4 h-4 mr-1" />
                     添加第一个组件
@@ -538,8 +538,8 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Eye className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8 text-muted-foreground">
+                  <Eye className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
                   <p className="text-sm">点击组件进行编辑</p>
                 </div>
               )}
@@ -618,7 +618,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                       className={`p-3 border rounded-lg transition-colors ${
                         newWidgetConfig.type === item.type
                           ? 'border-blue-500 bg-blue-50'
-                          : 'hover:border-gray-300'
+                          : 'hover:border-border'
                       }`}
                     >
                       <Icon className={`w-5 h-5 mx-auto mb-1 ${newWidgetConfig.type === item.type ? 'text-blue-500' : ''}`} />

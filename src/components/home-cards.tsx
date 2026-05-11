@@ -8,9 +8,6 @@ import {
   TrendingUp, AlertTriangle, CheckCircle, Activity,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 
 // ========== 业务场景模板 ==========
 interface SceneTemplate {
@@ -96,7 +93,7 @@ interface QuickAction {
   needsData: boolean;
   badge?: string;
   permission?: string;
-  accent?: boolean; // Highlight as primary action
+  accent?: boolean;
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
@@ -135,55 +132,56 @@ function HomeCards({ hasData, onViewChange, fileName, rowCount, isLoggedIn = fal
   // ---- No Data State: Scene-based guidance ----
   if (!hasData) {
     return (
-      <div className="space-y-8">
-        {/* Hero section */}
-        <div className="text-center py-8">
-          <div className="w-16 h-16 rounded-2xl bg-primary-tint flex items-center justify-center mx-auto mb-5">
-            <Sparkles className="w-8 h-8 text-primary/50" />
+      <div className="space-y-6">
+        {/* Hero section - 规范: 标题20px加粗, 辅助12px浅灰, 间距16px */}
+        <div className="text-center py-6">
+          <div className="w-12 h-12 rounded-sm bg-primary/8 flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="w-6 h-6 text-primary/60" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">选择你的业务场景</h3>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+          <h3 className="text-xl font-bold text-foreground mb-2">选择你的业务场景</h3>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
             上传数据后，系统会自动识别场景并生成对应的业务分析
           </p>
         </div>
 
-        {/* Scene template cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {/* Scene template cards - 规范: 卡片6px圆角, 间距8px, 内边距8px */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {SCENE_TEMPLATES.map((scene) => (
-            <Card
+            <div
               key={scene.id}
-              className="group cursor-pointer transition-all duration-200 hover:shadow-md border-border hover:border-primary/25 bg-card"
+              className="group cursor-pointer rounded-sm border border-border bg-card p-2 transition-all duration-200 hover:shadow-float hover:border-primary/25"
               onClick={() => onViewChange('ai-table-builder')}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary-tint flex items-center justify-center shrink-0">
-                    <scene.icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <h4 className="text-sm font-medium text-foreground">{scene.label}</h4>
+              {/* Icon + title - 规范: 图标16px, 间距4px */}
+              <div className="flex items-center gap-1 mb-2">
+                <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center shrink-0">
+                  <scene.icon className="w-4 h-4 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{scene.desc}</p>
-                {/* KPI preview */}
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {scene.kpis.slice(0, 4).map(kpi => (
-                    <Badge key={kpi} variant="secondary" className="text-[10px] h-5 px-1.5 font-normal">
-                      {kpi}
-                    </Badge>
-                  ))}
-                </div>
-                {/* Example questions preview */}
-                <div className="space-y-1">
-                  {scene.exampleQuestions.slice(0, 2).map((q, i) => (
-                    <p key={i} className="text-[11px] text-muted-foreground/60 truncate">
-                      &quot;{q}&quot;
-                    </p>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  AI生成此场景模板 <ArrowRight className="w-3 h-3 ml-1" />
-                </div>
-              </CardContent>
-            </Card>
+                <h4 className="text-sm font-semibold text-foreground truncate">{scene.label}</h4>
+              </div>
+              {/* Description - 规范: 12px浅灰 */}
+              <p className="text-xs text-muted-foreground leading-relaxed mb-2">{scene.desc}</p>
+              {/* KPI tags - 规范: 标签4px圆角, 24px高度, 12px文字 */}
+              <div className="flex flex-wrap gap-1 mb-2">
+                {scene.kpis.slice(0, 4).map(kpi => (
+                  <span key={kpi} className="text-xs h-6 px-1 rounded-sm bg-muted text-muted-foreground leading-6 font-normal">
+                    {kpi}
+                  </span>
+                ))}
+              </div>
+              {/* Example questions - 规范: 12px浅灰 */}
+              <div className="space-y-0.5">
+                {scene.exampleQuestions.slice(0, 2).map((q, i) => (
+                  <p key={i} className="text-xs text-muted-foreground/60 truncate">
+                    &quot;{q}&quot;
+                  </p>
+                ))}
+              </div>
+              {/* Hover CTA */}
+              <div className="mt-2 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                AI生成此场景模板 <ArrowRight className="w-3 h-3 ml-1" />
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -192,49 +190,47 @@ function HomeCards({ hasData, onViewChange, fileName, rowCount, isLoggedIn = fal
 
   // ---- Has Data State ----
   return (
-    <div className="space-y-6">
-      {/* Data ready banner */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-primary-tint">
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+    <div className="space-y-4">
+      {/* Data ready banner - 规范: 16px模块分割, 6px圆角 */}
+      <div className="flex items-center gap-2 px-4 py-2 rounded-sm border border-border bg-primary/4">
+        <div className="w-6 h-6 rounded-full bg-primary/8 flex items-center justify-center shrink-0">
           <CheckCircle className="w-4 h-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground">
+          <p className="text-sm font-semibold text-foreground">
             {fileName || '数据已就绪'}
           </p>
           <p className="text-xs text-muted-foreground">
             {rowCount ? `${rowCount.toLocaleString()} 行数据已加载` : '数据已加载'}，开始你的数据分析之旅
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="default"
+        <button
           onClick={() => onViewChange('insights')}
-          className="gap-1.5 shrink-0"
+          className="h-8 px-4 rounded-sm bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shrink-0 flex items-center gap-1"
         >
-          <Zap className="w-3.5 h-3.5" />
+          <Zap className="w-4 h-4" />
           一键分析
-        </Button>
+        </button>
       </div>
 
-      {/* Quick actions grid */}
+      {/* Quick actions grid - 规范: 卡片6px圆角, 8px间距 */}
       <div>
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
           <Activity className="w-3.5 h-3.5" />
           快捷操作
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {QUICK_ACTIONS.map((action) => {
             const needsDataDisabled = action.needsData && !hasData;
             const needsPermission = action.permission && !checkPermission(action.permission);
             const disabled = needsDataDisabled || needsPermission;
             return (
-              <Card
+              <div
                 key={action.id}
-                className={`group cursor-pointer transition-all duration-200 border-border ${
+                className={`group cursor-pointer transition-all duration-200 rounded-sm border border-border p-2 flex items-center gap-2 ${
                   disabled
                     ? 'opacity-40 cursor-not-allowed'
-                    : 'hover:shadow-sm hover:border-primary/20'
+                    : 'hover:shadow-float hover:border-primary/25'
                 } ${action.accent && !disabled ? 'border-primary/20 bg-primary/[0.02]' : 'bg-card'}`}
                 onClick={() => {
                   if (disabled) {
@@ -246,67 +242,69 @@ function HomeCards({ hasData, onViewChange, fileName, rowCount, isLoggedIn = fal
                   onViewChange(action.id);
                 }}
               >
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                    action.accent ? 'bg-primary/10' : 'bg-muted'
-                  }`}>
-                    <action.icon className={`w-4 h-4 ${action.accent ? 'text-primary' : 'text-muted-foreground'}`} />
+                {/* Icon - 规范: 16px图标 */}
+                <div className={`w-7 h-7 rounded-sm flex items-center justify-center shrink-0 ${
+                  action.accent ? 'bg-primary/8' : 'bg-muted'
+                }`}>
+                  <action.icon className={`w-4 h-4 ${action.accent ? 'text-primary' : 'text-muted-foreground'}`} />
+                </div>
+                {/* Text - 规范: 标题14px, 描述12px */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1">
+                    <h4 className="text-sm font-medium truncate">{action.label}</h4>
+                    {action.badge && (
+                      <span className="text-xs font-semibold px-1 rounded-sm bg-primary/8 text-primary leading-5">
+                        {action.badge}
+                      </span>
+                    )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="text-sm font-medium truncate">{action.label}</h4>
-                      {action.badge && (
-                        <span className="text-[9px] font-semibold px-1.5 py-[1px] rounded bg-primary/10 text-primary leading-none">
-                          {action.badge}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground truncate mt-0.5">{action.desc}</p>
-                  </div>
-                </CardContent>
-              </Card>
+                  <p className="text-xs text-muted-foreground truncate">{action.desc}</p>
+                </div>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* Scene-based recommendations */}
+      {/* Scene-based recommendations - 规范: 卡片6px圆角 */}
       <div>
-        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
           <Sparkles className="w-3.5 h-3.5" />
           场景化分析
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
           {SCENE_TEMPLATES.slice(0, 3).map((scene) => (
-            <Card
+            <div
               key={scene.id}
-              className="group cursor-pointer transition-all duration-200 hover:shadow-md border-border hover:border-primary/25 relative overflow-hidden bg-card"
+              className="group cursor-pointer transition-all duration-200 rounded-sm border border-border hover:shadow-float hover:border-primary/25 relative overflow-hidden bg-card"
               onClick={() => onViewChange('insights')}
             >
-              {/* Top accent line */}
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-primary/10 group-hover:bg-primary/60 transition-colors duration-200" />
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2.5 mb-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-primary-tint flex items-center justify-center group-hover:bg-primary/15 transition-colors duration-200">
+              {/* Top accent line - 规范: 主色高亮 */}
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-primary/8 group-hover:bg-primary/50 transition-colors duration-200" />
+              <div className="p-4">
+                {/* Icon + title - 规范: 16px图标, 4px间距 */}
+                <div className="flex items-center gap-1 mb-2">
+                  <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center group-hover:bg-primary/12 transition-colors duration-200">
                     <scene.icon className="w-4 h-4 text-primary" />
                   </div>
-                  <h4 className="text-sm font-medium text-foreground">{scene.label}</h4>
+                  <h4 className="text-sm font-semibold text-foreground">{scene.label}</h4>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{scene.desc}</p>
+                {/* Description - 规范: 12px浅灰 */}
+                <p className="text-xs text-muted-foreground leading-relaxed mb-2">{scene.desc}</p>
                 {/* KPI preview */}
-                <div className="flex flex-wrap gap-1 mb-3">
+                <div className="flex flex-wrap gap-1 mb-2">
                   {scene.kpis.slice(0, 3).map(kpi => (
-                    <Badge key={kpi} variant="secondary" className="text-[10px] h-5 px-1.5 font-normal">
+                    <span key={kpi} className="text-xs h-6 px-1 rounded-sm bg-muted text-muted-foreground leading-6 font-normal">
                       {kpi}
-                    </Badge>
+                    </span>
                   ))}
                 </div>
-                {/* Clickable example questions */}
-                <div className="space-y-1.5">
+                {/* Clickable example questions - 规范: 12px文字, 4px圆角 */}
+                <div className="space-y-1">
                   {scene.exampleQuestions.slice(0, 2).map((q, i) => (
                     <button
                       key={i}
-                      className="w-full text-left text-xs px-2.5 py-1.5 rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors duration-150 truncate"
+                      className="w-full text-left text-xs px-2 py-1 rounded-sm bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors duration-150 truncate"
                       onClick={(e) => {
                         e.stopPropagation();
                         onViewChange('chat');
@@ -316,15 +314,16 @@ function HomeCards({ hasData, onViewChange, fileName, rowCount, isLoggedIn = fal
                     </button>
                   ))}
                 </div>
-                <div className="mt-3 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <div className="mt-2 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   一键分析 <ArrowRight className="w-3 h-3 ml-1" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       </div>
     </div>
   );
 }
+
 export default memo(HomeCards);

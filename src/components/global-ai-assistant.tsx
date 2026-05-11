@@ -497,7 +497,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                           ? 'bg-primary text-primary-foreground rounded-br-md'
                           : msg.isError
                           ? 'bg-red-50 text-red-800 rounded-bl-md border border-red-200'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                          : 'bg-muted text-foreground rounded-bl-md'
                       )}
                     >
                       {/* 错误提示头部 */}
@@ -511,17 +511,17 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                       <div className="text-sm leading-relaxed">
                         {msg.role === 'assistant' ? (
                           <div className="prose prose-sm prose-gray max-w-none
-                            [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h1]:text-gray-900
-                            [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-2 [&_h2]:mb-1 [&_h2]:text-gray-800
-                            [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-gray-700
-                            [&_p]:my-1 [&_p]:text-gray-700
+                            [&_h1]:text-base [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1.5 [&_h1]:text-foreground
+                            [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-2 [&_h2]:mb-1 [&_h2]:text-foreground
+                            [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-foreground
+                            [&_p]:my-1 [&_p]:text-foreground
                             [&_ul]:my-1 [&_ul]:pl-4 [&_ul]:list-disc
                             [&_ol]:my-1 [&_ol]:pl-4 [&_ol]:list-decimal
-                            [&_li]:my-0.5 [&_li]:text-gray-700
-                            [&_strong]:text-gray-900 [&_strong]:font-semibold
-                            [&_code]:bg-gray-200 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:text-blue-700
+                            [&_li]:my-0.5 [&_li]:text-foreground
+                            [&_strong]:text-foreground [&_strong]:font-semibold
+                            [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:text-blue-700
                             [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:text-xs
-                            [&_blockquote]:border-l-3 [&_blockquote]:border-blue-400 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-gray-600
+                            [&_blockquote]:border-l-3 [&_blockquote]:border-blue-400 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-foreground
                           ">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                           </div>
@@ -533,7 +533,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                       {/* 时间戳 */}
                       <div className={cn(
                         'flex items-center justify-between mt-2 pt-2 border-t',
-                        msg.role === 'user' ? 'border-white/20' : 'border-gray-200'
+                        msg.role === 'user' ? 'border-white/20' : 'border-border'
                       )}>
                         <span className={cn(
                           'text-xs',
@@ -556,7 +556,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
 
                       {/* 推荐追问 */}
                       {msg.role === 'assistant' && msg.suggestions && msg.suggestions.length > 0 && !msg.isStreaming && (
-                        <div className="mt-2 pt-2 border-t border-gray-200">
+                        <div className="mt-2 pt-2 border-t border-border">
                           <p className="text-xs font-medium mb-1.5 text-purple-500 flex items-center gap-1">
                             <Lightbulb className="w-3 h-3" />
                             深度追问：
@@ -582,13 +582,13 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                 {/* 流式内容 */}
                 {streamedContent && (
                   <div className="flex justify-start">
-                    <div className="max-w-[85%] bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md px-4 py-3">
+                    <div className="max-w-[85%] bg-muted text-foreground rounded-2xl rounded-bl-md px-4 py-3">
                       <div className="text-sm leading-relaxed prose prose-sm prose-gray max-w-none
-                        [&_p]:my-1 [&_p]:text-gray-700
-                        [&_strong]:text-gray-900 [&_strong]:font-semibold
+                        [&_p]:my-1 [&_p]:text-foreground
+                        [&_strong]:text-foreground [&_strong]:font-semibold
                         [&_ul]:my-1 [&_ul]:pl-4 [&_ul]:list-disc
                         [&_ol]:my-1 [&_ol]:pl-4 [&_ol]:list-decimal
-                        [&_li]:my-0.5 [&_li]:text-gray-700
+                        [&_li]:my-0.5 [&_li]:text-foreground
                       ">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{streamedContent.replace(/##\s*推荐追问[\s\S]*$/, '')}</ReactMarkdown>
                       </div>
@@ -600,7 +600,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                 {/* 正在输入 */}
                 {isTyping && !streamedContent && (
                   <div className="flex justify-start">
-                    <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
+                    <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
                       <div className="flex gap-1">
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -645,7 +645,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                     <button
                       key={q}
                       onClick={() => sendMessage(q)}
-                      className="text-xs text-gray-500 hover:text-purple-600 whitespace-nowrap px-2 py-1 rounded-full bg-gray-100 hover:bg-purple-50 transition-colors"
+                      className="text-xs text-muted-foreground hover:text-purple-600 whitespace-nowrap px-2 py-1 rounded-full bg-muted hover:bg-purple-50 transition-colors"
                     >
                       {q}
                     </button>

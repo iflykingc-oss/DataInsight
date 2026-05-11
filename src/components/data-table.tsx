@@ -401,7 +401,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
   
   const formatValue = (value: import('@/lib/data-processor').CellValue, type: string) => {
     if (value === null || value === undefined || value === '') {
-      return <span className="text-gray-400 italic">空</span>;
+      return <span className="text-muted-foreground italic">空</span>;
     }
     if (typeof value === 'object' && value instanceof Date) {
       return value.toLocaleDateString();
@@ -426,23 +426,24 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
       {/* 批量操作栏 */}
       {selectedRows.size > 0 && (
         <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
-          <Badge variant="secondary">
-            已选择 {selectedRows.size} 条记录
+          <Badge variant="secondary" className="text-xs">
+            已选择 {selectedRows.size} 条
           </Badge>
           <Button
             size="sm"
             variant="default"
+            className="h-7 text-xs"
             onClick={() => setShowAIAnalyzeDialog(true)}
           >
-            <Sparkles className="w-4 h-4 mr-1" />
-            选中即分析
+            <Sparkles className="w-3 h-3 mr-1" />
+            AI分析
           </Button>
-          <Button size="sm" variant="outline" onClick={handleBulkDelete}>
-            <Trash2 className="w-4 h-4 mr-1" />
-            批量删除
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleBulkDelete}>
+            <Trash2 className="w-3 h-3 mr-1" />
+            删除
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setSelectedRows(new Set())}>
-            取消选择
+          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setSelectedRows(new Set())}>
+            取消
           </Button>
         </div>
       )}
@@ -451,7 +452,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 flex-1">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="搜索数据..."
               value={searchTerm}
@@ -459,17 +460,17 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                 setSearchTerm(e.target.value);
                 setPage(1);
               }}
-              className="pl-9"
+              className="pl-8 h-8 text-sm"
             />
           </div>
           
-          <Badge variant="secondary">
-            共 {processedData.length.toLocaleString()} 条数据
+          <Badge variant="secondary" className="text-xs">
+            共 {processedData.length.toLocaleString()} 条
           </Badge>
         </div>
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">每页</span>
+          <span className="text-xs text-muted-foreground">每页</span>
           <Select
             value={String(pageSize)}
             onValueChange={v => {
@@ -477,7 +478,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
               setPage(1);
             }}
           >
-            <SelectTrigger className="w-20">
+            <SelectTrigger className="w-16 h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -490,48 +491,48 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
         </div>
       </div>
       
-      {/* 表格 */}
-      <div className="border rounded-lg overflow-hidden">
+      {/* 表格 - 规范: 4px圆角, 边框#E5E6EB, 行高40px, 表头#F2F3F5 */}
+      <div className="border border-border rounded-sm overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-10 text-center">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-10 text-center bg-[#F2F3F5]">
                   <Checkbox 
                     checked={selectedRows.size === paginatedData.length && paginatedData.length > 0}
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
-                <TableHead className="w-12 text-center">#</TableHead>
+                <TableHead className="w-12 text-center bg-[#F2F3F5]">#</TableHead>
                 {data.headers.map(header => (
                   <TableHead
                     key={header}
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-[#F7F8FA] bg-[#F2F3F5]"
                     onClick={() => handleSort(header)}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="truncate">{header}</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
-                      <Badge variant="outline" className="text-xs">
+                    <div className="flex items-center gap-1">
+                      <span className="truncate text-xs">{header}</span>
+                      <ArrowUpDown className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground h-5 px-1 rounded-sm bg-muted font-normal">
                         {getFieldType(header)}
-                      </Badge>
+                      </span>
                     </div>
                   </TableHead>
                 ))}
-                {/* AI字段列 */}
+                {/* AI字段列 - 规范: 主色边框标识 */}
                 {aiFields.map(field => (
                   <TableHead
                     key={field.id}
-                    className="bg-primary/5 border-l-2 border-primary/20"
+                    className="bg-primary/4 border-l border-primary/20"
                   >
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm">{getAIFieldTypeIcon(field.type)}</span>
-                      <span className="truncate font-medium text-primary">{field.name}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs">{getAIFieldTypeIcon(field.type)}</span>
+                      <span className="truncate text-xs font-medium text-primary">{field.name}</span>
                       {field.status === 'running' && (
-                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-sm bg-primary animate-pulse" />
                       )}
                       {field.status === 'completed' && (
-                        <span className="w-2 h-2 rounded-full bg-green-400" />
+                        <span className="w-1.5 h-1.5 rounded-sm bg-success" />
                       )}
                     </div>
                   </TableHead>
@@ -541,7 +542,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
             <TableBody>
               {paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={data.headers.length + 1} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={data.headers.length + 1} className="text-center py-8 text-muted-foreground text-xs">
                     没有找到匹配的数据
                   </TableCell>
                 </TableRow>
@@ -553,7 +554,10 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                   return (
                     <TableRow 
                       key={`row-${rowIndex}`} 
-                      className={cn(selectedRows.has(actualRowIndex) && 'bg-primary/5')}
+                      className={cn(
+                        'h-10 hover:bg-[#F7F8FA] cursor-default',
+                        selectedRows.has(actualRowIndex) && 'bg-primary/4'
+                      )}
                       onContextMenu={(e) => handleContextMenu(e, actualRowIndex)}
                     >
                       <TableCell className="text-center">
@@ -563,10 +567,10 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                           onClick={(e) => e.stopPropagation()}
                         />
                       </TableCell>
-                      <TableCell className="text-center text-gray-400">
-                        <div className="flex items-center gap-1">
+                      <TableCell className="text-center text-muted-foreground text-xs">
+                        <div className="flex items-center justify-center gap-1">
                           {isSubscribed && (
-                            <Bell className="w-3 h-3 text-yellow-500" />
+                            <Bell className="w-3 h-3 text-warning" />
                           )}
                           <span>{actualRowIndex + 1}</span>
                         </div>
@@ -585,17 +589,17 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                         <TableCell
                           key={field.id}
                           className={cn(
-                            'max-w-xs truncate border-l-2 border-primary/10',
-                            field.results[actualRowIndex] ? 'bg-primary/5' : 'bg-gray-50'
+                            'max-w-xs truncate border-l border-primary/10 text-xs',
+                            field.results[actualRowIndex] ? 'bg-primary/4' : 'bg-muted/30'
                           )}
                         >
                           {field.status === 'running' && !field.results[actualRowIndex] ? (
                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                              <span className="w-1 h-1 rounded-sm bg-primary animate-pulse" />
                               处理中...
                             </span>
                           ) : field.results[actualRowIndex] ? (
-                            <span className="text-sm">{String(field.results[actualRowIndex])}</span>
+                            <span className="text-xs">{String(field.results[actualRowIndex])}</span>
                           ) : (
                             <span className="text-xs text-muted-foreground italic">未处理</span>
                           )}
@@ -665,7 +669,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => handleDeleteRow(contextMenuPos.rowIndex)}
-            className="text-red-600 focus:text-red-600"
+            className="text-destructive focus:text-destructive"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             删除记录
@@ -854,23 +858,24 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
 
       {/* 分页 */}
       {pageCount > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+        <div className="flex items-center justify-center gap-4 pt-4 pb-1">
+          <p className="text-xs text-muted-foreground">
             显示 {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, processedData.length)} 条，
             共 {processedData.length.toLocaleString()} 条
           </p>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
+              className="h-7 w-7 p-0"
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3 h-3" />
             </Button>
             
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               {Array.from({ length: Math.min(5, pageCount) }, (_, i) => {
                 let pageNum: number;
                 if (pageCount <= 5) {
@@ -888,8 +893,8 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                     key={pageNum}
                     variant={page === pageNum ? 'default' : 'outline'}
                     size="sm"
+                    className={cn('h-7 w-7 p-0 text-xs', page === pageNum && 'pointer-events-none')}
                     onClick={() => setPage(pageNum)}
-                    className="w-8 h-8 p-0"
                   >
                     {pageNum}
                   </Button>
@@ -900,10 +905,11 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
             <Button
               variant="outline"
               size="sm"
+              className="h-7 w-7 p-0"
               onClick={() => setPage(p => Math.min(pageCount, p + 1))}
               disabled={page === pageCount}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
         </div>

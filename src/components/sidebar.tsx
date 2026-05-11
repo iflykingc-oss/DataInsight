@@ -17,7 +17,7 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   badge?: string;
-  description?: string; // Tooltip for collapsed state
+  description?: string;
 }
 
 interface NavGroup {
@@ -28,9 +28,7 @@ interface NavGroup {
 }
 
 // ---- Navigation Definition ----
-// Design principle: 2 groups, clear hierarchy
-// "Core" = daily-use features (5 items), always visible
-// "Tools" = advanced/specialized features (7 items), collapsible
+// 规范：2组导航，核心功能5项 + 更多工具9项
 const NAV_GROUPS: NavGroup[] = [
   {
     key: 'core',
@@ -76,6 +74,16 @@ interface SidebarProps {
   onLogout?: () => void;
 }
 
+/*
+ * Sidebar — 规范改造要点：
+ * - 间距：仅4/8/16px三档（侧边栏内无24px场景）
+ * - 字号：分组标题12px、导航项14px、辅助文字12px
+ * - 主色：选中态/图标统一用sidebar-primary (#1677FF系)
+ * - 选中态：左侧3px主色条 + 背景微亮 + 图标主色
+ * - 圆角：6px（导航项）
+ * - 层级：分组标题缩进8px，子项缩进8px（图标+4px间距+文字）
+ * - 低噪：去阴影、去多余装饰
+ */
 function Sidebar({
   activeView,
   onViewChange,
@@ -111,29 +119,29 @@ function Sidebar({
         collapsed ? 'w-[52px]' : 'w-[216px]'
       }`}
     >
-      {/* ---- Logo / Brand ---- */}
-      <div className="flex items-center h-11 px-3 border-b border-sidebar-border shrink-0">
+      {/* ---- Logo / Brand ---- 规范：h-11, 间距8px */}
+      <div className="flex items-center h-11 px-2 border-b border-sidebar-border shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-md bg-sidebar-primary flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-7 h-7 rounded-md bg-sidebar-primary flex items-center justify-center shrink-0">
             <BarChart3 className="w-4 h-4 text-sidebar-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="text-[13px] font-semibold text-sidebar-foreground tracking-tight truncate">
+            <span className="text-[14px] font-semibold text-sidebar-foreground tracking-tight truncate">
               DataInsight
             </span>
           )}
         </div>
       </div>
 
-      {/* ---- Navigation ---- */}
-      <nav className="flex-1 overflow-y-auto py-2 px-1.5 sidebar-scrollbar">
-        {/* 工作台 - Top level, always visible */}
+      {/* ---- Navigation ---- 规范：py-8px px-4px */}
+      <nav className="flex-1 overflow-y-auto py-2 px-1 sidebar-scrollbar">
+        {/* 工作台 - Top level */}
         <button
           onClick={() => onViewChange('home')}
           title={collapsed ? '工作台' : undefined}
           className={`
-            group relative flex items-center gap-2.5 w-full rounded-md text-[13px] transition-all duration-150 mb-1
-            ${collapsed ? 'justify-center px-0 py-[7px]' : 'px-2.5 py-[7px]'}
+            group relative flex items-center gap-2 w-full rounded-md text-[14px] transition-all duration-150 mb-0.5
+            ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-2'}
             ${
               isHomeActive
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
@@ -145,22 +153,22 @@ function Sidebar({
             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-sidebar-primary" />
           )}
           <Home className={`w-4 h-4 shrink-0 ${isHomeActive ? 'text-sidebar-primary' : ''}`} />
-          {!collapsed && <span className="truncate flex-1">工作台</span>}
+          {!collapsed && <span className="truncate flex-1 text-left">工作台</span>}
         </button>
 
-        {/* Divider */}
+        {/* Divider — 规范间距8px */}
         <div className="my-2 mx-2 border-t border-sidebar-border/40" />
 
         {/* Grouped navigation */}
         {NAV_GROUPS.map(group => {
           const isExpanded = expandedGroups.has(group.key);
           return (
-            <div key={group.key} className="mb-1">
-              {/* Group Header */}
+            <div key={group.key} className="mb-0.5">
+              {/* Group Header — 规范：12px浅灰大写 */}
               {!collapsed && (
                 <button
                   onClick={() => toggleGroup(group.key)}
-                  className="flex items-center w-full px-2.5 py-1.5 text-[11px] font-medium text-sidebar-foreground/35 uppercase tracking-wider hover:text-sidebar-foreground/55 transition-colors rounded"
+                  className="flex items-center w-full px-2 py-1.5 text-[12px] font-medium text-sidebar-foreground/35 uppercase tracking-wider hover:text-sidebar-foreground/55 transition-colors rounded"
                 >
                   <span className="flex-1 text-left">{group.label}</span>
                   {isExpanded ? (
@@ -171,14 +179,14 @@ function Sidebar({
                 </button>
               )}
 
-              {/* Collapsed: show divider dot */}
+              {/* Collapsed: divider dot */}
               {collapsed && (
                 <div className="flex items-center justify-center py-1 my-0.5">
                   <div className="w-1 h-1 rounded-full bg-sidebar-foreground/15" />
                 </div>
               )}
 
-              {/* Group Items */}
+              {/* Group Items — 规范：14px字号, 8px图标间距, 6px圆角 */}
               {(isExpanded || collapsed) && (
                 <div className={collapsed ? 'flex flex-col items-center gap-0.5' : 'space-y-0.5'}>
                   {group.items.map(item => {
@@ -189,8 +197,8 @@ function Sidebar({
                         onClick={() => onViewChange(item.id)}
                         title={collapsed ? item.label : (item.description || undefined)}
                         className={`
-                          group/item relative flex items-center gap-2.5 w-full rounded-md text-[13px] transition-all duration-150
-                          ${collapsed ? 'justify-center px-0 py-[7px]' : 'px-2.5 py-[6px]'}
+                          group/item relative flex items-center gap-2 w-full rounded-md text-[14px] transition-all duration-150
+                          ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-1.5'}
                           ${
                             isActive
                               ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
@@ -198,13 +206,13 @@ function Sidebar({
                           }
                         `}
                       >
-                        {/* Active indicator bar */}
+                        {/* Active indicator — 规范3px主色条 */}
                         {isActive && (
                           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-sidebar-primary" />
                         )}
                         <item.icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-sidebar-primary' : ''}`} />
                         {!collapsed && (
-                          <span className="truncate flex-1">{item.label}</span>
+                          <span className="truncate flex-1 text-left">{item.label}</span>
                         )}
                       </button>
                     );
@@ -216,16 +224,16 @@ function Sidebar({
         })}
       </nav>
 
-      {/* ---- Bottom Section ---- */}
-      <div className="border-t border-sidebar-border p-1.5 space-y-0.5 shrink-0">
-        {/* Admin Entry - only visible when logged in as admin */}
+      {/* ---- Bottom Section ---- 规范：px-4px, gap-4px */}
+      <div className="border-t border-sidebar-border p-1 space-y-0.5 shrink-0">
+        {/* Admin Entry */}
         {isLoggedIn && isAdmin && (
           <button
             onClick={() => onViewChange('admin')}
             title={collapsed ? '后台管理' : undefined}
             className={`
-              group relative flex items-center gap-2.5 w-full rounded-md text-[13px] transition-all duration-150
-              ${collapsed ? 'justify-center px-0 py-[7px]' : 'px-2.5 py-[6px]'}
+              group relative flex items-center gap-2 w-full rounded-md text-[14px] transition-all duration-150
+              ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-1.5'}
               ${
                 isAdminActive
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
@@ -237,7 +245,7 @@ function Sidebar({
               <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-sidebar-primary" />
             )}
             <ShieldCheck className={`w-4 h-4 shrink-0 ${isAdminActive ? 'text-sidebar-primary' : ''}`} />
-            {!collapsed && <span className="truncate flex-1">后台管理</span>}
+            {!collapsed && <span className="truncate flex-1 text-left">后台管理</span>}
           </button>
         )}
 
@@ -246,13 +254,13 @@ function Sidebar({
           onClick={onOpenSettings}
           title={collapsed ? '设置' : undefined}
           className={`
-            flex items-center gap-2.5 w-full rounded-md text-[13px] transition-colors duration-150
+            flex items-center gap-2 w-full rounded-md text-[14px] transition-colors duration-150
             text-sidebar-foreground/40 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/75
-            ${collapsed ? 'justify-center px-0 py-[7px]' : 'px-2.5 py-[6px]'}
+            ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-1.5'}
           `}
         >
           <Settings className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>设置</span>}
+          {!collapsed && <span className="text-left">设置</span>}
         </button>
 
         {/* User / Login */}
@@ -261,19 +269,19 @@ function Sidebar({
             onClick={onOpenSettings}
             title={collapsed ? userName : undefined}
             className={`
-              flex items-center gap-2.5 w-full rounded-md text-[13px] transition-colors duration-150
+              flex items-center gap-2 w-full rounded-md text-[14px] transition-colors duration-150
               text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/90
-              ${collapsed ? 'justify-center px-0 py-[7px]' : 'px-2.5 py-[6px]'}
+              ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-1.5'}
             `}
           >
             <div className="w-5 h-5 rounded-full bg-sidebar-primary/15 flex items-center justify-center shrink-0">
-              <span className="text-[9px] font-bold text-sidebar-primary">
+              <span className="text-xs font-bold text-sidebar-primary">
                 {(userName || 'U')[0].toUpperCase()}
               </span>
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <div className="truncate text-sidebar-foreground/80 text-[13px]">{userName}</div>
+                <div className="truncate text-sidebar-foreground/80 text-[14px]">{userName}</div>
               </div>
             )}
           </button>
@@ -282,15 +290,15 @@ function Sidebar({
             onClick={onLoginClick}
             title={collapsed ? '登录' : undefined}
             className={`
-              flex items-center gap-2.5 w-full rounded-md text-[13px] transition-colors duration-150
+              flex items-center gap-2 w-full rounded-md text-[14px] transition-colors duration-150
               text-sidebar-primary hover:bg-sidebar-primary/10
-              ${collapsed ? 'justify-center px-0 py-[7px]' : 'px-2.5 py-[6px]'}
+              ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-1.5'}
             `}
           >
             <div className="w-5 h-5 rounded-full bg-sidebar-primary/15 flex items-center justify-center shrink-0">
-              <span className="text-[9px] font-bold text-sidebar-primary">?</span>
+              <span className="text-xs font-bold text-sidebar-primary">?</span>
             </div>
-            {!collapsed && <span>登录</span>}
+            {!collapsed && <span className="text-left">登录</span>}
           </button>
         )}
 
@@ -299,9 +307,9 @@ function Sidebar({
           onClick={onToggleCollapse}
           title={collapsed ? '展开侧边栏' : '收起侧边栏'}
           className={`
-            flex items-center gap-2.5 w-full rounded-md text-[13px] transition-colors duration-150
+            flex items-center gap-2 w-full rounded-md text-[12px] transition-colors duration-150
             text-sidebar-foreground/25 hover:text-sidebar-foreground/45 hover:bg-sidebar-accent/30
-            ${collapsed ? 'justify-center px-0 py-1.5' : 'px-2.5 py-1.5'}
+            ${collapsed ? 'justify-center px-0 py-1' : 'px-2 py-1'}
           `}
         >
           <svg
