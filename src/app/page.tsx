@@ -45,7 +45,7 @@ import { cn } from '@/lib/utils';
 import { useAuth, type PermissionKey } from '@/lib/use-auth';
 import { LoginDialog } from '@/components/login-dialog';
 import { UserMenu } from '@/components/user-menu';
-const AdminPanel = dynamic(() => import('@/components/admin-panel').then(m => ({ default: m.default })), { ssr: false });
+const AdminContent = dynamic(() => import('@/components/admin-content').then(m => ({ default: m.default })), { ssr: false });
 import type { ParsedData, DataAnalysis, CellValue } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
 import { checkTTLWarning } from '@/lib/data-lifecycle';
@@ -107,6 +107,7 @@ const SpreadsheetAgentPage = dynamic(() => import('@/components/SpreadsheetAgent
 	  | 'data-source'
 	  | 'pivot-table'
 	  | 'multimodal'
+		| 'management'
 	
 
 
@@ -128,8 +129,7 @@ export default function HomePage() {
 
 
   const [showSettings, setShowSettings] = useState(false);
-  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
-  const { isLoggedIn, setLoginDialogOpen, hasPermission } = useAuth();
+  const { isLoggedIn, setLoginDialogOpen, hasPermission, user } = useAuth();
 
   // D-04修复：统一API请求头，携带JWT token
   const getAuthHeaders = useCallback(() => {
@@ -620,6 +620,17 @@ export default function HomePage() {
             <AITableBuilder modelConfig={activeModelConfig} />
           </ErrorBoundary>
           <SceneAgentPanel sceneId="table-generate" sceneName="生成表格" modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    // 管理后台（仅管理员可见，不需要数据）
+    if (viewMode === 'management' && user?.role === 'admin') {
+      return (
+        <div className="relative">
+          <ErrorBoundary moduleName="管理后台">
+            <AdminContent />
+          </ErrorBoundary>
         </div>
       );
     }
@@ -1233,6 +1244,7 @@ export default function HomePage() {
         activeView={viewMode}
         onViewChange={(v) => setViewMode(v as ViewMode)}
         isLoggedIn={isLoggedIn}
+        userRole={user?.role}
         onOpenSettings={() => setShowSettings(true)}
         onLoginClick={() => setLoginDialogOpen(true)}
       />
@@ -1305,7 +1317,6 @@ export default function HomePage() {
             {/* 用户登录入口 */}
             <UserMenu
               onOpenSettings={() => setShowSettings(true)}
-              onOpenAdmin={() => setAdminPanelOpen(true)}
             />
           </div>
         </header>
@@ -1331,7 +1342,7 @@ export default function HomePage() {
       <LoginDialog />
 
       {/* 管理员控制台 */}
-      <AdminPanel open={adminPanelOpen} onOpenChange={setAdminPanelOpen} />
+      <AdminContent />
 
       {/* 全局 AI 助手 */}
       <GlobalAgentAssistant

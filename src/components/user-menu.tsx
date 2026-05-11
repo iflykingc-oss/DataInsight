@@ -21,13 +21,13 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/use-auth';
 import { LogIn, LogOut, Settings, Users, Shield, Trash2, AlertTriangle, Loader2, Download } from 'lucide-react';
+import Link from 'next/link';
 
 interface UserMenuProps {
   onOpenSettings?: () => void;
-  onOpenAdmin?: () => void;
 }
 
-export function UserMenu({ onOpenSettings, onOpenAdmin }: UserMenuProps) {
+export function UserMenu({ onOpenSettings }: UserMenuProps) {
   const { user, isLoggedIn, isAdmin, logout, setLoginDialogOpen } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
@@ -136,9 +136,11 @@ export function UserMenu({ onOpenSettings, onOpenAdmin }: UserMenuProps) {
           </DropdownMenuItem>
 
           {isAdmin && (
-            <DropdownMenuItem onClick={onOpenAdmin} className="cursor-pointer">
-              <Users className="w-4 h-4 mr-2" />
-              权限管理
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/?view=admin">
+                <Users className="w-4 h-4 mr-2" />
+                权限管理
+              </Link>
             </DropdownMenuItem>
           )}
 

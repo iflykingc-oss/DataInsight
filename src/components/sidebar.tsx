@@ -6,6 +6,7 @@ import {
   Brain, FileSpreadsheet, Sparkles, MessageSquare, Image,
   FileText, Code2, Download, ChevronDown, ChevronRight,
   Home, Shield, Target, LineChart, BookOpen, Building2,
+  ShieldCheck, Users, Bot, BarChart2,
   LucideIcon
 } from 'lucide-react';
 
@@ -25,6 +26,7 @@ interface NavGroup {
   icon: LucideIcon;
   items: NavItem[];
   defaultOpen?: boolean;
+  visibleFor?: string[]; // roles that can see this group; undefined = all roles
 }
 
 // ---- Navigation Definition (4 groups, 12 items) ----
@@ -67,6 +69,19 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'report-export', label: '报表导出', icon: Download },
     ],
   },
+  {
+    key: 'admin',
+    label: '管理',
+    icon: ShieldCheck,
+    defaultOpen: false,
+    visibleFor: ['admin'],
+    items: [
+      { id: 'admin-users', label: '用户管理', icon: Users },
+      { id: 'admin-logs', label: '登录日志', icon: FileText },
+      { id: 'admin-config', label: 'AI模型配置', icon: Bot },
+      { id: 'admin-stats', label: '使用统计', icon: BarChart2 },
+    ],
+  },
 ];
 
 // ---- Component ----
@@ -93,8 +108,13 @@ export default function Sidebar({
   userName,
   userRole,
 }: SidebarProps) {
+  // Filter groups by role
+  const visibleGroups = NAV_GROUPS.filter(
+    group => !group.visibleFor || group.visibleFor.includes(userRole || '')
+  );
+
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(NAV_GROUPS.filter(g => g.defaultOpen).map(g => g.key))
+    new Set(visibleGroups.filter(g => g.defaultOpen).map(g => g.key))
   );
 
   const toggleGroup = (key: string) => {
@@ -155,7 +175,7 @@ export default function Sidebar({
         <div className="my-1.5 mx-2 border-t border-sidebar-border/50" />
 
         {/* Grouped navigation */}
-        {NAV_GROUPS.map(group => {
+        {visibleGroups.map(group => {
           const isExpanded = expandedGroups.has(group.key);
           return (
             <div key={group.key} className="mb-1">
