@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -86,10 +85,13 @@ const ROLE_OPTIONS = [
   { value: 'viewer', label: '查看者', desc: '只读访问', restricted: false },
 ];
 
-export default function AdminContent() {
+interface AdminContentProps {
+  activeTab: string;
+}
+
+export default function AdminContent({ activeTab }: AdminContentProps) {
   const { user } = useAuth();
-  const token = localStorage.getItem('datainsight_token') ?? '';
-  const [activeTab, setActiveTab] = useState('users');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('datainsight_token') ?? '' : '';
   const [users, setUsers] = useState<UserData[]>([]);
   const [loginLogs, setLoginLogs] = useState<any[]>([]);
   const [usageStats, setUsageStats] = useState<any[]>([]);
@@ -346,39 +348,7 @@ export default function AdminContent() {
   const totalApiCalls = usageStats.reduce((sum, s) => sum + (s.count || 0), 0);
 
   return (
-    <div className="h-full flex flex-col">
-      {/* 统计卡片 */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-card border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <Users className="w-3.5 h-3.5" /> 用户总数
-          </div>
-          <div className="text-2xl font-semibold">{totalUsers}</div>
-          <div className="text-xs text-muted-foreground mt-1">{activeUsers} 活跃</div>
-        </div>
-        <div className="bg-card border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <LogIn className="w-3.5 h-3.5" /> 登录记录
-          </div>
-          <div className="text-2xl font-semibold">{totalLogins}</div>
-          <div className="text-xs text-muted-foreground mt-1">近90天内</div>
-        </div>
-        <div className="bg-card border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <Brain className="w-3.5 h-3.5" /> API调用
-          </div>
-          <div className="text-2xl font-semibold">{totalApiCalls.toLocaleString()}</div>
-          <div className="text-xs text-muted-foreground mt-1">总调用次数</div>
-        </div>
-        <div className="bg-card border rounded-lg p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-            <Activity className="w-3.5 h-3.5" /> 在线状态
-          </div>
-          <div className="text-2xl font-semibold">{activeUsers}</div>
-          <div className="text-xs text-muted-foreground mt-1">活跃账号</div>
-        </div>
-      </div>
-
+    <div className="h-full flex flex-col overflow-auto">
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="w-4 h-4" />
@@ -392,28 +362,9 @@ export default function AdminContent() {
         </Alert>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="users" className="gap-1.5">
-            <Users className="w-4 h-4" />
-            用户管理
-          </TabsTrigger>
-          <TabsTrigger value="logs" className="gap-1.5">
-            <LogIn className="w-4 h-4" />
-            登录记录
-          </TabsTrigger>
-          <TabsTrigger value="ai" className="gap-1.5">
-            <Brain className="w-4 h-4" />
-            AI配置
-          </TabsTrigger>
-          <TabsTrigger value="stats" className="gap-1.5">
-            <BarChart3 className="w-4 h-4" />
-            使用统计
-          </TabsTrigger>
-        </TabsList>
-
-        {/* 用户管理 */}
-        <TabsContent value="users" className="flex-1 mt-4">
+      {/* 用户管理 */}
+      {activeTab === 'users' && (
+        <>
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-sm font-medium">用户列表</h3>
@@ -424,8 +375,7 @@ export default function AdminContent() {
               添加用户
             </Button>
           </div>
-
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border border-border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -478,10 +428,12 @@ export default function AdminContent() {
               </TableBody>
             </Table>
           </div>
-        </TabsContent>
+        </>
+      )}
 
-        {/* 登录记录 */}
-        <TabsContent value="logs" className="flex-1 mt-4">
+      {/* 登录记录 */}
+      {activeTab === 'logs' && (
+        <>
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-sm font-medium">登录记录</h3>
@@ -549,12 +501,13 @@ export default function AdminContent() {
               </Button>
             </div>
           )}
-        </TabsContent>
+        </>
+      )}
 
-        {/* AI配置 */}
-        <TabsContent value="ai" className="flex-1 mt-4">
-          <div className="max-w-xl">
-            <div className="space-y-4">
+      {/* AI配置 */}
+      {activeTab === 'ai-config' && (
+        <div className="max-w-xl">
+          <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Base URL</Label>
                 <Input
@@ -592,10 +545,11 @@ export default function AdminContent() {
               </div>
             </div>
           </div>
-        </TabsContent>
+      )}
 
-        {/* 使用统计 */}
-        <TabsContent value="stats" className="flex-1 mt-4">
+      {/* 使用统计 */}
+      {activeTab === 'stats' && (
+        <>
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-sm font-medium">API调用统计</h3>
@@ -641,8 +595,8 @@ export default function AdminContent() {
               </TableBody>
             </Table>
           </div>
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
 
       {/* 添加/编辑用户弹窗 */}
       <Dialog open={userFormOpen} onOpenChange={setUserFormOpen}>

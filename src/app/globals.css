@@ -1,134 +1,280 @@
+@import "https://fonts.googleapis.cn/css2?family=Inter:wght@400;500;600;700&display=swap";
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   DataInsight Design Token System
+   Inspired by Hue Design Language + premium-ui-builder-skill
+   
+   Principles:
+   - Neutral base + single accent (teal-cyan, NOT blue/purple)
+   - 3-tier surface hierarchy (background → surface1 → surface2)
+   - 4-tier text hierarchy (primary → secondary → tertiary → disabled)
+   - Semantic shadows (subtle / medium / elevated)
+   - Consistent spacing scale (4px base)
+   ============================================================ */
+
 @theme inline {
+  /* ---- Semantic Color Tokens → CSS Variables ---- */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Extended surface tokens */
+  --color-surface1: var(--surface1);
+  --color-surface2: var(--surface2);
+  --color-surface3: var(--surface3);
+  --color-border-visible: var(--border-visible);
+
+  /* Status tokens */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+
+  /* Sidebar tokens */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Chart tokens */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* ---- Radius Scale ---- */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* ---- Font Families ---- */
   --font-sans:
-    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-sans-serif,
-    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+    'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+    ui-monospace, SFMono-Regular, 'Cascadia Code', Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
   --font-serif:
     'Noto Serif SC', 'Songti SC', 'SimSun', ui-serif, Georgia, Cambria,
     'Times New Roman', Times, serif;
+
+  /* ---- Spacing Scale (4px base, following Hue's spacing system) ---- */
+  --spacing-2xs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+
+  /* ---- Shadow Scale ---- */
+  --shadow-xs: var(--shadow-xs-val);
+  --shadow-sm: var(--shadow-sm-val);
+  --shadow-md: var(--shadow-md-val);
+  --shadow-lg: var(--shadow-lg-val);
+  --shadow-xl: var(--shadow-xl-val);
 }
 
+/* ============================================================
+   Light Theme
+   Tone: Cool-warm neutral, teal accent, clean data aesthetic
+   Reference: Stripe Dashboard, Linear, Notion
+   ============================================================ */
 :root {
   --radius: 0.5rem;
 
-  /* ---- Light theme: clean, modern, professional ---- */
-  --background: #f8f9fb;
-  --foreground: #1a1d23;
+  /* ---- Core Surfaces ---- */
+  --background: #f7f8fa;
+  --foreground: #111318;
+
+  /* Surface hierarchy: bg < surface1 < surface2 < surface3 */
+  --surface1: #ffffff;        /* Cards, elevated containers */
+  --surface2: #f0f1f4;       /* Grouped backgrounds, secondary panels */
+  --surface3: #e8eaef;       /* Inset areas, tertiary surfaces */
+
   --card: #ffffff;
-  --card-foreground: #1a1d23;
+  --card-foreground: #111318;
   --popover: #ffffff;
-  --popover-foreground: #1a1d23;
-  --primary: #2563eb;
+  --popover-foreground: #111318;
+
+  /* ---- Primary Accent (Teal-Cyan: distinctive, NOT generic blue) ---- */
+  --primary: #0d9488;
   --primary-foreground: #ffffff;
-  --secondary: #f1f3f5;
-  --secondary-foreground: #1a1d23;
-  --muted: #f1f3f5;
-  --muted-foreground: #6b7280;
-  --accent: #e8ecf2;
-  --accent-foreground: #1a1d23;
-  --destructive: #ef4444;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #2563eb;
 
-  /* Chart colors - vibrant & accessible */
-  --chart-1: #3b82f6;
-  --chart-2: #10b981;
-  --chart-3: #8b5cf6;
-  --chart-4: #f59e0b;
-  --chart-5: #ef4444;
+  /* ---- Secondary ---- */
+  --secondary: #f0f1f4;
+  --secondary-foreground: #111318;
 
-  /* Sidebar - dark, modern, Grafana-style */
-  --sidebar: #1e2028;
-  --sidebar-foreground: #c9cdd4;
-  --sidebar-primary: #3b82f6;
+  /* ---- Muted ---- */
+  --muted: #f0f1f4;
+  --muted-foreground: #6b7084;
+
+  /* ---- Accent (for subtle highlights) ---- */
+  --accent: #e6f5f3;
+  --accent-foreground: #0d9488;
+
+  /* ---- Destructive ---- */
+  --destructive: #dc2626;
+
+  /* ---- Borders ---- */
+  --border: #e2e4ea;
+  --border-visible: #c9ccd4;
+
+  /* ---- Input ---- */
+  --input: #e2e4ea;
+
+  /* ---- Ring ---- */
+  --ring: #0d9488;
+
+  /* ---- Status Colors ---- */
+  --success: #059669;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --error: #dc2626;
+  --error-foreground: #ffffff;
+
+  /* ---- Chart Colors (harmonious, accessible, teal-led) ---- */
+  --chart-1: #0d9488;
+  --chart-2: #6366f1;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #8b5cf6;
+
+  /* ---- Shadow System (layered, soft, not dirty) ---- */
+  --shadow-xs-val: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm-val: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md-val: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg-val: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl-val: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+  /* ---- Sidebar (dark, deep, refined) ---- */
+  --sidebar: #13161c;
+  --sidebar-foreground: #b0b5c3;
+  --sidebar-primary: #14b8a6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.06);
-  --sidebar-accent-foreground: #e5e7eb;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #3b82f6;
-}
-
-.dark {
-  --background: #0f1117;
-  --foreground: #e5e7eb;
-  --card: #1a1d25;
-  --card-foreground: #e5e7eb;
-  --popover: #1a1d25;
-  --popover-foreground: #e5e7eb;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #262930;
-  --secondary-foreground: #e5e7eb;
-  --muted: #262930;
-  --muted-foreground: #8b8f98;
-  --accent: #262930;
-  --accent-foreground: #e5e7eb;
-  --destructive: #ef4444;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.1);
-  --ring: #3b82f6;
-  --chart-1: #60a5fa;
-  --chart-2: #34d399;
-  --chart-3: #a78bfa;
-  --chart-4: #fbbf24;
-  --chart-5: #f87171;
-  --sidebar: #13151a;
-  --sidebar-foreground: #c9cdd4;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 255, 255, 0.06);
-  --sidebar-accent-foreground: #e5e7eb;
+  --sidebar-accent: rgba(255, 255, 255, 0.05);
+  --sidebar-accent-foreground: #e2e4ea;
   --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: #3b82f6;
+  --sidebar-ring: #14b8a6;
 }
 
+/* ============================================================
+   Dark Theme
+   Tone: Deep cool-gray, teal accent, comfortable data reading
+   ============================================================ */
+.dark {
+  /* ---- Core Surfaces ---- */
+  --background: #0c0e14;
+  --foreground: #dfe1e8;
+
+  /* Surface hierarchy */
+  --surface1: #181b24;
+  --surface2: #1e2130;
+  --surface3: #262a3a;
+
+  --card: #181b24;
+  --card-foreground: #dfe1e8;
+  --popover: #181b24;
+  --popover-foreground: #dfe1e8;
+
+  /* ---- Primary Accent ---- */
+  --primary: #14b8a6;
+  --primary-foreground: #ffffff;
+
+  /* ---- Secondary ---- */
+  --secondary: #1e2130;
+  --secondary-foreground: #dfe1e8;
+
+  /* ---- Muted ---- */
+  --muted: #1e2130;
+  --muted-foreground: #7b7f94;
+
+  /* ---- Accent ---- */
+  --accent: #1a2d2a;
+  --accent-foreground: #14b8a6;
+
+  /* ---- Destructive ---- */
+  --destructive: #ef4444;
+
+  /* ---- Borders ---- */
+  --border: rgba(255, 255, 255, 0.07);
+  --border-visible: rgba(255, 255, 255, 0.14);
+
+  /* ---- Input ---- */
+  --input: rgba(255, 255, 255, 0.09);
+
+  /* ---- Ring ---- */
+  --ring: #14b8a6;
+
+  /* ---- Status Colors ---- */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --error: #ef4444;
+  --error-foreground: #ffffff;
+
+  /* ---- Chart Colors ---- */
+  --chart-1: #2dd4bf;
+  --chart-2: #818cf8;
+  --chart-3: #fbbf24;
+  --chart-4: #f472b6;
+  --chart-5: #a78bfa;
+
+  /* ---- Shadow System (dark mode: deeper, cooler) ---- */
+  --shadow-xs-val: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm-val: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md-val: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-lg-val: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  --shadow-xl-val: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+
+  /* ---- Sidebar ---- */
+  --sidebar: #0a0c12;
+  --sidebar-foreground: #b0b5c3;
+  --sidebar-primary: #14b8a6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.04);
+  --sidebar-accent-foreground: #dfe1e8;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-ring: #14b8a6;
+}
+
+/* ============================================================
+   Base Layer
+   ============================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -138,7 +284,11 @@
   }
 }
 
-/* ---- Custom Sidebar Scrollbar ---- */
+/* ============================================================
+   Scrollbar Styles
+   ============================================================ */
+
+/* ---- Sidebar Scrollbar ---- */
 .sidebar-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -146,14 +296,14 @@
   background: transparent;
 }
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 2px;
 }
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
 }
 
-/* ---- Thin Scrollbar for Main Content ---- */
+/* ---- Main Content Scrollbar ---- */
 .thin-scrollbar::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -168,3 +318,34 @@
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
+
+/* ============================================================
+   Utility Classes (Design Token derived)
+   ============================================================ */
+
+/* Surface layers - use for background hierarchy */
+.surface-1 { background: var(--surface1); }
+.surface-2 { background: var(--surface2); }
+.surface-3 { background: var(--surface3); }
+
+/* Subtle border for elevated cards */
+.border-subtle { border-color: var(--border); }
+.border-visible { border-color: var(--border-visible); }
+
+/* Status text colors */
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-error { color: var(--error); }
+
+/* Status background tints */
+.bg-success-tint { background: color-mix(in srgb, var(--success) 8%, transparent); }
+.bg-warning-tint { background: color-mix(in srgb, var(--warning) 8%, transparent); }
+.bg-error-tint { background: color-mix(in srgb, var(--error) 8%, transparent); }
+.bg-primary-tint { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+
+/* Shadow utilities */
+.shadow-xs { box-shadow: var(--shadow-xs-val); }
+.shadow-sm { box-shadow: var(--shadow-sm-val); }
+.shadow-md { box-shadow: var(--shadow-md-val); }
+.shadow-lg { box-shadow: var(--shadow-lg-val); }
+.shadow-xl { box-shadow: var(--shadow-xl-val); }

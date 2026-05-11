@@ -17,10 +17,10 @@ interface SceneTemplate {
   icon: LucideIcon;
   label: string;
   desc: string;
-  scenario: string;          // 对应AnalysisScene
-  exampleQuestions: string[]; // 推荐问题
-  kpis: string[];            // 预置KPI
-  charts: string[];          // 推荐图表
+  scenario: string;
+  exampleQuestions: string[];
+  kpis: string[];
+  charts: string[];
 }
 
 const SCENE_TEMPLATES: SceneTemplate[] = [
@@ -92,22 +92,21 @@ interface QuickAction {
   icon: LucideIcon;
   label: string;
   desc: string;
-  color: string;
-  bgColor: string;
   needsData: boolean;
   badge?: string;
-  permission?: string; // 需要的权限
+  permission?: string;
+  accent?: boolean; // Highlight as primary action
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { id: 'insights', icon: Brain, label: '一键分析', desc: 'AI自动分析数据，生成业务洞察', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, badge: 'AI', permission: 'ai_analyze' },
-  { id: 'chat', icon: MessageSquare, label: '问数对话', desc: '用自然语言提问，AI给答案', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, badge: 'AI', permission: 'ai_analyze' },
-  { id: 'visualization', icon: LayoutGrid, label: '智能看板', desc: '一键生成业务仪表盘', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, permission: 'dashboard' },
-  { id: 'data-table', icon: Table2, label: '数据表格', desc: '查看和编辑数据', color: 'text-muted-foreground', bgColor: 'bg-muted', needsData: true },
-  { id: 'data-prep', icon: Database, label: '数据清洗', desc: '智能检测问题数据，一键修复', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true },
-  { id: 'metrics', icon: Target, label: '指标中心', desc: '业务指标自动计算与监控', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, badge: 'AI', permission: 'ai_analyze' },
-  { id: 'sql-lab', icon: Wrench, label: 'SQL查询', desc: '用SQL自由查询数据', color: 'text-muted-foreground', bgColor: 'bg-muted', needsData: true },
-  { id: 'report-export', icon: FileText, label: '导出报告', desc: '生成分析报告并分享', color: 'text-primary', bgColor: 'bg-primary/10', needsData: true, permission: 'export' },
+  { id: 'insights', icon: Brain, label: '一键分析', desc: 'AI自动分析数据，生成业务洞察', needsData: true, badge: 'AI', permission: 'ai_analyze', accent: true },
+  { id: 'chat', icon: MessageSquare, label: '问数对话', desc: '用自然语言提问，AI给答案', needsData: true, badge: 'AI', permission: 'ai_analyze' },
+  { id: 'visualization', icon: LayoutGrid, label: '智能看板', desc: '一键生成业务仪表盘', needsData: true, permission: 'dashboard' },
+  { id: 'data-table', icon: Table2, label: '数据表格', desc: '查看和编辑数据', needsData: true },
+  { id: 'data-prep', icon: Database, label: '数据清洗', desc: '智能检测问题数据，一键修复', needsData: true },
+  { id: 'metrics', icon: Target, label: '指标中心', desc: '业务指标自动计算与监控', needsData: true, badge: 'AI', permission: 'ai_analyze' },
+  { id: 'sql-lab', icon: Wrench, label: 'SQL查询', desc: '用SQL自由查询数据', needsData: true },
+  { id: 'report-export', icon: FileText, label: '导出报告', desc: '生成分析报告并分享', needsData: true, permission: 'export' },
 ];
 
 interface HomeCardsProps {
@@ -121,7 +120,6 @@ interface HomeCardsProps {
 }
 
 export default function HomeCards({ hasData, onViewChange, fileName, rowCount, isLoggedIn = false, onLoginRequired, hasPermission }: HomeCardsProps) {
-  // 权限检查辅助函数
   const checkPermission = (permission: string) => {
     if (!isLoggedIn && onLoginRequired) {
       onLoginRequired();
@@ -132,55 +130,55 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount, i
     }
     return true;
   };
+
+  // ---- No Data State: Scene-based guidance ----
   if (!hasData) {
     return (
       <div className="space-y-8">
-        {/* 无数据状态：场景化引导 */}
-        <div className="text-center py-6">
-          <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-10 h-10 text-primary/40" />
+        {/* Hero section */}
+        <div className="text-center py-8">
+          <div className="w-16 h-16 rounded-2xl bg-primary-tint flex items-center justify-center mx-auto mb-5">
+            <Sparkles className="w-8 h-8 text-primary/50" />
           </div>
-          <h3 className="text-xl font-semibold text-foreground mb-2">选择你的业务场景</h3>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            上传数据后，系统会自动识别场景并生成对应的业务分析，你也可以先选场景参考
+          <h3 className="text-lg font-semibold text-foreground mb-2">选择你的业务场景</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+            上传数据后，系统会自动识别场景并生成对应的业务分析
           </p>
         </div>
 
-        {/* 场景模板卡片 */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {/* Scene template cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {SCENE_TEMPLATES.map((scene) => (
             <Card
               key={scene.id}
-              className="group cursor-pointer transition-all hover:shadow-md hover:border-primary/30"
+              className="group cursor-pointer transition-all duration-200 hover:shadow-md border-border hover:border-primary/25 bg-card"
               onClick={() => onViewChange('ai-table-builder')}
             >
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <scene.icon className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary-tint flex items-center justify-center shrink-0">
+                    <scene.icon className="w-4 h-4 text-primary" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold">{scene.label}</h4>
-                  </div>
+                  <h4 className="text-sm font-medium text-foreground">{scene.label}</h4>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">{scene.desc}</p>
-                {/* 预置KPI预览 */}
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{scene.desc}</p>
+                {/* KPI preview */}
                 <div className="flex flex-wrap gap-1 mb-3">
                   {scene.kpis.slice(0, 4).map(kpi => (
-                    <Badge key={kpi} variant="secondary" className="text-[10px] h-5 px-1.5">
+                    <Badge key={kpi} variant="secondary" className="text-[10px] h-5 px-1.5 font-normal">
                       {kpi}
                     </Badge>
                   ))}
                 </div>
-                {/* 推荐问题预览 */}
+                {/* Example questions preview */}
                 <div className="space-y-1">
                   {scene.exampleQuestions.slice(0, 2).map((q, i) => (
-                    <p key={i} className="text-[11px] text-muted-foreground/70 truncate">
+                    <p key={i} className="text-[11px] text-muted-foreground/60 truncate">
                       &quot;{q}&quot;
                     </p>
                   ))}
                 </div>
-                <div className="mt-3 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-3 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   AI生成此场景模板 <ArrowRight className="w-3 h-3 ml-1" />
                 </div>
               </CardContent>
@@ -191,35 +189,40 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount, i
     );
   }
 
-  // 有数据状态
+  // ---- Has Data State ----
   return (
     <div className="space-y-6">
-      {/* 数据状态横幅 */}
-      <div className="flex items-center gap-3 p-3 rounded-lg border border-l-4 border-l-primary bg-primary/5">
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+      {/* Data ready banner */}
+      <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-primary-tint">
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
           <CheckCircle className="w-4 h-4 text-primary" />
         </div>
-        <div className="flex-1">
-          <p className="text-sm font-medium">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground">
             {fileName || '数据已就绪'}
           </p>
           <p className="text-xs text-muted-foreground">
             {rowCount ? `${rowCount.toLocaleString()} 行数据已加载` : '数据已加载'}，开始你的数据分析之旅
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => onViewChange('insights')} className="gap-1">
+        <Button
+          size="sm"
+          variant="default"
+          onClick={() => onViewChange('insights')}
+          className="gap-1.5 shrink-0"
+        >
           <Zap className="w-3.5 h-3.5" />
           一键分析
         </Button>
       </div>
 
-      {/* 快捷操作 - 核心功能一排展示 */}
+      {/* Quick actions grid */}
       <div>
-        <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-          <Activity className="w-4 h-4" />
+        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Activity className="w-3.5 h-3.5" />
           快捷操作
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
           {QUICK_ACTIONS.map((action) => {
             const needsDataDisabled = action.needsData && !hasData;
             const needsPermission = action.permission && !checkPermission(action.permission);
@@ -227,9 +230,11 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount, i
             return (
               <Card
                 key={action.id}
-                className={`group cursor-pointer transition-all hover:shadow-md ${
-                  disabled ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className={`group cursor-pointer transition-all duration-200 border-border ${
+                  disabled
+                    ? 'opacity-40 cursor-not-allowed'
+                    : 'hover:shadow-sm hover:border-primary/20'
+                } ${action.accent && !disabled ? 'border-primary/20 bg-primary/[0.02]' : 'bg-card'}`}
                 onClick={() => {
                   if (disabled) {
                     if (!isLoggedIn && onLoginRequired) {
@@ -241,19 +246,21 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount, i
                 }}
               >
                 <CardContent className="p-3 flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-lg ${action.bgColor} flex items-center justify-center shrink-0`}>
-                    <action.icon className={`w-4.5 h-4.5 ${action.color}`} />
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    action.accent ? 'bg-primary/10' : 'bg-muted'
+                  }`}>
+                    <action.icon className={`w-4 h-4 ${action.accent ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <h4 className="text-sm font-medium truncate">{action.label}</h4>
                       {action.badge && (
-                        <Badge variant="secondary" className="text-[9px] h-4 px-1 shrink-0">
+                        <span className="text-[9px] font-semibold px-1.5 py-[1px] rounded bg-primary/10 text-primary leading-none">
                           {action.badge}
-                        </Badge>
+                        </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-muted-foreground truncate">{action.desc}</p>
+                    <p className="text-[11px] text-muted-foreground truncate mt-0.5">{action.desc}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -262,42 +269,43 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount, i
         </div>
       </div>
 
-      {/* 场景化推荐 - 根据数据类型推荐场景操作 */}
+      {/* Scene-based recommendations */}
       <div>
-        <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-          <Sparkles className="w-4 h-4" />
+        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Sparkles className="w-3.5 h-3.5" />
           场景化分析
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {SCENE_TEMPLATES.slice(0, 3).map((scene) => (
             <Card
               key={scene.id}
-              className="group cursor-pointer transition-all hover:shadow-md hover:border-primary/30 relative overflow-hidden"
+              className="group cursor-pointer transition-all duration-200 hover:shadow-md border-border hover:border-primary/25 relative overflow-hidden bg-card"
               onClick={() => onViewChange('insights')}
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-primary/20 group-hover:bg-primary transition-colors" />
+              {/* Top accent line */}
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-primary/10 group-hover:bg-primary/60 transition-colors duration-200" />
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-primary-tint flex items-center justify-center group-hover:bg-primary/15 transition-colors duration-200">
                     <scene.icon className="w-4 h-4 text-primary" />
                   </div>
-                  <h4 className="text-sm font-medium">{scene.label}</h4>
+                  <h4 className="text-sm font-medium text-foreground">{scene.label}</h4>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">{scene.desc}</p>
-                {/* KPI预览 */}
+                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{scene.desc}</p>
+                {/* KPI preview */}
                 <div className="flex flex-wrap gap-1 mb-3">
                   {scene.kpis.slice(0, 3).map(kpi => (
-                    <Badge key={kpi} variant="secondary" className="text-[10px] h-5 px-1.5">
+                    <Badge key={kpi} variant="secondary" className="text-[10px] h-5 px-1.5 font-normal">
                       {kpi}
                     </Badge>
                   ))}
                 </div>
-                {/* 推荐问题 - 可点击 */}
+                {/* Clickable example questions */}
                 <div className="space-y-1.5">
                   {scene.exampleQuestions.slice(0, 2).map((q, i) => (
                     <button
                       key={i}
-                      className="w-full text-left text-xs px-2 py-1.5 rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors truncate"
+                      className="w-full text-left text-xs px-2.5 py-1.5 rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors duration-150 truncate"
                       onClick={(e) => {
                         e.stopPropagation();
                         onViewChange('chat');
@@ -307,7 +315,7 @@ export default function HomeCards({ hasData, onViewChange, fileName, rowCount, i
                     </button>
                   ))}
                 </div>
-                <div className="mt-3 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-3 flex items-center text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   一键分析 <ArrowRight className="w-3 h-3 ml-1" />
                 </div>
               </CardContent>

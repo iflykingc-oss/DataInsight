@@ -40,12 +40,15 @@ import {
   MessageSquare,
   Download,
   Image as ImageIcon,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, type PermissionKey } from '@/lib/use-auth';
 import { LoginDialog } from '@/components/login-dialog';
 import { UserMenu } from '@/components/user-menu';
 const AdminContent = dynamic(() => import('@/components/admin-content').then(m => ({ default: m.default })), { ssr: false });
+const AdminSidebar = dynamic(() => import('@/components/admin-sidebar').then(m => ({ default: m.default })), { ssr: false });
+import type { AdminTab } from '@/components/admin-sidebar';
 import type { ParsedData, DataAnalysis, CellValue } from '@/lib/data-processor';
 import type { AIField } from '@/lib/ai-field-engine';
 import { checkTTLWarning } from '@/lib/data-lifecycle';
@@ -107,7 +110,7 @@ const SpreadsheetAgentPage = dynamic(() => import('@/components/SpreadsheetAgent
 	  | 'data-source'
 	  | 'pivot-table'
 	  | 'multimodal'
-		| 'management'
+		| 'admin'
 	
 
 
@@ -143,6 +146,14 @@ export default function HomePage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('home');
+  const [adminTab, setAdminTab] = useState<AdminTab>('users');
+  const [adminSidebarCollapsed, setAdminSidebarCollapsed] = useState(false);
+  const adminTabTitles: Record<AdminTab, string> = {
+    users: '用户管理',
+    logs: '登录记录',
+    'ai-config': 'AI模型配置',
+    stats: '使用统计',
+  };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [tableView, setTableView] = useState<'table' | 'kanban' | 'calendar' | 'gantt'>('table');
   const [kanbanField, setKanbanField] = useState<string>('');
@@ -620,17 +631,6 @@ export default function HomePage() {
             <AITableBuilder modelConfig={activeModelConfig} />
           </ErrorBoundary>
           <SceneAgentPanel sceneId="table-generate" sceneName="生成表格" modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
-
-    // 管理后台（仅管理员可见，不需要数据）
-    if (viewMode === 'management' && user?.role === 'admin') {
-      return (
-        <div className="relative">
-          <ErrorBoundary moduleName="管理后台">
-            <AdminContent />
-          </ErrorBoundary>
         </div>
       );
     }
@@ -1235,6 +1235,49 @@ export default function HomePage() {
   // ============================================
   // 渲染
   // ============================================
+
+  // 管理后台：独立布局，替换整个页面
+  if (viewMode === 'admin' && user?.role === 'admin') {
+    return (
+      <div className="min-h-screen flex bg-background">
+        <AdminSidebar
+          activeTab={adminTab}
+          onTabChange={setAdminTab}
+          onBackToUser={() => setViewMode('home')}
+          collapsed={adminSidebarCollapsed}
+          onToggleCollapse={() => setAdminSidebarCollapsed(!adminSidebarCollapsed)}
+        />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-12 border-b border-border flex items-center px-6 shrink-0 bg-background">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Shield className="w-4 h-4" />
+              <span>管理后台</span>
+              <span className="text-muted-foreground/40">/</span>
+              <span className="text-foreground font-medium">{adminTabTitles[adminTab] || adminTab}</span>
+            </div>
+          </header>
+          <main className="flex-1 overflow-y-auto p-6">
+            <ErrorBoundary moduleName="管理后台">
+              <AdminContent activeTab={adminTab} />
+            </ErrorBoundary>
+          </main>
+        </div>
+
+        {/* 设置弹窗 */}
+        <SettingsDialog
+          open={showSettings}
+          onOpenChange={setShowSettings}
+          parsedData={parsedData}
+          fieldStats={analysis?.fieldStats || []}
+          darkMode={darkMode}
+          onDarkModeChange={setDarkMode}
+          onModelChange={handleModelChange}
+        />
+        <LoginDialog />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex bg-background">
       {/* ===== 左侧侧边栏 ===== */}
@@ -1252,7 +1295,7 @@ export default function HomePage() {
       {/* ===== 右侧主区域 ===== */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* 顶部栏 */}
-        <header className="h-14 bg-background/80 backdrop-blur-sm border-b flex items-center justify-between px-5 flex-shrink-0">
+        <header className="h-12 bg-card/80 backdrop-blur-sm border-b border-border flex items-center justify-between px-5 flex-shrink-0">
           <div className="flex items-center gap-3">
             {/* 面包屑 */}
             <button
@@ -1269,46 +1312,32 @@ export default function HomePage() {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* 模型未配置警告 */}
             {!activeModelConfig && (
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-primary-tint text-primary border border-primary/15 hover:bg-primary/12 transition-colors cursor-pointer"
               >
                 <AlertCircle className="w-3 h-3" />
-                未配置AI模型
+                配置AI模型
               </button>
             )}
             {/* 数据状态指示 */}
-            {parsedData ? (
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                  <CheckCircle className="w-3 h-3 text-primary" />
-                  {parsedData.fileName}
-                </Badge>
-                <Badge variant="outline" className="text-[10px]">
-                  {parsedData.rowCount?.toLocaleString() ?? '0'} 行 &times; {parsedData.columnCount ?? 0} 列
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                  onClick={handleGoHome}
-                >
-                  切换数据
-                </Button>
-              </div>
-            ) : (
-              <span className="text-xs text-muted-foreground/50">请上传数据</span>
+            {parsedData && (
+              <Badge variant="secondary" className="flex items-center gap-1 text-xs cursor-pointer hover:bg-muted" onClick={handleGoHome}>
+                <CheckCircle className="w-3 h-3 text-primary" />
+                {parsedData.fileName}
+                <span className="text-muted-foreground/50 ml-0.5">{parsedData.rowCount?.toLocaleString() ?? '0'}行</span>
+              </Badge>
             )}
 
-            <Separator orientation="vertical" className="h-5" />
+            <Separator orientation="vertical" className="h-4 mx-0.5" />
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowSettings(true)}>
-                  <Settings className="w-4 h-4 text-muted-foreground" />
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSettings(true)}>
+                  <Settings className="w-3.5 h-3.5 text-muted-foreground" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>设置</TooltipContent>
@@ -1340,9 +1369,6 @@ export default function HomePage() {
 
       {/* 登录弹窗 */}
       <LoginDialog />
-
-      {/* 管理员控制台 */}
-      <AdminContent />
 
       {/* 全局 AI 助手 */}
       <GlobalAgentAssistant
