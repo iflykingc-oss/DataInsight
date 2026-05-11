@@ -63,6 +63,31 @@ export const usageStats = pgTable("usage_stats", {
 			}).onDelete("cascade"),
 ]);
 
+export const announcements = pgTable("announcements", {
+	id: serial().primaryKey().notNull(),
+	title: varchar({ length: 500 }).notNull(),
+	content: text().notNull(),
+	type: varchar({ length: 50 }).default('info'),
+	priority: varchar({ length: 50 }).default('normal'),
+	remindStrategy: varchar("remind_strategy", { length: 50 }).default('once'),
+	status: varchar({ length: 50 }).default('draft'),
+	scheduledAt: timestamp("scheduled_at", { withTimezone: true, mode: 'string' }),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }),
+	createdBy: integer("created_by"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	foreignKey({
+				columns: [table.createdBy],
+				foreignColumns: [users.id],
+				name: "announcements_created_by_fkey"
+			}),
+		check("announcements_type_check", sql`(type)::text = ANY ((ARRAY['info'::character varying, 'warning'::character varying, 'urgent'::character varying, 'maintenance'::character varying])::text[])`),
+		check("announcements_priority_check", sql`(priority)::text = ANY ((ARRAY['low'::character varying, 'normal'::character varying, 'high'::character varying])::text[])`),
+		check("announcements_remind_strategy_check", sql`(remind_strategy)::text = ANY ((ARRAY['once'::character varying, 'always'::character varying])::text[])`),
+		check("announcements_status_check", sql`(status)::text = ANY ((ARRAY['draft'::character varying, 'scheduled'::character varying, 'published'::character varying, 'expired'::character varying])::text[])`),
+]);
+
 export const adminAiConfig = pgTable("admin_ai_config", {
 	id: serial().primaryKey().notNull(),
 	config: jsonb().default({"apiKey":"","baseUrl":"","modelName":""}).notNull(),

@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { FileUploader as AsyncFileUploader, UploadFile } from '@/components/async-file-uploader';
 import Sidebar from '@/components/sidebar';
 import HomeCards from '@/components/home-cards';
+const AnnouncementPopup = dynamic(() => import('@/components/announcement-popup').then(m => ({ default: m.AnnouncementPopup })), { ssr: false });
 import SettingsDialog from '@/components/settings-dialog';
 import { OnboardingGuide } from '@/components/onboarding-guide';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -154,6 +155,7 @@ export default function HomePage() {
     'ai-config': 'AI模型配置',
     stats: '使用统计',
     plans: '套餐管理',
+    announcements: '公告管理',
   };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [tableView, setTableView] = useState<'table' | 'kanban' | 'calendar' | 'gantt'>('table');
@@ -605,6 +607,8 @@ export default function HomePage() {
             onLoginRequired={() => setLoginDialogOpen(true)}
             hasPermission={(perm: string) => hasPermission(perm as PermissionKey)}
           />
+          {/* 公告弹窗 - 合规：已读状态仅存客户端localStorage */}
+          <AnnouncementPopup isLoggedIn={isLoggedIn} />
         </div>
       );
     }

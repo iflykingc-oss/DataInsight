@@ -5,7 +5,7 @@ import {
   Users, LogIn, Brain, BarChart3, Plus, Edit3, Trash2, Shield,
   CheckCircle2, AlertCircle, Lock, LayoutGrid, Settings2,
   RefreshCw, Activity, TrendingUp, Database, CreditCard,
-  Star, Zap, Crown
+  Star, Zap, Crown, Megaphone, Calendar, Clock, Bell, BellRing, Eye, Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,12 +14,29 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/lib/use-auth';
 import { request } from '@/lib/request';
 
 type Role = 'admin' | 'editor' | 'analyst' | 'viewer' | 'custom';
+
+// Announcement helper maps
+const announcementTypeColor: Record<string, string> = {
+  info: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  warning: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  urgent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  maintenance: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+};
+const announcementTypeLabel: Record<string, string> = { info: '通知', warning: '警告', urgent: '紧急', maintenance: '维护' };
+const announcementPriorityLabel: Record<string, string> = { low: '低', normal: '普通', high: '高' };
+const announcementStatusColor: Record<string, string> = {
+  draft: 'bg-muted text-muted-foreground',
+  scheduled: 'bg-yellow-100 text-yellow-700',
+  published: 'bg-green-100 text-green-700',
+  expired: 'bg-red-100 text-red-700',
+};
+const announcementStatusLabel: Record<string, string> = { draft: '草稿', scheduled: '已计划', published: '已发布', expired: '已过期' };
 
 interface UserData {
   id: number;
@@ -121,6 +138,18 @@ function AdminContent({ activeTab }: AdminContentProps) {
   const [planFormOpen, setPlanFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
 
+  // Announcements management state
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [annLoading, setAnnLoading] = useState(false);
+  const [announcementFormOpen, setAnnouncementFormOpen] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: '', content: '', type: 'info' as 'info' | 'warning' | 'urgent' | 'maintenance',
+    priority: 'normal' as 'low' | 'normal' | 'high',
+    remind_strategy: 'once' as 'once' | 'always',
+    scheduled_at: '', expires_at: '',
+  });
+
   const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     setError('');
     setSuccess('');
@@ -186,8 +215,94 @@ function AdminContent({ activeTab }: AdminContentProps) {
       fetchLoginLogs();
       fetchUsageStats();
       fetchAIConfig();
+      fetchAnnouncements();
     }
   }, [user?.role]);
+
+  // ===== Announcements CRUD =====
+  const fetchAnnouncements = async () => {
+    setAnnLoading(true);
+    try {
+      const data = await request<{ data: any[] }>('/api/admin/announcements');
+      setAnnouncements(data.data || []);
+    } catch {
+      showMessage('加载公告失败', 'error');
+    } finally {
+      setAnnLoading(false);
+    }
+  };
+
+  const handleSaveAnnouncement = async () => {
+    if (!announcementForm.title.trim() || !announcementForm.content.trim()) {
+      showMessage('标题和内容为必填项', 'error');
+      return;
+    }
+    try {
+      const body: Record<string, unknown> = {
+        title: announcementForm.title,
+        content: announcementForm.content,
+        type: announcementForm.type,
+        priority: announcementForm.priority,
+        remind_strategy: announcementForm.remind_strategy,
+        scheduled_at: announcementForm.scheduled_at || null,
+        expires_at: announcementForm.expires_at || null,
+      };
+      if (editingAnnouncement) {
+        await request(`/api/admin/announcements/${editingAnnouncement.id}`, { method: 'PUT', body: JSON.stringify(body) });
+        showMessage('公告已更新');
+      } else {
+        await request('/api/admin/announcements', { method: 'POST', body: JSON.stringify(body) });
+        showMessage('公告已创建');
+      }
+      setAnnouncementFormOpen(false);
+      setEditingAnnouncement(null);
+      setAnnouncementForm({ title: '', content: '', type: 'info', priority: 'normal', remind_strategy: 'once', scheduled_at: '', expires_at: '' });
+      fetchAnnouncements();
+    } catch (e: any) {
+      showMessage(e.message || '保存失败', 'error');
+    }
+  };
+
+  const handlePublishAnnouncement = async (id: number) => {
+    try {
+      await request(`/api/admin/announcements/${id}`, { method: 'PUT', body: JSON.stringify({ status: 'published' }) });
+      showMessage('公告已发布');
+      fetchAnnouncements();
+    } catch {
+      showMessage('发布失败', 'error');
+    }
+  };
+
+  const handleDeleteAnnouncement = async (id: number) => {
+    if (!confirm('确定删除此公告？')) return;
+    try {
+      await request(`/api/admin/announcements/${id}`, { method: 'DELETE' });
+      showMessage('公告已删除');
+      fetchAnnouncements();
+    } catch {
+      showMessage('删除失败', 'error');
+    }
+  };
+
+  const openEditAnnouncement = (ann: any) => {
+    setEditingAnnouncement(ann);
+    setAnnouncementForm({
+      title: ann.title || '',
+      content: ann.content || '',
+      type: ann.type || 'info',
+      priority: ann.priority || 'normal',
+      remind_strategy: ann.remind_strategy || 'once',
+      scheduled_at: ann.scheduled_at ? ann.scheduled_at.slice(0, 16) : '',
+      expires_at: ann.expires_at ? ann.expires_at.slice(0, 16) : '',
+    });
+    setAnnouncementFormOpen(true);
+  };
+
+  const openNewAnnouncement = () => {
+    setEditingAnnouncement(null);
+    setAnnouncementForm({ title: '', content: '', type: 'info', priority: 'normal', remind_strategy: 'once', scheduled_at: '', expires_at: '' });
+    setAnnouncementFormOpen(true);
+  };
 
   const applyRoleTemplate = (role: Role) => {
     setFormData((prev) => ({
@@ -408,8 +523,8 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   </TableRow>
                 ) : users.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{typeof u.name === 'string' ? u.name : String(u.name ?? '')}</TableCell>
-                    <TableCell className="text-sm font-mono">{typeof u.username === 'string' ? u.username : String(u.username ?? '')}</TableCell>
+                    <TableCell className="font-medium">{typeof u.name === 'string' ? u.name : (u.name && typeof u.name === 'object' ? JSON.stringify(u.name) : String(u.name ?? ''))}</TableCell>
+                    <TableCell className="text-sm font-mono">{typeof u.username === 'string' ? u.username : (u.username && typeof u.username === 'object' ? JSON.stringify(u.username) : String(u.username ?? ''))}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{typeof u.email === 'string' ? u.email : '-'}</TableCell>
                     <TableCell>{getRoleBadge(u.role)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -478,7 +593,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(log.created_at).toLocaleString('zh-CN')}
                     </TableCell>
-                    <TableCell className="text-sm font-mono">{typeof log.username === 'string' ? log.username : String(log.username ?? '')}</TableCell>
+                    <TableCell className="text-sm font-mono">{typeof log.username === 'string' ? log.username : (log.username && typeof log.username === 'object' ? JSON.stringify(log.username) : String(log.username ?? ''))}</TableCell>
                     <TableCell>
                       <Badge variant={log.status === 'success' ? 'default' : 'destructive'} className="text-xs">
                         {log.status === 'success' ? '成功' : '失败'}
@@ -566,6 +681,186 @@ function AdminContent({ activeTab }: AdminContentProps) {
       )}
 
       {/* 使用统计 */}
+      {/* 公告管理 */}
+      {activeTab === 'announcements' && (
+        <>
+          <div className="flex justify-between items-center mb-5">
+            <div>
+              <h3 className="text-base font-medium">公告管理</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">发布、定时推送公告，管理公告生命周期</p>
+            </div>
+            <Button size="sm" onClick={() => { setEditingAnnouncement(null); setAnnouncementFormOpen(true); }}>
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              新建公告
+            </Button>
+          </div>
+
+          {announcements.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Megaphone className="w-10 h-10 mx-auto mb-3 opacity-40" />
+              <p className="text-sm">暂无公告</p>
+              <p className="text-xs mt-1">点击"新建公告"发布第一条公告</p>
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[240px]">标题</TableHead>
+                    <TableHead className="w-[80px]">类型</TableHead>
+                    <TableHead className="w-[80px]">优先级</TableHead>
+                    <TableHead className="w-[100px]">提醒策略</TableHead>
+                    <TableHead className="w-[100px]">状态</TableHead>
+                    <TableHead className="w-[150px]">计划发布</TableHead>
+                    <TableHead className="w-[150px]">过期时间</TableHead>
+                    <TableHead className="w-[100px] text-right">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {announcements.map((a) => (
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium truncate max-w-[240px]">{a.title}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={announcementTypeColor[a.type] ?? ''}>
+                          {announcementTypeLabel[a.type] ?? a.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{announcementPriorityLabel[a.priority] ?? a.priority}</Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {a.remind_strategy === 'once' ? '仅提醒一次' : '每次登录提醒'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={announcementStatusColor[a.status] ?? ''}>
+                          {announcementStatusLabel[a.status] ?? a.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {a.scheduled_at ? new Date(a.scheduled_at).toLocaleString('zh-CN') : '—'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {a.expires_at ? new Date(a.expires_at).toLocaleString('zh-CN') : '—'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          {a.status === 'draft' && (
+                            <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handlePublishAnnouncement(a.id)}>
+                              发布
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setEditingAnnouncement(a); setAnnouncementFormOpen(true); }}>
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 px-2 text-destructive" onClick={() => handleDeleteAnnouncement(a.id)}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {/* 公告编辑弹窗 */}
+          <Dialog open={announcementFormOpen} onOpenChange={setAnnouncementFormOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingAnnouncement ? '编辑公告' : '新建公告'}</DialogTitle>
+                <DialogDescription>
+                  公告内容对所有用户可见。定时发布可设定未来时间，系统届时自动发布。
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">标题</Label>
+                  <Input
+                    placeholder="公告标题"
+                    value={announcementForm.title}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnouncementForm(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">内容</Label>
+                  <textarea
+                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="公告正文..."
+                    value={announcementForm.content}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAnnouncementForm(prev => ({ ...prev, content: e.target.value }))}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">类型</Label>
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      value={announcementForm.type}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAnnouncementForm(prev => ({ ...prev, type: e.target.value as 'info' | 'warning' | 'urgent' | 'maintenance' }))}
+                    >
+                      <option value="info">通知</option>
+                      <option value="warning">警告</option>
+                      <option value="urgent">紧急</option>
+                      <option value="maintenance">维护</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">优先级</Label>
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      value={announcementForm.priority}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAnnouncementForm(prev => ({ ...prev, priority: e.target.value as 'low' | 'normal' | 'high' }))}
+                    >
+                      <option value="low">低</option>
+                      <option value="normal">普通</option>
+                      <option value="high">高</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">提醒策略</Label>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    value={announcementForm.remind_strategy}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAnnouncementForm(prev => ({ ...prev, remind_strategy: e.target.value as 'once' | 'always' }))}
+                  >
+                    <option value="once">仅提醒一次（用户关闭后不再显示）</option>
+                    <option value="always">每次登录提醒</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">计划发布时间（可选）</Label>
+                    <Input
+                      type="datetime-local"
+                      value={announcementForm.scheduled_at}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnouncementForm(prev => ({ ...prev, scheduled_at: e.target.value }))}
+                    />
+                    <p className="text-[10px] text-muted-foreground">留空则立即发布</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">过期时间（可选）</Label>
+                    <Input
+                      type="datetime-local"
+                      value={announcementForm.expires_at}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnouncementForm(prev => ({ ...prev, expires_at: e.target.value }))}
+                    />
+                    <p className="text-[10px] text-muted-foreground">过期后自动下线</p>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAnnouncementFormOpen(false)}>取消</Button>
+                <Button onClick={handleSaveAnnouncement}>
+                  {editingAnnouncement ? '保存修改' : (announcementForm.scheduled_at ? '计划发布' : '立即发布')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+
       {activeTab === 'stats' && (
         <>
           <div className="flex justify-between items-center mb-4">
