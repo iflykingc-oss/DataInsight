@@ -100,3 +100,29 @@ export const adminAiConfig = pgTable("admin_ai_config", {
 				name: "admin_ai_config_updated_by_fkey"
 			}),
 ]);
+
+// User Activity Logs - GDPR/CCPA compliant
+// - Device IDs are SHA-256 hashed (never stored raw)
+// - No PII in metadata (no email, phone, name)
+// - 90-day auto-expiry per data minimization principle
+// - User opt-out supported
+export const userActivityLogs = pgTable("user_activity_logs", {
+	id: serial().primaryKey().notNull(),
+	userId: integer("user_id"),
+	eventCategory: varchar("event_category", { length: 50 }).notNull(),
+	eventType: varchar("event_type", { length: 100 }).notNull(),
+	deviceIdHash: varchar("device_id_hash", { length: 64 }),
+	ipAddress: varchar("ip_address", { length: 45 }),
+	userAgent: varchar("user_agent", { length: 500 }),
+	metadata: jsonb().default({}),
+	sessionId: varchar("session_id", { length: 64 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP + INTERVAL '90 days'`),
+}, (table) => [
+	foreignKey({
+				columns: [table.userId],
+				foreignColumns: [users.id],
+				name: "fk_activity_logs_user_id"
+			}).onDelete("set null"),
+	check("chk_event_category", sql`(event_category)::text = ANY ((ARRAY['auth'::character varying, 'account'::character varying, 'action'::character varying, 'page_view'::character varying])::text[])`),
+]);

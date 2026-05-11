@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/lib/use-auth';
+import { trackAuth } from '@/lib/activity-tracker';
 import {
   LogIn, Loader2, AlertCircle, Shield, UserPlus, Mail,
   KeyRound, ArrowLeft, Eye, EyeOff, Lock, HelpCircle,
@@ -144,6 +145,7 @@ export function LoginDialog() {
       const data = await res.json();
 
       if (data.success) {
+        trackAuth('register');
         localStorage.setItem('datainsight_token', data.token);
         if (data.refreshToken) {
           localStorage.setItem('datainsight_refresh_token', data.refreshToken);
@@ -291,10 +293,12 @@ export function LoginDialog() {
       } else {
         const result = await login(username, password);
         if (result.success) {
+          trackAuth('login');
           setLoginDialogOpen(false);
           setUsername('');
           setPassword('');
         } else {
+          trackAuth('login_failed');
           setError(result.error || '登录失败');
         }
       }

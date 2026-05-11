@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
+import { trackAction, trackAccount } from '@/lib/activity-tracker';
 import {
   Users, LogIn, Brain, BarChart3, Plus, Edit3, Trash2, Shield,
   CheckCircle2, AlertCircle, Lock, LayoutGrid, Settings2,
   RefreshCw, Activity, TrendingUp, Database, CreditCard,
-  Star, Zap, Crown, Megaphone, Calendar, Clock, Bell, BellRing, Eye, Pencil
+  Star, Zap, Crown, Megaphone, Calendar, Clock, Bell, BellRing, Eye, Pencil,
+  FileDown, Search, Filter, Globe, Smartphone, Monitor, ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +39,37 @@ const announcementStatusColor: Record<string, string> = {
   expired: 'bg-red-100 text-red-700',
 };
 const announcementStatusLabel: Record<string, string> = { draft: '草稿', scheduled: '已计划', published: '已发布', expired: '已过期' };
+
+// Activity event helpers
+const getActivityEventColor = (type: string): string => {
+  const colorMap: Record<string, string> = {
+    login: 'bg-green-100 text-green-700', logout: 'bg-gray-100 text-gray-700',
+    login_failed: 'bg-red-100 text-red-700', register: 'bg-blue-100 text-blue-700',
+    bind_email: 'bg-cyan-100 text-cyan-700', bind_phone: 'bg-cyan-100 text-cyan-700',
+    permission_change: 'bg-amber-100 text-amber-700', role_change: 'bg-amber-100 text-amber-700',
+    payment_init: 'bg-purple-100 text-purple-700', payment_success: 'bg-green-100 text-green-700',
+    payment_failed: 'bg-red-100 text-red-700', export: 'bg-indigo-100 text-indigo-700',
+    share: 'bg-pink-100 text-pink-700', ai_analyze: 'bg-violet-100 text-violet-700',
+    upload: 'bg-teal-100 text-teal-700', dashboard_create: 'bg-blue-100 text-blue-700',
+  };
+  return colorMap[type] || 'bg-muted text-muted-foreground';
+};
+
+const getActivityEventLabel = (type: string): string => {
+  const labelMap: Record<string, string> = {
+    login: '登录', logout: '登出', login_failed: '登录失败', register: '注册',
+    bind_email: '绑定邮箱', bind_phone: '绑定手机', password_change: '修改密码',
+    permission_change: '权限变更', role_change: '角色变更', settings_change: '设置变更',
+    payment_init: '发起支付', payment_success: '支付成功', payment_failed: '支付失败',
+    export: '数据导出', share: '分享', ai_analyze: 'AI分析', upload: '文件上传',
+    dashboard_create: '创建仪表盘', report_generate: '生成报表', data_clean: '数据清洗',
+    sql_query: 'SQL查询', formula_generate: 'AI公式', chart_create: '创建图表',
+    homepage: '首页', dashboard: '仪表盘', settings: '设置页', payment: '支付页',
+    analysis: '分析页', data_table: '数据表格', chart_center: '图表中心',
+    metric_center: '指标中心', ai_assistant: 'AI助手', sql_lab: 'SQL实验室', admin_panel: '管理后台',
+  };
+  return labelMap[type] || type;
+};
 
 interface UserData {
   id: number;
@@ -150,6 +183,16 @@ function AdminContent({ activeTab }: AdminContentProps) {
     scheduled_at: '', expires_at: '',
   });
 
+  // Activity logs state
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityTotal, setActivityTotal] = useState(0);
+  const [activityFilter, setActivityFilter] = useState({
+    category: '', eventType: '', userId: '', startDate: '', endDate: '', search: '',
+  });
+  const [activityStats, setActivityStats] = useState<any>(null);
+
   const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
     setError('');
     setSuccess('');
@@ -216,8 +259,33 @@ function AdminContent({ activeTab }: AdminContentProps) {
       fetchUsageStats();
       fetchAIConfig();
       fetchAnnouncements();
+      fetchActivityLogs();
     }
   }, [user?.role]);
+
+  // ===== Activity Logs Query =====
+  const fetchActivityLogs = async (page = 1) => {
+    setActivityLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(page), pageSize: '20' });
+      if (activityFilter.category) params.set('category', activityFilter.category);
+      if (activityFilter.eventType) params.set('eventType', activityFilter.eventType);
+      if (activityFilter.userId) params.set('userId', activityFilter.userId);
+      if (activityFilter.startDate) params.set('startDate', activityFilter.startDate);
+      if (activityFilter.endDate) params.set('endDate', activityFilter.endDate);
+      if (activityFilter.search) params.set('search', activityFilter.search);
+
+      const data = await request<{ data: any[]; total: number; stats?: any }>(`/api/admin/activity-logs?${params}`);
+      setActivityLogs(data.data || []);
+      setActivityTotal(data.total || 0);
+      if (data.stats) setActivityStats(data.stats);
+      setActivityPage(page);
+    } catch {
+      showMessage('加载用户日志失败', 'error');
+    } finally {
+      setActivityLoading(false);
+    }
+  };
 
   // ===== Announcements CRUD =====
   const fetchAnnouncements = async () => {
@@ -344,6 +412,13 @@ function AdminContent({ activeTab }: AdminContentProps) {
       });
       const data = await res.json();
       if (res.ok) {
+        // Track permission/role changes for audit
+        if (editingUser) {
+          if (editingUser.role !== formData.role) {
+            trackAccount('role_change', { target_user_id: editingUser.id, old_role: editingUser.role, new_role: formData.role });
+          }
+          trackAccount('permission_change', { target_user_id: editingUser.id, action: 'update' });
+        }
         showMessage(editingUser ? '用户已更新' : '用户已创建');
         setUserFormOpen(false);
         setEditingUser(null);
@@ -985,6 +1060,186 @@ function AdminContent({ activeTab }: AdminContentProps) {
               </div>
             ))}
           </div>
+        </>
+      )}
+
+      {/* ===== Activity Logs Tab ===== */}
+      {activeTab === 'activity-logs' && (
+        <>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
+            <div>
+              <h3 className="text-base font-medium flex items-center gap-1.5">
+                <Activity className="w-4 h-4 text-primary" />
+                用户行为日志
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                产品优化数据 · GDPR/CCPA 合规 · 设备ID已哈希 · 无PII存储 · 90天自动过期
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => fetchActivityLogs(1)}>
+                <RefreshCw className={`w-3.5 h-3.5 mr-1 ${activityLoading ? 'animate-spin' : ''}`} />
+                刷新
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          {activityStats?.last24h && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+              <div className="rounded-lg border bg-card p-3">
+                <div className="text-xs text-muted-foreground mb-1">24h 认证事件</div>
+                <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.auth || 0}</div>
+              </div>
+              <div className="rounded-lg border bg-card p-3">
+                <div className="text-xs text-muted-foreground mb-1">24h 账户操作</div>
+                <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.account || 0}</div>
+              </div>
+              <div className="rounded-lg border bg-card p-3">
+                <div className="text-xs text-muted-foreground mb-1">24h 功能使用</div>
+                <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.action || 0}</div>
+              </div>
+              <div className="rounded-lg border bg-card p-3">
+                <div className="text-xs text-muted-foreground mb-1">24h 页面访问</div>
+                <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.page_view || 0}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <select
+              className="h-8 rounded-md border bg-background px-2 text-xs"
+              value={activityFilter.category}
+              onChange={(e) => setActivityFilter(f => ({ ...f, category: e.target.value }))}
+            >
+              <option value="">全部类别</option>
+              <option value="auth">认证(auth)</option>
+              <option value="account">账户(account)</option>
+              <option value="action">操作(action)</option>
+              <option value="page_view">页面访问(page_view)</option>
+            </select>
+            <Input
+              placeholder="事件类型 (如 login)"
+              className="h-8 w-36 text-xs"
+              value={activityFilter.eventType}
+              onChange={(e) => setActivityFilter(f => ({ ...f, eventType: e.target.value }))}
+            />
+            <Input
+              placeholder="用户ID"
+              className="h-8 w-24 text-xs"
+              value={activityFilter.userId}
+              onChange={(e) => setActivityFilter(f => ({ ...f, userId: e.target.value }))}
+            />
+            <Input
+              type="date"
+              className="h-8 w-32 text-xs"
+              value={activityFilter.startDate}
+              onChange={(e) => setActivityFilter(f => ({ ...f, startDate: e.target.value }))}
+            />
+            <Input
+              type="date"
+              className="h-8 w-32 text-xs"
+              value={activityFilter.endDate}
+              onChange={(e) => setActivityFilter(f => ({ ...f, endDate: e.target.value }))}
+            />
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => fetchActivityLogs(1)}>
+              <Search className="w-3 h-3 mr-1" />
+              查询
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => {
+              setActivityFilter({ category: '', eventType: '', userId: '', startDate: '', endDate: '', search: '' });
+              setTimeout(() => fetchActivityLogs(1), 0);
+            }}>
+              重置
+            </Button>
+          </div>
+
+          {/* Compliance Notice */}
+          <Alert className="mb-4 border-primary/20 bg-primary/5">
+            <ShieldCheck className="w-4 h-4 text-primary" />
+            <AlertDescription className="text-xs">
+              <strong>合规说明：</strong>设备ID仅存储SHA-256哈希值；手机号/邮箱仅记录绑定动作，不存储完整号码；
+              IP地址已脱敏显示；元数据不含任何PII；日志90天自动过期；用户可在设置中关闭行为追踪（GDPR Art.7/CCPA §1798.120）。
+            </AlertDescription>
+          </Alert>
+
+          {/* Activity Logs Table */}
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs w-[140px]">时间</TableHead>
+                  <TableHead className="text-xs">用户</TableHead>
+                  <TableHead className="text-xs">类别</TableHead>
+                  <TableHead className="text-xs">事件</TableHead>
+                  <TableHead className="text-xs">设备ID哈希</TableHead>
+                  <TableHead className="text-xs">IP(脱敏)</TableHead>
+                  <TableHead className="text-xs">元数据</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activityLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <RefreshCw className="w-4 h-4 animate-spin inline mr-2" />
+                      加载中...
+                    </TableCell>
+                  </TableRow>
+                ) : activityLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      暂无用户行为日志
+                    </TableCell>
+                  </TableRow>
+                ) : activityLogs.map((log: Record<string, unknown>) => (
+                  <TableRow key={log.id as number}>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {log.created_at ? new Date(log.created_at as string).toLocaleString('zh-CN', {
+                        month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+                      }) : '-'}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      <div className="font-medium">{(log.users as Record<string, string>)?.name || (log.users as Record<string, string>)?.username || `#${log.user_id}`}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {String(log.event_category)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={`text-[10px] ${getActivityEventColor(String(log.event_type))}`}>
+                        {getActivityEventLabel(String(log.event_type))}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-[10px] font-mono text-muted-foreground max-w-[100px] truncate" title={String(log.device_id_hash || '')}>
+                      {log.device_id_hash ? `${String(log.device_id_hash).slice(0, 8)}...` : '-'}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{String(log.ip_address || '-')}</TableCell>
+                    <TableCell className="text-[10px] max-w-[160px] truncate text-muted-foreground" title={log.metadata ? JSON.stringify(log.metadata) : ''}>
+                      {log.metadata && typeof log.metadata === 'object' ? Object.entries(log.metadata as Record<string, unknown>).map(([k, v]) => `${k}=${v}`).join(', ') || '-' : '-'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {activityTotal > 20 && (
+            <div className="flex items-center justify-between mt-3">
+              <span className="text-xs text-muted-foreground">
+                共 {activityTotal} 条 · 第 {activityPage} 页
+              </span>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={activityPage <= 1}
+                  onClick={() => fetchActivityLogs(activityPage - 1)}>上一页</Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs"
+                  disabled={activityPage * 20 >= activityTotal}
+                  onClick={() => fetchActivityLogs(activityPage + 1)}>下一页</Button>
+              </div>
+            </div>
+          )}
         </>
       )}
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { trackAuth } from '@/lib/activity-tracker';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { showError, showSuccess } from './feedback';
 
@@ -176,6 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    trackAuth('logout');
     localStorage.removeItem('datainsight_token');
     localStorage.removeItem('datainsight_refresh_token');
     setUser(null);

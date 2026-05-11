@@ -15,6 +15,7 @@ const AnnouncementPopup = dynamic(() => import('@/components/announcement-popup'
 import SettingsDialog from '@/components/settings-dialog';
 import { OnboardingGuide } from '@/components/onboarding-guide';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { trackAuth, trackAction, trackPageView } from '@/lib/activity-tracker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -152,6 +153,7 @@ export default function HomePage() {
   const adminTabTitles: Record<AdminTab, string> = {
     users: '用户管理',
     logs: '登录记录',
+    'activity-logs': '用户日志',
     'ai-config': 'AI模型配置',
     stats: '使用统计',
     plans: '套餐管理',
@@ -278,8 +280,24 @@ export default function HomePage() {
     }
   }, []);
 
+  // Activity tracking: page views & auth events
+  useEffect(() => {
+    const viewToPageMap: Record<string, string> = {
+      home: 'homepage', 'data-table': 'data_table', dashboard: 'dashboard',
+      settings: 'settings', analysis: 'analysis', 'chart-center': 'chart_center',
+      'metric-center': 'metric_center', 'ai-assistant': 'ai_assistant',
+      'sql-lab': 'sql_lab', admin: 'admin_panel', 'ai-table-builder': 'ai_assistant',
+      'data-source': 'data_table',
+    };
+    const page = viewToPageMap[viewMode] || 'homepage';
+    if (isLoggedIn) {
+      trackPageView(page as Parameters<typeof trackPageView>[0]);
+    }
+  }, [viewMode, isLoggedIn]);
+
   const handleFileUpload = async (uploadedFiles: UploadFile[]) => {
     console.log('[Upload] handleFileUpload called, count:', uploadedFiles?.length, 'isLoggedIn:', isLoggedIn);
+    trackAction('upload', { file_count: uploadedFiles?.length });
 
     if (!isLoggedIn) {
       console.log('[Upload] Not logged in, queueing files and showing login dialog');
