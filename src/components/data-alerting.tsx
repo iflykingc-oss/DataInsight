@@ -931,7 +931,7 @@ export function DataAlerting({
                       key={key}
                       onClick={() => setEditingRule(prev => prev ? { ...prev, severity: key } : null)}
                       className={cn(
-                        'flex-1 p-3 rounded-lg border text-center transition-all',
+                        'flex-1 p-3 rounded-md border text-center transition-all',
                         editingRule?.severity === key
                           ? `border-2 ${config.color} ${config.bg}`
                           : 'border-border hover:border-border'
@@ -962,7 +962,7 @@ export function DataAlerting({
                           setEditingRule({ ...editingRule, channels });
                         }}
                         className={cn(
-                          'flex items-center gap-2 p-3 rounded-lg border transition-all',
+                          'flex items-center gap-2 p-3 rounded-md border transition-all',
                           isSelected
                             ? 'border-primary bg-primary/10'
                             : 'border-border hover:border-border'
@@ -980,7 +980,7 @@ export function DataAlerting({
               {/* 预览 */}
               {previewResult && (
                 <div className={cn(
-                  'p-3 rounded-lg',
+                  'p-3 rounded-md',
                   previewResult.triggered ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'
                 )}>
                   <div className="flex items-center gap-2">
@@ -1244,7 +1244,7 @@ export function DataAlerting({
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-blue-100 rounded-lg">
+                      <div className="p-1.5 bg-blue-100 rounded-md">
                         <Mail className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
@@ -1347,7 +1347,7 @@ export function DataAlerting({
                   </div>
                   {/* 测试结果 */}
                   {testResult && isSendingTest === null && (
-                    <div className={cn('mt-2 p-2.5 rounded-lg text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+                    <div className={cn('mt-2 p-2.5 rounded-md text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
                       {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
                       {testResult.message}
                     </div>
@@ -1377,7 +1377,7 @@ export function DataAlerting({
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-green-100 rounded-lg">
+                      <div className="p-1.5 bg-green-100 rounded-md">
                         <MessageSquare className="w-4 h-4 text-green-600" />
                       </div>
                       <div>
@@ -1427,7 +1427,7 @@ export function DataAlerting({
                     </Button>
                   </div>
                   {testResult && isSendingTest === null && (
-                    <div className={cn('mt-2 p-2.5 rounded-lg text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+                    <div className={cn('mt-2 p-2.5 rounded-md text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
                       {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
                       {testResult.message}
                     </div>
@@ -1457,7 +1457,7 @@ export function DataAlerting({
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-purple-100 rounded-lg">
+                      <div className="p-1.5 bg-purple-100 rounded-md">
                         <Zap className="w-4 h-4 text-purple-600" />
                       </div>
                       <div>
@@ -1521,7 +1521,7 @@ export function DataAlerting({
                     />
                     <p className="text-xs text-muted-foreground mt-1">JSON 格式，填写 Authorization 等认证 header</p>
                   </div>
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="p-3 bg-blue-50 rounded-md border border-blue-100">
                     <p className="text-xs text-blue-700 font-medium mb-1.5">POST 请求 Body 示例</p>
                     <pre className="text-xs text-blue-600 font-mono whitespace-pre-wrap overflow-x-auto">
 {`{
@@ -1547,7 +1547,7 @@ export function DataAlerting({
                     </Button>
                   </div>
                   {testResult && isSendingTest === null && (
-                    <div className={cn('mt-2 p-2.5 rounded-lg text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+                    <div className={cn('mt-2 p-2.5 rounded-md text-xs flex items-center gap-2', testResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
                       {testResult.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
                       {testResult.message}
                     </div>
@@ -1608,7 +1608,7 @@ export function DataAlerting({
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-indigo-100 rounded-lg">
+                        <div className="p-1.5 bg-indigo-100 rounded-md">
                           <Bell className="w-4 h-4 text-indigo-600" />
                         </div>
                         <div>
@@ -1632,7 +1632,7 @@ export function DataAlerting({
       {/* 模板选择面板 */}
       {showTemplates && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-[600px] max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-md shadow-xl w-[600px] max-h-[80vh] overflow-hidden flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <div>
                 <h3 className="font-medium">从模板创建告警</h3>

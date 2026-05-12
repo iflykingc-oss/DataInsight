@@ -558,11 +558,11 @@ export function FileUploader({
           {files.map((uploadFile) => (
             <div
               key={uploadFile.id}
-              className="bg-white border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
+              className="bg-white border border-border rounded-md p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <div className="p-2 bg-muted/30 rounded-lg">
+                  <div className="p-2 bg-muted/30 rounded-md">
                     {getFileIcon(uploadFile.file.name)}
                   </div>
 
@@ -614,7 +614,7 @@ export function FileUploader({
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFile(uploadFile.id)}
-                      className="text-xs text-orange-600"
+                      className="text-xs text-warning"
                     >
                       取消
                     </Button>
@@ -622,7 +622,7 @@ export function FileUploader({
 
                   <button
                     onClick={() => removeFile(uploadFile.id)}
-                    className="p-1.5 hover:bg-muted rounded-lg transition-colors"
+                    className="p-1.5 hover:bg-muted rounded-md transition-colors"
                   >
                     <Trash2 className="w-4 h-4 text-muted-foreground" />
                   </button>
@@ -650,7 +650,7 @@ export function FileUploader({
                       已从缓存加载
                     </span>
                   </div>
-                  <Progress value={100} className="h-1.5 bg-emerald-100" />
+                  <Progress value={100} className="h-1.5 bg-success/10" />
                 </div>
               )}
 
@@ -661,7 +661,7 @@ export function FileUploader({
                       key={idx}
                       className={cn(
                         'flex items-start gap-2 text-xs p-2 rounded',
-                        issue.type === 'error' ? 'bg-red-50 text-destructive' :
+                        issue.type === 'error' ? 'bg-destructive/5 text-destructive' :
                           issue.type === 'warning' ? 'bg-warning/10 text-warning' :
                             'bg-primary/10 text-primary'
                       )}
@@ -674,7 +674,7 @@ export function FileUploader({
               )}
 
               {uploadFile.status === 'error' && uploadFile.errorMessage && (
-                <div className="mt-3 p-2 bg-red-50 text-destructive text-xs rounded flex items-center gap-2">
+                <div className="mt-3 p-2 bg-destructive/5 text-destructive text-xs rounded flex items-center gap-2">
                   <AlertCircle className="w-3 h-3 flex-shrink-0" />
                   <span>{uploadFile.errorMessage}</span>
                 </div>
@@ -699,7 +699,7 @@ export function FileUploader({
           {selectedFileForCheck?.validationResult && (
             <div className="space-y-4">
               <div className={cn(
-                'p-4 rounded-lg flex items-center gap-3',
+                'p-4 rounded-md flex items-center gap-3',
                 selectedFileForCheck.validationResult.isValid
                   ? 'bg-success/5 border border-success/20'
                   : 'bg-destructive/5 border border-destructive/20'
@@ -730,7 +730,7 @@ export function FileUploader({
                     <div
                       key={idx}
                       className={cn(
-                        'p-3 rounded-lg border',
+                        'p-3 rounded-md border',
                         issue.type === 'error' ? 'bg-destructive/5 border-destructive/10' :
                           issue.type === 'warning' ? 'bg-warning/5 border-warning/10' :
                             'bg-primary/5 border-primary/10'
@@ -758,7 +758,7 @@ export function FileUploader({
               )}
 
               {enableAIHealing && selectedFileForCheck.validationResult.suggestedFix && (
-                <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                <div className="p-4 rounded-md bg-primary/5 border border-primary/10">
                   <div className="flex items-start gap-3">
                     <Sparkles className="w-5 h-5 text-chart-4 mt-0.5" />
                     <div>

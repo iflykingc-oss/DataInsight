@@ -645,7 +645,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
 
   if (showToolbar) {
     return (
-      <div className={cn('flex flex-col bg-white rounded-lg border shadow-sm', className)}>
+      <div className={cn('flex flex-col bg-white rounded-md border shadow-sm', className)}>
         <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30 rounded-t-lg">
           <div className="flex items-center gap-2">
             <span className="font-medium text-sm">数据表格</span>
@@ -788,7 +788,7 @@ export const Spreadsheet: React.FC<SpreadsheetProps> = ({
 
         {state.contextMenu && (
           <div
-            className="fixed z-50 bg-white rounded-lg border shadow-lg py-1 min-w-32"
+            className="fixed z-50 bg-white rounded-md border shadow-lg py-1 min-w-32"
             style={{ left: state.contextMenu.x, top: state.contextMenu.y }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -928,7 +928,7 @@ export const ColumnFilter: React.FC<ColumnFilterProps> = ({ column, values, onAp
   ];
 
   return (
-    <div className="p-3 bg-white rounded-lg border shadow-lg w-64">
+    <div className="p-3 bg-white rounded-md border shadow-lg w-64">
       <div className="flex items-center justify-between mb-3">
         <span className="font-medium text-sm">筛选: {column}</span>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -1015,7 +1015,7 @@ export const ConditionalFormatEditor: React.FC<ConditionalFormatEditorProps> = (
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg border shadow-lg w-96">
+    <div className="p-4 bg-white rounded-md border shadow-lg w-96">
       <div className="flex items-center justify-between mb-4">
         <span className="font-medium">条件格式</span>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground">

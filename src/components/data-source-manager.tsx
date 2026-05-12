@@ -366,7 +366,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
           
           {/* 数据库连接 - 简化版 */}
           <TabsContent value="database" className="space-y-4">
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-md p-4">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div>
@@ -408,7 +408,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                       key={db.key}
                       onClick={() => setDbConfig(prev => ({ ...prev, type: db.key as typeof dbConfig.type }))}
                       className={cn(
-                        "text-left px-3 py-2 rounded-lg border transition-all text-sm",
+                        "text-left px-3 py-2 rounded-md border transition-all text-sm",
                         dbConfig.type === db.key
                           ? "border-primary bg-primary/5 text-primary shadow-sm"
                           : "border-border bg-card hover:border-primary/30 hover:bg-muted/50"
@@ -518,7 +518,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
             {/* 测试结果 */}
             {testResult && (
               <div className={cn(
-                'p-4 rounded-lg border',
+                'p-4 rounded-md border',
                 testResult.success 
                   ? 'bg-green-50 border-green-200' 
                   : 'bg-red-50 border-red-200'
@@ -633,7 +633,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               {/* API 测试结果预览 */}
               {apiTestResult && (
                 <div className={cn(
-                  'p-4 rounded-lg border',
+                  'p-4 rounded-md border',
                   apiTestResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
                 )}>
                   <div className="flex items-center gap-2 mb-2">
@@ -704,10 +704,10 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
             ) : (
               <div className="space-y-2">
                 {snapshots.map(snapshot => (
-                  <div key={snapshot.id} className="p-4 border rounded-lg hover:bg-muted/30">
+                  <div key={snapshot.id} className="p-4 border rounded-md hover:bg-muted/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
+                        <div className="p-2 bg-blue-100 rounded-md">
                           <History className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
@@ -734,7 +734,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
 
           {/* 飞书集成 */}
           <TabsContent value="feishu" className="space-y-4">
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 rounded-md p-4">
               <div className="flex items-start gap-3">
                 <Cloud className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
@@ -749,7 +749,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
           </TabsContent>
 
           <TabsContent value="wechat" className="space-y-4">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-md p-4">
               <div className="flex items-start gap-3">
                 <Cloud className="w-5 h-5 text-green-600 mt-0.5" />
                 <div>
@@ -764,7 +764,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
           </TabsContent>
 
           <TabsContent value="dingtalk" className="space-y-4">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-md p-4">
               <div className="flex items-start gap-3">
                 <Cloud className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
@@ -779,7 +779,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
           </TabsContent>
 
           <TabsContent value="wps" className="space-y-4">
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-md p-4">
               <div className="flex items-start gap-3">
                 <Cloud className="w-5 h-5 text-amber-600 mt-0.5" />
                 <div>

@@ -54,10 +54,10 @@ interface DataInsightsProps {
 }
 
 const SEVERITY_CONFIG = {
-  critical: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: '严重' },
-  warning: { icon: AlertCircle, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', label: '警告' },
-  info: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', label: '提示' },
-  positive: { icon: ThumbsUp, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', label: '正面' }
+  critical: { icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/5', border: 'border-destructive/20', label: '严重' },
+  warning: { icon: AlertCircle, color: 'text-warning', bg: 'bg-warning/5', border: 'border-warning/20', label: '警告' },
+  info: { icon: Info, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/20', label: '提示' },
+  positive: { icon: ThumbsUp, color: 'text-success', bg: 'bg-success/5', border: 'border-success/20', label: '正面' }
 };
 
 const CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
@@ -294,7 +294,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
 
                 {/* 各步骤结果 */}
                 {aiResult.stepResults.map((step: StepResult) => (
-                  <div key={step.stepId} className="border rounded-lg bg-background">
+                  <div key={step.stepId} className="border rounded-md bg-background">
                     <button
                       className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
                       onClick={() => setExpandedAiStep(expandedAiStep === step.stepId ? null : step.stepId)}
@@ -303,7 +303,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                         {step.content.startsWith('\u274c') ? (
                           <AlertCircle className="w-4 h-4 text-destructive" />
                         ) : (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <CheckCircle className="w-4 h-4 text-success" />
                         )}
                         <span className="text-sm font-medium">{step.stepName}</span>
                         {step.isRequired && <Badge variant="outline" className="text-xs py-0">必选</Badge>}
@@ -368,7 +368,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                 </div>
                 {/* 分析规划结果展示 */}
                 {analysisPlan && (
-                  <div className="mt-3 p-3 border rounded-lg bg-background text-left">
+                  <div className="mt-3 p-3 border rounded-md bg-background text-left">
                     <div className="flex items-center gap-2 mb-2">
                       <Compass className="w-4 h-4 text-primary" />
                       <span className="text-sm font-medium">分析规划</span>
@@ -416,35 +416,35 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
           <CardContent>
             <p className="text-sm text-foreground mb-4">{deep.dataProfile.summary}</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              <div className="bg-blue-50 rounded-lg p-3">
-                <p className="text-xs text-blue-600 mb-1">数据类型</p>
-                <p className="font-semibold text-blue-900 text-sm">{deep.dataProfile.dataType}</p>
+              <div className="bg-primary/5 rounded-md p-3">
+                <p className="text-xs text-primary mb-1">数据类型</p>
+                <p className="font-semibold text-foreground text-sm">{deep.dataProfile.dataType}</p>
               </div>
-              <div className="bg-purple-50 rounded-lg p-3">
-                <p className="text-xs text-purple-600 mb-1">推测行业</p>
-                <p className="font-semibold text-purple-900 text-sm">{deep.dataProfile.suggestedIndustry}</p>
+              <div className="bg-chart-4/5 rounded-md p-3">
+                <p className="text-xs text-chart-4 mb-1">推测行业</p>
+                <p className="font-semibold text-chart-4 text-sm">{deep.dataProfile.suggestedIndustry}</p>
               </div>
               {deep.dataProfile.subScenario && (
-                <div className="bg-indigo-50 rounded-lg p-3">
-                  <p className="text-xs text-indigo-600 mb-1">细分场景</p>
-                  <p className="font-semibold text-indigo-900 text-sm">{deep.dataProfile.subScenario}</p>
+                <div className="bg-chart-4/5 rounded-md p-3">
+                  <p className="text-xs text-chart-4 mb-1">细分场景</p>
+                  <p className="font-semibold text-chart-4 text-sm">{deep.dataProfile.subScenario}</p>
                 </div>
               )}
               {deep.dataProfile.periodFeature && (
-                <div className="bg-cyan-50 rounded-lg p-3">
-                  <p className="text-xs text-cyan-600 mb-1">数据周期</p>
-                  <p className="font-semibold text-cyan-900 text-sm">{deep.dataProfile.periodFeature}</p>
+                <div className="bg-primary/5 rounded-md p-3">
+                  <p className="text-xs text-primary mb-1">数据周期</p>
+                  <p className="font-semibold text-primary text-sm">{deep.dataProfile.periodFeature}</p>
                 </div>
               )}
               {deep.dataProfile.scaleFeature && (
-                <div className="bg-teal-50 rounded-lg p-3">
-                  <p className="text-xs text-teal-600 mb-1">数据规模</p>
-                  <p className="font-semibold text-teal-900 text-sm">{deep.dataProfile.scaleFeature}</p>
+                <div className="bg-success/5 rounded-md p-3">
+                  <p className="text-xs text-success mb-1">数据规模</p>
+                  <p className="font-semibold text-success text-sm">{deep.dataProfile.scaleFeature}</p>
                 </div>
               )}
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-green-600 mb-1">分析潜力</p>
-                <p className="font-semibold text-green-900 text-sm">
+              <div className="bg-success/5 rounded-md p-3">
+                <p className="text-xs text-success mb-1">分析潜力</p>
+                <p className="font-semibold text-success text-sm">
                   {deep.dataProfile.analysisPotential === 'high' ? '高' :
                    deep.dataProfile.analysisPotential === 'medium' ? '中' : '低'}
                 </p>
@@ -513,15 +513,15 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {/* 推荐 KPI */}
             <div>
               <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
-                <Target className="w-4 h-4 text-blue-500" />
+                <Target className="w-4 h-4 text-primary" />
                 推荐核心指标
               </h4>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {deep.scenarioAnalysis.kpiRecommendations.map((kpi, idx) => (
-                  <div key={idx} className={`p-3 rounded-lg border ${
-                    kpi.priority === 'p0' ? 'border-l-4 border-l-red-400 bg-red-50/30' :
-                    kpi.priority === 'p1' ? 'border-l-4 border-l-orange-400 bg-orange-50/30' :
-                    'border-l-4 border-l-blue-400 bg-blue-50/30'
+                  <div key={idx} className={`p-3 rounded-md border ${
+                    kpi.priority === 'p0' ? 'border-l-4 border-l-red-400 bg-destructive/5/30' :
+                    kpi.priority === 'p1' ? 'border-l-4 border-l-orange-400 bg-warning/5/30' :
+                    'border-l-4 border-l-blue-400 bg-primary/5/30'
                   }`}>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm">{kpi.name}</span>
@@ -539,7 +539,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {/* 推荐维度 */}
             <div>
               <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
-                <Layers className="w-4 h-4 text-purple-500" />
+                <Layers className="w-4 h-4 text-chart-4" />
                 推荐分析维度
               </h4>
               <div className="flex flex-wrap gap-2">
@@ -554,15 +554,15 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {/* 行业化建议 */}
             <div>
               <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
-                <Lightbulb className="w-4 h-4 text-yellow-500" />
+                <Lightbulb className="w-4 h-4 text-warning" />
                 行业化分析建议
               </h4>
               <div className="space-y-2">
                 {deep.scenarioAnalysis.industrySuggestions.map((s, idx) => (
-                  <div key={idx} className={`flex items-start gap-3 p-3 rounded-lg ${
-                    s.priority === 'high' ? 'bg-red-50/50 border-l-4 border-l-red-400' :
-                    s.priority === 'medium' ? 'bg-orange-50/50 border-l-4 border-l-orange-400' :
-                    'bg-blue-50/50 border-l-4 border-l-blue-400'
+                  <div key={idx} className={`flex items-start gap-3 p-3 rounded-md ${
+                    s.priority === 'high' ? 'bg-destructive/5/50 border-l-4 border-l-red-400' :
+                    s.priority === 'medium' ? 'bg-warning/5/50 border-l-4 border-l-orange-400' :
+                    'bg-primary/5/50 border-l-4 border-l-blue-400'
                   }`}>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{s.title}</p>
@@ -621,7 +621,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               const isExpanded = expandedFinding === `${idx}`;
               
               return (
-                <div key={idx} className={`rounded-lg border ${config.border} ${config.bg} overflow-hidden`}>
+                <div key={idx} className={`rounded-md border ${config.border} ${config.bg} overflow-hidden`}>
                   <div 
                     className="flex items-start gap-3 p-3 cursor-pointer"
                     onClick={() => setExpandedFinding(isExpanded ? null : `${idx}`)}
@@ -649,14 +649,14 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                     <div className="px-3 pb-3 pt-0 ml-8 border-t border-border">
                       <div className="mt-2 space-y-2">
                         <div className="flex items-start gap-2">
-                          <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                          <AlertTriangle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="text-xs font-medium text-foreground">影响</p>
                             <p className="text-xs text-muted-foreground">{finding.impact}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <CheckCircle className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="text-xs font-medium text-foreground">建议</p>
                             <p className="text-xs text-muted-foreground">{finding.suggestion}</p>
@@ -698,12 +698,12 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                   const TrendIcon = trend.direction === 'up' ? TrendingUp : 
                                      trend.direction === 'down' ? TrendingDown : 
                                      trend.direction === 'volatile' ? Activity : Minus;
-                  const trendColor = trend.direction === 'up' ? 'text-green-600' :
-                                     trend.direction === 'down' ? 'text-red-600' :
-                                     trend.direction === 'volatile' ? 'text-orange-600' : 'text-foreground';
-                  const trendBg = trend.direction === 'up' ? 'bg-green-50' :
-                                  trend.direction === 'down' ? 'bg-red-50' :
-                                  trend.direction === 'volatile' ? 'bg-orange-50' : 'bg-muted/30';
+                  const trendColor = trend.direction === 'up' ? 'text-success' :
+                                     trend.direction === 'down' ? 'text-destructive' :
+                                     trend.direction === 'volatile' ? 'text-warning' : 'text-foreground';
+                  const trendBg = trend.direction === 'up' ? 'bg-success/5' :
+                                  trend.direction === 'down' ? 'bg-destructive/5' :
+                                  trend.direction === 'volatile' ? 'bg-warning/5' : 'bg-muted/30';
                   // 业务化趋势描述
                   const bizDirection = trend.direction === 'up' ? '增长' :
                                        trend.direction === 'down' ? '下降' :
@@ -713,9 +713,9 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                                     trend.direction === 'volatile' ? '建议平滑波动分析' : '维持现状即可';
                   
                   return (
-                    <div key={idx} className={`p-3 rounded-lg ${trendBg}`}>
+                    <div key={idx} className={`p-3 rounded-md ${trendBg}`}>
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${trendBg} border`}>
+                        <div className={`w-10 h-10 rounded-md flex items-center justify-center ${trendBg} border`}>
                           <TrendIcon className={`w-5 h-5 ${trendColor}`} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -764,7 +764,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                                      '数据较均匀，无明显集中趋势';
                   
                   return (
-                    <div key={idx} className="p-3 bg-muted/30 rounded-lg">
+                    <div key={idx} className="p-3 bg-muted/30 rounded-md">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-sm">{dist.field}</span>
                         <Badge variant="secondary" className="text-xs">{bizType}</Badge>
@@ -794,7 +794,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {/* 异常指标 */}
             <div>
               <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
-                <Flame className="w-4 h-4 text-orange-500" />
+                <Flame className="w-4 h-4 text-warning" />
                 异常指标检测
               </h4>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -802,13 +802,13 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                   const dirIcon = metric.direction === 'spike_up' ? TrendingUp :
                                   metric.direction === 'drop_down' ? TrendingDown : Activity;
                   const DirIcon = dirIcon;
-                  const dirColor = metric.direction === 'spike_up' ? 'text-green-600 bg-green-50' :
-                                   metric.direction === 'drop_down' ? 'text-red-600 bg-red-50' : 'text-orange-600 bg-orange-50';
+                  const dirColor = metric.direction === 'spike_up' ? 'text-success bg-success/5' :
+                                   metric.direction === 'drop_down' ? 'text-destructive bg-destructive/5' : 'text-warning bg-warning/5';
                   const sevColor = metric.severity === 'high' ? 'border-l-4 border-l-red-400' :
                                    metric.severity === 'medium' ? 'border-l-4 border-l-orange-400' : 'border-l-4 border-l-blue-400';
                   
                   return (
-                    <div key={idx} className={`p-3 rounded-lg border ${sevColor} ${dirColor}`}>
+                    <div key={idx} className={`p-3 rounded-md border ${sevColor} ${dirColor}`}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-sm">{metric.field}</span>
                         <DirIcon className="w-4 h-4" />
@@ -836,17 +836,17 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {deep.attribution.dimensionBreakdowns.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
-                  <BarChart3 className="w-4 h-4 text-blue-500" />
+                  <BarChart3 className="w-4 h-4 text-primary" />
                   维度拆解
                 </h4>
                 <div className="space-y-4">
                   {deep.attribution.dimensionBreakdowns.slice(0, 4).map((breakdown, idx) => (
-                    <div key={idx} className="p-3 bg-muted/30 rounded-lg">
+                    <div key={idx} className="p-3 bg-muted/30 rounded-md">
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-sm font-medium">{breakdown.metricField}</span>
                         <ArrowRight className="w-3 h-3 text-muted-foreground" />
                         <span className="text-sm text-foreground">按 {breakdown.dimensionField} 拆解</span>
-                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs ml-auto">
+                        <Badge className="bg-primary/10 text-primary hover:bg-primary/10 text-xs ml-auto">
                           核心驱动: {breakdown.keyDriver} ({Math.abs(breakdown.keyDriverContribution).toFixed(1)}%)
                         </Badge>
                       </div>
@@ -858,7 +858,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                             </span>
                             <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden relative">
                               <div
-                                className={`h-full rounded-full ${seg.isKeyDriver ? 'bg-blue-500' : Math.abs(seg.contribution) > 20 ? 'bg-blue-300' : 'bg-gray-400'}`}
+                                className={`h-full rounded-full ${seg.isKeyDriver ? 'bg-primary' : Math.abs(seg.contribution) > 20 ? 'bg-primary/30' : 'bg-muted-foreground/30'}`}
                                 style={{ width: `${Math.min(Math.abs(seg.contribution), 100)}%` }}
                               />
                             </div>
@@ -866,7 +866,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                               {seg.contribution.toFixed(1)}%
                             </span>
                             {seg.isKeyDriver && (
-                              <Badge className="bg-blue-500 text-white hover:bg-blue-500 text-xs py-0 px-1.5">驱动</Badge>
+                              <Badge className="bg-primary text-white hover:bg-primary text-xs py-0 px-1.5">驱动</Badge>
                             )}
                           </div>
                         ))}
@@ -881,17 +881,17 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {deep.attribution.rootCauses.length > 0 && (
               <div>
                 <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-1">
-                  <Crosshair className="w-4 h-4 text-red-500" />
+                  <Crosshair className="w-4 h-4 text-destructive" />
                   根因定位
                 </h4>
                 <div className="space-y-3">
                   {deep.attribution.rootCauses.map((rc, idx) => {
-                    const confColor = rc.confidence === 'high' ? 'border-l-4 border-l-red-400 bg-red-50/30' :
-                                      rc.confidence === 'medium' ? 'border-l-4 border-l-orange-400 bg-orange-50/30' :
-                                      'border-l-4 border-l-blue-400 bg-blue-50/30';
+                    const confColor = rc.confidence === 'high' ? 'border-l-4 border-l-red-400 bg-destructive/5/30' :
+                                      rc.confidence === 'medium' ? 'border-l-4 border-l-orange-400 bg-warning/5/30' :
+                                      'border-l-4 border-l-blue-400 bg-primary/5/30';
                     
                     return (
-                      <div key={idx} className={`p-3 rounded-lg ${confColor}`}>
+                      <div key={idx} className={`p-3 rounded-md ${confColor}`}>
                         <div className="flex items-center gap-2 mb-2">
                           <span className="font-medium text-sm">{rc.metric}</span>
                           <Badge variant="outline" className="text-xs">
@@ -919,8 +919,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                           </div>
                         )}
                         {/* 建议 */}
-                        <div className="flex items-start gap-1.5 mt-2 p-2 bg-green-50/50 rounded">
-                          <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <div className="flex items-start gap-1.5 mt-2 p-2 bg-success/5/50 rounded">
+                          <CheckCircle className="w-3.5 h-3.5 text-success mt-0.5 flex-shrink-0" />
                           <span className="text-xs text-foreground">{rc.suggestion}</span>
                         </div>
                       </div>
@@ -947,8 +947,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
               {deep.correlations.slice(0, 9).map((corr, idx) => {
-                const strengthColor = corr.strength === 'strong' ? 'text-red-600 bg-red-50' :
-                                      corr.strength === 'moderate' ? 'text-orange-600 bg-orange-50' : 'text-blue-600 bg-blue-50';
+                const strengthColor = corr.strength === 'strong' ? 'text-destructive bg-destructive/5' :
+                                      corr.strength === 'moderate' ? 'text-warning bg-warning/5' : 'text-primary bg-primary/5';
                 const dirIcon = corr.direction === 'positive' ? '↑' : '↓';
                 // 业务化关联解读
                 const bizRelation = corr.direction === 'positive' 
@@ -963,7 +963,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                   : `关联较弱，可分开独立分析`;
                 
                 return (
-                  <div key={idx} className={`p-3 rounded-lg border ${strengthColor}`}>
+                  <div key={idx} className={`p-3 rounded-md border ${strengthColor}`}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-sm">
                         {corr.field1} {dirIcon} {corr.field2}
@@ -1009,7 +1009,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                                    rec.chartType === 'radar' ? '雷达图' : rec.chartType;
                 
                 return (
-                  <div key={idx} className={`p-4 bg-white border rounded-lg ${priorityColor} hover:shadow-md transition-shadow group`}>
+                  <div key={idx} className={`p-4 bg-white border rounded-md ${priorityColor} hover:shadow-md transition-shadow group`}>
                     <div className="flex items-center gap-2 mb-2">
                       <BarChart3 className="w-5 h-5 text-primary" />
                       <span className="font-medium text-sm">{rec.title}</span>
@@ -1051,18 +1051,18 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               {deep.actionItems.filter(i => i.priority === 'high').length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-red-100 text-red-700 hover:bg-red-100">本周可落地</Badge>
+                    <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10">本周可落地</Badge>
                     <span className="text-xs text-muted-foreground">低成本、零依赖、立刻执行</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'high').map((item, idx) => (
-                      <div key={`h-${idx}`} className="p-3 rounded-lg border-l-4 border-l-red-400 bg-red-50/30">
+                      <div key={`h-${idx}`} className="p-3 rounded-md border-l-4 border-l-red-400 bg-destructive/5/30">
                         <div className="flex items-center gap-2 mb-1">
-                          <Zap className="w-3.5 h-3.5 text-red-500" />
+                          <Zap className="w-3.5 h-3.5 text-destructive" />
                           <span className="font-medium text-sm">{item.action}</span>
                         </div>
                         <p className="text-xs text-foreground ml-5">{item.detail}</p>
-                        <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
+                        <p className="text-xs text-success ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
                       </div>
                     ))}
                   </div>
@@ -1072,18 +1072,18 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               {deep.actionItems.filter(i => i.priority === 'medium').length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">本月内落地</Badge>
+                    <Badge className="bg-warning/10 text-warning hover:bg-warning/10">本月内落地</Badge>
                     <span className="text-xs text-muted-foreground">需要少量资源和协调</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'medium').map((item, idx) => (
-                      <div key={`m-${idx}`} className="p-3 rounded-lg border-l-4 border-l-orange-400 bg-orange-50/30">
+                      <div key={`m-${idx}`} className="p-3 rounded-md border-l-4 border-l-orange-400 bg-warning/5/30">
                         <div className="flex items-center gap-2 mb-1">
-                          <Target className="w-3.5 h-3.5 text-orange-500" />
+                          <Target className="w-3.5 h-3.5 text-warning" />
                           <span className="font-medium text-sm">{item.action}</span>
                         </div>
                         <p className="text-xs text-foreground ml-5">{item.detail}</p>
-                        <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
+                        <p className="text-xs text-success ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
                       </div>
                     ))}
                   </div>
@@ -1093,18 +1093,18 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               {deep.actionItems.filter(i => i.priority === 'low').length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">本季度规划</Badge>
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/10">本季度规划</Badge>
                     <span className="text-xs text-muted-foreground">需要系统建设和资源投入</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'low').map((item, idx) => (
-                      <div key={`l-${idx}`} className="p-3 rounded-lg border-l-4 border-l-blue-400 bg-blue-50/30">
+                      <div key={`l-${idx}`} className="p-3 rounded-md border-l-4 border-l-blue-400 bg-primary/5/30">
                         <div className="flex items-center gap-2 mb-1">
-                          <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
+                          <TrendingUp className="w-3.5 h-3.5 text-primary" />
                           <span className="font-medium text-sm">{item.action}</span>
                         </div>
                         <p className="text-xs text-foreground ml-5">{item.detail}</p>
-                        <p className="text-xs text-green-600 ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
+                        <p className="text-xs text-success ml-5 mt-1">预期收益: {item.expectedBenefit}</p>
                       </div>
                     ))}
                   </div>
@@ -1153,18 +1153,18 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                <div className="p-4 bg-muted/50 rounded-md text-center">
                   <p className="text-xs text-muted-foreground mb-1">当前值</p>
                   <p className="text-2xl font-bold">{lastValue.toLocaleString()}</p>
                 </div>
-                <div className="p-4 bg-primary/5 rounded-lg text-center">
+                <div className="p-4 bg-primary/5 rounded-md text-center">
                   <p className="text-xs text-primary mb-1">下一周期预测</p>
                   <p className="text-2xl font-bold text-primary">{nextValue.toLocaleString()}</p>
                 </div>
-                <div className="p-4 bg-muted/50 rounded-lg text-center">
+                <div className="p-4 bg-muted/50 rounded-md text-center">
                   <p className="text-xs text-muted-foreground mb-1">预计变化</p>
                   <div className={`flex items-center justify-center gap-1 text-2xl font-bold ${
-                    trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-foreground'
+                    trend === 'up' ? 'text-success' : trend === 'down' ? 'text-destructive' : 'text-foreground'
                   }`}>
                     {trend === 'up' ? <TrendingUp className="w-5 h-5" /> : trend === 'down' ? <TrendingDown className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
                     {Number(changePct) > 0 ? '+' : ''}{changePct}%
@@ -1212,7 +1212,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                       </Badge>
                     </td>
                     <td className="py-2 px-3 text-right">
-                      <span className={stat.nullCount > 0 ? 'text-orange-600' : 'text-green-600'}>
+                      <span className={stat.nullCount > 0 ? 'text-warning' : 'text-success'}>
                         {stat.count - stat.nullCount}/{stat.count}
                       </span>
                     </td>

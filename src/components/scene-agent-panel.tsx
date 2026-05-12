@@ -323,7 +323,7 @@ export function SceneAgentPanel({
           <div key={idx} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div
               className={cn(
-                'max-w-[90%] rounded-lg px-3 py-2 text-xs leading-relaxed',
+                'max-w-[90%] rounded-md px-3 py-2 text-xs leading-relaxed',
                 msg.role === 'user'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted border'
@@ -356,7 +356,7 @@ export function SceneAgentPanel({
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-muted border rounded-lg px-3 py-2 flex items-center gap-2">
+            <div className="bg-muted border rounded-md px-3 py-2 flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
               <span className="text-xs text-muted-foreground">智能体思考中...</span>
             </div>

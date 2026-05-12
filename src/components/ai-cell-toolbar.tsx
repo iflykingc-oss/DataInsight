@@ -132,7 +132,7 @@ export function AICellToolbar({ selectedText, cellValue, modelConfig, onApply, o
     <div
       ref={toolbarRef}
       className={cn(
-        'absolute z-50 bg-background border rounded-lg shadow-lg p-2',
+        'absolute z-50 bg-background border rounded-md shadow-lg p-2',
         'animate-in fade-in zoom-in-95 duration-150'
       )}
       style={{ minWidth: '320px' }}

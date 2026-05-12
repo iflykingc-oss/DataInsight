@@ -368,7 +368,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
       {isExpanded && (
         <div
           className={cn(
-            'fixed z-[60] bg-white rounded-xl shadow-xl border p-2 space-y-1',
+            'fixed z-[60] bg-white rounded-md shadow-xl border p-2 space-y-1',
             positionClasses[position]?.panel || 'bottom-24 right-6'
           )}
         >
@@ -384,7 +384,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
               key={pos.key}
               onClick={() => savePosition(pos.key)}
               className={cn(
-                'w-full text-left px-3 py-2 rounded-lg text-sm transition-colors',
+                'w-full text-left px-3 py-2 rounded-md text-sm transition-colors',
                 position === pos.key
                   ? 'bg-primary text-primary-foreground'
                   : 'hover:bg-muted'
@@ -411,7 +411,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
           )}
         >
           <Sparkles className="w-6 h-6 text-primary-foreground" />
-          <span className="absolute bg-foreground text-foreground-contrast text-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <span className="absolute bg-foreground text-foreground-contrast text-sm px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
             AI 助手
           </span>
         </button>
@@ -424,7 +424,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
           onTouchStart={handleDragStart}
           className={cn(
             'fixed z-50',
-            'bg-white rounded-2xl shadow-2xl',
+            'bg-white rounded-md shadow-2xl',
             'transition-all duration-300',
             'cursor-move select-none',
             isDragging && 'opacity-90 shadow-3xl',
@@ -492,7 +492,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                   >
                     <div
                       className={cn(
-                        'max-w-[85%] rounded-2xl px-4 py-3',
+                        'max-w-[85%] rounded-md px-4 py-3',
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground rounded-br-md'
                           : msg.isError
@@ -520,7 +520,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                             [&_li]:my-0.5 [&_li]:text-foreground
                             [&_strong]:text-foreground [&_strong]:font-semibold
                             [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:text-blue-700
-                            [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:text-xs
+                            [&_pre]:bg-gray-900 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:my-2 [&_pre]:text-xs
                             [&_blockquote]:border-l-3 [&_blockquote]:border-blue-400 [&_blockquote]:pl-3 [&_blockquote]:my-2 [&_blockquote]:text-foreground
                           ">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
@@ -582,7 +582,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                 {/* 流式内容 */}
                 {streamedContent && (
                   <div className="flex justify-start">
-                    <div className="max-w-[85%] bg-muted text-foreground rounded-2xl rounded-bl-md px-4 py-3">
+                    <div className="max-w-[85%] bg-muted text-foreground rounded-md rounded-bl-md px-4 py-3">
                       <div className="text-sm leading-relaxed prose prose-sm prose-gray max-w-none
                         [&_p]:my-1 [&_p]:text-foreground
                         [&_strong]:text-foreground [&_strong]:font-semibold
@@ -600,7 +600,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
                 {/* 正在输入 */}
                 {isTyping && !streamedContent && (
                   <div className="flex justify-start">
-                    <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
+                    <div className="bg-muted rounded-md rounded-bl-md px-4 py-3">
                       <div className="flex gap-1">
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

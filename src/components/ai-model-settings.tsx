@@ -351,7 +351,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2 bg-blue-100 rounded-md">
                 <Bot className="w-6 h-6 text-blue-600" />
               </div>
               <div>
@@ -405,7 +405,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                             key={preset.id}
                             onClick={() => handleSelectPreset(preset.id)}
                             className={cn(
-                              'p-2 rounded-lg border text-left transition-all',
+                              'p-2 rounded-md border text-left transition-all',
                               editingConfig?.baseUrl === preset.baseUrl
                                 ? 'border-primary bg-primary/10'
                                 : 'border-border hover:border-primary/50'
@@ -479,7 +479,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                   {/* 测试结果 */}
                   {testResult && (
                     <div className={cn(
-                      'p-3 rounded-lg flex items-center gap-2',
+                      'p-3 rounded-md flex items-center gap-2',
                       testResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                     )}>
                       {testResult.success ? (
@@ -531,13 +531,13 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
               <div
                 key={config.id}
                 className={cn(
-                  'flex items-center justify-between p-3 rounded-lg border transition-all',
+                  'flex items-center justify-between p-3 rounded-md border transition-all',
                   config.enabled ? 'bg-white' : 'bg-muted/30 opacity-60'
                 )}
               >
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    'p-2 rounded-lg',
+                    'p-2 rounded-md',
                     config.enabled ? 'bg-muted' : 'bg-muted'
                   )}>
                     <Bot className={cn(

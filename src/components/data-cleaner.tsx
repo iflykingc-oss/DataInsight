@@ -630,9 +630,9 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
             
             {/* AI 智能清洗 */}
             <TabsContent value="ai" className="space-y-4">
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-md p-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
+                  <div className="p-2 bg-purple-100 rounded-md">
                     <MessageSquare className="w-5 h-5 text-purple-600" />
                   </div>
                   <div className="flex-1">
@@ -671,7 +671,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                 
                 {/* AI 识别结果 */}
                 {aiIntent && (
-                  <div className="mt-4 p-3 bg-white rounded-lg border">
+                  <div className="mt-4 p-3 bg-white rounded-md border">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       <span className="text-sm font-medium">AI 识别结果</span>
@@ -713,7 +713,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
             {/* 快捷操作 */}
             <TabsContent value="quick" className="space-y-4">
               {/* 快速筛选 */}
-              <div className="p-4 border rounded-lg space-y-3">
+              <div className="p-4 border rounded-md space-y-3">
                 <h4 className="text-sm font-medium flex items-center gap-2">
                   <Filter className="w-4 h-4 text-blue-500" />
                   快速筛选
@@ -761,7 +761,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
               </div>
               
               {/* 快速填充空值 */}
-              <div className="p-4 border rounded-lg space-y-3">
+              <div className="p-4 border rounded-md space-y-3">
                 <h4 className="text-sm font-medium flex items-center gap-2">
                   <Hash className="w-4 h-4 text-green-500" />
                   填补空值
@@ -814,7 +814,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
               </div>
               
               {/* 快速去重 */}
-              <div className="p-4 border rounded-lg">
+              <div className="p-4 border rounded-md">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Copy className="w-4 h-4 text-orange-500" />
@@ -845,7 +845,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
           
           {/* 清洗步骤列表 */}
           {cleaningSteps.length > 0 && (
-            <div className="border rounded-lg">
+            <div className="border rounded-md">
               <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
                 <span className="text-sm font-medium">清洗步骤 ({cleaningSteps.length})</span>
                 <div className="flex gap-2">
@@ -887,7 +887,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                     <div 
                       key={step.id}
                       className={cn(
-                        'flex items-center gap-2 p-2 rounded-lg mb-1',
+                        'flex items-center gap-2 p-2 rounded-md mb-1',
                         step.enabled ? 'bg-white border border-border' : 'bg-muted/30 opacity-60'
                       )}
                     >
@@ -934,7 +934,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
           
           {/* 数据预览 */}
           {showPreview && (
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border rounded-md overflow-hidden">
               <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Eye className="w-4 h-4 text-muted-foreground" />

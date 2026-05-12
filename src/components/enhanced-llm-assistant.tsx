@@ -613,13 +613,13 @@ export function EnhancedLLMAssistant({
           </Button>
 
           {showModeSelector && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-10 p-2 space-y-1">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-10 p-2 space-y-1">
               {AI_MODES.map(mode => {
                 const Icon = mode.icon;
                 return (
                   <button
                     key={mode.id}
-                    className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-colors ${
+                    className={`w-full flex items-center gap-2 p-2 rounded-md text-left transition-colors ${
                       currentMode === mode.id 
                         ? 'bg-primary/10 text-primary' 
                         : 'hover:bg-muted'
@@ -643,7 +643,7 @@ export function EnhancedLLMAssistant({
       <CardContent className="flex-1 flex flex-col min-h-0">
         {/* 历史会话面板 */}
         {showHistory && (
-          <div className="mb-3 p-3 bg-muted/50 rounded-lg max-h-64 overflow-auto">
+          <div className="mb-3 p-3 bg-muted/50 rounded-md max-h-64 overflow-auto">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium">历史会话</p>
               <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setShowHistory(false)}>
@@ -757,14 +757,14 @@ export function EnhancedLLMAssistant({
 
           {messages.map((msg, idx) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[90%] rounded-lg px-4 py-3 ${
+              <div className={`max-w-[90%] rounded-md px-4 py-3 ${
                 msg.role === 'user'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted border border-border'
               }`}>
                 {/* 错误提示 */}
                 {msg.role === 'assistant' && msg.error && (
-                  <div className="mb-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <div className="mb-3 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
                     <div className="flex items-center gap-2 text-destructive font-medium text-sm mb-1">
                       <AlertTriangle className="w-4 h-4" />
                       {msg.error.title}
@@ -797,7 +797,7 @@ export function EnhancedLLMAssistant({
                       [&_li]:my-0.5
                       [&_strong]:font-semibold
                       [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
-                      [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:my-2 [&_pre]:text-xs [&_pre]:overflow-x-auto
+                      [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:rounded-md [&_pre]:my-2 [&_pre]:text-xs [&_pre]:overflow-x-auto
                       [&_table]:my-2 [&_table]:text-xs [&_th]:bg-muted [&_th]:px-2 [&_th]:py-1
                     ">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content.replace(/##\s*推荐追问[\s\S]*$/, '')}</ReactMarkdown>
@@ -870,7 +870,7 @@ export function EnhancedLLMAssistant({
 
           {isLoading && messages[messages.length - 1]?.role === 'user' && (
             <div className="flex justify-start">
-              <div className="bg-muted rounded-lg px-4 py-3 border border-border">
+              <div className="bg-muted rounded-md px-4 py-3 border border-border">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm">AI 正在分析...</span>
@@ -917,7 +917,7 @@ export function EnhancedLLMAssistant({
         </Button>
 
         {showContext && (
-          <div className="mt-2 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+          <div className="mt-2 p-3 bg-muted/50 rounded-md text-xs space-y-1">
             <p className="font-medium">数据概况：</p>
             <p>文件: {data.fileName}</p>
             <p>行数: {(data.rowCount ?? 0).toLocaleString()} | 列数: {data.columnCount ?? 0}</p>

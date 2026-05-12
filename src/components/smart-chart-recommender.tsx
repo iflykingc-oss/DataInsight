@@ -90,7 +90,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
                     <button
                       key={idx}
                       onClick={() => setSelectedChart(String(idx))}
-                      className={`p-3 rounded-lg border text-left transition-all ${
+                      className={`p-3 rounded-md border text-left transition-all ${
                         isSelected 
                           ? 'border-primary bg-primary/5 shadow-sm' 
                           : 'border-border hover:border-border hover:bg-muted/30'
@@ -120,7 +120,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
                     <Lightbulb className="w-4 h-4 text-yellow-500" />
                     <p className="text-sm text-foreground">{currentRecommendation.reason}</p>
                   </div>
-                  <div className="bg-white border rounded-lg p-4">
+                  <div className="bg-white border rounded-md p-4">
                     <h4 className="font-medium text-sm mb-2">{currentRecommendation.title}</h4>
                     <ResponsiveContainer width="100%" height={350}>
                       {renderChart(currentRecommendation.type, currentRecommendation.xField, currentRecommendation.yField, currentRecommendation.data)}
@@ -182,7 +182,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
           </div>
           
           {customChartData.length > 0 ? (
-            <div className="bg-white border rounded-lg p-4">
+            <div className="bg-white border rounded-md p-4">
               <h4 className="font-medium text-sm mb-2">
                 {customChartType === 'bar' ? '柱状图' :
                  customChartType === 'line' ? '折线图' :

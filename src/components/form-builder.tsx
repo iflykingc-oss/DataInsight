@@ -418,7 +418,7 @@ export function FormBuilder({
         </DialogHeader>
         <div className="space-y-4">
           {qrDataUrl && (
-            <div className="flex justify-center p-4 bg-white rounded-lg">
+            <div className="flex justify-center p-4 bg-white rounded-md">
               <img src={qrDataUrl} alt="QR Code" className="w-64 h-64" />
             </div>
           )}
@@ -763,11 +763,11 @@ export function FormBuilder({
                   {PRESET_THEMES.map((t) => (
                     <button
                       key={t.name}
-                      className="flex flex-col items-center gap-2 p-3 rounded-lg border-2 hover:border-primary/50 transition"
+                      className="flex flex-col items-center gap-2 p-3 rounded-md border-2 hover:border-primary/50 transition"
                       style={{ borderColor: editing.theme.primaryColor === t.primary ? t.primary : undefined }}
                       onClick={() => setEditing({ ...editing, theme: { ...editing.theme, primaryColor: t.primary, bgColor: t.bg }, updatedAt: Date.now() })}
                     >
-                      <div className="w-10 h-10 rounded-lg" style={{ backgroundColor: t.primary }} />
+                      <div className="w-10 h-10 rounded-md" style={{ backgroundColor: t.primary }} />
                       <span className="text-xs">{t.name}</span>
                     </button>
                   ))}
@@ -1209,7 +1209,7 @@ export function FormRenderer({
         case "image":
           return (
             <div className="mt-1">
-              <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition ${readOnly ? "pointer-events-none" : ""}`}>
+              <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/50 transition ${readOnly ? "pointer-events-none" : ""}`}>
                 <ImageIcon className="w-8 h-8 text-muted-foreground mb-1" />
                 <span className="text-sm text-muted-foreground">点击上传图片</span>
                 <span className="text-xs text-muted-foreground">最大 {field.maxFileSize || 10}MB</span>
@@ -1233,7 +1233,7 @@ export function FormRenderer({
         case "file":
           return (
             <div className="mt-1">
-              <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition ${readOnly ? "pointer-events-none" : ""}`}>
+              <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/50 transition ${readOnly ? "pointer-events-none" : ""}`}>
                 <FileUp className="w-8 h-8 text-muted-foreground mb-1" />
                 <span className="text-sm text-muted-foreground">点击上传文件</span>
                 <span className="text-xs text-muted-foreground">最大 {field.maxFileSize || 10}MB</span>
@@ -1303,7 +1303,7 @@ export function FormRenderer({
         <div className="w-full h-40 bg-cover bg-center rounded-t-lg" style={{ backgroundImage: `url(${config.theme?.headerImage})` }} />
       )}
 
-      <div className="bg-card rounded-lg shadow-sm border">
+      <div className="bg-card rounded-md shadow-sm border">
         {/* Progress bar */}
         {config.settings.showProgressBar && !readOnly && (
           <div className="h-1 bg-muted rounded-t-lg overflow-hidden">

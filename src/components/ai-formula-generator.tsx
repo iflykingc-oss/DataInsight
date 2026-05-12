@@ -410,7 +410,7 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
               </div>
 
               {error && (
-                <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+                <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
                   {error}
                 </div>
               )}
@@ -448,7 +448,7 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
                   </Button>
                 </div>
 
-                <div className="p-3 bg-background rounded-lg font-mono text-sm border">
+                <div className="p-3 bg-background rounded-md font-mono text-sm border">
                   {generatedFormula}
                 </div>
 

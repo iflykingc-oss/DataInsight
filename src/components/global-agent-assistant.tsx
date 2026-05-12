@@ -540,7 +540,7 @@ export function GlobalAgentAssistant({
 
   // -- 渲染：内嵌模式 --
   return (
-    <div className={cn('flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card', className)}>
+    <div className={cn('flex h-full flex-col overflow-hidden rounded-md border border-border bg-card', className)}>
       <div className="flex items-center justify-between border-b border-border bg-muted/50 px-4 py-3">
         <div className="flex items-center gap-2">
           <Brain className="h-5 w-5 text-primary" />
@@ -615,7 +615,7 @@ function MessageBubble({
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[85%] rounded-xl px-4 py-3',
+          'max-w-[85%] rounded-md px-4 py-3',
           isUser
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted text-foreground'

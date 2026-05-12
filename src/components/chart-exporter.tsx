@@ -537,7 +537,7 @@ export function ChartExporter({
                     key={preset.format}
                     onClick={() => setConfig(prev => ({ ...prev, format: preset.format }))}
                     className={cn(
-                      'p-4 rounded-lg border text-left transition-all',
+                      'p-4 rounded-md border text-left transition-all',
                       isSelected
                         ? 'border-primary bg-primary/10 ring-1 ring-primary'
                         : 'border-border hover:border-border'
@@ -566,7 +566,7 @@ export function ChartExporter({
           <Card className="border-dashed">
             <CardContent className="pt-4">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-muted rounded-lg">
+                <div className="p-3 bg-muted rounded-md">
                   <Icon className="w-8 h-8 text-foreground" />
                 </div>
                 <div className="flex-1">
@@ -641,7 +641,7 @@ export function ChartExporter({
                   key={preset.value}
                   onClick={() => setConfig(prev => ({ ...prev, quality: preset.value }))}
                   className={cn(
-                    'flex-1 p-3 rounded-lg border text-center transition-all',
+                    'flex-1 p-3 rounded-md border text-center transition-all',
                     config.quality === preset.value
                       ? 'border-primary bg-primary/10'
                       : 'border-border hover:border-border'
@@ -658,7 +658,7 @@ export function ChartExporter({
           <div className="space-y-3">
             <Label>输出尺寸</Label>
             <select
-              className="w-full p-3 border rounded-lg"
+              className="w-full p-3 border rounded-md"
               value={config.width ? `${config.width}x${config.height}` : '0x0'}
               onChange={e => {
                 const parts = e.target.value.split('x');
@@ -684,7 +684,7 @@ export function ChartExporter({
                   key={scale}
                   onClick={() => setConfig(prev => ({ ...prev, scale }))}
                   className={cn(
-                    'flex-1 p-3 rounded-lg border text-center transition-all',
+                    'flex-1 p-3 rounded-md border text-center transition-all',
                     config.scale === scale
                       ? 'border-primary bg-primary/10'
                       : 'border-border hover:border-border'
@@ -776,7 +776,7 @@ export function ChartExporter({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={cn(
-                          'p-2 rounded-lg',
+                          'p-2 rounded-md',
                           task.status === 'completed' ? 'bg-green-100' :
                           task.status === 'failed' ? 'bg-red-100' : 'bg-muted'
                         )}>

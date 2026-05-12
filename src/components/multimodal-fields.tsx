@@ -105,7 +105,7 @@ function ImageToTable({ onResult }: { onResult?: (result: ParsedData) => void })
           {/* 上传区域 */}
           <div
             className={cn(
-              "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
+              "border-2 border-dashed rounded-md p-8 text-center transition-colors",
               dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25",
               uploading && "opacity-50"
             )}
@@ -115,7 +115,7 @@ function ImageToTable({ onResult }: { onResult?: (result: ParsedData) => void })
           >
             {imageUrl ? (
               <div className="space-y-3">
-                <img src={imageUrl} alt="预览" className="max-h-48 mx-auto rounded-lg object-contain" />
+                <img src={imageUrl} alt="预览" className="max-h-48 mx-auto rounded-md object-contain" />
                 <p className="text-sm text-muted-foreground">图片已上传</p>
                 <Button variant="outline" size="sm" onClick={() => setImageUrl('')}>
                   重新上传
@@ -177,7 +177,7 @@ function ImageToTable({ onResult }: { onResult?: (result: ParsedData) => void })
                 <CheckCircle className="h-4 w-4" />
                 成功提取 {result.rows.length} 行数据
               </div>
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-md overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>
@@ -264,7 +264,7 @@ function ImageToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
       <CardContent className="space-y-4">
         <div
           className={cn(
-            "border-2 border-dashed rounded-lg p-6 text-center transition-colors",
+            "border-2 border-dashed rounded-md p-6 text-center transition-colors",
             dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25"
           )}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -277,7 +277,7 @@ function ImageToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
           }}
         >
           {imageUrl ? (
-            <img src={imageUrl} alt="预览" className="max-h-40 mx-auto rounded-lg object-contain mb-3" />
+            <img src={imageUrl} alt="预览" className="max-h-40 mx-auto rounded-md object-contain mb-3" />
           ) : (
             <>
               <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
@@ -322,7 +322,7 @@ function ImageToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
         )}
 
         {result && (
-          <div className="p-3 bg-muted rounded-lg">
+          <div className="p-3 bg-muted rounded-md">
             <p className="text-sm whitespace-pre-wrap">{result}</p>
           </div>
         )}
@@ -442,7 +442,7 @@ function AIGenerator({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
 
         {result && (
           <div className="space-y-3">
-            <div className="relative rounded-lg overflow-hidden border">
+            <div className="relative rounded-md overflow-hidden border">
               <img
                 src={result}
                 alt="生成结果"
@@ -549,7 +549,7 @@ function SpeechToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['mod
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-col items-center gap-3 py-6 border rounded-lg">
+        <div className="flex flex-col items-center gap-3 py-6 border rounded-md">
           <button
             className={cn(
               "w-16 h-16 rounded-full flex items-center justify-center transition-all",
@@ -597,7 +597,7 @@ function SpeechToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['mod
         )}
 
         {result && (
-          <div className="p-3 bg-muted rounded-lg">
+          <div className="p-3 bg-muted rounded-md">
             <p className="text-sm whitespace-pre-wrap">{result}</p>
           </div>
         )}

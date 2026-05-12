@@ -127,7 +127,7 @@ export const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
   }
 
   return (
-    <div className={cn('flex flex-col bg-white rounded-lg border shadow-sm', className)}>
+    <div className={cn('flex flex-col bg-white rounded-md border shadow-sm', className)}>
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30 rounded-t-lg">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-500" />
@@ -312,7 +312,7 @@ const ExecutionStepsView: React.FC<ExecutionStepsViewProps> = ({
         <div
           key={log.id}
           className={cn(
-            'border rounded-lg overflow-hidden transition-colors',
+            'border rounded-md overflow-hidden transition-colors',
             log.status === 'error' ? 'border-red-200 bg-red-50' :
             log.status === 'done' ? 'border-green-200 bg-green-50' :
             'border-border bg-white'
@@ -412,7 +412,7 @@ const ChangesView: React.FC<ChangesViewProps> = ({ changes }) => {
       {changes.map((change, index) => (
         <div
           key={index}
-          className="p-3 bg-blue-50 rounded-lg border border-blue-200"
+          className="p-3 bg-blue-50 rounded-md border border-blue-200"
         >
           <div className="flex items-center gap-2 mb-2">
             <span className={cn(
@@ -483,7 +483,7 @@ const DataPreview: React.FC<DataPreviewProps> = ({ data }) => {
         )}
       </div>
 
-      <div className="overflow-auto border rounded-lg">
+      <div className="overflow-auto border rounded-md">
         <table className="w-full text-sm">
           <thead className="bg-muted/30">
             <tr>
@@ -591,7 +591,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   }, 0);
 
   return (
-    <div className={cn('bg-white rounded-lg border shadow-lg', className)}>
+    <div className={cn('bg-white rounded-md border shadow-lg', className)}>
       <div className="px-4 py-3 border-b bg-muted/30 rounded-t-lg">
         <div className="flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-yellow-500" />
@@ -604,7 +604,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           <p className="text-sm text-foreground mb-2">{skill.description}</p>
         </div>
 
-        <div className="p-3 bg-muted/30 rounded-lg">
+        <div className="p-3 bg-muted/30 rounded-md">
           <div className="text-sm font-medium mb-2">执行步骤（共 {skill.execution.steps.length} 步）：</div>
           <ul className="space-y-1 text-sm text-foreground">
             {skill.execution.steps.map((step, index) => (
@@ -622,7 +622,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         </div>
 
         {highImpactSteps.length > 0 && (
-          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5" />
               <div className="text-sm">
@@ -688,7 +688,7 @@ export const SkillCard: React.FC<SkillCardProps> = ({
     <div
       onClick={onClick}
       className={cn(
-        'p-4 rounded-lg border cursor-pointer transition-all',
+        'p-4 rounded-md border cursor-pointer transition-all',
         isSelected
           ? 'border-blue-500 bg-blue-50 shadow-md'
           : 'border-border bg-white hover:border-blue-300 hover:shadow-sm',
@@ -768,7 +768,7 @@ export const ToastNotification: React.FC<ToastNotificationProps> = ({
   return (
     <div
       className={cn(
-        'fixed bottom-4 right-4 p-4 rounded-lg border shadow-lg z-50 animate-slide-up',
+        'fixed bottom-4 right-4 p-4 rounded-md border shadow-lg z-50 animate-slide-up',
         bgColors[type],
         className
       )}

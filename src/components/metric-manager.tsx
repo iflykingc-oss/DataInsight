@@ -626,7 +626,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
 
             {/* 公式预览 */}
             {newMetricForm.formula && (
-              <div className="bg-muted p-3 rounded-lg">
+              <div className="bg-muted p-3 rounded-md">
                 <div className="text-xs text-muted-foreground mb-1">公式预览</div>
                 <code className="text-sm font-mono">{newMetricForm.formula}</code>
               </div>
@@ -668,7 +668,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
                 )}
               </div>
 
-              <div className="bg-muted p-4 rounded-lg text-center">
+              <div className="bg-muted p-4 rounded-md text-center">
                 <div className="text-4xl font-bold">
                   {formatMetricValue(
                     computedResults[selectedMetric.id]?.value ?? null,
@@ -687,7 +687,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
                   <Calculator className="w-4 h-4" />
                   计算公式
                 </h4>
-                <div className="bg-muted p-3 rounded-lg flex items-center justify-between">
+                <div className="bg-muted p-3 rounded-md flex items-center justify-between">
                   <code className="text-sm font-mono">{selectedMetric.formula}</code>
                   <Button
                     variant="ghost"

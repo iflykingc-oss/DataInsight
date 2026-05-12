@@ -128,28 +128,28 @@ interface AITableBuilderProps {
 // 场景分类 (20+行业)
 const CATEGORIES = [
   { id: 'general', name: '通用', icon: Building2, color: 'text-primary' },
-  { id: 'retail', name: '零售电商', icon: ShoppingCart, color: 'text-emerald-600' },
-  { id: 'restaurant', name: '餐饮', icon: ShoppingCart, color: 'text-orange-600' },
-  { id: 'education', name: '教育培训', icon: BookOpen, color: 'text-blue-600' },
-  { id: 'health', name: '医疗健康', icon: Building2, color: 'text-red-600' },
-  { id: 'finance', name: '金融保险', icon: Building2, color: 'text-purple-600' },
-  { id: 'hr', name: '人力资源', icon: Users, color: 'text-indigo-600' },
+  { id: 'retail', name: '零售电商', icon: ShoppingCart, color: 'text-success' },
+  { id: 'restaurant', name: '餐饮', icon: ShoppingCart, color: 'text-warning' },
+  { id: 'education', name: '教育培训', icon: BookOpen, color: 'text-primary' },
+  { id: 'health', name: '医疗健康', icon: Building2, color: 'text-destructive' },
+  { id: 'finance', name: '金融保险', icon: Building2, color: 'text-chart-4' },
+  { id: 'hr', name: '人力资源', icon: Users, color: 'text-chart-4' },
   { id: 'admin', name: '办公行政', icon: Building2, color: 'text-slate-600' },
-  { id: 'marketing', name: '市场营销', icon: Target, color: 'text-pink-600' },
-  { id: 'supply', name: '供应链物流', icon: Layers, color: 'text-amber-600' },
+  { id: 'marketing', name: '市场营销', icon: Target, color: 'text-chart-4' },
+  { id: 'supply', name: '供应链物流', icon: Layers, color: 'text-warning' },
   { id: 'manufacturing', name: '制造业', icon: Zap, color: 'text-foreground' },
   { id: 'realty', name: '地产物业', icon: Building2, color: 'text-stone-600' },
-  { id: 'hotel', name: '酒店旅游', icon: Layers, color: 'text-cyan-600' },
-  { id: 'media', name: '媒体娱乐', icon: Target, color: 'text-fuchsia-600' },
+  { id: 'hotel', name: '酒店旅游', icon: Layers, color: 'text-primary' },
+  { id: 'media', name: '媒体娱乐', icon: Target, color: 'text-chart-4' },
   { id: 'legal', name: '法律服务', icon: Shield, color: 'text-neutral-600' },
   { id: 'agri', name: '农业畜牧', icon: Target, color: 'text-lime-600' },
-  { id: 'gov', name: '政府公共', icon: Shield, color: 'text-rose-600' },
+  { id: 'gov', name: '政府公共', icon: Shield, color: 'text-destructive' },
   { id: 'tech', name: '科技互联', icon: Zap, color: 'text-violet-600' },
-  { id: 'env', name: '环保环卫', icon: Target, color: 'text-teal-600' },
-  { id: 'sports', name: '体育健身', icon: Target, color: 'text-orange-600' },
-  { id: 'publish', name: '出版传媒', icon: BookOpen, color: 'text-amber-600' },
-  { id: 'beauty', name: '美业服务', icon: Scissors, color: 'text-pink-600' },
-  { id: 'team', name: '小微团队', icon: Users, color: 'text-blue-600' },
+  { id: 'env', name: '环保环卫', icon: Target, color: 'text-success' },
+  { id: 'sports', name: '体育健身', icon: Target, color: 'text-warning' },
+  { id: 'publish', name: '出版传媒', icon: BookOpen, color: 'text-warning' },
+  { id: 'beauty', name: '美业服务', icon: Scissors, color: 'text-chart-4' },
+  { id: 'team', name: '小微团队', icon: Users, color: 'text-primary' },
 ];
 
 // 快捷提示词
@@ -679,7 +679,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                   className="h-7 w-7 p-0 -mr-2 -mt-1"
                   onClick={e => { e.stopPropagation(); toggleFavorite(template.id); }}
                 >
-                  <Star className={`h-3.5 w-3.5 ${favorites.includes(template.id) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
+                  <Star className={`h-3.5 w-3.5 ${favorites.includes(template.id) ? 'fill-warning text-warning' : 'text-muted-foreground'}`} />
                 </Button>
               </div>
             </CardHeader>
@@ -787,7 +787,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           </CardHeader>
           <CardContent className="space-y-4">
             {/* 业务背景 */}
-            <div className="p-3 bg-muted/50 rounded-lg">
+            <div className="p-3 bg-muted/50 rounded-md">
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen className="h-4 w-4 text-primary" />
                 <span className="font-medium text-sm">业务背景</span>
@@ -796,9 +796,9 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             </div>
 
             {/* 业务目标 */}
-            <div className="p-3 bg-muted/50 rounded-lg">
+            <div className="p-3 bg-muted/50 rounded-md">
               <div className="flex items-center gap-2 mb-1">
-                <Target className="h-4 w-4 text-green-600" />
+                <Target className="h-4 w-4 text-success" />
                 <span className="font-medium text-sm">业务目标</span>
               </div>
               <p className="text-sm text-muted-foreground">{doc.businessGoal}</p>
@@ -807,7 +807,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             {/* 数据表方案 */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Table className="h-4 w-4 text-blue-600" />
+                <Table className="h-4 w-4 text-primary" />
                 <span className="font-medium text-sm">数据表方案（{doc.tableSchemes.length}张）</span>
               </div>
               <div className="space-y-2">
@@ -830,7 +830,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             {/* 仪表盘配置 */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <LayoutDashboard className="h-4 w-4 text-purple-600" />
+                <LayoutDashboard className="h-4 w-4 text-chart-4" />
                 <span className="font-medium text-sm">仪表盘配置</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -846,7 +846,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             {/* 工作流配置 */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <GitBranch className="h-4 w-4 text-orange-600" />
+                <GitBranch className="h-4 w-4 text-warning" />
                 <span className="font-medium text-sm">工作流配置</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
@@ -864,7 +864,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             {/* 权限配置 */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Shield className="h-4 w-4 text-red-600" />
+                <Shield className="h-4 w-4 text-destructive" />
                 <span className="font-medium text-sm">权限配置</span>
               </div>
               <div className="space-y-1">
@@ -937,7 +937,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
       {/* 主内容区 */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* 左侧：对话区 */}
-        <div className="flex-1 flex flex-col min-w-0 border rounded-lg">
+        <div className="flex-1 flex flex-col min-w-0 border rounded-md">
           {/* 对话消息 */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
             {chatMessages.length === 0 && (
@@ -948,7 +948,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                   AI 将根据你的需求生成标准化表格方案
                 </p>
                 {selectedScene && (
-                  <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm text-left max-w-md mx-auto">
+                  <div className="mt-4 p-3 bg-muted/50 rounded-md text-sm text-left max-w-md mx-auto">
                     <p className="font-medium mb-1">已选择场景：{selectedScene.name}</p>
                     <p className="text-muted-foreground">{selectedScene.usage}</p>
                   </div>
@@ -981,7 +981,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-lg px-4 py-3 text-sm ${
+                  className={`max-w-[85%] rounded-md px-4 py-3 text-sm ${
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted/50'
@@ -999,7 +999,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
 
             {isGenerating && (
               <div className="flex justify-start">
-                <div className="bg-muted/50 rounded-lg px-4 py-3 space-y-2">
+                <div className="bg-muted/50 rounded-md px-4 py-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">{currentBuildStep || 'AI 正在分析需求...'}</span>
@@ -1068,7 +1068,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
 
         {/* 右侧：预览区 */}
         {showPreview && currentScheme && (
-          <div className="w-80 border rounded-lg overflow-hidden flex flex-col">
+          <div className="w-80 border rounded-md overflow-hidden flex flex-col">
             <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
               <span className="font-medium text-sm">方案预览</span>
               <Button variant="ghost" size="sm" className="h-7" onClick={() => setShowPreview(false)}>
@@ -1202,7 +1202,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                         <TableCell className="font-medium">{col.name}</TableCell>
                         <TableCell><Badge variant={badge.variant}>{badge.label}</Badge></TableCell>
                         <TableCell className="text-muted-foreground text-sm">{col.description}</TableCell>
-                        <TableCell>{col.required ? <Check className="h-4 w-4 text-green-600" /> : '-'}</TableCell>
+                        <TableCell>{col.required ? <Check className="h-4 w-4 text-success" /> : '-'}</TableCell>
                       </TableRow>
                     );
                   })}
@@ -1266,8 +1266,8 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   // ============= 渲染：完成页面 =============
   const renderConfirmPage = () => (
     <div className="flex flex-col items-center justify-center py-12 space-y-4">
-      <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-        <Check className="h-8 w-8 text-green-600" />
+      <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center">
+        <Check className="h-8 w-8 text-success" />
       </div>
       <h2 className="text-xl font-semibold">表格已生成</h2>
       <p className="text-muted-foreground">Excel文件已准备好，可以开始使用了</p>

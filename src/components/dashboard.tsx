@@ -397,16 +397,16 @@ export function Dashboard({ data, analysis }: DashboardProps) {
 
       {/* 图表联动筛选提示 */}
       {linkedFilter && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-          <Filter className="w-3.5 h-3.5 text-blue-600" />
-          <span className="text-xs text-blue-700">
+        <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-md">
+          <Filter className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs text-primary">
             联动筛选: <strong>{linkedFilter.field}</strong> = <strong>{linkedFilter.value}</strong>
           </span>
-          <span className="text-xs text-blue-500">（点击图表数据点触发，所有图表同步更新）</span>
+          <span className="text-xs text-primary">（点击图表数据点触发，所有图表同步更新）</span>
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-xs text-blue-600 hover:text-blue-800"
+            className="h-6 text-xs text-primary hover:text-primary/80"
             onClick={() => setChartType('detail')}
           >
             查看明细
@@ -414,7 +414,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-xs ml-auto text-blue-600 hover:text-blue-800"
+            className="h-6 text-xs ml-auto text-primary hover:text-primary/80"
             onClick={clearLinkedFilter}
           >
             清除联动
@@ -541,7 +541,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                     </div>
                   </div>
                   {/* 表格 */}
-                  <div className="overflow-x-auto border rounded-lg">
+                  <div className="overflow-x-auto border rounded-md">
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="bg-muted/30">
@@ -572,7 +572,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                       </thead>
                       <tbody>
                         {detailPagedRows.map((row, i) => (
-                          <tr key={i} className="border-t hover:bg-blue-50/50">
+                          <tr key={i} className="border-t hover:bg-primary/5/50">
                             {data.headers.map(h => (
                               <td key={h} className="px-3 py-1.5 whitespace-nowrap max-w-[200px] truncate">
                                 {String(row[h] ?? '')}
@@ -626,9 +626,9 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                       const percent = topData[0] ? (value / Number(topData[0][widget.yField] || topData[0].value || 1)) * 100 : 0;
                       
                       const rankIcons = [
-                        <Crown key="crown" className="w-4 h-4 text-yellow-500" />,
+                        <Crown key="crown" className="w-4 h-4 text-warning" />,
                         <Medal key="medal" className="w-4 h-4 text-muted-foreground" />,
-                        <Medal key="medal2" className="w-4 h-4 text-amber-600" />,
+                        <Medal key="medal2" className="w-4 h-4 text-warning" />,
                       ];
                       
                       return (
@@ -695,7 +695,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                   <div className="text-center py-4">
                     <div className="grid grid-cols-4 gap-2">
                       {timeBlocks.map((block, idx) => (
-                        <div key={idx} className="bg-primary/5 rounded-lg p-3">
+                        <div key={idx} className="bg-primary/5 rounded-md p-3">
                           <div className="text-3xl font-bold text-primary">
                             {String(block.value).padStart(2, '0')}
                           </div>
@@ -719,10 +719,10 @@ export function Dashboard({ data, analysis }: DashboardProps) {
             const percent = Math.min((currentValue / maxValue) * 100, 100);
             
             const getStatusColor = () => {
-              if (percent >= 100) return 'text-green-500';
+              if (percent >= 100) return 'text-success';
               if (percent >= 70) return 'text-primary';
-              if (percent >= 30) return 'text-yellow-500';
-              return 'text-red-500';
+              if (percent >= 30) return 'text-warning';
+              return 'text-destructive';
             };
             
             return (
@@ -751,10 +751,10 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                       <div className="h-4 bg-muted rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full transition-all ${
-                            percent >= 100 ? 'bg-green-500' :
+                            percent >= 100 ? 'bg-success' :
                             percent >= 70 ? 'bg-primary' :
-                            percent >= 30 ? 'bg-yellow-500' :
-                            'bg-red-500'
+                            percent >= 30 ? 'bg-warning' :
+                            'bg-destructive'
                           }`}
                           style={{ width: `${percent}%` }}
                         />
@@ -787,10 +787,10 @@ export function Dashboard({ data, analysis }: DashboardProps) {
             const npsScore = Math.round(promoterPct - detractorPct);
             
             const getNpsLevel = () => {
-              if (npsScore >= 70) return { label: '优秀', color: 'text-green-500', bg: 'bg-green-500' };
+              if (npsScore >= 70) return { label: '优秀', color: 'text-success', bg: 'bg-success' };
               if (npsScore >= 50) return { label: '良好', color: 'text-primary', bg: 'bg-primary' };
-              if (npsScore >= 30) return { label: '一般', color: 'text-yellow-500', bg: 'bg-yellow-500' };
-              return { label: '需改进', color: 'text-red-500', bg: 'bg-red-500' };
+              if (npsScore >= 30) return { label: '一般', color: 'text-warning', bg: 'bg-warning' };
+              return { label: '需改进', color: 'text-destructive', bg: 'bg-destructive' };
             };
             
             const level = getNpsLevel();
@@ -812,11 +812,11 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-20 text-xs text-green-600 flex items-center gap-1">
+                      <div className="w-20 text-xs text-success flex items-center gap-1">
                         <TrendingUp className="w-3 h-3" /> 推荐者
                       </div>
-                      <div className="flex-1 h-4 bg-green-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500" style={{ width: `${promoterPct}%` }} />
+                      <div className="flex-1 h-4 bg-success/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-success" style={{ width: `${promoterPct}%` }} />
                       </div>
                       <span className="text-xs w-12 text-right">{promoterPct.toFixed(1)}%</span>
                     </div>
@@ -825,16 +825,16 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                         <Minus className="w-3 h-3" /> 被动者
                       </div>
                       <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-gray-400" style={{ width: `${passivePct}%` }} />
+                        <div className="h-full bg-muted-foreground/30" style={{ width: `${passivePct}%` }} />
                       </div>
                       <span className="text-xs w-12 text-right">{passivePct.toFixed(1)}%</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-20 text-xs text-red-600 flex items-center gap-1">
+                      <div className="w-20 text-xs text-destructive flex items-center gap-1">
                         <TrendingDown className="w-3 h-3" /> 贬损者
                       </div>
-                      <div className="flex-1 h-4 bg-red-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500" style={{ width: `${detractorPct}%` }} />
+                      <div className="flex-1 h-4 bg-destructive/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-destructive" style={{ width: `${detractorPct}%` }} />
                       </div>
                       <span className="text-xs w-12 text-right">{detractorPct.toFixed(1)}%</span>
                     </div>
@@ -863,7 +863,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
           // ==================== 预测分析组件 ====================
           if (widget.type === 'forecast') {
             const { forecastValue, forecastTrend, forecastGrowth } = widget;
-            const trendColor = forecastTrend === 'up' ? 'text-green-600' : forecastTrend === 'down' ? 'text-red-600' : 'text-foreground';
+            const trendColor = forecastTrend === 'up' ? 'text-success' : forecastTrend === 'down' ? 'text-destructive' : 'text-foreground';
             const trendIcon = forecastTrend === 'up' ? <TrendingUp className="w-4 h-4" /> : forecastTrend === 'down' ? <TrendingDown className="w-4 h-4" /> : <Minus className="w-4 h-4" />;
             const trendLabel = forecastTrend === 'up' ? '上升' : forecastTrend === 'down' ? '下降' : '平稳';
 
@@ -877,11 +877,11 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                    <div className="text-center p-3 bg-muted/50 rounded-md">
                       <p className="text-xs text-muted-foreground mb-1">下一周期预测</p>
                       <p className="text-2xl font-bold">{forecastValue?.toLocaleString() || '-'}</p>
                     </div>
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                    <div className="text-center p-3 bg-muted/50 rounded-md">
                       <p className="text-xs text-muted-foreground mb-1">趋势方向</p>
                       <div className={`flex items-center justify-center gap-1 ${trendColor}`}>
                         {trendIcon}
@@ -998,7 +998,7 @@ function PivotTableView({
   const { rowValues, colValues, matrix, aggregate, rowTotals, colTotals } = pivotData;
 
   return (
-    <div className="overflow-x-auto border rounded-lg">
+    <div className="overflow-x-auto border rounded-md">
       <table className="w-full text-xs">
         <thead>
           <tr className="bg-muted/30">
@@ -1006,28 +1006,28 @@ function PivotTableView({
             {colValues.map(cv => (
               <th key={cv} className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">{cv}</th>
             ))}
-            <th className="px-3 py-2 text-right font-medium text-blue-600 whitespace-nowrap border-l">合计</th>
+            <th className="px-3 py-2 text-right font-medium text-primary whitespace-nowrap border-l">合计</th>
           </tr>
         </thead>
         <tbody>
           {rowValues.map(rv => (
-            <tr key={rv} className="border-t hover:bg-blue-50/30">
+            <tr key={rv} className="border-t hover:bg-primary/5/30">
               <td className="px-3 py-1.5 font-medium text-foreground border-r whitespace-nowrap">{rv}</td>
               {colValues.map(cv => (
                 <td key={cv} className="px-3 py-1.5 text-right text-foreground">
                   {aggregate(matrix[rv]?.[cv] || [])}
                 </td>
               ))}
-              <td className="px-3 py-1.5 text-right font-medium text-blue-600 border-l">{rowTotals[rv]}</td>
+              <td className="px-3 py-1.5 text-right font-medium text-primary border-l">{rowTotals[rv]}</td>
             </tr>
           ))}
           {/* 合计行 */}
           <tr className="border-t bg-muted/30 font-medium">
-            <td className="px-3 py-1.5 text-blue-600 border-r">合计</td>
+            <td className="px-3 py-1.5 text-primary border-r">合计</td>
             {colValues.map(cv => (
-              <td key={cv} className="px-3 py-1.5 text-right text-blue-600">{colTotals[cv]}</td>
+              <td key={cv} className="px-3 py-1.5 text-right text-primary">{colTotals[cv]}</td>
             ))}
-            <td className="px-3 py-1.5 text-right text-blue-600 border-l">
+            <td className="px-3 py-1.5 text-right text-primary border-l">
               {aggregate(Object.values(matrix).flatMap(rv => Object.values(rv).flat()))}
             </td>
           </tr>

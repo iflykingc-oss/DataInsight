@@ -353,7 +353,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
                 <button
                   key={ind.id}
                   onClick={() => setSelectedIndustry(ind.id)}
-                  className={`p-3 rounded-lg border text-center transition-all ${
+                  className={`p-3 rounded-md border text-center transition-all ${
                     isActive
                       ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
                       : 'border-border hover:border-primary/30 hover:bg-muted/50'

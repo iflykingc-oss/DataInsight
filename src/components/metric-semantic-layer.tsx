@@ -505,7 +505,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                 {Object.entries(groupedMetrics).map(([cat, metrics]) => {
                   const config = METRIC_CATEGORIES[cat as keyof typeof METRIC_CATEGORIES];
                   return (
-                    <div key={cat} className="bg-muted/30 rounded-lg p-3">
+                    <div key={cat} className="bg-muted/30 rounded-md p-3">
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`text-xs px-2 py-0.5 rounded ${config?.color || 'bg-muted text-foreground'}`}>
                           {config?.label || cat}
@@ -608,7 +608,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                   {savedMetrics.map((metric, idx) => {
                     const config = METRIC_CATEGORIES[metric.category as keyof typeof METRIC_CATEGORIES];
                     return (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div key={idx} className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
                         <div className="flex items-center gap-3">
                           <Badge variant="outline" className={`text-xs ${config?.color || ''}`}>
                             {config?.label}
@@ -683,7 +683,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
 
           {/* 指标基本信息 */}
           {selectedMetric && (
-            <div className="bg-gradient-to-r from-muted/50 to-muted rounded-lg p-4 space-y-2">
+            <div className="bg-gradient-to-r from-muted/50 to-muted rounded-md p-4 space-y-2">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">计算公式：</span>
@@ -710,7 +710,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
           )}
 
           {/* 对话历史 */}
-          <ScrollArea className="flex-1 min-h-[200px] max-h-[300px] border rounded-lg p-3 bg-muted/30">
+          <ScrollArea className="flex-1 min-h-[200px] max-h-[300px] border rounded-md p-3 bg-muted/30">
             <div className="space-y-3">
               {insightMessages.map((msg, idx) => (
                 <div
@@ -718,7 +718,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-lg p-3 text-sm whitespace-pre-wrap ${
+                    className={`max-w-[85%] rounded-md p-3 text-sm whitespace-pre-wrap ${
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-white border text-foreground'
@@ -730,7 +730,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
               ))}
               {isAnalyzing && (
                 <div className="flex justify-start">
-                  <div className="bg-white border rounded-lg p-3 text-sm text-muted-foreground flex items-center gap-2">
+                  <div className="bg-white border rounded-md p-3 text-sm text-muted-foreground flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     AI 正在分析...
                   </div>
@@ -780,10 +780,10 @@ function MetricCard({
   const Icon = config?.icon || Activity;
 
   return (
-    <div className="border rounded-lg p-4 hover:shadow-sm transition-shadow bg-white">
+    <div className="border rounded-md p-4 hover:shadow-sm transition-shadow bg-white">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          <div className={`w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 ${
             config?.color || 'bg-muted'
           }`}>
             <Icon className="w-5 h-5" />

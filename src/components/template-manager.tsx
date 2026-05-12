@@ -518,7 +518,7 @@ export function TemplateManager({
                   >
                     <CardContent className="p-4">
                       {/* 缩略图占位 */}
-                      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-3 flex items-center justify-center">
+                      <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-md mb-3 flex items-center justify-center">
                         <Icon className="w-8 h-8 text-muted-foreground" />
                       </div>
                       
@@ -575,7 +575,7 @@ export function TemplateManager({
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
                         <div className={cn(
-                          'p-3 rounded-lg',
+                          'p-3 rounded-md',
                           template.isBuiltIn ? 'bg-blue-100' : 'bg-muted'
                         )}>
                           <Icon className={cn(
@@ -699,7 +699,7 @@ export function TemplateManager({
                   <Card key={template.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
-                        <div className="p-3 bg-muted rounded-lg">
+                        <div className="p-3 bg-muted rounded-md">
                           <Icon className="w-6 h-6 text-foreground" />
                         </div>
                         

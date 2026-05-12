@@ -24,7 +24,7 @@ export function SkillPanel({
   return (
     <div className={cn('flex flex-col gap-4', className)}>
       {problemReport && problemReport.hasProblems && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">🔍</span>
             <h3 className="font-medium text-amber-800">检测到 {problemReport.problems.length} 个问题</h3>
@@ -73,7 +73,7 @@ export function SkillPanel({
             key={skill.id}
             onClick={() => onSkillClick(skill)}
             className={cn(
-              'flex flex-col items-center justify-center gap-1 p-3 rounded-lg border',
+              'flex flex-col items-center justify-center gap-1 p-3 rounded-md border',
               'transition-all duration-150 hover:shadow-md',
               'bg-white hover:bg-muted/30 border-border'
             )}
@@ -111,7 +111,7 @@ export function ExecutionLog({ log, className }: ExecutionLogProps) {
   }
 
   return (
-    <div className={cn('bg-muted/30 rounded-lg p-3', className)}>
+    <div className={cn('bg-muted/30 rounded-md p-3', className)}>
       <h4 className="text-sm font-medium text-foreground mb-2">执行日志</h4>
       <div className="space-y-1">
         {log.map((entry, index) => (
@@ -160,11 +160,11 @@ export function ConfirmationDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
-      <div className="relative bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+      <div className="relative bg-white rounded-md shadow-xl p-6 w-full max-w-md mx-4">
         <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
         <p className="text-foreground mb-4">{message}</p>
         {details && details.length > 0 && (
-          <div className="bg-muted/30 rounded-lg p-3 mb-4">
+          <div className="bg-muted/30 rounded-md p-3 mb-4">
             <ul className="text-sm text-foreground space-y-1">
               {details.map((detail, index) => (
                 <li key={index} className="flex items-center gap-2">
@@ -178,13 +178,13 @@ export function ConfirmationDialog({
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-foreground bg-muted rounded-lg hover:bg-muted"
+            className="px-4 py-2 text-sm font-medium text-foreground bg-muted rounded-md hover:bg-muted"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
           >
             {confirmLabel}
           </button>
@@ -210,7 +210,7 @@ export function ExportReminder({
   onDismiss,
 }: ExportReminderProps) {
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
       <div className="flex items-start gap-3">
         <span className="text-xl">⚠️</span>
         <div className="flex-1">
@@ -219,19 +219,19 @@ export function ExportReminder({
           <div className="flex flex-wrap gap-2">
             <button
               onClick={onExportCSV}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700"
+              className="px-3 py-1.5 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700"
             >
               导出 CSV
             </button>
             <button
               onClick={onExportExcel}
-              className="px-3 py-1.5 text-sm font-medium text-amber-700 bg-white border border-amber-300 rounded-lg hover:bg-amber-50"
+              className="px-3 py-1.5 text-sm font-medium text-amber-700 bg-white border border-amber-300 rounded-md hover:bg-amber-50"
             >
               导出 Excel
             </button>
             <button
               onClick={onContinue}
-              className="px-3 py-1.5 text-sm font-medium text-foreground bg-muted rounded-lg hover:bg-muted"
+              className="px-3 py-1.5 text-sm font-medium text-foreground bg-muted rounded-md hover:bg-muted"
             >
               继续处理
             </button>

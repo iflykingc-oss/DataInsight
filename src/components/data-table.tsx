@@ -425,7 +425,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
     <div className="space-y-4">
       {/* 批量操作栏 */}
       {selectedRows.size > 0 && (
-        <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+        <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-md">
           <Badge variant="secondary" className="text-xs">
             已选择 {selectedRows.size} 条
           </Badge>
@@ -497,17 +497,17 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-10 text-center bg-[#F2F3F5]">
+                <TableHead className="w-10 text-center bg-muted">
                   <Checkbox 
                     checked={selectedRows.size === paginatedData.length && paginatedData.length > 0}
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
-                <TableHead className="w-12 text-center bg-[#F2F3F5]">#</TableHead>
+                <TableHead className="w-12 text-center bg-muted">#</TableHead>
                 {data.headers.map(header => (
                   <TableHead
                     key={header}
-                    className="cursor-pointer hover:bg-[#F7F8FA] bg-[#F2F3F5]"
+                    className="cursor-pointer hover:bg-muted/50 bg-muted"
                     onClick={() => handleSort(header)}
                   >
                     <div className="flex items-center gap-1">
@@ -542,8 +542,12 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
             <TableBody>
               {paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={data.headers.length + 1} className="text-center py-8 text-muted-foreground text-xs">
-                    没有找到匹配的数据
+                  <TableCell colSpan={data.headers.length + 1} className="text-center py-16">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="h-8 w-8 text-muted-foreground/30" />
+                      <p className="text-sm text-muted-foreground">没有找到匹配的数据</p>
+                      <p className="text-xs text-muted-foreground/60">尝试调整筛选条件或搜索关键词</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -555,7 +559,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                     <TableRow 
                       key={`row-${rowIndex}`} 
                       className={cn(
-                        'h-10 hover:bg-[#F7F8FA] cursor-default',
+                        'h-10 hover:bg-muted/50 cursor-default',
                         selectedRows.has(actualRowIndex) && 'bg-primary/4'
                       )}
                       onContextMenu={(e) => handleContextMenu(e, actualRowIndex)}
@@ -617,7 +621,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
       {/* 右键菜单 */}
       {contextMenuPos && (
         <div
-          className="fixed z-50 bg-background border rounded-lg shadow-lg py-1 min-w-[180px]"
+          className="fixed z-50 bg-background border rounded-md shadow-lg py-1 min-w-[180px]"
           style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
         >
           <DropdownMenuItem onClick={() => { setDetailRow({ row: data.rows[contextMenuPos.rowIndex], index: contextMenuPos.rowIndex }); setContextMenuPos(null); }}>
@@ -697,7 +701,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
               {/* 字段详情 */}
               <div className="grid gap-3">
                 {data.headers.map(header => (
-                  <div key={header} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                  <div key={header} className="flex items-start gap-2 p-2 bg-muted/50 rounded-md">
                     <Label className="w-32 shrink-0 font-medium">{header}</Label>
                     <span className="flex-1 break-all">
                       {detailRow.row[header] !== null && detailRow.row[header] !== undefined 
@@ -710,14 +714,14 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
               
               {/* 智能总结 */}
               <div className="border-t pt-4">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-4 h-4 text-primary" />
                   <span className="font-medium">智能总结</span>
                   {summaryLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
                 </div>
                 
                 {getRecordSummary(detailRow.index) ? (
-                  <div className="p-4 bg-primary/5 rounded-lg">
+                  <div className="p-4 bg-primary/5 rounded-md">
                     <p className="text-sm mb-2">{getRecordSummary(detailRow.index)?.summary}</p>
                   </div>
                 ) : (
@@ -815,7 +819,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                 placeholder="例如：总结这些记录的共同点、找出异常值、分析趋势..."
                 value={aiAnalyzeQuery}
                 onChange={e => setAIAnalyzeQuery(e.target.value)}
-                className="min-h-[80px]"
+                className="min-h-20"
               />
               <div className="flex flex-wrap gap-2 mt-2">
                 {['总结关键信息', '找出异常值', '对比分析', '趋势预测'].map(q => (
@@ -848,7 +852,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
               )}
             </Button>
             {aiAnalyzeResult && (
-              <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="p-4 bg-muted/50 rounded-md">
                 <p className="text-sm whitespace-pre-wrap">{aiAnalyzeResult}</p>
               </div>
             )}

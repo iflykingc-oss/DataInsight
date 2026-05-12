@@ -361,7 +361,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
             </>
           )}
 
-          <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700">
+          <label className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700">
             <Upload className="w-4 h-4" />
             <span>上传文件</span>
             <input
@@ -397,7 +397,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
       </header>
 
       {showExportPanel && data && (
-        <div className="absolute right-4 top-16 z-30 bg-white rounded-lg border shadow-lg p-4 w-72">
+        <div className="absolute right-4 top-16 z-30 bg-white rounded-md border shadow-lg p-4 w-72">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-medium">导出数据</h3>
             <button onClick={() => setShowExportPanel(false)} className="text-muted-foreground hover:text-foreground">
@@ -409,7 +409,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
               <button
                 key={preset.id}
                 onClick={() => handleExport(preset.options.format as 'csv' | 'xlsx' | 'json')}
-                className="w-full p-3 text-left border rounded-lg hover:bg-muted/30"
+                className="w-full p-3 text-left border rounded-md hover:bg-muted/30"
               >
                 <div className="font-medium text-sm">{preset.name}</div>
                 <div className="text-xs text-muted-foreground mt-0.5">{preset.description}</div>
@@ -488,23 +488,23 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
 
               {viewMode === 'analysis' && problemReport && (
                 <div className="flex-1 overflow-auto">
-                  <div className="bg-white rounded-lg border p-4">
+                  <div className="bg-white rounded-md border p-4">
                     <h2 className="text-lg font-medium mb-4">数据健康度报告</h2>
 
                     <div className="grid grid-cols-4 gap-4 mb-6">
-                      <div className="p-4 bg-muted/30 rounded-lg text-center">
+                      <div className="p-4 bg-muted/30 rounded-md text-center">
                         <div className="text-2xl font-bold text-blue-600">{problemReport.totalScore}</div>
                         <div className="text-sm text-muted-foreground">健康度得分</div>
                       </div>
-                      <div className="p-4 bg-muted/30 rounded-lg text-center">
+                      <div className="p-4 bg-muted/30 rounded-md text-center">
                         <div className="text-2xl font-bold text-green-600">{problemReport.statistics.totalRows}</div>
                         <div className="text-sm text-muted-foreground">数据行数</div>
                       </div>
-                      <div className="p-4 bg-muted/30 rounded-lg text-center">
+                      <div className="p-4 bg-muted/30 rounded-md text-center">
                         <div className="text-2xl font-bold text-orange-600">{problemReport.problems.length}</div>
                         <div className="text-sm text-muted-foreground">发现问题</div>
                       </div>
-                      <div className="p-4 bg-muted/30 rounded-lg text-center">
+                      <div className="p-4 bg-muted/30 rounded-md text-center">
                         <div className="text-2xl font-bold text-purple-600">
                           {problemReport.problems.filter(p => p.autoFixable).length}
                         </div>
@@ -517,7 +517,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                         <div
                           key={index}
                           className={cn(
-                            'p-4 rounded-lg border',
+                            'p-4 rounded-md border',
                             problem.severity === 'critical' && 'bg-red-50 border-red-200',
                             problem.severity === 'high' && 'bg-orange-50 border-orange-200',
                             problem.severity === 'medium' && 'bg-yellow-50 border-yellow-200',
@@ -553,7 +553,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                     </div>
 
                     {problemReport.recommendations.length > 0 && (
-                      <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+                      <div className="mt-6 p-4 bg-muted/30 rounded-md">
                         <h3 className="font-medium mb-2">优化建议</h3>
                         <ul className="space-y-1">
                           {problemReport.recommendations.map((rec, i) => (
@@ -571,7 +571,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
 
               {viewMode === 'export' && (
                 <div className="flex-1 overflow-auto">
-                  <div className="bg-white rounded-lg border p-6">
+                  <div className="bg-white rounded-md border p-6">
                     <h2 className="text-lg font-medium mb-4">导出数据</h2>
                     <p className="text-sm text-muted-foreground mb-6">
                       选择导出格式后，数据将下载到您的设备。注意：导出的数据不包含任何隐私追踪信息。
@@ -582,7 +582,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                         <button
                           key={preset.id}
                           onClick={() => handleExport(preset.options.format as 'csv' | 'xlsx' | 'json')}
-                          className="p-4 border rounded-lg text-left hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                          className="p-4 border rounded-md text-left hover:border-blue-500 hover:bg-blue-50 transition-colors"
                         >
                           <div className="font-medium mb-1">{preset.name}</div>
                           <div className="text-sm text-muted-foreground">{preset.description}</div>
@@ -590,7 +590,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                       ))}
                     </div>
 
-                    <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="mt-6 p-4 bg-green-50 rounded-md border border-green-200">
                       <div className="flex items-start gap-2">
                         <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
                         <div>
@@ -633,7 +633,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
                     value={freeModeInput}
                     onChange={(e) => setFreeModeInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleFreeModeSubmit()}
-                    className="w-full px-3 py-2 pr-10 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 pr-10 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     onClick={handleFreeModeSubmit}
@@ -740,7 +740,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
               <p className="text-sm text-muted-foreground mb-6">
                 支持 Excel (.xlsx, .xls) 和 CSV 文件
               </p>
-              <label className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700">
+              <label className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-md cursor-pointer hover:bg-blue-700">
                 <Upload className="w-5 h-5" />
                 选择文件
                 <input
@@ -754,21 +754,21 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
 
             <div className="mt-12 grid grid-cols-3 gap-8 max-w-3xl">
               <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-md flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">🔍</span>
                 </div>
                 <h3 className="font-medium mb-1">智能检测</h3>
                 <p className="text-xs text-muted-foreground">自动识别数据问题并提供修复建议</p>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 bg-green-100 rounded-md flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">⚡</span>
                 </div>
                 <h3 className="font-medium mb-1">一键处理</h3>
                 <p className="text-xs text-muted-foreground">复杂的表格操作一句话就能完成</p>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 bg-purple-100 rounded-md flex items-center justify-center mx-auto mb-3">
                   <span className="text-2xl">🔒</span>
                 </div>
                 <h3 className="font-medium mb-1">隐私保护</h3>
@@ -781,7 +781,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
 
       {needsConfirmation && selectedSkill && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+          <div className="bg-white rounded-md shadow-xl w-full max-w-md mx-4">
             <div className="p-4 border-b">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-yellow-500" />

@@ -187,7 +187,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
               <div
                 key={module.id}
                 className={cn(
-                  'flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer',
+                  'flex items-start gap-3 p-3 rounded-md border transition-colors cursor-pointer',
                   module.checked ? 'border-primary/30 bg-primary/5' : 'border-border hover:bg-muted'
                 )}
                 onClick={() => toggleModule(module.id)}
@@ -323,7 +323,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                       <div
                         key={idx}
                         className={cn(
-                          'p-3 rounded-lg border-l-4',
+                          'p-3 rounded-md border-l-4',
                           finding.severity === 'critical' && 'bg-red-50 border-l-red-500',
                           finding.severity === 'warning' && 'bg-orange-50 border-l-orange-500',
                           finding.severity === 'info' && 'bg-blue-50 border-l-blue-500',
@@ -402,7 +402,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                 >
                   <div className="space-y-2">
                     {deep.distributions.map((d, idx) => (
-                      <div key={idx} className="p-3 bg-muted rounded-lg">
+                      <div key={idx} className="p-3 bg-muted rounded-md">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-sm">{d.field}</span>
                           <Badge variant="outline" className="text-xs">
@@ -429,7 +429,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                 >
                   <div className="space-y-2">
                     {deep.trends.map((t, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div key={idx} className="flex items-center justify-between p-3 bg-muted rounded-md">
                         <div>
                           <span className="font-medium text-sm">{t.field}</span>
                           <p className="text-xs text-muted-foreground">{t.description}</p>
@@ -459,7 +459,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                 >
                   <div className="space-y-2">
                     {deep.recommendedCharts.slice(0, 6).map((chart, idx) => (
-                      <div key={idx} className="p-3 bg-muted rounded-lg">
+                      <div key={idx} className="p-3 bg-muted rounded-md">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-sm">{chart.title}</span>
                           <Badge variant="outline" className={cn(
@@ -488,7 +488,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                   <div className="space-y-2">
                     {deep.actionItems.slice(0, 10).map((item, idx) => (
                       <div key={idx} className={cn(
-                        'p-3 rounded-lg border-l-4',
+                        'p-3 rounded-md border-l-4',
                         item.priority === 'high' ? 'bg-red-50 border-l-red-500' :
                         item.priority === 'medium' ? 'bg-orange-50 border-l-orange-500' :
                         'bg-blue-50 border-l-blue-500'
@@ -542,7 +542,7 @@ function ReportSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-md">
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
@@ -565,7 +565,7 @@ function ReportSection({
 // 指标卡片
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-3 bg-muted rounded-lg text-center">
+    <div className="p-3 bg-muted rounded-md text-center">
       <div className="text-2xl font-bold text-primary">{value}</div>
       <div className="text-xs text-muted-foreground">{label}</div>
     </div>

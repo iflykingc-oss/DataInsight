@@ -51,7 +51,7 @@ export function KanbanView({ data }: KanbanViewProps) {
   return (
     <div className="space-y-4">
       {/* 视图配置栏 */}
-      <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
+      <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-md">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <LayoutGrid className="w-4 h-4" />
           <span>看板视图</span>

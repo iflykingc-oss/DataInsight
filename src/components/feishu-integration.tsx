@@ -146,7 +146,7 @@ export function FeishuIntegration({ onImportData }: FeishuIntegrationProps) {
               </div>
               
               {isConnected && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-md">
                   <div className="flex items-center gap-2 text-green-700">
                     <Check className="w-5 h-5" />
                     <span className="font-medium">连接成功</span>
@@ -161,7 +161,7 @@ export function FeishuIntegration({ onImportData }: FeishuIntegrationProps) {
             <TabsContent value="guide" className="space-y-4">
               <div className="space-y-4">
                 {integrationGuide.map(item => (
-                  <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
+                  <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-md">
                     <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
                       {item.step}
                     </div>
@@ -202,7 +202,7 @@ export function FeishuIntegration({ onImportData }: FeishuIntegrationProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="relative">
-                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto">
+                    <pre className="bg-gray-900 text-gray-100 p-4 rounded-md text-xs overflow-x-auto">
 {`// 获取多维表格数据
 const response = await fetch(
   \`https://open.feishu.cn/open-apis/bitable/v1/apps/\${appToken}/tables\`,
@@ -251,7 +251,7 @@ const data = await response.json();`)}
                 </Button>
               </div>
               
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border rounded-md overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>

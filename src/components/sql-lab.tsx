@@ -373,7 +373,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
       {/* 头部 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Database className="w-5 h-5 text-blue-500" />
+          <Database className="w-5 h-5 text-primary" />
           <h3 className="font-medium">SQL Lab</h3>
           <Badge variant="outline" className="text-xs">
             SQLite
@@ -411,9 +411,9 @@ export function SqlLab({ data, className }: SqlLabProps) {
                 <div key={schema.name}>
                   <button
                     className={cn(
-                      'w-full flex items-center gap-2 text-sm font-medium p-2 rounded-lg transition-colors',
+                      'w-full flex items-center gap-2 text-sm font-medium p-2 rounded-md transition-colors',
                       selectedTable === schema.name
-                        ? 'bg-blue-50 text-blue-700'
+                        ? 'bg-primary/5 text-primary'
                         : 'hover:bg-muted/30'
                     )}
                     onClick={() => setSelectedTable(schema.name)}
@@ -459,7 +459,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
                 history.map(entry => (
                   <div
                     key={entry.id}
-                    className="group flex items-start gap-2 p-2 rounded-lg hover:bg-muted/30 cursor-pointer transition-colors"
+                    className="group flex items-start gap-2 p-2 rounded-md hover:bg-muted/30 cursor-pointer transition-colors"
                   >
                     <button
                       className="flex-1 text-left"
@@ -467,9 +467,9 @@ export function SqlLab({ data, className }: SqlLabProps) {
                     >
                       <div className="flex items-center gap-1.5 mb-1">
                         {entry.success ? (
-                          <CheckCircle2 className="w-3 h-3 text-green-500" />
+                          <CheckCircle2 className="w-3 h-3 text-success" />
                         ) : (
-                          <AlertCircle className="w-3 h-3 text-red-500" />
+                          <AlertCircle className="w-3 h-3 text-destructive" />
                         )}
                         <span className="text-xs font-mono text-foreground truncate">
                           {entry.sql.slice(0, 40)}{entry.sql.length > 40 ? '...' : ''}
@@ -481,10 +481,10 @@ export function SqlLab({ data, className }: SqlLabProps) {
                       </div>
                     </button>
                     <button
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/5 rounded transition-opacity"
                       onClick={() => deleteHistory(entry.id)}
                     >
-                      <Trash2 className="w-3 h-3 text-red-400" />
+                      <Trash2 className="w-3 h-3 text-destructive" />
                     </button>
                   </div>
                 ))
@@ -532,20 +532,20 @@ export function SqlLab({ data, className }: SqlLabProps) {
                   <textarea
                     value={sql}
                     onChange={e => setSql(e.target.value)}
-                    className="w-full h-40 p-3 font-mono text-sm bg-muted/30 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full h-40 p-3 font-mono text-sm bg-muted/30 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary"
                     placeholder="输入 SQL 查询语句..."
                     spellCheck={false}
                   />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {error && (
-                        <div className="flex items-center gap-1.5 text-xs text-red-600">
+                        <div className="flex items-center gap-1.5 text-xs text-destructive">
                           <AlertCircle className="w-3.5 h-3.5" />
                           {error}
                         </div>
                       )}
                       {results !== null && !error && (
-                        <div className="flex items-center gap-1.5 text-xs text-green-600">
+                        <div className="flex items-center gap-1.5 text-xs text-success">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           查询成功 ({executionTime.toFixed(0)}ms)
                         </div>

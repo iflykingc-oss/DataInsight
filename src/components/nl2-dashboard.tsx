@@ -799,11 +799,11 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                   <button
                     key={tpl.id}
                     onClick={() => generateDashboard(tpl.prompt, false)}
-                    className="group p-3 border rounded-xl hover:shadow-md hover:border-purple-300 transition-all text-left"
+                    className="group p-3 border rounded-md hover:shadow-md hover:border-purple-300 transition-all text-left"
                     disabled={isGenerating}
                   >
                     <div className="flex items-center gap-2 mb-1.5">
-                      <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${tpl.color}18` }}>
+                      <div className="p-1.5 rounded-md" style={{ backgroundColor: `${tpl.color}18` }}>
                         <span style={{ color: tpl.color }}>{tpl.icon}</span>
                       </div>
                       <span className="font-medium text-sm">{tpl.name}</span>
@@ -874,7 +874,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                           <Sparkles className="w-3.5 h-3.5 text-purple-600" />
                         </div>
                       )}
-                      <div className={cn('max-w-[85%] rounded-xl p-3', msg.role === 'user' ? 'bg-purple-500 text-white' : 'bg-muted/30 border')}>
+                      <div className={cn('max-w-[85%] rounded-md p-3', msg.role === 'user' ? 'bg-purple-500 text-white' : 'bg-muted/30 border')}>
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                         {msg.dashboard && (
                           <div className="mt-2 space-y-1.5">
@@ -910,7 +910,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                       <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
                         <Sparkles className="w-3.5 h-3.5 text-purple-600" />
                       </div>
-                      <div className="bg-muted/30 border rounded-xl p-3">
+                      <div className="bg-muted/30 border rounded-md p-3">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           {generationStep || 'AI 正在生成中...'}
@@ -1082,7 +1082,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                       </div>
                       {/* 业务解读 */}
                       {chart.insight && (
-                        <div className="mt-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100">
+                        <div className="mt-2 p-2 rounded-md bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100">
                           <div className="flex items-start gap-1.5">
                             <Lightbulb className="w-3 h-3 text-blue-500 mt-0.5 shrink-0" />
                             <p className="text-xs text-blue-800 leading-relaxed line-clamp-3">{chart.insight}</p>
@@ -1154,7 +1154,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                   <CardContent className="p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="p-2 rounded-lg bg-purple-100 shrink-0">
+                        <div className="p-2 rounded-md bg-purple-100 shrink-0">
                           <LayoutDashboard className="w-4 h-4 text-purple-600" />
                         </div>
                         <div className="min-w-0">
@@ -1256,7 +1256,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                     );
                     setCurrentDashboard({ ...currentDashboard, charts: updated });
                   }}
-                  className="w-full h-20 px-3 py-2 text-xs border rounded-lg resize-none"
+                  className="w-full h-20 px-3 py-2 text-xs border rounded-md resize-none"
                   placeholder="输入这条数据的业务解读..."
                 />
               </div>

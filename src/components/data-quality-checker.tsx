@@ -692,19 +692,19 @@ export function DataQualityChecker({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="p-2 bg-green-50 rounded-lg">
+                    <div className="p-2 bg-green-50 rounded-md">
                       <p className="text-2xl font-bold text-green-600">{report.summary.passedFields}</p>
                       <p className="text-xs text-muted-foreground">通过</p>
                     </div>
-                    <div className="p-2 bg-yellow-50 rounded-lg">
+                    <div className="p-2 bg-yellow-50 rounded-md">
                       <p className="text-2xl font-bold text-yellow-600">{report.summary.warningFields}</p>
                       <p className="text-xs text-muted-foreground">警告</p>
                     </div>
-                    <div className="p-2 bg-red-50 rounded-lg">
+                    <div className="p-2 bg-red-50 rounded-md">
                       <p className="text-2xl font-bold text-red-600">{report.summary.failedFields}</p>
                       <p className="text-xs text-muted-foreground">失败</p>
                     </div>
-                    <div className="p-2 bg-muted/30 rounded-lg">
+                    <div className="p-2 bg-muted/30 rounded-md">
                       <p className="text-2xl font-bold text-foreground">{report.summary.totalFields}</p>
                       <p className="text-xs text-muted-foreground">总字段</p>
                     </div>
@@ -816,7 +816,7 @@ export function DataQualityChecker({
                         </div>
 
                         {check.suggestion && (
-                          <div className="p-3 bg-blue-50 rounded-lg">
+                          <div className="p-3 bg-blue-50 rounded-md">
                             <div className="flex items-start gap-2">
                               <Lightbulb className="w-4 h-4 text-blue-500 mt-0.5" />
                               <p className="text-sm text-blue-700">{check.suggestion}</p>

@@ -565,7 +565,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                           type="button"
                           onClick={() => !opt.restricted && applyRoleTemplate(opt.value)}
                           disabled={opt.restricted}
-                          className={`relative flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
+                          className={`relative flex flex-col items-start p-3 rounded-md border text-left transition-all ${
                             opt.restricted
                               ? 'border-border/50 bg-muted/30 opacity-50 cursor-not-allowed'
                               : formData.role === opt.value

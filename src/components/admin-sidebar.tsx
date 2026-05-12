@@ -42,7 +42,7 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   return (
     <aside
-      className={`flex flex-col h-screen bg-[#13161c] border-r border-white/[0.06] transition-all duration-200 ease-in-out ${
+      className={`flex flex-col h-screen bg-card border-r border-white/[0.06] transition-all duration-200 ease-in-out ${
         collapsed ? 'w-[52px]' : 'w-[200px]'
       }`}
     >

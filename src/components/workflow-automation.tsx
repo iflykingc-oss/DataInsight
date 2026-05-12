@@ -412,7 +412,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                   {isExpanded && (
                     <div className="mt-3 pt-3 border-t space-y-3">
                       {/* 触发器详情 */}
-                      <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="bg-muted/50 rounded-md p-3">
                         <div className="flex items-center gap-2 mb-2">
                           <Zap className="w-4 h-4 text-orange-500" />
                           <span className="text-xs font-medium">触发器</span>
@@ -439,7 +439,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
 
                       {/* 条件详情 */}
                       {rule.conditions && rule.conditions.length > 0 && (
-                        <div className="bg-muted/50 rounded-lg p-3">
+                        <div className="bg-muted/50 rounded-md p-3">
                           <div className="flex items-center gap-2 mb-2">
                             <Filter className="w-4 h-4 text-blue-500" />
                             <span className="text-xs font-medium">触发条件</span>
@@ -455,7 +455,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                       )}
 
                       {/* 操作详情 */}
-                      <div className="bg-muted/50 rounded-lg p-3">
+                      <div className="bg-muted/50 rounded-md p-3">
                         <div className="flex items-center gap-2 mb-2">
                           <GitBranch className="w-4 h-4 text-green-500" />
                           <span className="text-xs font-medium">执行操作</span>
@@ -535,7 +535,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                 onClick={() => createFromTemplate(template)}
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                     <GitBranch className="w-5 h-5 text-primary" />
                   </div>
                   <div className="min-w-0">
@@ -691,7 +691,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                   return (
                     <button
                       key={option.value}
-                      className={`p-3 rounded-lg border text-left transition-colors ${
+                      className={`p-3 rounded-md border text-left transition-colors ${
                         triggerType === option.value
                           ? 'border-primary bg-primary/5'
                           : 'hover:border-muted-foreground/50'
@@ -710,7 +710,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
 
               {/* 触发器配置 */}
               {triggerType === 'field_changed' && (
-                <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="p-3 bg-muted/50 rounded-md">
                   <Label className="text-xs mb-2 block">监控字段</Label>
                   <Select value={triggerField} onValueChange={setTriggerField}>
                     <SelectTrigger>
@@ -726,7 +726,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
               )}
 
               {triggerType === 'scheduled' && (
-                <div className="p-3 bg-muted/50 rounded-lg space-y-3">
+                <div className="p-3 bg-muted/50 rounded-md space-y-3">
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <Label className="text-xs">执行频率</Label>
@@ -802,7 +802,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                 </Button>
               </div>
               {conditions.length === 0 ? (
-                <p className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-md">
                   暂未设置条件，任何触发事件都会执行操作
                 </p>
               ) : (
@@ -868,7 +868,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                   return (
                     <button
                       key={option.value}
-                      className={`p-2 rounded-lg border text-center transition-colors ${
+                      className={`p-2 rounded-md border text-center transition-colors ${
                         actions[activeAction]?.type === option.value
                           ? 'border-primary bg-primary/5'
                           : 'hover:border-muted-foreground/50'
@@ -891,7 +891,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                   return (
                     <div
                       key={i}
-                      className={`p-3 rounded-lg border cursor-pointer ${
+                      className={`p-3 rounded-md border cursor-pointer ${
                         activeAction === i ? 'border-primary' : 'border-border'
                       }`}
                       onClick={() => setActiveAction(i)}

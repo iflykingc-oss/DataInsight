@@ -188,7 +188,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
           <TabsContent value="share" className="space-y-4">
             {/* 链接配置 */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 p-4 bg-muted/30 rounded-lg">
+              <div className="flex items-center gap-2 p-4 bg-muted/30 rounded-md">
                 <div className="flex-1">
                   <p className="text-sm font-medium">分享链接</p>
                   <p className="text-xs text-muted-foreground truncate">{shareConfig.link}</p>
@@ -210,7 +210,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
               
               {/* 访问控制 */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center justify-between p-3 border rounded-md">
                   <div className="flex items-center gap-3">
                     {shareConfig.isPublic ? (
                       <Globe className="w-5 h-5 text-green-500" />
@@ -233,7 +233,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   </Button>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center justify-between p-3 border rounded-md">
                   <div className="flex items-center gap-3">
                     <Key className="w-5 h-5 text-muted-foreground" />
                     <div>
@@ -274,7 +274,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   </Dialog>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center justify-between p-3 border rounded-md">
                   <div className="flex items-center gap-3">
                     <Clock className="w-5 h-5 text-muted-foreground" />
                     <div>
@@ -309,15 +309,15 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
               
               {/* 统计数据 */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 bg-blue-50 rounded-lg text-center">
+                <div className="p-4 bg-blue-50 rounded-md text-center">
                   <p className="text-2xl font-bold text-blue-600">{shareConfig.viewCount}</p>
                   <p className="text-xs text-muted-foreground">浏览次数</p>
                 </div>
-                <div className="p-4 bg-green-50 rounded-lg text-center">
+                <div className="p-4 bg-green-50 rounded-md text-center">
                   <p className="text-2xl font-bold text-green-600">12</p>
                   <p className="text-xs text-muted-foreground">独立访客</p>
                 </div>
-                <div className="p-4 bg-purple-50 rounded-lg text-center">
+                <div className="p-4 bg-purple-50 rounded-md text-center">
                   <p className="text-2xl font-bold text-purple-600">
                     {shareConfig.lastViewed ? '2分钟前' : '暂无'}
                   </p>
@@ -330,7 +330,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
           {/* 团队协作 */}
           <TabsContent value="team" className="space-y-4">
             {/* 邀请成员 */}
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border rounded-md">
               <h4 className="font-medium mb-3">邀请团队成员</h4>
               <div className="flex gap-2">
                 <Input
@@ -361,7 +361,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
               {teamMembers.map(member => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between p-3 border rounded-md"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
@@ -432,7 +432,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
             </div>
             
             {embedCode && (
-              <div className="p-4 bg-gray-900 rounded-lg">
+              <div className="p-4 bg-gray-900 rounded-md">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-muted-foreground">嵌入代码</span>
                   <Button
@@ -451,7 +451,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
               </div>
             )}
             
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="p-4 bg-blue-50 rounded-md">
               <h4 className="font-medium text-blue-800 mb-2">嵌入说明</h4>
               <ul className="text-sm text-blue-600 space-y-1">
                 <li>• iframe 嵌入：可嵌入到网站中，支持自定义尺寸</li>
@@ -464,7 +464,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
           {/* 权限设置 */}
           <TabsContent value="permissions" className="space-y-4">
             <div className="space-y-4">
-              <div className="p-4 border rounded-lg">
+              <div className="p-4 border rounded-md">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <Eye className="w-5 h-5 text-blue-500" />
@@ -477,7 +477,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                 </div>
               </div>
               
-              <div className="p-4 border rounded-lg">
+              <div className="p-4 border rounded-md">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <Edit3 className="w-5 h-5 text-green-500" />
@@ -490,7 +490,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                 </div>
               </div>
               
-              <div className="p-4 border rounded-lg">
+              <div className="p-4 border rounded-md">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <Download className="w-5 h-5 text-purple-500" />
@@ -503,7 +503,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                 </div>
               </div>
               
-              <div className="p-4 border rounded-lg">
+              <div className="p-4 border rounded-md">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <Trash2 className="w-5 h-5 text-red-500" />

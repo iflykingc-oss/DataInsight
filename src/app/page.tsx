@@ -692,7 +692,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">视图:</span>
-                    <div className="flex bg-muted rounded-lg p-0.5">
+                    <div className="flex bg-muted rounded-md p-0.5">
                       {([
                         { key: 'table', label: '表格', icon: TableIcon },
                         { key: 'kanban', label: '看板', icon: LayoutIcon },
@@ -1033,7 +1033,7 @@ export default function HomePage() {
           />
           <Card>
             <CardContent className="pt-6 space-y-4">
-              <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <div className="p-4 bg-primary/5 rounded-md border border-primary/10">
                 <h4 className="font-medium text-primary mb-2">你能问什么？</h4>
                 <ul className="text-sm text-primary/70 space-y-1.5">
                   <li className="flex items-start gap-2"><Search className="w-4 h-4 mt-0.5 shrink-0" />查找数据 - &ldquo;销售额超过10万的订单有哪些？&rdquo;</li>
@@ -1043,7 +1043,7 @@ export default function HomePage() {
                   <li className="flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />分析报告 - &ldquo;帮我生成本周项目进展周报&rdquo;</li>
                 </ul>
               </div>
-              <div className="p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
+              <div className="p-4 bg-success/5 rounded-md border border-success/10">
                 <h4 className="font-medium text-success mb-2">试试这些问题</h4>
                 <div className="space-y-2 text-sm text-success/80">
                   <p>&ldquo;哪些产品销量最高？&rdquo;</p>

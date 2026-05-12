@@ -460,7 +460,7 @@ export function AIFieldPanel({
                 </div>
                 {/* 展开的结果展示 */}
                 {expandedFieldId === field.id && field.status === 'completed' && Object.keys(field.results).length > 0 && (
-                  <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="mt-3 p-3 bg-muted/50 rounded-md">
                     <div className="text-xs text-muted-foreground mb-2 flex items-center justify-between">
                       <span>处理结果（共 {Object.keys(field.results).length} 行）：</span>
                       {field.previewMode && (
@@ -588,7 +588,7 @@ export function AIFieldPanel({
                         <button
                           key={template.id}
                           onClick={() => handleSelectTemplate(template)}
-                          className="text-left p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition-colors"
+                          className="text-left p-3 rounded-md border hover:border-primary hover:bg-primary/5 transition-colors"
                         >
                           <div className="flex items-center gap-2 mb-1">
                             {ICON_MAP[template.icon] ? React.createElement(ICON_MAP[template.icon], { className: 'w-4 h-4 text-primary' }) : <Sparkles className="w-4 h-4 text-primary" />}
@@ -618,7 +618,7 @@ export function AIFieldPanel({
                           <button
                             key={template!.id}
                             onClick={() => handleSelectTemplate(template!)}
-                            className="text-left p-3 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
+                            className="text-left p-3 rounded-md border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
                           >
                             <div className="flex items-center gap-2 mb-1">
                               {ICON_MAP[template.icon] ? React.createElement(ICON_MAP[template.icon], { className: 'w-4 h-4 text-primary' }) : <Sparkles className="w-4 h-4 text-primary" />}
@@ -644,7 +644,7 @@ export function AIFieldPanel({
             {createStep === 'config' && selectedTemplate && (
               <ScrollArea className="h-[400px]">
                 <div className="space-y-4 pr-2">
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
                     {ICON_MAP[selectedTemplate.icon] ? React.createElement(ICON_MAP[selectedTemplate.icon], { className: 'w-5 h-5 text-primary' }) : <Sparkles className="w-5 h-5 text-primary" />}
                     <div>
                       <p className="font-medium">{selectedTemplate.name}</p>
@@ -713,7 +713,7 @@ export function AIFieldPanel({
                   </div>
 
                   {/* 选项 */}
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
                     <div>
                       <p className="text-sm font-medium">先预览前5行</p>
                       <p className="text-xs text-muted-foreground">确认效果后再全列生成</p>
@@ -727,11 +727,11 @@ export function AIFieldPanel({
             {createStep === 'preview' && (
               <ScrollArea className="h-[400px]">
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 p-2 bg-green-50 text-green-700 rounded-lg text-sm">
+                  <div className="flex items-center gap-2 p-2 bg-green-50 text-green-700 rounded-md text-sm">
                     <CheckSquare className="w-4 h-4" />
                     预览完成，以下前5行处理结果：
                   </div>
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className="border rounded-md overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-muted">
                         <tr>

@@ -323,7 +323,7 @@ export function VersionHistory({
               </div>
 
               {currentContent && (
-                <div className="p-3 bg-muted/30 rounded-lg text-sm text-foreground">
+                <div className="p-3 bg-muted/30 rounded-md text-sm text-foreground">
                   <p>预估大小：约 {Math.ceil(JSON.stringify(currentContent).length / 1024)} KB</p>
                 </div>
               )}
@@ -421,7 +421,7 @@ export function VersionHistory({
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
                           <div className={cn(
-                            'p-2 rounded-lg',
+                            'p-2 rounded-md',
                             isLatest ? 'bg-blue-100' : 'bg-muted'
                           )}>
                             <Icon className={cn(

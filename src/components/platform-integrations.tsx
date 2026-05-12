@@ -180,7 +180,7 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           </Button>
 
           {isConnected && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-md">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-medium">连接成功</span>
@@ -205,7 +205,7 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           )}
 
           {connectionError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">连接失败</span>
@@ -219,7 +219,7 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
       <TabsContent value="guide" className="space-y-4">
         <div className="space-y-4">
           {guideSteps.map(item => (
-            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
+            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-md">
               <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">{item.step}</div>
               <div className="flex-1">
                 <h4 className="font-medium">{item.title}</h4>
@@ -247,7 +247,7 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           <CardHeader className="pb-2"><CardTitle className="text-sm">API 调用示例</CardTitle></CardHeader>
           <CardContent>
             <div className="relative">
-              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto">
+              <pre className="bg-gray-900 text-gray-100 p-4 rounded-md text-xs overflow-x-auto">
 {`// 获取多维表格数据
 const resp = await fetch(
   \`https://open.feishu.cn/open-apis/bitable/v1/apps/\${appToken}/tables\`,
@@ -269,7 +269,7 @@ const resp = await fetch(
             导入此数据 <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-md overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>{sampleData.headers.map(h => <TableHead key={h}>{h}</TableHead>)}</TableRow>
@@ -410,7 +410,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           </Button>
 
           {isConnected && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-md">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-medium">连接成功</span>
@@ -448,7 +448,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           )}
 
           {connectionError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">连接失败</span>
@@ -467,7 +467,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
             { step: 3, title: '获取企业 ID', desc: '在"我的企业" → "企业信息"中获取 CorpId' },
             { step: 4, title: '配置应用权限', desc: '添加"查看企业通讯录"等接口权限' },
           ].map(item => (
-            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
+            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-md">
               <div className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">{item.step}</div>
               <div className="flex-1">
                 <h4 className="font-medium">{item.title}</h4>
@@ -490,7 +490,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
             导入此数据 <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-md overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>{sampleData.headers.map(h => <TableHead key={h}>{h}</TableHead>)}</TableRow>
@@ -631,7 +631,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
           </Button>
 
           {isConnected && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-md">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-medium">连接成功</span>
@@ -656,7 +656,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
           )}
 
           {connectionError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">连接失败</span>
@@ -675,7 +675,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
             { step: 3, title: '配置权限', desc: '添加"考勤数据"、"审批数据"、"任务数据"等权限' },
             { step: 4, title: '开发调试', desc: '使用钉钉提供的 API 拉取组织成员和业务数据' },
           ].map(item => (
-            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
+            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-md">
               <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">{item.step}</div>
               <div className="flex-1">
                 <h4 className="font-medium">{item.title}</h4>
@@ -698,7 +698,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
             导入此数据 <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-md overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>{sampleData.headers.map(h => <TableHead key={h}>{h}</TableHead>)}</TableRow>
@@ -816,7 +816,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
 
       <TabsContent value="connect" className="space-y-4">
         <div className="grid gap-4">
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
             <div className="flex items-center gap-2 text-amber-700 text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>WPS 集成需要开通金山文档企业版服务</span>
@@ -842,7 +842,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
           </Button>
 
           {isConnected && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-md">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-medium">连接成功</span>
@@ -876,7 +876,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
           )}
 
           {connectionError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">连接失败</span>
@@ -895,7 +895,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
             { step: 3, title: '配置应用权限', desc: '添加文档读取权限，获取文档数据接口访问权限' },
             { step: 4, title: '连接数据', desc: '输入文档 ID，导入金山文档中的表格数据' },
           ].map(item => (
-            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-lg">
+            <div key={item.step} className="flex gap-4 p-4 bg-muted/30 rounded-md">
               <div className="flex-shrink-0 w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold">{item.step}</div>
               <div className="flex-1">
                 <h4 className="font-medium">{item.title}</h4>
@@ -918,7 +918,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
             导入此数据 <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-md overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>{sampleData.headers.map(h => <TableHead key={h}>{h}</TableHead>)}</TableRow>
@@ -986,7 +986,7 @@ export function PlatformIntegrations({ onImportData }: PlatformIntegrationProps)
           <CardContent>
             <div className="space-y-2">
               {savedConnections.map(conn => (
-                <div key={conn.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                <div key={conn.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
                   <div className="flex items-center gap-2">
                     <Link2 className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium">{conn.name}</span>
@@ -1041,7 +1041,7 @@ function PlatformCard({ name, badge, badgeColor, desc, icon }: {
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <button className="bg-white border rounded-lg p-4 text-left hover:shadow-md transition-shadow cursor-pointer">
+        <button className="bg-white border rounded-md p-4 text-left hover:shadow-md transition-shadow cursor-pointer">
           <div className="flex items-center gap-2 mb-2">
             {icon}
             <span className="font-medium text-sm">{name}</span>

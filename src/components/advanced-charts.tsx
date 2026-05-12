@@ -453,7 +453,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
             
             <div className="space-y-2">
               <Label>当前图表</Label>
-              <div className="p-3 bg-primary/10 rounded-lg">
+              <div className="p-3 bg-primary/10 rounded-md">
                 <div className="flex items-center gap-2">
                   {(() => {
                     const Icon = CHART_TYPES.find(c => c.id === selectedChartType)?.icon || BarChart3;
@@ -489,7 +489,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
       <Card>
         <CardContent className="pt-6">
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="p-4 bg-blue-50 rounded-md">
               <h4 className="font-medium text-blue-800 mb-2">适用场景</h4>
               <p className="text-sm text-blue-600">
                 {selectedChartType === 'bar' && '分类数据对比、数量统计'}
@@ -503,14 +503,14 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
                 {selectedChartType === 'composed' && '多指标综合分析'}
               </p>
             </div>
-            <div className="p-4 bg-green-50 rounded-lg">
+            <div className="p-4 bg-green-50 rounded-md">
               <h4 className="font-medium text-green-800 mb-2">数据要求</h4>
               <p className="text-sm text-green-600">
                 {selectedChartType === 'scatter' && '需要至少2个数值字段'}
                 {selectedChartType !== 'scatter' && '需要1个分类字段 + 1个数值字段'}
               </p>
             </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
+            <div className="p-4 bg-purple-50 rounded-md">
               <h4 className="font-medium text-purple-800 mb-2">优化建议</h4>
               <p className="text-sm text-purple-600">
                 数据量控制在20条以内效果最佳，过多数据建议先聚合

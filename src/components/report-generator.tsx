@@ -82,34 +82,34 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
       content: (
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-3">
-            <div className="p-3 bg-blue-50 rounded-lg text-center">
+            <div className="p-3 bg-blue-50 rounded-md text-center">
               <p className="text-2xl font-bold text-blue-700">{analysis.summary.totalRows.toLocaleString()}</p>
               <p className="text-xs text-blue-500">总行数</p>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg text-center">
+            <div className="p-3 bg-green-50 rounded-md text-center">
               <p className="text-2xl font-bold text-green-700">{analysis.summary.totalColumns}</p>
               <p className="text-xs text-green-500">总列数</p>
             </div>
-            <div className="p-3 bg-orange-50 rounded-lg text-center">
+            <div className="p-3 bg-orange-50 rounded-md text-center">
               <p className="text-2xl font-bold text-orange-700">{analysis.summary.numericColumns}</p>
               <p className="text-xs text-orange-500">数值列</p>
             </div>
-            <div className="p-3 bg-red-50 rounded-lg text-center">
+            <div className="p-3 bg-red-50 rounded-md text-center">
               <p className="text-2xl font-bold text-red-700">{analysis.summary.nullValues}</p>
               <p className="text-xs text-red-500">空值数</p>
             </div>
           </div>
           {deep && (
             <div className="grid grid-cols-4 gap-3">
-              <div className="p-3 bg-purple-50 rounded-lg text-center">
+              <div className="p-3 bg-purple-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-purple-700">{deep.dataProfile.dataType}</p>
                 <p className="text-xs text-purple-500">数据类型</p>
               </div>
-              <div className="p-3 bg-indigo-50 rounded-lg text-center">
+              <div className="p-3 bg-indigo-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-indigo-700">{deep.dataProfile.suggestedIndustry}</p>
                 <p className="text-xs text-indigo-500">推测行业</p>
               </div>
-              <div className="p-3 bg-cyan-50 rounded-lg text-center">
+              <div className="p-3 bg-cyan-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-cyan-700">
                   {deep.dataProfile.dataMaturity === 'raw' ? '原始' :
                    deep.dataProfile.dataMaturity === 'cleaned' ? '已清洗' :
@@ -117,7 +117,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                 </p>
                 <p className="text-xs text-cyan-500">数据成熟度</p>
               </div>
-              <div className="p-3 bg-teal-50 rounded-lg text-center">
+              <div className="p-3 bg-teal-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-teal-700">
                   {deep.dataProfile.analysisPotential === 'high' ? '高' :
                    deep.dataProfile.analysisPotential === 'medium' ? '中' : '低'}
@@ -171,7 +171,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
         content: (
           <div className="space-y-2">
             {deep.keyFindings.slice(0, 8).map((finding, idx) => (
-              <div key={idx} className={`p-3 rounded-lg border ${
+              <div key={idx} className={`p-3 rounded-md border ${
                 finding.severity === 'critical' ? 'border-red-200 bg-red-50' :
                 finding.severity === 'warning' ? 'border-orange-200 bg-orange-50' :
                 finding.severity === 'positive' ? 'border-green-200 bg-green-50' :
@@ -207,7 +207,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
         content: (
           <div className="space-y-2">
             {deep.trends.map((trend, idx) => (
-              <div key={idx} className={`p-3 rounded-lg ${
+              <div key={idx} className={`p-3 rounded-md ${
                 trend.direction === 'up' ? 'bg-green-50' :
                 trend.direction === 'down' ? 'bg-red-50' : 'bg-muted/30'
               }`}>
@@ -240,7 +240,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
         content: (
           <div className="space-y-2">
             {deep.actionItems.map((item, idx) => (
-              <div key={idx} className={`p-3 rounded-lg border-l-4 ${
+              <div key={idx} className={`p-3 rounded-md border-l-4 ${
                 item.priority === 'high' ? 'border-l-red-400 bg-red-50/50' :
                 item.priority === 'medium' ? 'border-l-orange-400 bg-orange-50/50' :
                 'border-l-blue-400 bg-blue-50/50'
@@ -473,12 +473,12 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                 return (
                   <div
                     key={template.id}
-                    className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                    className={`p-3 border rounded-md cursor-pointer transition-all ${
                       isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-muted-foreground'
                     }`}
                     onClick={() => setSelectedTemplate(template.id)}
                   >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${template.color}`}>
+                    <div className={`w-8 h-8 rounded-md flex items-center justify-center mb-2 ${template.color}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <p className="font-medium text-sm">{template.name}</p>
@@ -531,7 +531,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div ref={reportRef} className="border rounded-lg p-6 bg-white space-y-6 print:shadow-none">
+          <div ref={reportRef} className="border rounded-md p-6 bg-white space-y-6 print:shadow-none">
             {/* 报告头 */}
             <div className="border-b pb-4">
               <h1 className="text-2xl font-bold text-foreground">{reportTitle}</h1>

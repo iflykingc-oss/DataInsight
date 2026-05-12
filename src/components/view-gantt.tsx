@@ -92,7 +92,7 @@ export function GanttView({ rows, headers }: GanttViewProps) {
   return (
     <div className="space-y-4">
       {/* 配置栏 */}
-      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg flex-wrap">
+      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-md flex-wrap">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <GanttChart className="w-4 h-4" />
           <span>甘特图视图</span>
@@ -142,7 +142,7 @@ export function GanttView({ rows, headers }: GanttViewProps) {
           未找到有效任务数据。请确保有任务名称字段和日期字段。
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-md overflow-hidden">
           {/* 时间刻度 */}
           <div className="flex border-b bg-muted/50">
             <div className="w-[200px] flex-shrink-0 p-2 text-xs font-medium text-muted-foreground border-r">任务名称</div>

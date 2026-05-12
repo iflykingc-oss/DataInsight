@@ -576,7 +576,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
               添加用户
             </Button>
           </div>
-          <div className="border border-border rounded-lg overflow-hidden">
+          <div className="border border-border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -645,7 +645,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
               刷新
             </Button>
           </div>
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -712,7 +712,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
             <h3 className="text-base font-medium">AI 模型配置</h3>
             <p className="text-sm text-muted-foreground mt-1">配置全局 AI 模型，所有用户将共用此配置</p>
           </div>
-          <div className="space-y-5 bg-card border rounded-xl p-6">
+          <div className="space-y-5 bg-card border rounded-md p-6">
             <div className="space-y-2">
               <Label className="text-sm font-medium">接口地址（Base URL）</Label>
               <Input
@@ -777,7 +777,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
               <p className="text-xs mt-1">点击"新建公告"发布第一条公告</p>
             </div>
           ) : (
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border rounded-md overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -948,7 +948,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
               刷新
             </Button>
           </div>
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1001,7 +1001,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {plans.map((plan) => (
-              <div key={plan.id} className={`relative rounded-xl border p-5 transition-all hover:shadow-md ${
+              <div key={plan.id} className={`relative rounded-md border p-5 transition-all hover:shadow-md ${
                 plan.active ? 'border-primary/20 bg-card' : 'border-border/60 bg-muted/30 opacity-70'
               }`}>
                 {plan.id === 'pro' && (
@@ -1013,7 +1013,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   </div>
                 )}
                 <div className="flex items-center gap-2 mb-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
                     plan.active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                   }`}>
                     {plan.id === 'free' ? <Zap className="w-4 h-4" /> : plan.id === 'enterprise' ? <Crown className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}
@@ -1087,19 +1087,19 @@ function AdminContent({ activeTab }: AdminContentProps) {
           {/* Stats Cards */}
           {activityStats?.last24h && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-              <div className="rounded-lg border bg-card p-3">
+              <div className="rounded-md border bg-card p-3">
                 <div className="text-xs text-muted-foreground mb-1">24h 认证事件</div>
                 <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.auth || 0}</div>
               </div>
-              <div className="rounded-lg border bg-card p-3">
+              <div className="rounded-md border bg-card p-3">
                 <div className="text-xs text-muted-foreground mb-1">24h 账户操作</div>
                 <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.account || 0}</div>
               </div>
-              <div className="rounded-lg border bg-card p-3">
+              <div className="rounded-md border bg-card p-3">
                 <div className="text-xs text-muted-foreground mb-1">24h 功能使用</div>
                 <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.action || 0}</div>
               </div>
-              <div className="rounded-lg border bg-card p-3">
+              <div className="rounded-md border bg-card p-3">
                 <div className="text-xs text-muted-foreground mb-1">24h 页面访问</div>
                 <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.page_view || 0}</div>
               </div>
@@ -1270,7 +1270,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     key={opt.value}
                     type="button"
                     onClick={() => applyRoleTemplate(opt.value as Role)}
-                    className={`relative flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
+                    className={`relative flex flex-col items-start p-3 rounded-md border text-left transition-all ${
                       formData.role === opt.value
                         ? 'border-primary bg-primary/5 ring-1 ring-primary'
                         : 'border-border hover:border-muted-foreground/30'

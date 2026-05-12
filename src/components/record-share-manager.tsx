@@ -123,7 +123,7 @@ export function RecordShareManager({
         
         <div className="space-y-6">
           {/* 分享预览 */}
-          <div className="p-4 bg-muted/50 rounded-lg">
+          <div className="p-4 bg-muted/50 rounded-md">
             <p className="text-sm font-medium mb-2">分享预览</p>
             <div className="space-y-2">
               {getSharePreview().map(({ field, value }) => (
@@ -167,7 +167,7 @@ export function RecordShareManager({
 
           {/* 分享设置 */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between p-3 border rounded-md">
               <div className="flex items-center gap-3">
                 {shareConfig.isPublic ? (
                   <Globe className="w-5 h-5 text-green-500" />
@@ -263,7 +263,7 @@ export function RecordShareManager({
           {/* 二维码 */}
           {shareConfig.link && (
             <div className="flex flex-col items-center gap-3 pt-4 border-t">
-              <div className="p-4 bg-white rounded-lg">
+              <div className="p-4 bg-white rounded-md">
                 <QrCode className="w-32 h-32 text-muted-foreground" />
                 <p className="text-xs text-center text-muted-foreground mt-2">
                   扫码查看记录

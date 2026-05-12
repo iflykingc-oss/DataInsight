@@ -168,7 +168,7 @@ export default function SettingsDialog({
                   <p className="text-sm text-muted-foreground">
                     您当前使用的是管理员配置的AI模型。如需自定义模型，请联系管理员开启权限。
                   </p>
-                  <div className="space-y-3 bg-muted/50 rounded-lg p-4">
+                  <div className="space-y-3 bg-muted/50 rounded-md p-4">
                     <div className="flex items-center gap-3">
                       <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
                       <div className="min-w-0">
@@ -287,7 +287,7 @@ export default function SettingsDialog({
               <CardContent className="pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <Mail className="w-4 h-4 text-primary dark:text-primary/80" />
                     <span className="font-medium text-sm">邮件通知</span>
                   </div>
                   <Switch
@@ -316,7 +316,7 @@ export default function SettingsDialog({
               <CardContent className="pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <MessageSquare className="w-4 h-4 text-success dark:text-success/80" />
                     <span className="font-medium text-sm">飞书通知</span>
                   </div>
                   <Switch
@@ -375,8 +375,8 @@ export default function SettingsDialog({
             </div>
             {notifTestResult && (
               <div className={cn(
-                'p-3 rounded-lg text-xs flex items-center gap-2',
-                notifTestResult.success ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' : 'bg-destructive/10 text-destructive border border-destructive/20'
+                'p-3 rounded-md text-xs flex items-center gap-2',
+                notifTestResult.success ? 'bg-success/10 text-success dark:text-success/80 border border-success/20' : 'bg-destructive/10 text-destructive border border-destructive/20'
               )}>
                 {notifTestResult.success ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
                 {notifTestResult.message}

@@ -94,7 +94,7 @@ export function GlobalErrorBoundary({ children }: { children: React.ReactNode })
                     <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
                       错误详情（开发模式）
                     </summary>
-                    <pre className="mt-2 p-3 bg-muted rounded-lg text-xs overflow-auto max-h-40 text-destructive">
+                    <pre className="mt-2 p-3 bg-muted rounded-md text-xs overflow-auto max-h-40 text-destructive">
                       {error.message}
                       {'\n\n'}
                       {error.stack}

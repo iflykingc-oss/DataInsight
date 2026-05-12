@@ -233,7 +233,7 @@ export function FeatureCard({
     >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/10 transition-colors">
+          <div className="p-2 rounded-md bg-muted group-hover:bg-primary/10 transition-colors">
             {icon}
           </div>
           {badge && (
@@ -280,7 +280,7 @@ export function QuickStartTip({ onDismiss }: QuickStartTipProps) {
   };
 
   return (
-    <div className="bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-lg p-4 mb-4">
+    <div className="bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 rounded-md p-4 mb-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           <h4 className="font-medium text-sm mb-1">快速开始</h4>

@@ -78,7 +78,7 @@ export function CalendarView({ rows, headers }: CalendarViewProps) {
   return (
     <div className="space-y-4">
       {/* 配置栏 */}
-      <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
+      <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-md">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <CalendarDays className="w-4 h-4" />
           <span>日历视图</span>
@@ -120,7 +120,7 @@ export function CalendarView({ rows, headers }: CalendarViewProps) {
       </div>
 
       {/* 日历 */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-md overflow-hidden">
         {/* 星期标题 */}
         <div className="grid grid-cols-7 bg-muted/50">
           {weekDays.map(d => (
