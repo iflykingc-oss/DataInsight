@@ -161,18 +161,27 @@ function AdminContent({ activeTab }: AdminContentProps) {
   const [aiConfigLoading, setAiConfigLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
-  const [logsPage, setLogsPage] = useState(0);
+  const [logsPage, setLogsPage] = useState(1);
   const [logsTotal, setLogsTotal] = useState(0);
+  const [logsFilter, setLogsFilter] = useState({ username: '', status: '', startDate: '', endDate: '' });
 
   // Plans management state
-  const [plans, setPlans] = useState([
-    { id: 'free', name: '免费版', price: 0, period: '永久', features: ['基础数据表格', '5 个仪表盘', '基础图表'], active: true, users: 128 },
-    { id: 'pro', name: '专业版', price: 29, period: '月', features: ['全部 AI 功能', '无限仪表盘', '高级图表', '数据导出', '团队协作'], active: true, users: 56 },
-    { id: 'team', name: '团队版', price: 99, period: '月', features: ['专业版全部功能', '成员管理', '权限控制', 'API 接入', '优先支持'], active: true, users: 12 },
-    { id: 'enterprise', name: '企业版', price: 299, period: '月', features: ['团队版全部功能', '私有化部署', '定制开发', 'SLA 保障', '专属客服'], active: false, users: 0 },
+  const [plans, setPlans] = useState<Array<{
+    id: string; name: string; price: number; period: string;
+    features: string[]; active: boolean; users: number;
+    aiCallsLimit?: number; scheduledAt?: string;
+  }>>([
+    { id: 'free', name: '免费版', price: 0, period: '永久', features: ['基础数据表格', '5 个仪表盘', '基础图表'], active: true, users: 128, aiCallsLimit: 50 },
+    { id: 'pro', name: '专业版', price: 29, period: '月', features: ['全部 AI 功能', '无限仪表盘', '高级图表', '数据导出', '团队协作'], active: true, users: 56, aiCallsLimit: 500 },
+    { id: 'team', name: '团队版', price: 99, period: '月', features: ['专业版全部功能', '成员管理', '权限控制', 'API 接入', '优先支持'], active: true, users: 12, aiCallsLimit: 2000 },
+    { id: 'enterprise', name: '企业版', price: 299, period: '月', features: ['团队版全部功能', '私有化部署', '定制开发', 'SLA 保障', '专属客服'], active: false, users: 0, aiCallsLimit: -1 },
   ]);
   const [planFormOpen, setPlanFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [planForm, setPlanForm] = useState({
+    name: '', price: 0, period: '月', features: '' as string, active: true,
+    aiCallsLimit: 50, scheduledAt: '',
+  });
 
   // Announcements management state
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -217,11 +226,16 @@ function AdminContent({ activeTab }: AdminContentProps) {
     }
   };
 
-  const fetchLoginLogs = async (page = 0) => {
+  const fetchLoginLogs = async (page = 1) => {
     if (!token) return;
     setLogsLoading(true);
     try {
-      const data = await request<{ data: any[]; total: number }>(`/api/admin/login-logs?page=${page}&limit=20`);
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      if (logsFilter.username) params.set('username', logsFilter.username);
+      if (logsFilter.status) params.set('status', logsFilter.status);
+      if (logsFilter.startDate) params.set('startDate', logsFilter.startDate);
+      if (logsFilter.endDate) params.set('endDate', logsFilter.endDate);
+      const data = await request<{ data: any[]; total: number }>(`/api/admin/login-logs?${params}`);
       setLoginLogs(data.data || []);
       setLogsTotal(data.total || 0);
     } catch {
@@ -640,28 +654,73 @@ function AdminContent({ activeTab }: AdminContentProps) {
         <>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-sm font-medium">登录记录</h3>
-              <p className="text-xs text-muted-foreground">共 {logsTotal} 条记录（近90天）</p>
+              <h3 className="text-sm font-medium flex items-center gap-1.5">
+                <LogIn className="w-4 h-4 text-primary" />
+                登录记录
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">共 {logsTotal} 条记录</p>
             </div>
             <Button variant="outline" size="sm" onClick={() => fetchLoginLogs(logsPage)}>
               <RefreshCw className="w-3.5 h-3.5 mr-1" />
               刷新
             </Button>
           </div>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2 mb-4 items-center">
+            <Input
+              placeholder="用户名"
+              className="h-8 w-32 text-xs"
+              value={logsFilter.username}
+              onChange={(e) => setLogsFilter(f => ({ ...f, username: e.target.value }))}
+            />
+            <select
+              className="h-8 rounded-md border bg-background px-2 text-xs"
+              value={logsFilter.status}
+              onChange={(e) => setLogsFilter(f => ({ ...f, status: e.target.value }))}
+            >
+              <option value="">全部状态</option>
+              <option value="success">成功</option>
+              <option value="failed">失败</option>
+            </select>
+            <Input
+              type="date"
+              className="h-8 w-32 text-xs"
+              value={logsFilter.startDate}
+              onChange={(e) => setLogsFilter(f => ({ ...f, startDate: e.target.value }))}
+            />
+            <span className="text-xs text-muted-foreground">至</span>
+            <Input
+              type="date"
+              className="h-8 w-32 text-xs"
+              value={logsFilter.endDate}
+              onChange={(e) => setLogsFilter(f => ({ ...f, endDate: e.target.value }))}
+            />
+            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => fetchLoginLogs(1)}>
+              <Search className="w-3 h-3 mr-1" />
+              查询
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => {
+              setLogsFilter({ username: '', status: '', startDate: '', endDate: '' });
+              setTimeout(() => fetchLoginLogs(1), 0);
+            }}>
+              重置
+            </Button>
+          </div>
           <div className="border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>时间</TableHead>
+                  <TableHead className="w-[180px]">时间</TableHead>
                   <TableHead>账户</TableHead>
-                  <TableHead>状态</TableHead>
+                  <TableHead className="w-[80px]">状态</TableHead>
+                  <TableHead className="w-[120px]">IP</TableHead>
                   <TableHead>错误信息</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {logsLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       <RefreshCw className="w-4 h-4 animate-spin inline mr-2" />
                       加载中...
                     </TableCell>
@@ -677,6 +736,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                         {log.status === 'success' ? '成功' : '失败'}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-xs text-muted-foreground font-mono">{log.ip_address || '-'}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {log.error_message || '-'}
                     </TableCell>
@@ -684,7 +744,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                 ))}
                 {!logsLoading && loginLogs.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       暂无记录
                     </TableCell>
                   </TableRow>
@@ -694,13 +754,13 @@ function AdminContent({ activeTab }: AdminContentProps) {
           </div>
           {logsTotal > 20 && (
             <div className="flex justify-center gap-2 mt-3">
-              <Button variant="outline" size="sm" disabled={logsPage === 0} onClick={() => { setLogsPage(p => p - 1); fetchLoginLogs(logsPage - 1); }}>
+              <Button variant="outline" size="sm" disabled={logsPage <= 1} onClick={() => { setLogsPage(p => p - 1); fetchLoginLogs(logsPage - 1); }}>
                 上一页
               </Button>
               <span className="text-xs text-muted-foreground self-center">
-                第 {logsPage + 1} 页，共 {Math.ceil(logsTotal / 20)} 页
+                第 {logsPage} 页，共 {Math.ceil(logsTotal / 20)} 页
               </span>
-              <Button variant="outline" size="sm" disabled={loginLogs.length < 20} onClick={() => { setLogsPage(p => p + 1); fetchLoginLogs(logsPage + 1); }}>
+              <Button variant="outline" size="sm" disabled={logsPage * 20 >= logsTotal} onClick={() => { setLogsPage(p => p + 1); fetchLoginLogs(logsPage + 1); }}>
                 下一页
               </Button>
             </div>
@@ -711,49 +771,76 @@ function AdminContent({ activeTab }: AdminContentProps) {
       {/* AI配置 */}
       {activeTab === 'ai-config' && (
         <div className="max-w-2xl mx-auto">
-          <div className="mb-6">
-            <h3 className="text-base font-medium">AI 模型配置</h3>
-            <p className="text-sm text-muted-foreground mt-1">配置全局 AI 模型，所有用户将共用此配置</p>
+          <div className="mb-5">
+            <h3 className="text-base font-medium flex items-center gap-1.5">
+              <Brain className="w-4 h-4 text-primary" />
+              AI 模型配置
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">配置全局 AI 模型，所有用户将共用此配置</p>
           </div>
-          <div className="space-y-5 bg-card border rounded-md p-6">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">接口地址（Base URL）</Label>
-              <Input
-                value={aiConfig.baseUrl}
-                onChange={(e) => setAiConfig({ ...aiConfig, baseUrl: e.target.value })}
-                placeholder="https://api.deepseek.com"
-              />
-              <p className="text-xs text-muted-foreground">OpenAI 兼容格式的 API 接口地址</p>
+          <div className="bg-card border rounded-md divide-y">
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Globe className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <Label className="text-sm font-medium">接口地址（Base URL）</Label>
+                  <Input
+                    value={aiConfig.baseUrl}
+                    onChange={(e) => setAiConfig({ ...aiConfig, baseUrl: e.target.value })}
+                    placeholder="https://api.deepseek.com"
+                    className="h-9"
+                  />
+                  <p className="text-xs text-muted-foreground">OpenAI 兼容格式的 API 接口地址</p>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">密钥（API Key）</Label>
-              <Input
-                type="password"
-                value={aiConfig.apiKey}
-                onChange={(e) => setAiConfig({ ...aiConfig, apiKey: e.target.value })}
-                placeholder="sk-..."
-              />
-              <p className="text-xs text-muted-foreground">从模型服务商获取的 API Key</p>
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Lock className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <Label className="text-sm font-medium">密钥（API Key）</Label>
+                  <Input
+                    type="password"
+                    value={aiConfig.apiKey}
+                    onChange={(e) => setAiConfig({ ...aiConfig, apiKey: e.target.value })}
+                    placeholder="sk-..."
+                    className="h-9"
+                  />
+                  <p className="text-xs text-muted-foreground">从模型服务商获取的 API Key</p>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">模型名称（Model Name）</Label>
-              <Input
-                value={aiConfig.modelName}
-                onChange={(e) => setAiConfig({ ...aiConfig, modelName: e.target.value })}
-                placeholder="deepseek-chat"
-              />
-              <p className="text-xs text-muted-foreground">例如：gpt-3.5-turbo、deepseek-chat、claude-3-sonnet</p>
+            <div className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <Cpu className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <Label className="text-sm font-medium">模型名称（Model Name）</Label>
+                  <Input
+                    value={aiConfig.modelName}
+                    onChange={(e) => setAiConfig({ ...aiConfig, modelName: e.target.value })}
+                    placeholder="deepseek-chat"
+                    className="h-9"
+                  />
+                  <p className="text-xs text-muted-foreground">例如：gpt-3.5-turbo、deepseek-chat、claude-3-sonnet</p>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-3 pt-2">
-              <Button onClick={handleSaveAIConfig} disabled={aiConfigLoading} className="min-w-[100px]">
-                <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                保存配置
-              </Button>
-              <Button variant="outline" onClick={handleTestAIConnection} disabled={aiConfigLoading}>
-                <Brain className="w-4 h-4 mr-1.5" />
-                测试连接
-              </Button>
-            </div>
+          </div>
+          <div className="flex gap-3 mt-5">
+            <Button onClick={handleSaveAIConfig} disabled={aiConfigLoading} className="min-w-[100px]">
+              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+              保存配置
+            </Button>
+            <Button variant="outline" onClick={handleTestAIConnection} disabled={aiConfigLoading}>
+              <Brain className="w-4 h-4 mr-1.5" />
+              测试连接
+            </Button>
           </div>
         </div>
       )}
@@ -764,7 +851,10 @@ function AdminContent({ activeTab }: AdminContentProps) {
         <>
           <div className="flex justify-between items-center mb-5">
             <div>
-              <h3 className="text-base font-medium">公告管理</h3>
+              <h3 className="text-base font-medium flex items-center gap-1.5">
+                <Megaphone className="w-4 h-4 text-primary" />
+                公告管理
+              </h3>
               <p className="text-xs text-muted-foreground mt-0.5">发布、定时推送公告，管理公告生命周期</p>
             </div>
             <Button size="sm" onClick={() => { setEditingAnnouncement(null); setAnnouncementFormOpen(true); }}>
@@ -994,10 +1084,17 @@ function AdminContent({ activeTab }: AdminContentProps) {
         <>
           <div className="flex justify-between items-center mb-5">
             <div>
-              <h3 className="text-base font-medium">订阅套餐管理</h3>
+              <h3 className="text-base font-medium flex items-center gap-1.5">
+                <CreditCard className="w-4 h-4 text-primary" />
+                订阅套餐管理
+              </h3>
               <p className="text-xs text-muted-foreground mt-0.5">配置用户订阅套餐、价格与功能权限</p>
             </div>
-            <Button size="sm" onClick={() => { setEditingPlan(null); setPlanFormOpen(true); }}>
+            <Button size="sm" onClick={() => {
+              setEditingPlan(null);
+              setPlanForm({ name: '', price: 0, period: '月', features: '', active: true, aiCallsLimit: 50, scheduledAt: '' });
+              setPlanFormOpen(true);
+            }}>
               <Plus className="w-3.5 h-3.5 mr-1" />
               新增套餐
             </Button>
@@ -1027,11 +1124,11 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   </div>
                 </div>
                 <div className="mb-3">
-                  <span className="text-2xl font-semibold">${plan.price}</span>
+                  <span className="text-2xl font-semibold">¥{plan.price}</span>
                   <span className="text-xs text-muted-foreground ml-1">/ {plan.period}</span>
                 </div>
                 <div className="space-y-1.5 mb-4">
-                  {plan.features.map((f, i) => (
+                  {plan.features.map((f: string, i: number) => (
                     <div key={i} className="flex items-start gap-1.5 text-xs">
                       <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                       <span className="text-muted-foreground">{f}</span>
@@ -1043,7 +1140,19 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     variant="outline"
                     size="sm"
                     className="flex-1 text-xs h-8"
-                    onClick={() => { setEditingPlan(plan); setPlanFormOpen(true); }}
+                    onClick={() => {
+                      setEditingPlan(plan);
+                      setPlanForm({
+                        name: plan.name,
+                        price: plan.price,
+                        period: plan.period,
+                        features: plan.features.join('\n'),
+                        active: plan.active,
+                        aiCallsLimit: plan.aiCallsLimit || 50,
+                        scheduledAt: plan.scheduledAt || '',
+                      });
+                      setPlanFormOpen(true);
+                    }}
                   >
                     <Settings2 className="w-3 h-3 mr-1" />
                     配置
@@ -1063,6 +1172,133 @@ function AdminContent({ activeTab }: AdminContentProps) {
               </div>
             ))}
           </div>
+
+          {/* 套餐编辑弹窗 */}
+          <Dialog open={planFormOpen} onOpenChange={setPlanFormOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>{editingPlan ? '编辑套餐' : '新增套餐'}</DialogTitle>
+                <DialogDescription>配置套餐的价格、功能列表与上架状态</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">套餐名称</Label>
+                    <Input
+                      value={planForm.name}
+                      onChange={(e) => setPlanForm(p => ({ ...p, name: e.target.value }))}
+                      placeholder="如：专业版"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">周期</Label>
+                    <select
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                      value={planForm.period}
+                      onChange={(e) => setPlanForm(p => ({ ...p, period: e.target.value }))}
+                    >
+                      <option value="永久">永久</option>
+                      <option value="月">月</option>
+                      <option value="年">年</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">价格（¥）</Label>
+                    <Input
+                      type="number"
+                      value={planForm.price}
+                      onChange={(e) => setPlanForm(p => ({ ...p, price: Number(e.target.value) }))}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">AI 调用次数限制</Label>
+                    <Input
+                      type="number"
+                      value={planForm.aiCallsLimit}
+                      onChange={(e) => setPlanForm(p => ({ ...p, aiCallsLimit: Number(e.target.value) }))}
+                      placeholder="50"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">功能列表（每行一项）</Label>
+                  <textarea
+                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    placeholder="全部 AI 功能&#10;无限仪表盘&#10;高级图表"
+                    value={planForm.features}
+                    onChange={(e) => setPlanForm(p => ({ ...p, features: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">定时上架（可选）</Label>
+                  <Input
+                    type="datetime-local"
+                    value={planForm.scheduledAt}
+                    onChange={(e) => setPlanForm(p => ({ ...p, scheduledAt: e.target.value }))}
+                  />
+                  <p className="text-xs text-muted-foreground">设定未来时间，系统届时自动上架此套餐</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs font-medium">上架状态</Label>
+                  <button
+                    type="button"
+                    onClick={() => setPlanForm(p => ({ ...p, active: !p.active }))}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                      planForm.active ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  >
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                      planForm.active ? 'translate-x-4' : 'translate-x-1'
+                    }`} />
+                  </button>
+                  <span className="text-xs text-muted-foreground">{planForm.active ? '已上架' : '已下架'}</span>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setPlanFormOpen(false)}>取消</Button>
+                <Button onClick={() => {
+                  if (!planForm.name.trim()) {
+                    showMessage('请输入套餐名称', 'error');
+                    return;
+                  }
+                  const features = planForm.features.split('\n').filter(f => f.trim());
+                  if (editingPlan) {
+                    setPlans(plans.map(p => p.id === editingPlan.id ? {
+                      ...p,
+                      name: planForm.name,
+                      price: planForm.price,
+                      period: planForm.period,
+                      features,
+                      active: planForm.active,
+                      aiCallsLimit: planForm.aiCallsLimit,
+                      scheduledAt: planForm.scheduledAt,
+                    } : p));
+                    showMessage('套餐已更新');
+                  } else {
+                    const newPlan = {
+                      id: planForm.name.toLowerCase().replace(/\s+/g, '-'),
+                      name: planForm.name,
+                      price: planForm.price,
+                      period: planForm.period,
+                      features,
+                      active: planForm.active,
+                      users: 0,
+                      aiCallsLimit: planForm.aiCallsLimit,
+                      scheduledAt: planForm.scheduledAt,
+                    };
+                    setPlans([...plans, newPlan]);
+                    showMessage('套餐已创建');
+                  }
+                  setPlanFormOpen(false);
+                }}>
+                  {editingPlan ? '保存修改' : '创建套餐'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </>
       )}
 
@@ -1253,11 +1489,11 @@ function AdminContent({ activeTab }: AdminContentProps) {
 
       {/* 添加/编辑用户弹窗 */}
       <Dialog open={userFormOpen} onOpenChange={setUserFormOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col">
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingUser ? '编辑用户' : '添加用户'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-5 overflow-y-auto pr-1">
+          <div className="space-y-4">
             {!editingUser && (
               <div className="space-y-2">
                 <Label>账户 *</Label>

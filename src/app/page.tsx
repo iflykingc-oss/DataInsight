@@ -1416,16 +1416,7 @@ export default function HomePage() {
         </main>
       </div>
 
-      {/* ===== 设置弹窗 ===== */}
-      <SettingsDialog
-        open={showSettings}
-        onOpenChange={setShowSettings}
-        parsedData={parsedData}
-        fieldStats={analysis?.fieldStats || []}
-        darkMode={darkMode}
-        onDarkModeChange={setDarkMode}
-        onModelChange={handleModelChange}
-      />
+
 
       {/* 登录弹窗 */}
       <LoginDialog />

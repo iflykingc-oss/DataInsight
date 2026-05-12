@@ -561,7 +561,7 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
 
       {/* 应用对话框 */}
       <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>应用公式</DialogTitle>
             <DialogDescription>

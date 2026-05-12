@@ -13,7 +13,7 @@ export default function DataCompliancePage() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('datainsight_token');
       const res = await fetch('/api/data-compliance', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -40,7 +40,7 @@ export default function DataCompliancePage() {
     if (deleteConfirm !== 'DELETE_ALL_MY_DATA') return;
     setDeleting(true);
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('datainsight_token');
       const res = await fetch('/api/data-compliance', {
         method: 'DELETE',
         headers: {
@@ -51,7 +51,7 @@ export default function DataCompliancePage() {
       });
       const data = await res.json();
       if (data.success) {
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem('datainsight_token');
         localStorage.removeItem('auth_user');
         window.location.href = '/';
       } else {

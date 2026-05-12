@@ -33,7 +33,7 @@ export default function PricingPage() {
       if (data.success) setPlans(data.plans);
 
       // Check current plan
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('datainsight_token');
       if (token) {
         const usageRes = await fetch('/api/ai-usage', {
           headers: { 'Authorization': `Bearer ${token}` }

@@ -293,7 +293,7 @@ export function VersionHistory({
               创建快照
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>创建新快照</DialogTitle>
               <DialogDescription>

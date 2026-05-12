@@ -36,7 +36,7 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
 
   const handleExportData = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('datainsight_token');
       const res = await fetch('/api/auth/export-data', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -76,7 +76,7 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
     setDeleteLoading(true);
     setDeleteError('');
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('datainsight_token');
       const res = await fetch('/api/auth/delete-account', {
         method: 'POST',
         headers: {

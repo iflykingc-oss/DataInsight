@@ -584,7 +584,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
       
       {/* 添加组件对话框 */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>添加仪表盘组件</DialogTitle>
             <DialogDescription>为仪表盘添加新的可视化组件，支持多种图表类型</DialogDescription>

@@ -752,7 +752,7 @@ export function TemplateManager({
 
       {/* 创建/编辑对话框 */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {isCreating ? '创建新模板' : '编辑模板'}
