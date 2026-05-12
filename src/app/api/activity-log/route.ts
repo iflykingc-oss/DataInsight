@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     if (!validTypes || !validTypes.has(event.type)) continue;
 
     // Sanitize metadata - remove PII
-    let sanitizedMeta: Record<string, unknown> = {};
+    const sanitizedMeta: Record<string, unknown> = {};
     if (event.metadata && typeof event.metadata === 'object') {
       for (const [key, value] of Object.entries(event.metadata)) {
         // Skip PII keys

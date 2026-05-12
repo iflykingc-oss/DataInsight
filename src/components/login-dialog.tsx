@@ -440,7 +440,7 @@ export function LoginDialog() {
                 autoComplete="off"
                 minLength={2}
               />
-              <p className="text-xs text-muted-foreground">t('login.answerHint')</p>
+              <p className="text-xs text-muted-foreground">{t('login.answerHint')}</p>
             </div>
 
             <div className="space-y-2">

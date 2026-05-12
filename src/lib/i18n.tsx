@@ -1627,9 +1627,10 @@ const translations: Record<Locale, Record<string, string>> = {
     '未处理': '未处理',
     '每页': '每页',
     '没有找到匹配的数据': '没有找到匹配的数据',
+    'ai.clickToAddField': '点击「新建AI字段」开始智能数据处理',
   },
 
-  'en-US': {
+'en-US': {
 
     // === Admin ===
     'admin.account': 'Account',
@@ -3223,6 +3224,7 @@ const translations: Record<Locale, Record<string, string>> = {
     '未处理': 'Pending',
     '每页': 'Per Page',
     '没有找到匹配的数据': 'No matching data found',
+    'ai.clickToAddField': 'Click "Add AI Field" to start smart data processing',
 
   },
 };

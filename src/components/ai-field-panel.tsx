@@ -511,7 +511,7 @@ export function AIFieldPanel({
           <CardContent className="py-8 text-center">
             <Wand2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground">{t('txt.暂无AI字段')}</p>
-            <p className="text-sm text-muted-foreground">点击&quot;新建AI字段&quot;开始智能数据处理</p>
+            <p className="text-sm text-muted-foreground">{t('ai.clickToAddField')}</p>
           </CardContent>
         </Card>
       )}

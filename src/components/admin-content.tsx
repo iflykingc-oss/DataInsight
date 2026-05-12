@@ -237,7 +237,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
       if (logsFilter.status) params.set('status', logsFilter.status);
       if (logsFilter.startDate) params.set('startDate', logsFilter.startDate);
       if (logsFilter.endDate) params.set('endDate', logsFilter.endDate);
-      const data = await request<{ data: any[]; total: number }>(`/api/admin/login-logs?${params}`);
+      const data = await request<{ data: Record<string, unknown>[]; total: number }>(`/api/admin/login-logs?${params}`);
       setLoginLogs(data.data || []);
       setLogsTotal(data.total || 0);
     } catch {
@@ -251,7 +251,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
     if (!token) return;
     setStatsLoading(true);
     try {
-      const data = await request<{ data: any[] }>('/api/admin/usage-stats');
+      const data = await request<{ data: Record<string, unknown>[] }>('/api/admin/usage-stats');
       setUsageStats(data.data || []);
     } catch {
       showMessage(t('admin.loadStatsFailed'), 'error');
@@ -294,7 +294,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
       if (activityFilter.endDate) params.set('endDate', activityFilter.endDate);
       if (activityFilter.search) params.set('search', activityFilter.search);
 
-      const data = await request<{ data: any[]; total: number; stats?: any }>(`/api/admin/activity-logs?${params}`);
+      const data = await request<{ data: Record<string, unknown>[]; total: number; stats?: Record<string, unknown> }>(`/api/admin/activity-logs?${params}`);
       setActivityLogs(data.data || []);
       setActivityTotal(data.total || 0);
       if (data.stats) setActivityStats(data.stats);
@@ -310,7 +310,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
   const fetchAnnouncements = async () => {
     setAnnLoading(true);
     try {
-      const data = await request<{ data: any[] }>('/api/admin/announcements');
+      const data = await request<{ data: Record<string, unknown>[] }>('/api/admin/announcements');
       setAnnouncements(data.data || []);
     } catch {
       showMessage(t('admin.loadAnnouncementsFailed'), 'error');
@@ -345,8 +345,9 @@ function AdminContent({ activeTab }: AdminContentProps) {
       setEditingAnnouncement(null);
       setAnnouncementForm({ title: '', content: '', type: 'info', priority: 'normal', remind_strategy: 'once', scheduled_at: '', expires_at: '' });
       fetchAnnouncements();
-    } catch (e: any) {
-      showMessage(e.message || t('admin.saveFailed'), 'error');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : t('admin.saveFailed');
+      showMessage(msg || t('admin.saveFailed'), 'error');
     }
   };
 
@@ -371,6 +372,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const openEditAnnouncement = (ann: any) => {
     setEditingAnnouncement(ann);
     setAnnouncementForm({
@@ -869,7 +871,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
             <div className="text-center py-16 text-muted-foreground">
               <Megaphone className="w-10 h-10 mx-auto mb-3 opacity-40" />
               <p className="text-sm">暂无公告</p>
-              <p className="text-xs mt-1">点击"新建公告"发布第一条公告</p>
+              <p className="text-xs mt-1">{"Click \"New Announcement\" to publish the first announcement"}</p>
             </div>
           ) : (
             <div className="border rounded-md overflow-hidden">
