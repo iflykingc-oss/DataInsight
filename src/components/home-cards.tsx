@@ -2,10 +2,11 @@
 
 import React from 'react';
 import {
-  BarChart3, LayoutDashboard, MessageSquare, FileSpreadsheet,
+  LayoutDashboard, MessageSquare,
   Search, Brain, Table2, Target, TrendingUp, FileText, Zap,
-  PieChart, ArrowRight
+  ArrowRight
 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 // 规范: 4档字号(20/16/14/12), 4档间距(4/8/16/24), 2档圆角(4/6px), 3级阴影
 // 主色#1677FF, 边框#E5E6EB, 文字#1D2129/#86909C
@@ -20,26 +21,26 @@ interface HomeCardsProps {
   hasPermission: (perm: string) => boolean;
 }
 
-// 快捷入口 - 6个核心功能
+// 快捷入口 - 6个核心功能 (label/desc now use i18n keys)
 const quickEntries = [
-  { key: 'data-table', icon: Table2, label: '数据表格', desc: '编辑、筛选、多视图' },
-  { key: 'insights', icon: Brain, label: '智能洞察', desc: 'AI深度数据分析' },
-  { key: 'visualization', icon: LayoutDashboard, label: '可视化仪表盘', desc: '交互式图表看板' },
-  { key: 'chat', icon: MessageSquare, label: 'AI 问数', desc: '自然语言查数据' },
-  { key: 'sql-lab', icon: Search, label: 'SQL 查询', desc: '浏览器端即席查询' },
-  { key: 'report-export', icon: FileText, label: '报表导出', desc: '生成报告并分享' },
+  { key: 'data-table', icon: Table2, labelKey: 'sidebar.dataTable', descKey: 'dataTable.tableView' },
+  { key: 'insights', icon: Brain, labelKey: 'sidebar.insights', descKey: 'ai.deepAnalysis' },
+  { key: 'visualization', icon: LayoutDashboard, labelKey: 'home.visualDashboard', descKey: 'viz.dashboard' },
+  { key: 'chat', icon: MessageSquare, labelKey: 'sidebar.aiChat', descKey: 'ai.askPlaceholder' },
+  { key: 'sql-lab', icon: Search, labelKey: 'sidebar.sqlLab', descKey: 'sql.title' },
+  { key: 'report-export', icon: FileText, labelKey: 'sidebar.reportExport', descKey: 'report.title' },
 ] as const;
 
-// 场景模板
+// 场景模板 (labelKey maps to i18n)
 const scenarios = [
-  { key: 'retail', label: '零售电商', icon: '🛒' },
-  { key: 'finance', label: '财务会计', icon: '💰' },
-  { key: 'project', label: '项目管理', icon: '📋' },
-  { key: 'hr', label: '人力资源', icon: '👥' },
-  { key: 'education', label: '教育培训', icon: '📚' },
-  { key: 'marketing', label: '市场运营', icon: '📢' },
-  { key: 'logistics', label: '物流供应链', icon: '🚚' },
-  { key: 'manufacturing', label: '制造生产', icon: '🏭' },
+  { key: 'retail', labelKey: 'industry.retail', icon: '🛒' },
+  { key: 'finance', labelKey: 'industry.finance', icon: '💰' },
+  { key: 'project', labelKey: 'industry.hrm', icon: '📋' },
+  { key: 'hr', labelKey: 'industry.hrm', icon: '👥' },
+  { key: 'education', labelKey: 'industry.education', icon: '📚' },
+  { key: 'marketing', labelKey: 'industry.tech', icon: '📢' },
+  { key: 'logistics', labelKey: 'industry.logistics', icon: '🚚' },
+  { key: 'manufacturing', labelKey: 'industry.manufacturing', icon: '🏭' },
 ] as const;
 
 const HomeCards = React.memo(function HomeCards({
@@ -48,6 +49,7 @@ const HomeCards = React.memo(function HomeCards({
   isLoggedIn,
   onLoginRequired,
 }: HomeCardsProps) {
+  const { t } = useI18n();
   const handleEntryClick = (viewKey: string) => {
     if (!isLoggedIn) {
       onLoginRequired();
@@ -61,10 +63,10 @@ const HomeCards = React.memo(function HomeCards({
       {/* ===== 快捷入口 ===== */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-foreground">快捷入口</h3>
+          <h3 className="text-base font-semibold text-foreground">{t('home.quickStart')}</h3>
           {hasData && (
             <span className="text-xs text-muted-foreground">
-              已加载数据，可直接使用以下功能
+              {t('home.noDataHint')}
             </span>
           )}
         </div>
@@ -80,8 +82,8 @@ const HomeCards = React.memo(function HomeCards({
                 <div className="w-8 h-8 rounded-sm bg-primary/8 flex items-center justify-center mb-3 group-hover:bg-primary/12 transition-colors">
                   <Icon className="w-4 h-4 text-primary" />
                 </div>
-                <span className="text-sm font-medium text-foreground mb-1">{entry.label}</span>
-                <span className="text-xs text-muted-foreground leading-tight">{entry.desc}</span>
+                <span className="text-sm font-medium text-foreground mb-1">{t(entry.labelKey)}</span>
+                <span className="text-xs text-muted-foreground leading-tight">{t(entry.descKey)}</span>
               </button>
             );
           })}
@@ -90,9 +92,9 @@ const HomeCards = React.memo(function HomeCards({
 
       {/* ===== 场景模板 ===== */}
       <section>
-        <h3 className="text-base font-semibold text-foreground mb-2">行业场景</h3>
+        <h3 className="text-base font-semibold text-foreground mb-2">{t('home.sceneSelect')}</h3>
         <p className="text-xs text-muted-foreground mb-4">
-          上传数据后系统会自动识别行业，也可手动选择场景获取预置分析模板
+          {t('industry.title')}
         </p>
         <div className="flex flex-wrap gap-2">
           {scenarios.map((scene) => (
@@ -105,7 +107,7 @@ const HomeCards = React.memo(function HomeCards({
               className="inline-flex items-center gap-2 px-4 py-2 rounded-sm border border-border bg-card text-sm text-foreground hover:border-primary/30 hover:text-primary hover:bg-primary/4 transition-all"
             >
               <span className="text-base">{scene.icon}</span>
-              <span>{scene.label}</span>
+              <span>{t(scene.labelKey)}</span>
             </button>
           ))}
         </div>
@@ -113,33 +115,33 @@ const HomeCards = React.memo(function HomeCards({
 
       {/* ===== 数据洞察能力 ===== */}
       <section>
-        <h3 className="text-base font-semibold text-foreground mb-4">分析能力</h3>
+        <h3 className="text-base font-semibold text-foreground mb-4">{t('ai.deepAnalysis')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div className="p-4 rounded-sm border border-border bg-card">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-chart-1" />
-              <span className="text-sm font-semibold text-foreground">趋势分析</span>
+              <span className="text-sm font-semibold text-foreground">{t('ai.prediction')}</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              自动检测数据趋势，发现异常波动和变化规律
+              {t('ai.insight')}
             </p>
           </div>
           <div className="p-4 rounded-sm border border-border bg-card">
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-4 h-4 text-chart-2" />
-              <span className="text-sm font-semibold text-foreground">相关性分析</span>
+              <span className="text-sm font-semibold text-foreground">{t('ai.attribution')}</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Pearson 相关系数，揭示字段间的隐藏关联
+              {t('ai.attribution')}
             </p>
           </div>
           <div className="p-4 rounded-sm border border-border bg-card">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-4 h-4 text-chart-3" />
-              <span className="text-sm font-semibold text-foreground">智能归因</span>
+              <span className="text-sm font-semibold text-foreground">{t('ai.deepAnalysis')}</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              AI驱动的根因分析，快速定位问题来源
+              {t('ai.deepAnalysis')}
             </p>
           </div>
         </div>

@@ -31,6 +31,7 @@ interface AdminSidebarProps {
   onBackToUser: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  onOpenSettings?: () => void;
 }
 
 export default function AdminSidebar({
@@ -39,6 +40,7 @@ export default function AdminSidebar({
   onBackToUser,
   collapsed,
   onToggleCollapse,
+  onOpenSettings,
 }: AdminSidebarProps) {
   return (
     <aside
@@ -97,6 +99,7 @@ export default function AdminSidebar({
       <div className="border-t border-white/[0.06] px-1 py-1 space-y-px shrink-0">
         {/* System Settings */}
         <button
+          onClick={onOpenSettings}
           className={`
             flex items-center gap-2 w-full rounded-sm text-sm transition-colors duration-150
             text-white/30 hover:bg-white/[0.04] hover:text-white/60

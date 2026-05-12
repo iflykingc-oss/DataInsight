@@ -4,6 +4,7 @@ import './globals.css';
 import { GlobalErrorBoundary } from '@/components/error-boundary';
 import { AuthProvider } from '@/lib/use-auth';
 import { DataLifecycleProvider } from '@/components/data-lifecycle-provider';
+import { I18nProvider } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: {
@@ -62,11 +63,13 @@ export default function RootLayout({
       <body className={`antialiased`}>
         {isDev && <Inspector />}
         <GlobalErrorBoundary>
-          <AuthProvider>
-            <DataLifecycleProvider>
-              {children}
-            </DataLifecycleProvider>
-          </AuthProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <DataLifecycleProvider>
+                {children}
+              </DataLifecycleProvider>
+            </AuthProvider>
+          </I18nProvider>
         </GlobalErrorBoundary>
       </body>
     </html>

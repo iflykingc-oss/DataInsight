@@ -2,27 +2,28 @@
 
 import React, { useState, memo } from 'react';
 import {
-  Database, BarChart3, Wrench, Settings, LayoutDashboard, Table2,
-  Brain, FileSpreadsheet, Sparkles, MessageSquare, Image,
+  BarChart3, Settings, LayoutDashboard, Table2,
+  Brain, FileSpreadsheet, Sparkles, MessageSquare,
   FileText, Code2, Download, ChevronDown, ChevronRight,
   Home, Shield, Target, LineChart, BookOpen, Building2,
   ShieldCheck, Layers, Cpu, LucideIcon
 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 // ---- Types ----
 export type ViewMode = string;
 
 interface NavItem {
   id: ViewMode;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
   badge?: string;
-  description?: string;
+  descriptionKey?: string;
 }
 
 interface NavGroup {
   key: string;
-  label: string;
+  labelKey: string;
   items: NavItem[];
   defaultOpen?: boolean;
 }
@@ -32,30 +33,30 @@ interface NavGroup {
 const NAV_GROUPS: NavGroup[] = [
   {
     key: 'core',
-    label: '核心功能',
+    labelKey: 'sidebar.coreFeatures',
     defaultOpen: true,
     items: [
-      { id: 'data-table', label: '数据表格', icon: Table2, description: '上传、编辑、分析表格数据' },
-      { id: 'insights', label: '智能洞察', icon: Brain, description: 'AI驱动的深度数据分析' },
-      { id: 'visualization', label: '可视化', icon: LayoutDashboard, description: '交互式仪表盘与图表' },
-      { id: 'ai-assistant', label: 'AI问数', icon: MessageSquare, description: '自然语言查询数据' },
-      { id: 'chart-center', label: '图表中心', icon: LineChart, description: '10种高级图表与AI推荐' },
+      { id: 'data-table', labelKey: 'sidebar.dataTable', icon: Table2, descriptionKey: 'dataTable.emptyHint' },
+      { id: 'insights', labelKey: 'sidebar.insights', icon: Brain, descriptionKey: 'ai.insight' },
+      { id: 'visualization', labelKey: 'sidebar.visualization', icon: LayoutDashboard, descriptionKey: 'viz.dashboard' },
+      { id: 'ai-assistant', labelKey: 'sidebar.aiChat', icon: MessageSquare, descriptionKey: 'ai.askPlaceholder' },
+      { id: 'chart-center', labelKey: 'sidebar.chartCenter', icon: LineChart, descriptionKey: 'viz.chartCenter' },
     ],
   },
   {
     key: 'tools',
-    label: '更多工具',
+    labelKey: 'sidebar.moreTools',
     defaultOpen: false,
     items: [
-      { id: 'ai-table-builder', label: 'AI建表', icon: Sparkles, description: 'AI生成表格方案' },
-      { id: 'data-prep', label: '数据准备', icon: FileSpreadsheet, description: '数据源、清洗、质量检测' },
-      { id: 'metric-system', label: '指标体系', icon: Target, description: '预置指标+AI生成业务指标' },
-      { id: 'data-story', label: '数据故事', icon: BookOpen, description: 'AI生成5段式叙事报告' },
-      { id: 'industry-scenario', label: '行业场景', icon: Building2, description: '8大行业模板与指标' },
-      { id: 'multimodal', label: 'AI多模态', icon: Cpu, description: '生图、图转文、图转表' },
-      { id: 'form-collection', label: '表单收集', icon: Layers, description: '在线表单设计与管理' },
-      { id: 'sql-lab', label: 'SQL查询', icon: Code2, description: '浏览器端SQL即席查询' },
-      { id: 'report-export', label: '报表导出', icon: Download, description: '报表生成与分享' },
+      { id: 'ai-table-builder', labelKey: 'sidebar.aiTableBuilder', icon: Sparkles, descriptionKey: 'ai.generate' },
+      { id: 'data-prep', labelKey: 'sidebar.dataPrep', icon: FileSpreadsheet, descriptionKey: 'dataPrep.title' },
+      { id: 'metric-system', labelKey: 'sidebar.metricSystem', icon: Target, descriptionKey: 'metric.semantic' },
+      { id: 'data-story', labelKey: 'sidebar.dataStory', icon: BookOpen, descriptionKey: 'story.title' },
+      { id: 'industry-scenario', labelKey: 'sidebar.industryScene', icon: Building2, descriptionKey: 'industry.title' },
+      { id: 'multimodal', labelKey: 'sidebar.aiMultimodal', icon: Cpu, descriptionKey: 'multimodal.generateImage' },
+      { id: 'form-collection', labelKey: 'sidebar.formCollection', icon: Layers, descriptionKey: 'form.builder' },
+      { id: 'sql-lab', labelKey: 'sidebar.sqlLab', icon: Code2, descriptionKey: 'sql.title' },
+      { id: 'report-export', labelKey: 'sidebar.reportExport', icon: Download, descriptionKey: 'report.title' },
     ],
   },
 ];
@@ -96,6 +97,7 @@ function Sidebar({
   userRole,
   onLogout,
 }: SidebarProps) {
+  const { t } = useI18n();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(NAV_GROUPS.filter(g => g.defaultOpen).map(g => g.key))
   );
@@ -138,7 +140,7 @@ function Sidebar({
         {/* 工作台 - Top level */}
         <button
           onClick={() => onViewChange('home')}
-          title={collapsed ? '工作台' : undefined}
+          title={collapsed ? t('sidebar.workspace') : undefined}
           className={`
             group relative flex items-center gap-2 w-full rounded-md text-[14px] transition-all duration-150 mb-0.5
             ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-2'}
@@ -153,7 +155,7 @@ function Sidebar({
             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-sidebar-primary" />
           )}
           <Home className={`w-4 h-4 shrink-0 ${isHomeActive ? 'text-sidebar-primary' : ''}`} />
-          {!collapsed && <span className="truncate flex-1 text-left">工作台</span>}
+          {!collapsed && <span className="truncate flex-1 text-left">{t('sidebar.workspace')}</span>}
         </button>
 
         {/* Divider — 规范间距8px */}
@@ -170,7 +172,7 @@ function Sidebar({
                   onClick={() => toggleGroup(group.key)}
                   className="flex items-center w-full px-2 py-1.5 text-xs font-medium text-sidebar-foreground/35 uppercase tracking-wider hover:text-sidebar-foreground/55 transition-colors rounded"
                 >
-                  <span className="flex-1 text-left">{group.label}</span>
+                  <span className="flex-1 text-left">{t(group.labelKey)}</span>
                   {isExpanded ? (
                     <ChevronDown className="w-3 h-3 opacity-50" />
                   ) : (
@@ -195,7 +197,7 @@ function Sidebar({
                       <button
                         key={item.id}
                         onClick={() => onViewChange(item.id)}
-                        title={collapsed ? item.label : (item.description || undefined)}
+                        title={collapsed ? t(item.labelKey) : (item.descriptionKey ? t(item.descriptionKey) : undefined)}
                         className={`
                           group/item relative flex items-center gap-2 w-full rounded-md text-[14px] transition-all duration-150
                           ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-1.5'}
@@ -212,7 +214,7 @@ function Sidebar({
                         )}
                         <item.icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-sidebar-primary' : ''}`} />
                         {!collapsed && (
-                          <span className="truncate flex-1 text-left">{item.label}</span>
+                          <span className="truncate flex-1 text-left">{t(item.labelKey)}</span>
                         )}
                       </button>
                     );
@@ -230,7 +232,7 @@ function Sidebar({
         {isLoggedIn && isAdmin && (
           <button
             onClick={() => onViewChange('admin')}
-            title={collapsed ? '后台管理' : undefined}
+            title={collapsed ? t('sidebar.adminPanel') : undefined}
             className={`
               group relative flex items-center gap-2 w-full rounded-md text-[14px] transition-all duration-150
               ${collapsed ? 'justify-center px-0 py-2' : 'px-2 py-1.5'}
@@ -245,14 +247,14 @@ function Sidebar({
               <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-sidebar-primary" />
             )}
             <ShieldCheck className={`w-4 h-4 shrink-0 ${isAdminActive ? 'text-sidebar-primary' : ''}`} />
-            {!collapsed && <span className="truncate flex-1 text-left">后台管理</span>}
+            {!collapsed && <span className="truncate flex-1 text-left">{t('sidebar.adminPanel')}</span>}
           </button>
         )}
 
         {/* Settings */}
         <button
           onClick={onOpenSettings}
-          title={collapsed ? '设置' : undefined}
+          title={collapsed ? t('sidebar.settings') : undefined}
           className={`
             flex items-center gap-2 w-full rounded-md text-[14px] transition-colors duration-150
             text-sidebar-foreground/40 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground/75
@@ -260,7 +262,7 @@ function Sidebar({
           `}
         >
           <Settings className="w-4 h-4 shrink-0" />
-          {!collapsed && <span className="text-left">设置</span>}
+          {!collapsed && <span className="text-left">{t('sidebar.settings')}</span>}
         </button>
 
         {/* User / Login */}
@@ -288,7 +290,7 @@ function Sidebar({
         ) : (
           <button
             onClick={onLoginClick}
-            title={collapsed ? '登录' : undefined}
+            title={collapsed ? t('sidebar.login') : undefined}
             className={`
               flex items-center gap-2 w-full rounded-md text-[14px] transition-colors duration-150
               text-sidebar-primary hover:bg-sidebar-primary/10
@@ -298,14 +300,14 @@ function Sidebar({
             <div className="w-5 h-5 rounded-full bg-sidebar-primary/15 flex items-center justify-center shrink-0">
               <span className="text-xs font-bold text-sidebar-primary">?</span>
             </div>
-            {!collapsed && <span className="text-left">登录</span>}
+            {!collapsed && <span className="text-left">{t('sidebar.login')}</span>}
           </button>
         )}
 
         {/* Collapse Toggle */}
         <button
           onClick={onToggleCollapse}
-          title={collapsed ? '展开侧边栏' : '收起侧边栏'}
+          title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           className={`
             flex items-center gap-2 w-full rounded-md text-xs transition-colors duration-150
             text-sidebar-foreground/25 hover:text-sidebar-foreground/45 hover:bg-sidebar-accent/30
@@ -325,7 +327,7 @@ function Sidebar({
               <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
             )}
           </svg>
-          {!collapsed && <span>收起</span>}
+          {!collapsed && <span>{t('sidebar.collapse')}</span>}
         </button>
       </div>
     </aside>

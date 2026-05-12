@@ -16,6 +16,8 @@ import SettingsDialog from '@/components/settings-dialog';
 import { OnboardingGuide } from '@/components/onboarding-guide';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { trackAuth, trackAction, trackPageView } from '@/lib/activity-tracker';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { useI18n } from '@/lib/i18n';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -1272,6 +1274,7 @@ export default function HomePage() {
           onBackToUser={() => setViewMode('home')}
           collapsed={adminSidebarCollapsed}
           onToggleCollapse={() => setAdminSidebarCollapsed(!adminSidebarCollapsed)}
+          onOpenSettings={() => setShowSettings(true)}
         />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-12 border-b border-border flex items-center px-6 shrink-0 bg-background">
@@ -1280,6 +1283,9 @@ export default function HomePage() {
               <span>管理后台</span>
               <span className="text-muted-foreground/40">/</span>
               <span className="text-foreground font-medium">{adminTabTitles[adminTab] || adminTab}</span>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+              <LanguageSwitcher />
             </div>
           </header>
           <main className="flex-1 overflow-y-auto p-6">
@@ -1357,6 +1363,11 @@ export default function HomePage() {
                 <span className="text-muted-foreground ml-0.5">{parsedData.rowCount?.toLocaleString() ?? '0'}行</span>
               </span>
             )}
+
+            <Separator orientation="vertical" className="h-4 mx-0.5" />
+
+            {/* 语言切换 */}
+            <LanguageSwitcher />
 
             <Separator orientation="vertical" className="h-4 mx-0.5" />
 
