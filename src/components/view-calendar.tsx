@@ -59,8 +59,8 @@ export function CalendarView({ rows, headers }: CalendarViewProps) {
     return map;
   }, [rows, dateField]);
 
-  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  const monthNames = t('calendar.monthNames').split(',');
+  const weekDays = t('calendar.weekDays').split(',');
 
   // 生成日历格子
   const calendarDays: { day: number | null; dateKey: string | null; events: Record<string, unknown>[] }[] = [];
@@ -116,7 +116,7 @@ export function CalendarView({ rows, headers }: CalendarViewProps) {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={prevMonth}><ChevronLeft className="w-4 h-4" /></Button>
-          <span className="text-sm font-semibold min-w-[100px] text-center">{year}年 {monthNames[month]}</span>
+          <span className="text-sm font-semibold min-w-[100px] text-center">{t('calendar.yearMonth', { year, month: monthNames[month] })}</span>
           <Button variant="outline" size="sm" onClick={nextMonth}><ChevronRight className="w-4 h-4" /></Button>
         </div>
       </div>

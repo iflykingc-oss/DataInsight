@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, XCircle, Info } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -67,6 +68,7 @@ export function GlobalErrorProvider({ children }: { children: React.ReactNode })
 export function GlobalErrorBoundary({ children }: { children: React.ReactNode }) {
   const [hasError, setHasError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const { t } = useI18n();
 
   const handleReset = useCallback(() => {
     setHasError(false);
@@ -84,15 +86,15 @@ export function GlobalErrorBoundary({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-foreground">
-                  应用出现错误
+                  {t('errorBoundary.componentError')}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-2">
-                  抱歉，应用遇到了问题。请尝试刷新页面或联系技术支持。
+                  {t('errorBoundary.unknownError')}
                 </p>
                 {process.env.NODE_ENV === 'development' && error && (
                   <details className="mt-4 text-left">
                     <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                      错误详情（开发模式）
+                      {t('errorBoundary.errorDetails')}
                     </summary>
                     <pre className="mt-2 p-3 bg-muted rounded-md text-xs overflow-auto max-h-40 text-destructive">
                       {error.message}
@@ -104,11 +106,11 @@ export function GlobalErrorBoundary({ children }: { children: React.ReactNode })
               </div>
               <div className="flex gap-3 justify-center pt-2">
                 <Button variant="outline" onClick={handleReset}>
-                  重新尝试
+                  {t('errorBoundary.retry')}
                 </Button>
                 <Button onClick={() => window.location.reload()}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  刷新页面
+                  {t('errorBoundary.retry')}
                 </Button>
               </div>
             </div>
@@ -317,16 +319,17 @@ export function InfoMessage({
  * 加载状态组件
  */
 export function LoadingState({
-  message = '加载中...',
+  message,
   className = ''
 }: {
   message?: string;
   className?: string;
 }) {
+  const { t } = useI18n();
   return (
     <div className={`flex flex-col items-center justify-center py-8 gap-3 ${className}`}>
       <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-      <span className="text-sm text-muted-foreground">{message}</span>
+      <span className="text-sm text-muted-foreground">{message || t('errorBoundary.loading')}</span>
     </div>
   );
 }
@@ -335,7 +338,7 @@ export function LoadingState({
  * 空数据状态组件
  */
 export function EmptyState({
-  title = '暂无数据',
+  title,
   description,
   icon: Icon = Info,
   action,
@@ -350,13 +353,14 @@ export function EmptyState({
   };
   className?: string;
 }) {
+  const { t } = useI18n();
   return (
     <div className={`flex flex-col items-center justify-center py-12 gap-3 ${className}`}>
       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
         <Icon className="w-6 h-6 text-muted-foreground" />
       </div>
       <div className="text-center">
-        <h3 className="font-medium text-foreground">{title}</h3>
+        <h3 className="font-medium text-foreground">{title || t('errorBoundary.noData')}</h3>
         {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
       </div>
       {action && (

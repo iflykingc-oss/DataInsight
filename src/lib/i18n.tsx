@@ -824,6 +824,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'upload.statusAnalyzing': '分析中',
     'upload.statusCompleted': '已完成',
     'upload.statusError': '有问题',
+    'upload.cached': '缓存命中',
     'upload.preChecking': '正在预检...',
     'upload.analyzingFile': '正在分析...',
     'upload.cacheHit': '命中缓存',
@@ -1628,6 +1629,44 @@ const translations: Record<Locale, Record<string, string>> = {
     '每页': '每页',
     '没有找到匹配的数据': '没有找到匹配的数据',
     'ai.clickToAddField': '点击「新建AI字段」开始智能数据处理',
+
+    // === 看板视图 ===
+    'kanban.uncategorized': '未分类',
+    'kanban.unnamed': '未命名',
+
+    // === 行评论 ===
+    'comments.currentUser': '当前用户',
+    'comments.row': '第 {n} 行',
+    'comments.rowComments': '第 {n} 行 · {count} 条评论',
+    'comments.commentCount': '{count} 条',
+    'comments.send': '发送',
+
+    // === 设置 ===
+    'settings.dialogDescription': '配置AI模型、数据预警、通知渠道、权限管理等设置',
+    'settings.notConfiguredShort': '未配置',
+    'settings.configuredShort': '已配置',
+
+    // === 错误边界 ===
+    'errorBoundary.moduleError': '{name}加载异常',
+    'errorBoundary.componentError': '组件加载异常',
+    'errorBoundary.unknownError': '发生未知错误',
+    'errorBoundary.errorDetails': '错误详情',
+    'errorBoundary.loadError': '加载异常',
+    'errorBoundary.retry': '重试',
+    'errorBoundary.loading': '加载中...',
+    'errorBoundary.noData': '暂无数据',
+
+    // === 日历视图 ===
+    'calendar.monthNames': '一月,二月,三月,四月,五月,六月,七月,八月,九月,十月,十一月,十二月',
+    'calendar.weekDays': '日,一,二,三,四,五,六',
+    'calendar.yearMonth': '{year}年 {month}',
+
+    // === 公告 ===
+    'announcement.remindOnce': '仅提醒一次',
+    'announcement.remindAlways': '每次登录提醒',
+    'announcement.closeAll': '关闭全部',
+    'announcement.gotIt': '我知道了',
+    'announcement.next': '下一条',
   },
 
 'en-US': {
@@ -3090,6 +3129,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'upload.statusChecking': 'Pre-checking',
     'upload.statusCompleted': 'Completed',
     'upload.statusError': 'Error',
+    'upload.cached': 'Cache Hit',
     'upload.statusParsing': 'Parsing',
     'upload.statusPending': 'Pending',
     'upload.supportFormat': 'Supports Excel (.xlsx/.xls), CSV format, maximum single file size {max}MB',
@@ -3225,6 +3265,44 @@ const translations: Record<Locale, Record<string, string>> = {
     '每页': 'Per Page',
     '没有找到匹配的数据': 'No matching data found',
     'ai.clickToAddField': 'Click "Add AI Field" to start smart data processing',
+
+    // === Kanban View ===
+    'kanban.uncategorized': 'Uncategorized',
+    'kanban.unnamed': 'Unnamed',
+
+    // === Row Comments ===
+    'comments.currentUser': 'Current User',
+    'comments.row': 'Row {n}',
+    'comments.rowComments': 'Row {n} · {count} comments',
+    'comments.commentCount': '{count}',
+    'comments.send': 'Send',
+
+    // === Settings ===
+    'settings.dialogDescription': 'Configure AI models, data alerts, notification channels, permissions, and other settings',
+    'settings.notConfiguredShort': 'Not Configured',
+    'settings.configuredShort': 'Configured',
+
+    // === Error Boundary ===
+    'errorBoundary.moduleError': '{name} load error',
+    'errorBoundary.componentError': 'Component load error',
+    'errorBoundary.unknownError': 'Unknown error',
+    'errorBoundary.errorDetails': 'Error details',
+    'errorBoundary.loadError': 'Load error',
+    'errorBoundary.retry': 'Retry',
+    'errorBoundary.loading': 'Loading...',
+    'errorBoundary.noData': 'No Data',
+
+    // === Calendar View ===
+    'calendar.monthNames': 'January,February,March,April,May,June,July,August,September,October,November,December',
+    'calendar.weekDays': 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
+    'calendar.yearMonth': '{month} {year}',
+
+    // === Announcement ===
+    'announcement.remindOnce': 'Remind once only',
+    'announcement.remindAlways': 'Remind on every login',
+    'announcement.closeAll': 'Close All',
+    'announcement.gotIt': 'Got it',
+    'announcement.next': 'Next',
 
   },
 };

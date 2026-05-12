@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useI18n } from '@/lib/i18n';
 import {
   Dialog,
   DialogContent,
@@ -80,6 +81,7 @@ interface AnnouncementPopupProps {
 }
 
 export function AnnouncementPopup({ isLoggedIn }: AnnouncementPopupProps) {
+  const { t } = useI18n();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [open, setOpen] = useState(false);
@@ -177,8 +179,8 @@ export function AnnouncementPopup({ isLoggedIn }: AnnouncementPopupProps) {
               day: 'numeric',
             })}
             {currentAnnouncement.remind_strategy === 'once'
-              ? ' · 仅提醒一次'
-              : ' · 每次登录提醒'}
+              ? ` · ${t('announcement.remindOnce')}`
+              : ` · ${t('announcement.remindAlways')}`}
           </DialogDescription>
         </DialogHeader>
         <div className="pl-4 text-sm leading-relaxed whitespace-pre-wrap text-foreground/90">
@@ -193,11 +195,11 @@ export function AnnouncementPopup({ isLoggedIn }: AnnouncementPopupProps) {
           <div className="flex gap-2">
             {announcements.length > 1 && (
               <Button variant="ghost" size="sm" onClick={handleSkipAll}>
-                关闭全部
+                {t('announcement.closeAll')}
               </Button>
             )}
             <Button size="sm" onClick={handleDismiss}>
-              {currentIndex < announcements.length - 1 ? '下一条' : '我知道了'}
+              {currentIndex < announcements.length - 1 ? t('announcement.next') : t('announcement.gotIt')}
             </Button>
           </div>
         </DialogFooter>

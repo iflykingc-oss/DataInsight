@@ -33,7 +33,7 @@ export function KanbanView({ data }: KanbanViewProps) {
   const grouped = useMemo(() => {
     const groups: Record<string, Record<string, CellValue>[]> = {};
     rows.forEach(row => {
-      const key = String(row[groupField] ?? '未分类');
+      const key = String(row[groupField] ?? t('kanban.uncategorized'));
       if (!groups[key]) groups[key] = [];
       groups[key].push(row);
     });
@@ -109,7 +109,7 @@ export function KanbanView({ data }: KanbanViewProps) {
               {groupRows.map((row, idx) => (
                 <Card key={idx} className="p-3 hover:shadow-md transition-shadow cursor-pointer border-l-4 border-l-primary/60">
                   <div className="text-sm font-medium text-foreground mb-2 line-clamp-2">
-                    {String(row[cardTitleField] ?? '未命名')}
+                    {String(row[cardTitleField] ?? t('kanban.unnamed'))}
                   </div>
                   {metricField && (
                     <div className="flex items-center justify-between">

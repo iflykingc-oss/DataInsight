@@ -32,7 +32,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1 h-7 px-2 rounded-sm text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        title="Switch Language / 切换语言"
+        title={locale === 'zh-CN' ? '切换语言' : 'Switch Language'}
       >
         <Globe className="w-3.5 h-3.5" />
         <span>{locale === 'zh-CN' ? '中' : 'EN'}</span>

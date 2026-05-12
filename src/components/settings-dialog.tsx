@@ -185,21 +185,21 @@ export default function SettingsDialog({
                       <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
                       <div className="min-w-0">
                         <div className="text-xs text-muted-foreground">Base URL</div>
-                        <div className="text-sm font-medium truncate">{adminConfig.baseUrl || '未配置'}</div>
+                        <div className="text-sm font-medium truncate">{adminConfig.baseUrl || t('settings.notConfiguredShort')}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <Key className="w-4 h-4 text-muted-foreground shrink-0" />
                       <div className="min-w-0">
                         <div className="text-xs text-muted-foreground">{t('settings.model')}</div>
-                        <div className="text-sm font-medium truncate">{adminConfig.modelName || '未配置'}</div>
+                        <div className="text-sm font-medium truncate">{adminConfig.modelName || t('settings.notConfiguredShort')}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <Key className="w-4 h-4 text-muted-foreground shrink-0" />
                       <div className="min-w-0">
                         <div className="text-xs text-muted-foreground">API Key</div>
-                        <div className="text-sm font-medium">{adminConfig.apiKey ? '已配置' : '未配置'}</div>
+                        <div className="text-sm font-medium">{adminConfig.apiKey ? t('settings.configuredShort') : t('settings.notConfiguredShort')}</div>
                       </div>
                     </div>
                   </div>
@@ -231,7 +231,7 @@ export default function SettingsDialog({
             <div className="flex items-center justify-between py-3 border-b border-border/50">
               <div>
                 <p className="font-medium text-sm">{t('settings.darkMode')}</p>
-                <p className="text-xs text-muted-foreground">{darkMode ? '已开启深色主题' : '开启深色主题'}</p>
+                <p className="text-xs text-muted-foreground">{darkMode ? t('settings.darkModeOn') : t('settings.darkModeOff')}</p>
               </div>
               <Switch
                 checked={darkMode}
@@ -410,7 +410,7 @@ export default function SettingsDialog({
       <DialogContent showCloseButton={false} className="sm:max-w-3xl max-w-[calc(100%-2rem)] max-h-[85vh] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-5 pb-0 flex flex-row items-center justify-between">
           <DialogTitle className="text-base">{t('settings.title')}</DialogTitle>
-          <DialogDescription className="sr-only">配置AI模型、数据预警、通知渠道、权限管理等设置</DialogDescription>
+          <DialogDescription className="sr-only">{t('settings.dialogDescription')}</DialogDescription>
           <button
             onClick={() => onOpenChange(false)}
             className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"

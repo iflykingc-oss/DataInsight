@@ -474,7 +474,7 @@ export function FileUploader({
       parsing: { label: t('upload.statusParsing'), color: 'bg-primary/10 text-primary' },
       analyzing: { label: t('upload.statusAnalyzing'), color: 'bg-primary/10 text-primary' },
       completed: { label: t('upload.statusCompleted'), color: 'bg-success/10 text-success' },
-      cached: { label: '缓存命中', color: 'bg-success/10 text-success' },
+      cached: { label: t('upload.cached'), color: 'bg-success/10 text-success' },
       error: { label: t('upload.statusError'), color: 'bg-destructive/10 text-destructive' }
     };
     const { label, color } = statusMap[status] || statusMap.pending;

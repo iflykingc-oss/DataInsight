@@ -43,7 +43,7 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
     const comment: Comment = {
       id: `c-${Date.now()}`,
       rowId,
-      author: '当前用户',
+      author: t('comments.currentUser'),
       content: newComment,
       timestamp: new Date().toLocaleString(),
     };
@@ -65,7 +65,7 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
       <div className="flex items-center gap-2">
         <MessageSquare className="w-4 h-4 text-primary" />
         <h3 className="text-sm font-medium">{t('txt.行内评论')}</h3>
-        <Badge variant="secondary">{comments.length} 条</Badge>
+        <Badge variant="secondary">{t('comments.commentCount', { count: comments.length })}</Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -81,7 +81,7 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
                   activeRow === idx ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                 }`}
               >
-                第 {idx + 1} 行 {rowKeyField && row[rowKeyField] ? `· ${String(row[rowKeyField]).slice(0, 20)}` : ''}
+                {t('comments.row', { n: idx + 1 })} {rowKeyField && row[rowKeyField] ? `· ${String(row[rowKeyField]).slice(0, 20)}` : ''}
               </button>
             ))}
           </div>
@@ -89,7 +89,7 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
 
         {/* 评论区域 */}
         <Card className="p-3 md:col-span-2 space-y-3">
-          <p className="text-xs text-muted-foreground">第 {activeRow + 1} 行 · {rowComments.length} 条评论</p>
+          <p className="text-xs text-muted-foreground">{t('comments.rowComments', { n: activeRow + 1, count: rowComments.length })}</p>
 
           <div className="space-y-2 max-h-64 overflow-auto">
             {rowComments.length === 0 ? (
@@ -126,7 +126,7 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
                 <Button variant="ghost" size="icon" className="h-7 w-7"><Smile className="w-3.5 h-3.5" /></Button>
               </div>
               <Button size="sm" onClick={addComment} disabled={!newComment.trim()}>
-                <Send className="w-3.5 h-3.5 mr-1" /> 发送
+                <Send className="w-3.5 h-3.5 mr-1" /> {t('comments.send')}
               </Button>
             </div>
           </div>

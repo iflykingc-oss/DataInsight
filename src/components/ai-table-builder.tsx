@@ -237,7 +237,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   useEffect(() => {
     try {
       const saved = readBusinessData<string[]>('datainsight-table-favorites');
-      if (saved) setFavorites(saved);
+      if (Array.isArray(saved)) setFavorites(saved);
     } catch { /* ignore */ }
   }, []);
 
