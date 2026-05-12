@@ -1,3 +1,4 @@
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 import { NextRequest } from 'next/server';
 import { callLLM, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
 import { verifyAuth } from '@/lib/auth-middleware';
@@ -307,6 +308,7 @@ interface TableScheme {
 }
 
 export async function POST(request: NextRequest) {
+  const callStart = Date.now();
   const auth = await verifyAuth(request);
   if (auth.error) {
     return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: { 'Content-Type': 'application/json' } });
@@ -335,15 +337,42 @@ export async function POST(request: NextRequest) {
     }
 
     switch (action) {
-      case 'generate':
-        return handleGenerate(body, modelConfig!);
-      case 'iterate':
-        return handleIterate(body, modelConfig!);
+      case 'generate': {
+        const result = await handleGenerate(body, modelConfig!);
+        // 异步记录AI使用
+        trackAiUsage({
+          userId: auth.userId,
+          functionType: 'ai-table-builder',
+          modelName: modelConfig?.model,
+          status: 'success',
+          latencyMs: Date.now() - callStart,
+        }).catch(() => {});
+        return result;
+      }
+      case 'iterate': {
+        const result = await handleIterate(body, modelConfig!);
+        trackAiUsage({
+          userId: auth.userId,
+          functionType: 'ai-table-builder',
+          modelName: modelConfig?.model,
+          status: 'success',
+          latencyMs: Date.now() - callStart,
+        }).catch(() => {});
+        return result;
+      }
       default:
         return Response.json({ success: false, error: '未知操作' }, { status: 400 });
     }
   } catch (error) {
     console.error('AI table builder error:', error);
+    // 异步记录AI调用失败
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'ai-table-builder',
+      status: 'error',
+      errorMessage: (error instanceof Error ? error.message : '服务异常').slice(0, 500),
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
     return Response.json(
       { success: false, error: error instanceof Error ? error.message : '服务异常' },
       { status: 500 }
@@ -619,6 +648,7 @@ async function handleConfirm(body: Record<string, unknown>) {
     });
   } catch (error) {
     console.error('Excel generation error:', error);
+
     return Response.json({
       success: false,
       error: `文件生成失败: ${error instanceof Error ? error.message : '未知错误'}`,

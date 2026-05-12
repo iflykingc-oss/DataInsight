@@ -1,3 +1,4 @@
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 /**
  * AI字段执行API
  * 支持批量处理表格数据的AI字段
@@ -10,6 +11,7 @@ import type { CellValue } from '@/types';
 import { verifyAuth } from '@/lib/auth-middleware';
 
 export async function POST(req: NextRequest) {
+  const callStart = Date.now();
   const auth = await verifyAuth(req);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!auth.user?.permissions?.ai_analyze) return NextResponse.json({ error: '无AI分析权限' }, { status: 403 });
@@ -119,6 +121,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 异步记录AI使用
+    trackAiUsage({
+      userId: auth.userId,
+      functionType: 'ai-field',
+      modelName: modelConfig?.model,
+      inputTokens: estimateTokens(JSON.stringify(context?.rows?.slice(0, 5) || '')),
+      outputTokens: estimateTokens(JSON.stringify(results)),
+      status: 'success',
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       data: results,
@@ -132,6 +145,14 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     console.error('[AI Field API Error]', error);
     const message = error instanceof Error ? error.message : 'AI字段执行失败';
+    // 异步记录AI调用失败
+    trackAiUsage({
+      userId: auth.userId,
+      functionType: 'ai-field',
+      status: 'error',
+      errorMessage: message.slice(0, 500),
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
     return NextResponse.json(
       { success: false, error: message },
       { status: 500 }

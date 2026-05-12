@@ -126,3 +126,92 @@ export const userActivityLogs = pgTable("user_activity_logs", {
 			}).onDelete("set null"),
 	check("chk_event_category", sql`(event_category)::text = ANY ((ARRAY['auth'::character varying, 'account'::character varying, 'action'::character varying, 'page_view'::character varying])::text[])`),
 ]);
+
+// AI Usage Logs - Track AI function calls for cost management
+// - Stores function type, model name, token usage, latency
+// - Used for admin cost dashboard and user quota management
+export const aiUsageLogs = pgTable("ai_usage_logs", {
+	id: serial().primaryKey().notNull(),
+	userId: integer("user_id"),
+	functionType: varchar("function_type", { length: 50 }).notNull(), // insight, ai-table, ai-field, ai-formula, nl2dashboard, data-story, metric-ai, industry-detect, analysis-planner, chat
+	modelName: varchar("model_name", { length: 100 }),
+	inputTokens: integer("input_tokens").default(0),
+	outputTokens: integer("output_tokens").default(0),
+	totalTokens: integer("total_tokens").default(0),
+	latencyMs: integer("latency_ms"),
+	status: varchar({ length: 20 }).default('success'), // success, error, timeout
+	errorMessage: varchar("error_message", { length: 500 }),
+	ipAddress: varchar("ip_address", { length: 45 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	foreignKey({
+				columns: [table.userId],
+				foreignColumns: [users.id],
+				name: "fk_ai_usage_logs_user_id"
+			}).onDelete("set null"),
+	check("chk_ai_status", sql`(status)::text = ANY ((ARRAY['success'::character varying, 'error'::character varying, 'timeout'::character varying])::text[])`),
+]);
+
+// Pricing Plans - Admin configurable pricing tiers
+export const pricingPlans = pgTable("pricing_plans", {
+	id: serial().primaryKey().notNull(),
+	planKey: varchar("plan_key", { length: 50 }).notNull(), // free, pro, enterprise
+	name: varchar({ length: 100 }).notNull(),
+	nameEn: varchar("name_en", { length: 100 }),
+	description: text(),
+	descriptionEn: text("description_en"),
+	priceMonthly: integer("price_monthly").default(0), // in cents
+	priceYearly: integer("price_yearly").default(0), // in cents
+	currency: varchar({ length: 10 }).default('CNY'),
+	features: jsonb().default({}), // { maxProjects: 3, maxFileSize: 5, aiCallLimit: 100, ... }
+	isPopular: boolean("is_popular").default(false),
+	sortOrder: integer("sort_order").default(0),
+	status: varchar({ length: 20 }).default('active'),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	unique("pricing_plans_plan_key_unique").on(table.planKey),
+]);
+
+// User Subscriptions - Track user plan and usage quotas
+export const userSubscriptions = pgTable("user_subscriptions", {
+	id: serial().primaryKey().notNull(),
+	userId: integer("user_id").notNull(),
+	planKey: varchar("plan_key", { length: 50 }).default('free'),
+	aiCallsUsed: integer("ai_calls_used").default(0),
+	aiCallsLimit: integer("ai_calls_limit").default(100),
+	storageUsedMb: integer("storage_used_mb").default(0),
+	storageLimitMb: integer("storage_limit_mb").default(5),
+	periodStart: timestamp("period_start", { withTimezone: true, mode: 'string' }),
+	periodEnd: timestamp("period_end", { withTimezone: true, mode: 'string' }),
+	status: varchar({ length: 20 }).default('active'),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	foreignKey({
+				columns: [table.userId],
+				foreignColumns: [users.id],
+				name: "fk_user_subscriptions_user_id"
+			}).onDelete("cascade"),
+]);
+
+// Audit Logs - Immutable audit trail for security compliance
+// - No UPDATE/DELETE allowed (append-only)
+// - Covers: data access, export, delete, permission changes, admin actions
+export const auditLogs = pgTable("audit_logs", {
+	id: serial().primaryKey().notNull(),
+	userId: integer("user_id"),
+	action: varchar({ length: 100 }).notNull(), // data.export, data.delete, auth.permission_change, admin.user_create, etc.
+	resourceType: varchar("resource_type", { length: 50 }), // user, data, dashboard, settings
+	resourceId: varchar("resource_id", { length: 100 }),
+	details: jsonb().default({}),
+	ipAddress: varchar("ip_address", { length: 45 }),
+	userAgent: varchar("user_agent", { length: 500 }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	foreignKey({
+				columns: [table.userId],
+				foreignColumns: [users.id],
+				name: "fk_audit_logs_user_id"
+			}).onDelete("set null"),
+]);

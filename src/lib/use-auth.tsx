@@ -1,6 +1,7 @@
 'use client';
 
 import { trackAuth } from '@/lib/activity-tracker';
+import { setCurrentUserId } from '@/lib/safe-storage';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { showError, showSuccess } from './feedback';
 
@@ -81,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setInitialized(true);
       }
       setUser(null);
+      setCurrentUserId(null);
       setIsLoading(false);
       return;
     }
@@ -92,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
+        setCurrentUserId(data.user?.id ?? null);
         setInitialized(true);
       } else if (res.status === 401) {
         // Token 过期，尝试刷新
@@ -115,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (retryRes.ok) {
                   const retryData = await retryRes.json();
                   setUser(retryData.user);
+                  setCurrentUserId(retryData.user?.id ?? null);
                   setInitialized(true);
                   setIsLoading(false);
                   return;
@@ -126,12 +130,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('datainsight_token');
         localStorage.removeItem('datainsight_refresh_token');
         setUser(null);
+        setCurrentUserId(null);
       } else {
         localStorage.removeItem('datainsight_token');
         setUser(null);
+        setCurrentUserId(null);
       }
     } catch {
       setUser(null);
+      setCurrentUserId(null);
     } finally {
       setIsLoading(false);
     }
@@ -156,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem('datainsight_refresh_token', data.refreshToken);
         }
         setUser(data.user);
+        setCurrentUserId(data.user?.id ?? null);
         setInitialized(true);
         showSuccess('登录成功', `欢迎回来，${data.user.name}`);
         return { success: true };
@@ -181,6 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('datainsight_token');
     localStorage.removeItem('datainsight_refresh_token');
     setUser(null);
+    setCurrentUserId(null);
     showSuccess('已退出登录');
     window.location.reload();
   }, []);

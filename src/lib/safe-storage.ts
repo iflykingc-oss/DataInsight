@@ -132,3 +132,101 @@ export function checkStorageHealth(): { healthy: boolean; message: string } {
   }
   return { healthy: true, message: `存储正常 (已用 ${(ratio * 100).toFixed(0)}%)` };
 }
+
+// ============================================================
+// 用户级数据隔离存储
+// 每个用户的数据以 `u_<userId>_<key>` 格式存储在 localStorage
+// 未登录用户使用 `u_guest_<key>` 前缀
+// ============================================================
+
+let currentUserId: string | number | null = null;
+
+/** 设置当前用户ID，用于数据隔离命名空间 */
+export function setCurrentUserId(userId: string | number | null): void {
+  currentUserId = userId;
+  // 用户切换时无需清理其他用户数据，按前缀隔离即可
+}
+
+/** 获取当前用户的存储前缀 */
+export function getUserStoragePrefix(): string {
+  return currentUserId ? `u_${currentUserId}_` : 'u_guest_';
+}
+
+/** 获取用户隔离的 localStorage key */
+function namespacedKey(key: string): string {
+  return `${getUserStoragePrefix()}${key}`;
+}
+
+/** 用户隔离：安全写入 */
+export function userSetItem(key: string, value: string): boolean {
+  return safeSetItem(namespacedKey(key), value);
+}
+
+/** 用户隔离：安全读取 */
+export function userGetItem(key: string): string | null {
+  return safeGetItem(namespacedKey(key));
+}
+
+/** 用户隔离：删除 */
+export function userRemoveItem(key: string): void {
+  try {
+    localStorage.removeItem(namespacedKey(key));
+  } catch { /* ignore */ }
+}
+
+/** 用户隔离：获取用户所有数据 key 列表（不含前缀） */
+export function getUserDataKeys(): string[] {
+  const prefix = getUserStoragePrefix();
+  const keys: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const fullKey = localStorage.key(i);
+      if (fullKey && fullKey.startsWith(prefix)) {
+        keys.push(fullKey.slice(prefix.length));
+      }
+    }
+  } catch { /* ignore */ }
+  return keys;
+}
+
+/** 用户隔离：清除当前用户的所有数据 */
+export function clearUserData(): number {
+  const keys = getUserDataKeys();
+  keys.forEach(key => userRemoveItem(key));
+  return keys.length;
+}
+
+/** 用户隔离：导出当前用户所有数据为 JSON */
+export function exportUserData(): Record<string, unknown> {
+  const keys = getUserDataKeys();
+  const data: Record<string, unknown> = {};
+  keys.forEach(key => {
+    const value = userGetItem(key);
+    if (value !== null) {
+      try {
+        data[key] = JSON.parse(value);
+      } catch {
+        data[key] = value;
+      }
+    }
+  });
+  return data;
+}
+
+/** 用户隔离：获取存储容量占用估算 */
+export function getUserStorageUsage(): { used: number; keys: number } {
+  const prefix = getUserStoragePrefix();
+  let used = 0;
+  let keyCount = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const fullKey = localStorage.key(i);
+      if (fullKey && fullKey.startsWith(prefix)) {
+        const value = localStorage.getItem(fullKey) || '';
+        used += (fullKey.length + value.length) * 2;
+        keyCount++;
+      }
+    }
+  } catch { /* ignore */ }
+  return { used, keys: keyCount };
+}

@@ -1,3 +1,4 @@
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 import { NextRequest, NextResponse } from 'next/server';
 import { callLLMStreamWithFallback, validateModelConfig } from '@/lib/llm';
 import { verifyAuth } from '@/lib/auth-middleware';
@@ -15,6 +16,7 @@ export const runtime = 'nodejs';
  * - 行动呼吁：决策建议
  */
 export async function POST(request: NextRequest) {
+  const callStart = Date.now();
   const auth = await verifyAuth(request);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -97,6 +99,17 @@ ${sampleRows.map((row) =>
 
     // 流式生成
     const stream = await callLLMStreamWithFallback(modelConfig as LLMModelConfig, messages);
+    // 异步记录AI使用
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'data-story',
+      modelName: modelConfig?.model,
+      inputTokens: 0,
+      outputTokens: 0,
+      status: 'success',
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
@@ -106,6 +119,15 @@ ${sampleRows.map((row) =>
     });
   } catch (error) {
     console.error('Data story generation error:', error);
+    // 异步记录AI调用失败
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'data-story',
+      status: 'error',
+      errorMessage: (error instanceof Error ? error.message : String(error)).slice(0, 500),
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json(
       { error: '数据故事生成失败' },
       { status: 500 }

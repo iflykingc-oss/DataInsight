@@ -1,3 +1,4 @@
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 import { NextRequest, NextResponse } from "next/server";
 import { callLLM, validateModelConfig, type LLMModelConfig } from "@/lib/llm";
 import { verifyAuth } from "@/lib/auth-middleware";
@@ -91,6 +92,7 @@ ${fieldInfo}
 }
 
 export async function POST(request: NextRequest) {
+  const callStart = Date.now();
   const auth = await verifyAuth(request);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!auth.user?.permissions?.ai_analyze) return NextResponse.json({ error: '无AI分析权限' }, { status: 403 });
@@ -161,6 +163,15 @@ export async function POST(request: NextRequest) {
       };
     }
 
+    // 异步记录AI使用
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'metric-ai',
+      modelName: modelConfig?.model,
+      status: 'success',
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       data: {
@@ -172,6 +183,15 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Metric AI API error:", error);
     const errorMsg = error instanceof Error ? error.message : "指标生成失败";
+    // 异步记录AI调用失败
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'metric-ai',
+      status: 'error',
+      errorMessage: (error instanceof Error ? error.message : String(error)).slice(0, 500),
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json(
       { success: false, error: errorMsg },
       { status: 500 }

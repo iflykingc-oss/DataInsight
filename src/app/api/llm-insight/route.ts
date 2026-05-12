@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { callLLMStreamWithFallback, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
 import { IndustryTemplateManager } from '@/lib/analysis/industry-templates';
 import { verifyAuth } from '@/lib/auth-middleware';
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 
 const templateManager = new IndustryTemplateManager();
 
@@ -198,8 +199,18 @@ export async function POST(request: NextRequest) {
     messages.push({ role: 'user', content: `数据概要：\n${dataContext}\n\n用户问题：${question}` });
 
     // 流式调用 LLM（带超时和重试兜底）
+    const callStartTime = Date.now();
     try {
       const stream = await callLLMStreamWithFallback(modelConfig!, messages);
+      // 异步记录AI使用情况
+      trackAiUsage({
+        userId: auth.userId,
+        functionType: 'llm-insight',
+        modelName: modelConfig?.model,
+        inputTokens: estimateTokens(messages.map(m => m.content).join('')),
+        status: 'success',
+        latencyMs: Date.now() - callStartTime,
+      }).catch(() => {});
       return new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -211,6 +222,16 @@ export async function POST(request: NextRequest) {
       const encoder = new TextEncoder();
       const errorMsg = llmError instanceof Error ? llmError.message : 'AI 模型调用失败';
       const isTimeout = errorMsg.includes('timeout') || errorMsg.includes('超时');
+      // 异步记录AI调用失败
+      trackAiUsage({
+        userId: auth.userId,
+        functionType: 'llm-insight',
+        modelName: modelConfig?.model,
+        inputTokens: estimateTokens(messages.map(m => m.content).join('')),
+        status: isTimeout ? 'timeout' : 'error',
+        errorMessage: errorMsg.slice(0, 500),
+        latencyMs: Date.now() - callStartTime,
+      }).catch(() => {});
       const is401 = errorMsg.includes('401') || errorMsg.includes('Unauthorized');
       const is404 = errorMsg.includes('404') || errorMsg.includes('Not Found');
       const is429 = errorMsg.includes('429') || errorMsg.includes('Too Many');

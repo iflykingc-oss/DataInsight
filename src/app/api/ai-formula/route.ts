@@ -1,3 +1,4 @@
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 /**
  * AI公式生成API
  * 基于自然语言描述生成标准表格公式
@@ -42,6 +43,7 @@ ${JSON.stringify(sampleRows, null, 2)}
 2. 只返回JSON，不要其他内容
 3. 解释要通俗易懂，让不懂公式的用户也能理解`;
 
+    const callStart = Date.now();
     const content = await callLLM(
       {
         apiKey: modelConfig.apiKey,
@@ -61,6 +63,16 @@ ${JSON.stringify(sampleRows, null, 2)}
         timeout: 60000,
       }
     );
+    // 异步记录AI使用情况
+    trackAiUsage({
+      userId: auth.userId,
+      functionType: 'ai-formula',
+      modelName: modelConfig.model,
+      inputTokens: estimateTokens(prompt),
+      outputTokens: estimateTokens(content),
+      status: 'success',
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
 
     // 尝试解析JSON
     let result: { formula: string; explanation: string };

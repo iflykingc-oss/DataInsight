@@ -1,3 +1,4 @@
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 import { NextRequest, NextResponse } from 'next/server';
 import { callLLM } from '@/lib/llm';
 import { IndustryTemplateManager, BasicConstraint } from '@/lib/analysis/industry-templates';
@@ -65,6 +66,7 @@ const ANALYSIS_MODULES = [
 
 
 export async function POST(req: NextRequest) {
+  const callStart = Date.now();
   const auth = await verifyAuth(req);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!auth.user?.permissions?.ai_analyze) return NextResponse.json({ error: '无AI分析权限' }, { status: 403 });
@@ -220,6 +222,14 @@ ${ANALYSIS_MODULES.filter(m => !industryTemplate.forbiddenRules.modules.includes
       industryName: industryTemplate.name,
     };
 
+    // 异步记录AI使用
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'analysis-planner',
+      status: 'success',
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       plan: responsePlan,
@@ -234,6 +244,15 @@ ${ANALYSIS_MODULES.filter(m => !industryTemplate.forbiddenRules.modules.includes
     });
   } catch (error) {
     console.error('[analysis-planner] Error:', error);
+    // 异步记录AI调用失败
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'analysis-planner',
+      status: 'error',
+      errorMessage: (error instanceof Error ? error.message : String(error)).slice(0, 500),
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json(
       { success: false, error: String(error) },
       { status: 500 }

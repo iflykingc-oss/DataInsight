@@ -1,3 +1,4 @@
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 import { NextRequest, NextResponse } from 'next/server';
 import { callLLM, validateModelConfig } from '@/lib/llm';
 import { verifyAuth } from '@/lib/auth-middleware';
@@ -15,6 +16,7 @@ const INDUSTRY_LIST = [
 ];
 
 export async function POST(request: NextRequest) {
+  const callStart = Date.now();
   const auth = await verifyAuth(request);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -67,6 +69,14 @@ ${(data.rows || []).slice(0, 3).map((row: Record<string, unknown>) =>
       const jsonMatch = result.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
+        // 异步记录AI使用
+        trackAiUsage({
+          userId: auth?.userId,
+          functionType: 'industry-detect',
+          modelName: modelConfig?.model,
+          status: 'success',
+          latencyMs: Date.now() - callStart,
+        }).catch(() => {});
         return NextResponse.json({
           success: true,
           industries: parsed.industries || [],
@@ -81,6 +91,15 @@ ${(data.rows || []).slice(0, 3).map((row: Record<string, unknown>) =>
     return fallbackKeywordMatch(data.headers);
   } catch (error) {
     console.error('Industry detect error:', error);
+    // 异步记录AI调用失败
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'industry-detect',
+      status: 'error',
+      errorMessage: (error instanceof Error ? error.message : String(error)).slice(0, 500),
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json({ error: '行业识别失败' }, { status: 500 });
   }
 }

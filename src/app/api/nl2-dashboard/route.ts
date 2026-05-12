@@ -1,3 +1,4 @@
+import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
 import { NextRequest, NextResponse } from 'next/server';
 import { callLLM, validateModelConfig, type LLMModelConfig } from '@/lib/llm';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
@@ -325,6 +326,7 @@ ${numericFields.filter(f => !isIdField(f)).join('、') || '无有效数值字段
 // API Handler
 // ============================================
 export async function POST(req: NextRequest) {
+  const callStart = Date.now();
   const auth = await verifyAuth(req);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!auth.user?.permissions?.dashboard) return NextResponse.json({ error: '无仪表盘权限' }, { status: 403 });
@@ -418,6 +420,15 @@ export async function POST(req: NextRequest) {
       dashboardSpec.chartData = generateMockData(data, fieldStats, dashboardSpec.charts);
     }
 
+    // 异步记录AI使用
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'nl2-dashboard',
+      modelName: modelConfig?.model,
+      status: 'success',
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       data: dashboardSpec,
@@ -425,6 +436,15 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     console.error('NL2Dashboard API error:', error);
     const message = error instanceof Error ? error.message : '未知错误';
+    // 异步记录AI调用失败
+    trackAiUsage({
+      userId: auth?.userId,
+      functionType: 'nl2-dashboard',
+      status: 'error',
+      errorMessage: (error instanceof Error ? error.message : String(error)).slice(0, 500),
+      latencyMs: Date.now() - callStart,
+    }).catch(() => {});
+
     return NextResponse.json(
       { success: false, error: `生成失败: ${message}` },
       { status: 500 }

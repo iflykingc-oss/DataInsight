@@ -6,7 +6,7 @@ import {
   Brain, FileSpreadsheet, Sparkles, MessageSquare,
   FileText, Code2, Download, ChevronDown, ChevronRight,
   Home, Shield, Target, LineChart, BookOpen, Building2,
-  ShieldCheck, Layers, Cpu, LucideIcon
+  ShieldCheck, Layers, Cpu, CreditCard, LucideIcon
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
@@ -57,6 +57,8 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'form-collection', labelKey: 'sidebar.formCollection', icon: Layers, descriptionKey: 'form.builder' },
       { id: 'sql-lab', labelKey: 'sidebar.sqlLab', icon: Code2, descriptionKey: 'sql.title' },
       { id: 'report-export', labelKey: 'sidebar.reportExport', icon: Download, descriptionKey: 'report.title' },
+      { id: 'pricing', labelKey: 'sidebar.pricing', icon: CreditCard, descriptionKey: 'pricing.title' },
+      { id: 'data-compliance', labelKey: 'sidebar.dataCompliance', icon: ShieldCheck, descriptionKey: 'compliance.title' },
     ],
   },
 ];
@@ -330,6 +332,17 @@ function Sidebar({
           {!collapsed && <span>{t('sidebar.collapse')}</span>}
         </button>
       </div>
+
+      {/* Footer Links */}
+      {!collapsed && (
+        <div className="px-3 pb-3 flex items-center gap-3 text-[10px] text-sidebar-foreground/20">
+          <a href="/privacy" target="_blank" className="hover:text-sidebar-foreground/40 transition-colors">Privacy</a>
+          <span>·</span>
+          <button onClick={() => onViewChange('pricing')} className="hover:text-sidebar-foreground/40 transition-colors">Pricing</button>
+          <span>·</span>
+          <button onClick={() => onViewChange('data-compliance')} className="hover:text-sidebar-foreground/40 transition-colors">Data</button>
+        </div>
+      )}
     </aside>
   );
 }

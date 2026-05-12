@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, memo, useMemo } from 'react';
+import { useState, useEffect, memo, useMemo, lazy, Suspense } from 'react';
 import { trackAction, trackAccount } from '@/lib/activity-tracker';
 import {
   Users, LogIn, Brain, BarChart3, Plus, Edit3, Trash2, Shield,
   CheckCircle2, AlertCircle, Lock, LayoutGrid, Settings2,
   RefreshCw, Activity, TrendingUp, Database, CreditCard,
   Star, Zap, Crown, Megaphone, Calendar, Clock, Bell, BellRing, Eye, Pencil,
-  FileDown, Search, Filter, Globe, Smartphone, Monitor, ShieldCheck
+  FileDown, Search, Filter, Globe, Smartphone, Monitor, ShieldCheck, Cpu,
+  DollarSign, Timer, Hash
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,8 @@ import {
 } from '@/components/ui/dialog';
 import { useAuth } from '@/lib/use-auth';
 import { request } from '@/lib/request';
+import dynamic from 'next/dynamic';
+const AdminAiUsageDashboard = dynamic(() => import('@/components/admin-ai-usage-dashboard'), { ssr: false });
 
 type Role = 'admin' | 'editor' | 'analyst' | 'viewer' | 'custom';
 
@@ -1241,6 +1244,11 @@ function AdminContent({ activeTab }: AdminContentProps) {
             </div>
           )}
         </>
+      )}
+
+      {/* AI Usage Dashboard */}
+      {activeTab === 'ai-usage' && (
+        <AdminAiUsageDashboard />
       )}
 
       {/* 添加/编辑用户弹窗 */}

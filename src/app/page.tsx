@@ -86,6 +86,8 @@ const SqlLab = dynamic(() => import('@/components/sql-lab').then(m => ({ default
 const AIFormulaGenerator = dynamic(() => import('@/components/ai-formula-generator').then(m => ({ default: m.AIFormulaGenerator })), { ssr: false });
 const InsightReportGenerator = dynamic(() => import('@/components/insight-report-generator').then(m => ({ default: m.InsightReportGenerator })), { ssr: false });
 const PivotTable = dynamic(() => import('@/components/pivot-table').then(m => ({ default: m.PivotTable })), { ssr: false });
+const PricingPage = dynamic(() => import('@/components/pricing-page'), { ssr: false });
+const DataCompliancePage = dynamic(() => import('@/components/data-compliance-page'), { ssr: false });
 const KanbanView = dynamic(() => import('@/components/view-kanban').then(m => ({ default: m.KanbanView })), { ssr: false });
 const DataAlerting = dynamic(() => import('@/components/data-alerting').then(m => ({ default: m.DataAlerting })), { ssr: false });
 const VersionHistory = dynamic(() => import('@/components/version-history').then(m => ({ default: m.VersionHistory })), { ssr: false });
@@ -114,7 +116,7 @@ const SpreadsheetAgentPage = dynamic(() => import('@/components/SpreadsheetAgent
 	  | 'data-source'
 	  | 'pivot-table'
 	  | 'multimodal'
-		| 'admin'
+		| 'admin' | 'pricing' | 'data-compliance'
 	
 
 
@@ -157,6 +159,7 @@ export default function HomePage() {
     logs: '登录记录',
     'activity-logs': '用户日志',
     'ai-config': 'AI模型配置',
+    'ai-usage': 'AI使用量',
     stats: '使用统计',
     plans: '套餐管理',
     announcements: '公告管理',
@@ -1256,6 +1259,8 @@ export default function HomePage() {
       'alerting': '数据预警', 'version-history': '版本快照', 'template-manager': '模板管理',
       'pivot-table': '透视表',
       'form-collection': '表单收集',
+	      'pricing': '定价方案',
+	      'data-compliance': '数据合规',
     };
     return titles[viewMode] || '';
   };
@@ -1263,6 +1268,24 @@ export default function HomePage() {
   // ============================================
   // 渲染
   // ============================================
+
+  // ============================================
+  // 定价方案（独立功能，不依赖数据）
+  // ============================================
+  if (viewMode === 'pricing') {
+    return (
+      <PricingPage />
+    );
+  }
+
+  // ============================================
+  // 数据合规中心（独立功能，不依赖数据）
+  // ============================================
+  if (viewMode === 'data-compliance') {
+    return (
+      <DataCompliancePage />
+    );
+  }
 
   // 管理后台：独立布局，替换整个页面
   if (viewMode === 'admin' && user?.role === 'admin') {
