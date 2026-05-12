@@ -75,6 +75,7 @@ import {
   Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { CellValue } from '@/lib/data-processor';
 import type { ParsedData } from '@/lib/data-processor';
 import {
@@ -131,6 +132,7 @@ export function AIFieldPanel({
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const { t } = useI18n();
 
   // 智能推荐
   const recommendations = useMemo(() => {
@@ -428,7 +430,7 @@ export function AIFieldPanel({
                           )}
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>执行</TooltipContent>
+                      <TooltipContent>{t('txt.执行')}</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -438,10 +440,10 @@ export function AIFieldPanel({
                             onCheckedChange={() => handleToggleAutoUpdate(field.id)}
                             className="scale-75"
                           />
-                          <span className="text-xs text-muted-foreground">自动</span>
+                          <span className="text-xs text-muted-foreground">{t('txt.自动')}</span>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>数据变化时自动更新</TooltipContent>
+                      <TooltipContent>{t('txt.数据变化时自动更新')}</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -454,7 +456,7 @@ export function AIFieldPanel({
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>删除</TooltipContent>
+                      <TooltipContent>{t('txt.删除')}</TooltipContent>
                     </Tooltip>
                   </div>
                 </div>
@@ -473,9 +475,9 @@ export function AIFieldPanel({
                       <table className="w-full text-xs">
                         <thead className="bg-background/80 sticky top-0">
                           <tr>
-                            <th className="px-2 py-1 text-left">行号</th>
-                            <th className="px-2 py-1 text-left">源数据</th>
-                            <th className="px-2 py-1 text-left">处理结果</th>
+                            <th className="px-2 py-1 text-left">{t('txt.行号')}</th>
+                            <th className="px-2 py-1 text-left">{t('txt.源数据')}</th>
+                            <th className="px-2 py-1 text-left">{t('txt.处理结果')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -508,7 +510,7 @@ export function AIFieldPanel({
         <Card className="border-dashed">
           <CardContent className="py-8 text-center">
             <Wand2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">暂无AI字段</p>
+            <p className="text-muted-foreground">{t('txt.暂无AI字段')}</p>
             <p className="text-sm text-muted-foreground">点击&quot;新建AI字段&quot;开始智能数据处理</p>
           </CardContent>
         </Card>
@@ -533,7 +535,7 @@ export function AIFieldPanel({
             {createStep === 'template' && (
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="w-full">
-                  <TabsTrigger value="templates" className="flex-1">全部模板</TabsTrigger>
+                  <TabsTrigger value="templates" className="flex-1">{t('txt.全部模板')}</TabsTrigger>
                   <TabsTrigger value="recommend" className="flex-1">
                     <Lightbulb className="w-3.5 h-3.5 mr-1" />
                     智能推荐
@@ -548,7 +550,7 @@ export function AIFieldPanel({
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
-                        placeholder="搜索字段名称、描述、标签..."
+                        placeholder={t("ph.搜索字段名称描述标签")}
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
                         className="pl-9 h-9"
@@ -605,8 +607,8 @@ export function AIFieldPanel({
                       )) : (
                         <div className="col-span-2 text-center py-8 text-muted-foreground">
                           <Search className="w-8 h-8 mx-auto mb-2" />
-                          <p>未找到匹配的字段模板</p>
-                          <p className="text-xs mt-1">尝试调整搜索词或分类筛选</p>
+                          <p>{t('txt.未找到匹配的字段模板')}</p>
+                          <p className="text-xs mt-1">{t('txt.尝试调整搜索词或分类筛选')}</p>
                         </div>
                       )}
                     </div>
@@ -623,7 +625,7 @@ export function AIFieldPanel({
                             <div className="flex items-center gap-2 mb-1">
                               {ICON_MAP[template.icon] ? React.createElement(ICON_MAP[template.icon], { className: 'w-4 h-4 text-primary' }) : <Sparkles className="w-4 h-4 text-primary" />}
                               <span className="font-medium text-sm">{template.name}</span>
-                              <Badge variant="secondary" className="text-xs">推荐</Badge>
+                              <Badge variant="secondary" className="text-xs">{t('txt.推荐')}</Badge>
                             </div>
                             <p className="text-xs text-muted-foreground">{template.description}</p>
                             <p className="text-xs text-primary mt-1">{template.example}</p>
@@ -654,18 +656,18 @@ export function AIFieldPanel({
 
                   {/* 字段名称 */}
                   <div>
-                    <label className="text-sm font-medium">字段名称</label>
+                    <label className="text-sm font-medium">{t('txt.字段名称')}</label>
                     <Input
                       value={fieldName}
                       onChange={e => setFieldName(e.target.value)}
-                      placeholder="输入新字段名称"
+                      placeholder={t("ph.输入新字段名称")}
                       className="mt-1"
                     />
                   </div>
 
                   {/* 选择源列 */}
                   <div>
-                    <label className="text-sm font-medium">选择源数据列</label>
+                    <label className="text-sm font-medium">{t('txt.选择源数据列')}</label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {data.headers.map(header => (
                         <button
@@ -689,13 +691,13 @@ export function AIFieldPanel({
                       ))}
                     </div>
                     {selectedColumns.length === 0 && (
-                      <p className="text-xs text-destructive mt-1">请至少选择一列</p>
+                      <p className="text-xs text-destructive mt-1">{t('txt.请至少选择一列')}</p>
                     )}
                   </div>
 
                   {/* 配置参数 */}
                   <div>
-                    <label className="text-sm font-medium">配置参数</label>
+                    <label className="text-sm font-medium">{t('txt.配置参数')}</label>
                     <div className="space-y-2 mt-2">
                       {Object.entries(selectedTemplate.defaultConfig).map(([key, value]) => (
                         <div key={key}>
@@ -715,8 +717,8 @@ export function AIFieldPanel({
                   {/* 选项 */}
                   <div className="flex items-center justify-between p-3 bg-muted rounded-md">
                     <div>
-                      <p className="text-sm font-medium">先预览前5行</p>
-                      <p className="text-xs text-muted-foreground">确认效果后再全列生成</p>
+                      <p className="text-sm font-medium">{t('txt.先预览前5行')}</p>
+                      <p className="text-xs text-muted-foreground">{t('txt.确认效果后再全列生成')}</p>
                     </div>
                     <Switch checked defaultChecked />
                   </div>
@@ -735,8 +737,8 @@ export function AIFieldPanel({
                     <table className="w-full text-sm">
                       <thead className="bg-muted">
                         <tr>
-                          <th className="px-3 py-2 text-left">行号</th>
-                          <th className="px-3 py-2 text-left">源数据</th>
+                          <th className="px-3 py-2 text-left">{t('txt.行号')}</th>
+                          <th className="px-3 py-2 text-left">{t('txt.源数据')}</th>
                           <th className="px-3 py-2 text-left">AI处理结果</th>
                         </tr>
                       </thead>

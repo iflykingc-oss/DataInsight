@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -215,6 +216,7 @@ function applyFixes(data: ParsedData, selectedIssues: Set<string>, issues: Quali
 
 export function SmartDataPrep({ data, fieldStats, modelConfig, onDataReady }: SmartDataPrepProps) {
   const [issues, setIssues] = useState<QualityIssue[]>(() => detectQualityIssues(data));
+  const { t } = useI18n();
   const [selectedFixes, setSelectedFixes] = useState<Set<string>>(new Set());
   const [isApplying, setIsApplying] = useState(false);
   const [applied, setApplied] = useState(false);

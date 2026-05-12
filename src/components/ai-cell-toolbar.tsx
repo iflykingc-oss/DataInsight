@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Wand2, Languages, FileText, PenLine, Sparkles, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface AICellToolbarProps {
   selectedText: string;
@@ -32,6 +33,7 @@ const TOOLS: ToolOption[] = [
 ];
 
 export function AICellToolbar({ selectedText, cellValue, modelConfig, onApply, onClose }: AICellToolbarProps) {
+  const { t } = useI18n();
   const [activeTool, setActiveTool] = useState<AITool | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');

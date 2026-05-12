@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useI18n } from '@/lib/i18n';
 import ReactECharts from 'echarts-for-react';
 import type { EChartsOption } from 'echarts';
 import type { CellValue } from '@/lib/data-processor';
@@ -253,7 +254,7 @@ export function SankeyChart({ data, xField, yField, title, height = 400 }: Chart
   });
 
   const finalLinks = Object.entries(mergedLinks).map(([key, value]) => {
-    const [source, target] = key.split('|');
+  const [source, target] = key.split('|');
     return { source, target, value };
   });
 

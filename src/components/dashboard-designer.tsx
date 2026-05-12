@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -105,6 +106,7 @@ interface SortableWidgetProps {
 }
 
 function SortableWidget({ widget, onSelect, isSelected, onDelete }: SortableWidgetProps) {
+  const { t } = useI18n();
   const {
     attributes,
     listeners,
@@ -184,8 +186,8 @@ function SortableWidget({ widget, onSelect, isSelected, onDelete }: SortableWidg
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b">
-                  <th className="p-2 text-left">名称</th>
-                  <th className="p-2 text-right">值</th>
+                  <th className="p-2 text-left">{t('txt.名称')}</th>
+                  <th className="p-2 text-right">{t('txt.值')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -249,6 +251,7 @@ interface DashboardDesignerProps {
 }
 
 export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) {
+  const { t } = useI18n();
   const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
   const [selectedWidget, setSelectedWidget] = useState<string | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -391,7 +394,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
               {widgets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed rounded-md">
                   <LayoutGrid className="w-12 h-12 text-muted-foreground/50 mb-4" />
-                  <p className="text-muted-foreground mb-4">还没有添加任何组件</p>
+                  <p className="text-muted-foreground mb-4">{t('txt.还没有添加任何组件')}</p>
                   <Button onClick={() => setShowAddDialog(true)}>
                     <Plus className="w-4 h-4 mr-1" />
                     添加第一个组件
@@ -435,7 +438,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
               {selectedWidgetData ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label>组件标题</Label>
+                    <Label>{t('txt.组件标题')}</Label>
                     <Input
                       value={selectedWidgetData.title}
                       onChange={e => {
@@ -447,7 +450,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                   </div>
                   
                   <div className="space-y-2">
-                    <Label>图表类型</Label>
+                    <Label>{t('txt.图表类型')}</Label>
                     <Select
                       value={selectedWidgetData.type}
                       onValueChange={v => {
@@ -460,12 +463,12 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="bar">柱状图</SelectItem>
-                        <SelectItem value="line">折线图</SelectItem>
-                        <SelectItem value="pie">饼图</SelectItem>
-                        <SelectItem value="area">面积图</SelectItem>
+                        <SelectItem value="bar">{t('txt.柱状图')}</SelectItem>
+                        <SelectItem value="line">{t('txt.折线图')}</SelectItem>
+                        <SelectItem value="pie">{t('txt.饼图')}</SelectItem>
+                        <SelectItem value="area">{t('txt.面积图')}</SelectItem>
                         <SelectItem value="kpi">KPI指标卡</SelectItem>
-                        <SelectItem value="table">数据预览</SelectItem>
+                        <SelectItem value="table">{t('txt.数据预览')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -483,7 +486,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择字段" />
+                        <SelectValue placeholder={t("ph.选择字段")} />
                       </SelectTrigger>
                       <SelectContent>
                         {data.headers.map(h => (
@@ -506,7 +509,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择字段" />
+                        <SelectValue placeholder={t("ph.选择字段")} />
                       </SelectTrigger>
                       <SelectContent>
                         {fieldStats.filter(f => f.type === 'number').map(f => (
@@ -540,7 +543,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Eye className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                  <p className="text-sm">点击组件进行编辑</p>
+                  <p className="text-sm">{t('txt.点击组件进行编辑')}</p>
                 </div>
               )}
             </CardContent>
@@ -549,7 +552,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
           {/* 组件库 */}
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle className="text-base">组件库</CardTitle>
+              <CardTitle className="text-base">{t('txt.组件库')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-2">
@@ -586,21 +589,21 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>添加仪表盘组件</DialogTitle>
-            <DialogDescription>为仪表盘添加新的可视化组件，支持多种图表类型</DialogDescription>
+            <DialogTitle>{t('txt.添加仪表盘组件')}</DialogTitle>
+            <DialogDescription>{t('txt.为仪表盘添加新的可视化组件支持多种图表类型')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>组件标题</Label>
+              <Label>{t('txt.组件标题')}</Label>
               <Input
                 value={newWidgetConfig.title}
                 onChange={e => setNewWidgetConfig({ ...newWidgetConfig, title: e.target.value })}
-                placeholder="输入组件标题"
+                placeholder={t("ph.输入组件标题")}
               />
             </div>
             
             <div className="space-y-2">
-              <Label>组件类型</Label>
+              <Label>{t('txt.组件类型')}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { type: 'bar', icon: BarChart3, name: '柱状图' },
@@ -637,7 +640,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                   onValueChange={v => setNewWidgetConfig({ ...newWidgetConfig, xField: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择字段" />
+                    <SelectValue placeholder={t("ph.选择字段")} />
                   </SelectTrigger>
                   <SelectContent>
                     {data.headers.map(h => (
@@ -654,7 +657,7 @@ export function DashboardDesigner({ data, fieldStats }: DashboardDesignerProps) 
                   onValueChange={v => setNewWidgetConfig({ ...newWidgetConfig, yField: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择字段" />
+                    <SelectValue placeholder={t("ph.选择字段")} />
                   </SelectTrigger>
                   <SelectContent>
                     {fieldStats.filter(f => f.type === 'number').map(f => (

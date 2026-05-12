@@ -33,6 +33,7 @@ import {
   Key,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 import { useAuth } from '@/lib/use-auth';
 import { Badge } from '@/components/ui/badge';
@@ -53,17 +54,27 @@ const DEFAULT_NOTIFICATION_CONFIG: NotificationChannelConfig = {
 };
 
 // 侧边导航项定义
-const SETTINGS_TABS = [
-  { id: 'ai-settings', label: '当前模型', icon: Bot },
-  { id: 'alert', label: '数据预警', icon: Bell },
-  { id: 'version', label: '版本快照', icon: History },
-  { id: 'template', label: '模板管理', icon: BookTemplate },
-  { id: 'general', label: '通用设置', icon: Settings2 },
-  { id: 'notifications', label: '通知渠道', icon: Megaphone },
-  { id: 'permissions', label: '权限管理', icon: Shield },
+const SETTINGS_TAB_IDS = [
+  { id: 'ai-settings', icon: Bot },
+  { id: 'alert', icon: Bell },
+  { id: 'version', icon: History },
+  { id: 'template', icon: BookTemplate },
+  { id: 'general', icon: Settings2 },
+  { id: 'notifications', icon: Megaphone },
+  { id: 'permissions', icon: Shield },
 ] as const;
 
-type SettingsTabId = typeof SETTINGS_TABS[number]['id'];
+const SETTINGS_TAB_LABELS: Record<string, string> = {
+  'ai-settings': 'settings.currentModel',
+  'alert': 'settings.dataAlert',
+  'version': 'settings.versionSnapshot',
+  'template': 'settings.templateManager',
+  'general': 'settings.general',
+  'notifications': 'settings.notifications',
+  'permissions': 'settings.permissions',
+};
+
+type SettingsTabId = typeof SETTINGS_TAB_IDS[number]['id'];
 
 interface SettingsDialogProps {
   open: boolean;
@@ -86,6 +97,7 @@ export default function SettingsDialog({
 }: SettingsDialogProps) {
   const { user, isLoggedIn } = useAuth();
   const [adminConfig, setAdminConfig] = useState<{ apiKey?: string; baseUrl?: string; modelName?: string }>({});
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<SettingsTabId>('ai-settings');
 
   useEffect(() => {
@@ -122,16 +134,16 @@ export default function SettingsDialog({
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
       if (channel === 'feishu' && !notificationConfig.feishu.webhookUrl) {
-        setNotifTestResult({ success: false, message: '请先配置飞书 Webhook 地址' });
+        setNotifTestResult({ success: false, message: t('settings.configFeishuFirst') });
       } else if (channel === 'webhook' && !notificationConfig.webhook.url) {
-        setNotifTestResult({ success: false, message: '请先配置 Webhook URL' });
+        setNotifTestResult({ success: false, message: t('settings.configWebhookFirst') });
       } else if (channel === 'email' && !notificationConfig.email.smtp) {
-        setNotifTestResult({ success: false, message: '请先配置 SMTP 服务器' });
+        setNotifTestResult({ success: false, message: t('settings.configSmtpFirst') });
       } else {
-        setNotifTestResult({ success: true, message: `测试通知已通过${channel === 'feishu' ? '飞书' : channel === 'webhook' ? 'Webhook' : '邮件'}渠道发送` });
+        setNotifTestResult({ success: true, message: t('settings.testSuccess', { channel: channel === 'feishu' ? t('settings.feishu') : channel === 'webhook' ? 'Webhook' : t('settings.email') }) });
       }
     } catch {
-      setNotifTestResult({ success: false, message: '测试失败，请检查配置' });
+      setNotifTestResult({ success: false, message: t('settings.testFailed') });
     } finally {
       setIsTestingNotif(false);
     }
@@ -158,7 +170,7 @@ export default function SettingsDialog({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Bot className="w-5 h-5 text-primary" />
-                      <h3 className="text-lg font-semibold">平台模型配置</h3>
+                      <h3 className="text-lg font-semibold">{t('settings.platformModelConfig')}</h3>
                     </div>
                     <Badge variant="outline" className="text-xs">
                       <Lock className="w-3 h-3 mr-1" />
@@ -179,7 +191,7 @@ export default function SettingsDialog({
                     <div className="flex items-center gap-3">
                       <Key className="w-4 h-4 text-muted-foreground shrink-0" />
                       <div className="min-w-0">
-                        <div className="text-xs text-muted-foreground">模型</div>
+                        <div className="text-xs text-muted-foreground">{t('settings.model')}</div>
                         <div className="text-sm font-medium truncate">{adminConfig.modelName || '未配置'}</div>
                       </div>
                     </div>
@@ -203,7 +215,7 @@ export default function SettingsDialog({
         ) : (
           <div className="flex flex-col items-center py-16 text-muted-foreground/50">
             <AlertTriangle className="w-10 h-10 mb-3" />
-            <p className="text-sm">请先上传数据以使用数据预警功能</p>
+            <p className="text-sm">{t('settings.uploadFirstForAlert')}</p>
           </div>
         );
 
@@ -218,7 +230,7 @@ export default function SettingsDialog({
           <div className="space-y-1">
             <div className="flex items-center justify-between py-3 border-b border-border/50">
               <div>
-                <p className="font-medium text-sm">深色模式</p>
+                <p className="font-medium text-sm">{t('settings.darkMode')}</p>
                 <p className="text-xs text-muted-foreground">{darkMode ? '已开启深色主题' : '开启深色主题'}</p>
               </div>
               <Switch
@@ -238,23 +250,23 @@ export default function SettingsDialog({
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-primary" />
                 <div>
-                  <p className="font-medium text-sm">数据安全声明</p>
-                  <p className="text-xs text-muted-foreground">除账号权限配置和表单收集数据外，系统不保存任何用户数据</p>
+                  <p className="font-medium text-sm">{t('settings.dataSecurityStatement')}</p>
+                  <p className="text-xs text-muted-foreground">{t('settings.dataSecurityDesc')}</p>
                 </div>
               </div>
             </div>
             <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground space-y-1 mt-2">
-              <p className="font-medium text-foreground">数据处理原则</p>
+              <p className="font-medium text-foreground">{t('settings.dataPrinciples')}</p>
               <ul className="list-disc list-inside space-y-0.5">
-                <li>上传的表格数据仅用于页面内存分析，关闭页面后自动释放</li>
-                <li>AI 交互记录不存储，对话仅在当前会话有效</li>
-                <li>账号与权限配置持久化存储，保障多设备访问</li>
-                <li>表单收集数据设有 72 小时 TTL，到期自动清除</li>
+                <li>{t('settings.principle1')}</li>
+                <li>{t('settings.principle2')}</li>
+                <li>{t('settings.principle3')}</li>
+                <li>{t('settings.principle4')}</li>
               </ul>
             </div>
             {/* 数据管理 */}
             <div className="pt-4 space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">配置管理</p>
+              <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">{t('settings.configManagement')}</p>
               <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
                 const configKeys = ['datainsight_alert_config', 'datainsight_alerts', 'datainsight_alert_history', 'nl2dashboard_history_v2', 'datainsight_metrics_library', 'datainsight_notification_config', 'datainsight-darkmode'];
                 const exportData: Record<string, unknown> = {};
@@ -280,7 +292,7 @@ export default function SettingsDialog({
       case 'notifications':
         return (
           <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">配置告警通知渠道，数据预警触发时将通过已启用的渠道发送通知。</p>
+            <p className="text-xs text-muted-foreground">{t('settings.notifDesc')}</p>
 
             {/* 邮件 */}
             <Card>
@@ -288,7 +300,7 @@ export default function SettingsDialog({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-primary dark:text-primary/80" />
-                    <span className="font-medium text-sm">邮件通知</span>
+                    <span className="font-medium text-sm">{t('settings.emailNotif')}</span>
                   </div>
                   <Switch
                     checked={notificationConfig.email.enabled}
@@ -298,13 +310,13 @@ export default function SettingsDialog({
                 {notificationConfig.email.enabled && (
                   <div className="space-y-2">
                     <div className="grid grid-cols-3 gap-2">
-                      <Input placeholder="SMTP 服务器" value={notificationConfig.email.smtp} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, smtp: e.target.value } })} className="text-xs h-8" />
-                      <Input placeholder="端口" value={notificationConfig.email.port} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, port: e.target.value } })} className="text-xs h-8" />
-                      <Input placeholder="用户名" value={notificationConfig.email.user} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, user: e.target.value } })} className="text-xs h-8" />
+                      <Input placeholder={t("settings.smtpServer")} value={notificationConfig.email.smtp} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, smtp: e.target.value } })} className="text-xs h-8" />
+                      <Input placeholder={t("settings.port")} value={notificationConfig.email.port} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, port: e.target.value } })} className="text-xs h-8" />
+                      <Input placeholder={t("settings.username")} value={notificationConfig.email.user} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, user: e.target.value } })} className="text-xs h-8" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input placeholder="密码/授权码" type="password" value={notificationConfig.email.password} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, password: e.target.value } })} className="text-xs h-8" />
-                      <Input placeholder="收件人邮箱" value={notificationConfig.email.to} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, to: e.target.value } })} className="text-xs h-8" />
+                      <Input placeholder={t("settings.passwordAuth")} type="password" value={notificationConfig.email.password} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, password: e.target.value } })} className="text-xs h-8" />
+                      <Input placeholder={t("settings.recipientEmail")} value={notificationConfig.email.to} onChange={(e) => saveNotificationConfig({ ...notificationConfig, email: { ...notificationConfig.email, to: e.target.value } })} className="text-xs h-8" />
                     </div>
                   </div>
                 )}
@@ -317,7 +329,7 @@ export default function SettingsDialog({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-success dark:text-success/80" />
-                    <span className="font-medium text-sm">飞书通知</span>
+                    <span className="font-medium text-sm">{t('settings.feishuNotif')}</span>
                   </div>
                   <Switch
                     checked={notificationConfig.feishu.enabled}
@@ -326,8 +338,8 @@ export default function SettingsDialog({
                 </div>
                 {notificationConfig.feishu.enabled && (
                   <div className="space-y-2">
-                    <Input placeholder="飞书机器人 Webhook 地址" value={notificationConfig.feishu.webhookUrl} onChange={(e) => saveNotificationConfig({ ...notificationConfig, feishu: { ...notificationConfig.feishu, webhookUrl: e.target.value } })} className="text-xs h-8" />
-                    <Input placeholder="签名密钥（可选）" value={notificationConfig.feishu.secret} onChange={(e) => saveNotificationConfig({ ...notificationConfig, feishu: { ...notificationConfig.feishu, secret: e.target.value } })} className="text-xs h-8" />
+                    <Input placeholder={t("settings.feishuWebhook")} value={notificationConfig.feishu.webhookUrl} onChange={(e) => saveNotificationConfig({ ...notificationConfig, feishu: { ...notificationConfig.feishu, webhookUrl: e.target.value } })} className="text-xs h-8" />
+                    <Input placeholder={t("settings.signSecret")} value={notificationConfig.feishu.secret} onChange={(e) => saveNotificationConfig({ ...notificationConfig, feishu: { ...notificationConfig.feishu, secret: e.target.value } })} className="text-xs h-8" />
                   </div>
                 )}
               </CardContent>
@@ -348,7 +360,7 @@ export default function SettingsDialog({
                 </div>
                 {notificationConfig.webhook.enabled && (
                   <div className="space-y-2">
-                    <Input placeholder="Webhook URL（支持飞书/钉钉/企微自动适配）" value={notificationConfig.webhook.url} onChange={(e) => saveNotificationConfig({ ...notificationConfig, webhook: { ...notificationConfig.webhook, url: e.target.value } })} className="text-xs h-8" />
+                    <Input placeholder={t("settings.webhookUrl")} value={notificationConfig.webhook.url} onChange={(e) => saveNotificationConfig({ ...notificationConfig, webhook: { ...notificationConfig.webhook, url: e.target.value } })} className="text-xs h-8" />
                   </div>
                 )}
               </CardContent>
@@ -397,26 +409,27 @@ export default function SettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="sm:max-w-3xl max-w-[calc(100%-2rem)] max-h-[85vh] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-5 pb-0 flex flex-row items-center justify-between">
-          <DialogTitle className="text-base">设置与管理</DialogTitle>
+          <DialogTitle className="text-base">{t('settings.title')}</DialogTitle>
           <DialogDescription className="sr-only">配置AI模型、数据预警、通知渠道、权限管理等设置</DialogDescription>
           <button
             onClick={() => onOpenChange(false)}
             className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            <span className="sr-only">关闭</span>
+            <span className="sr-only">{t('common.close')}</span>
           </button>
         </DialogHeader>
         <div className="flex min-h-[480px]">
           {/* 左侧导航列表 */}
           <nav className="w-44 border-r border-border bg-muted/20 py-2 px-2 shrink-0">
-            {SETTINGS_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+            {SETTINGS_TAB_IDS.map((tabDef) => {
+              const TabIcon = tabDef.icon;
+              const tabLabel = t(SETTINGS_TAB_LABELS[tabDef.id]);
+              const isActive = activeTab === tabDef.id;
               return (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  key={tabDef.id}
+                  onClick={() => setActiveTab(tabDef.id)}
                   className={cn(
                     'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors',
                     isActive
@@ -424,8 +437,8 @@ export default function SettingsDialog({
                       : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
                   )}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{tab.label}</span>
+                  {TabIcon && <TabIcon className="w-4 h-4 shrink-0" />}
+                  <span>{tabLabel}</span>
                 </button>
               );
             })}

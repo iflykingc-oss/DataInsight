@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import {
   Select,
   SelectContent,
@@ -38,6 +39,7 @@ interface ExtendedChartGalleryProps {
 }
 
 export function ExtendedChartGallery({ data }: ExtendedChartGalleryProps) {
+  const { t } = useI18n();
   const [selectedChart, setSelectedChart] = useState<ExtendedChartType>('scatter');
   const [xField, setXField] = useState(data.headers?.[0] || '');
   const [yField, setYField] = useState('');
@@ -87,7 +89,7 @@ export function ExtendedChartGallery({ data }: ExtendedChartGalleryProps) {
           <div className="flex flex-col items-center justify-center py-8">
             <GaugeChart value={gaugeValue} title={yField || '指标完成度'} max={100} unit="%" />
             <div className="flex items-center gap-4 mt-4">
-              <span className="text-sm text-muted-foreground">调整数值:</span>
+              <span className="text-sm text-muted-foreground">{t('txt.调整数值')}</span>
               <input
                 type="range"
                 min={0}
@@ -173,7 +175,7 @@ export function ExtendedChartGallery({ data }: ExtendedChartGalleryProps) {
             <span className="text-sm text-muted-foreground">Y轴:</span>
             <Select value={yField} onValueChange={setYField}>
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="选择字段" />
+                <SelectValue placeholder={t("ph.选择字段")} />
               </SelectTrigger>
               <SelectContent>
                 {numericFields.map(h => (
@@ -186,10 +188,10 @@ export function ExtendedChartGallery({ data }: ExtendedChartGalleryProps) {
 
         {selectedChart === 'wordcloud' && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">文本字段:</span>
+            <span className="text-sm text-muted-foreground">{t('txt.文本字段')}</span>
             <Select value={wordField} onValueChange={setWordField}>
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="选择字段" />
+                <SelectValue placeholder={t("ph.选择字段")} />
               </SelectTrigger>
               <SelectContent>
                 {categoricalFields.map(h => (

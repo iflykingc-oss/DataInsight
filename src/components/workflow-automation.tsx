@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -169,6 +170,7 @@ interface WorkflowAutomationProps {
 }
 
 export function WorkflowAutomation({ headers, tableName = '当前表' }: WorkflowAutomationProps) {
+  const { t } = useI18n();
   const [rules, setRules] = useState<WorkflowRule[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -260,7 +262,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-medium">自动化工作流</h3>
+          <h3 className="text-sm font-medium">{t('txt.自动化工作流')}</h3>
           <Badge variant="secondary">
             {rules.filter(r => r.enabled).length}/{rules.length} 启用
           </Badge>
@@ -281,19 +283,19 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
       {rules.length > 0 && (
         <div className="grid grid-cols-4 gap-3">
           <Card className="p-3">
-            <p className="text-xs text-muted-foreground">总规则数</p>
+            <p className="text-xs text-muted-foreground">{t('txt.总规则数')}</p>
             <p className="text-2xl font-bold">{rules.length}</p>
           </Card>
           <Card className="p-3">
-            <p className="text-xs text-muted-foreground">启用中</p>
+            <p className="text-xs text-muted-foreground">{t('txt.启用中')}</p>
             <p className="text-2xl font-bold text-green-600">{rules.filter(r => r.enabled).length}</p>
           </Card>
           <Card className="p-3">
-            <p className="text-xs text-muted-foreground">总执行次数</p>
+            <p className="text-xs text-muted-foreground">{t('txt.总执行次数')}</p>
             <p className="text-2xl font-bold">{rules.reduce((sum, r) => sum + r.runCount, 0)}</p>
           </Card>
           <Card className="p-3">
-            <p className="text-xs text-muted-foreground">最近执行</p>
+            <p className="text-xs text-muted-foreground">{t('txt.最近执行')}</p>
             <p className="text-sm font-medium truncate">
               {rules.find(r => r.lastRun)?.lastRun?.toLocaleDateString() || '暂无'}
             </p>
@@ -309,7 +311,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
               <GitBranch className="w-8 h-8 text-muted-foreground/50" />
             </div>
             <div>
-              <h3 className="font-medium mb-1">暂无自动化规则</h3>
+              <h3 className="font-medium mb-1">{t('txt.暂无自动化规则')}</h3>
               <p className="text-sm text-muted-foreground mb-3">
                 自动化工作流可以在数据满足条件时自动执行操作
               </p>
@@ -415,12 +417,12 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                       <div className="bg-muted/50 rounded-md p-3">
                         <div className="flex items-center gap-2 mb-2">
                           <Zap className="w-4 h-4 text-orange-500" />
-                          <span className="text-xs font-medium">触发器</span>
+                          <span className="text-xs font-medium">{t('txt.触发器')}</span>
                         </div>
                         <div className="text-xs text-muted-foreground">
                           <p>{TRIGGER_OPTIONS.find(t => t.value === rule.trigger.type)?.description}</p>
                           {rule.trigger.field && (
-                            <p className="mt-1">监控字段: <Badge variant="outline">{rule.trigger.field}</Badge></p>
+                            <p className="mt-1">{t('txt.监控字段')}<Badge variant="outline">{rule.trigger.field}</Badge></p>
                           )}
                           {rule.trigger.schedule && (
                             <p className="mt-1">
@@ -442,7 +444,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                         <div className="bg-muted/50 rounded-md p-3">
                           <div className="flex items-center gap-2 mb-2">
                             <Filter className="w-4 h-4 text-blue-500" />
-                            <span className="text-xs font-medium">触发条件</span>
+                            <span className="text-xs font-medium">{t('txt.触发条件')}</span>
                           </div>
                           <div className="space-y-1">
                             {rule.conditions.map((c, i) => (
@@ -458,7 +460,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
                       <div className="bg-muted/50 rounded-md p-3">
                         <div className="flex items-center gap-2 mb-2">
                           <GitBranch className="w-4 h-4 text-green-500" />
-                          <span className="text-xs font-medium">执行操作</span>
+                          <span className="text-xs font-medium">{t('txt.执行操作')}</span>
                         </div>
                         <div className="space-y-2">
                           {rule.actions.map((action, i) => {
@@ -525,7 +527,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
       <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>工作流模板</DialogTitle>
+            <DialogTitle>{t('txt.工作流模板')}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-auto p-1">
             {WORKFLOW_TEMPLATES.map((template, i) => (
@@ -581,6 +583,7 @@ function WorkflowEditorDialog({
   onSave,
 }: WorkflowEditorDialogProps) {
   const [name, setName] = useState(rule?.name || '');
+  const { t } = useI18n();
   const [description, setDescription] = useState(rule?.description || '');
   type ScheduleType = {
   frequency: 'once' | 'daily' | 'weekly' | 'monthly';
@@ -659,22 +662,22 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
           <div className="space-y-6 p-1">
             {/* 基本信息 */}
             <div className="space-y-3">
-              <Label>基本信息</Label>
+              <Label>{t('txt.基本信息')}</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">工作流名称</Label>
+                  <Label className="text-xs">{t('txt.工作流名称')}</Label>
                   <Input
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    placeholder="例如：库存预警通知"
+                    placeholder={t("ph.例如库存预警通知")}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">描述（可选）</Label>
+                  <Label className="text-xs">{t('txt.描述可选')}</Label>
                   <Input
                     value={description}
                     onChange={e => setDescription(e.target.value)}
-                    placeholder="简要描述工作流的用途"
+                    placeholder={t("ph.简要描述工作流的用途")}
                   />
                 </div>
               </div>
@@ -684,7 +687,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
 
             {/* 触发器 */}
             <div className="space-y-3">
-              <Label>触发器</Label>
+              <Label>{t('txt.触发器')}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {TRIGGER_OPTIONS.map(option => {
                   const Icon = option.icon;
@@ -711,10 +714,10 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
               {/* 触发器配置 */}
               {triggerType === 'field_changed' && (
                 <div className="p-3 bg-muted/50 rounded-md">
-                  <Label className="text-xs mb-2 block">监控字段</Label>
+                  <Label className="text-xs mb-2 block">{t('txt.监控字段')}</Label>
                   <Select value={triggerField} onValueChange={setTriggerField}>
                     <SelectTrigger>
-                      <SelectValue placeholder="选择字段" />
+                      <SelectValue placeholder={t("ph.选择字段")} />
                     </SelectTrigger>
                     <SelectContent>
                       {headers.map(h => (
@@ -729,7 +732,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                 <div className="p-3 bg-muted/50 rounded-md space-y-3">
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <Label className="text-xs">执行频率</Label>
+                      <Label className="text-xs">{t('txt.执行频率')}</Label>
                       <Select
                         value={schedule.frequency}
                         onValueChange={(v: typeof schedule.frequency) =>
@@ -740,15 +743,15 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="once">仅一次</SelectItem>
-                          <SelectItem value="daily">每天</SelectItem>
-                          <SelectItem value="weekly">每周</SelectItem>
-                          <SelectItem value="monthly">每月</SelectItem>
+                          <SelectItem value="once">{t('txt.仅一次')}</SelectItem>
+                          <SelectItem value="daily">{t('txt.每天')}</SelectItem>
+                          <SelectItem value="weekly">{t('txt.每周')}</SelectItem>
+                          <SelectItem value="monthly">{t('txt.每月')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">执行时间</Label>
+                      <Label className="text-xs">{t('txt.执行时间')}</Label>
                       <Input
                         type="time"
                         value={schedule.time || '09:00'}
@@ -757,7 +760,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                     </div>
                     {schedule.frequency === 'weekly' && (
                       <div className="space-y-1">
-                        <Label className="text-xs">星期</Label>
+                        <Label className="text-xs">{t('txt.星期')}</Label>
                         <Select
                           value={String(schedule.dayOfWeek || 1)}
                           onValueChange={v => setSchedule({ ...schedule, dayOfWeek: Number(v) })}
@@ -775,7 +778,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                     )}
                     {schedule.frequency === 'monthly' && (
                       <div className="space-y-1">
-                        <Label className="text-xs">日期</Label>
+                        <Label className="text-xs">{t('txt.日期')}</Label>
                         <Input
                           type="number"
                           min={1}
@@ -795,7 +798,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
             {/* 触发条件 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>触发条件</Label>
+                <Label>{t('txt.触发条件')}</Label>
                 <Button variant="outline" size="sm" onClick={addCondition}>
                   <Plus className="w-3 h-3 mr-1" />
                   添加条件
@@ -814,7 +817,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                         onValueChange={v => updateCondition(i, { field: v })}
                       >
                         <SelectTrigger className="w-32">
-                          <SelectValue placeholder="字段" />
+                          <SelectValue placeholder={t("ph.字段")} />
                         </SelectTrigger>
                         <SelectContent>
                           {headers.map(h => (
@@ -839,7 +842,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                         className="flex-1"
                         value={condition.value}
                         onChange={e => updateCondition(i, { value: e.target.value })}
-                        placeholder="值"
+                        placeholder={t("ph.值")}
                       />
                       <Button variant="ghost" size="icon" onClick={() => removeCondition(i)}>
                         <Trash2 className="w-4 h-4" />
@@ -855,7 +858,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
             {/* 执行操作 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>执行操作</Label>
+                <Label>{t('txt.执行操作')}</Label>
                 <Button variant="outline" size="sm" onClick={addAction}>
                   <Plus className="w-3 h-3 mr-1" />
                   添加操作
@@ -912,11 +915,11 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                         <div className="mt-3 space-y-3 pl-6 border-l-2 border-primary/20">
                           {action.type === 'notify' && (
                             <div>
-                              <Label className="text-xs mb-1 block">通知消息</Label>
+                              <Label className="text-xs mb-1 block">{t('txt.通知消息')}</Label>
                               <Textarea
                                 value={action.notifyMessage || ''}
                                 onChange={e => updateAction(i, { notifyMessage: e.target.value })}
-                                placeholder="输入通知内容..."
+                                placeholder={t("ph.输入通知内容")}
                                 rows={2}
                               />
                             </div>
@@ -925,7 +928,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                           {action.type === 'email' && (
                             <div className="space-y-2">
                               <div>
-                                <Label className="text-xs mb-1 block">收件人</Label>
+                                <Label className="text-xs mb-1 block">{t('txt.收件人')}</Label>
                                 <Input
                                   value={action.emailTo || ''}
                                   onChange={e => updateAction(i, { emailTo: e.target.value })}
@@ -933,19 +936,19 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                                 />
                               </div>
                               <div>
-                                <Label className="text-xs mb-1 block">邮件主题</Label>
+                                <Label className="text-xs mb-1 block">{t('txt.邮件主题')}</Label>
                                 <Input
                                   value={action.emailSubject || ''}
                                   onChange={e => updateAction(i, { emailSubject: e.target.value })}
-                                  placeholder="邮件主题"
+                                  placeholder={t("ph.邮件主题")}
                                 />
                               </div>
                               <div>
-                                <Label className="text-xs mb-1 block">邮件正文</Label>
+                                <Label className="text-xs mb-1 block">{t('txt.邮件正文')}</Label>
                                 <Textarea
                                   value={action.emailBody || ''}
                                   onChange={e => updateAction(i, { emailBody: e.target.value })}
-                                  placeholder="邮件内容..."
+                                  placeholder={t("ph.邮件内容")}
                                   rows={3}
                                 />
                               </div>
@@ -959,15 +962,15 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                                 <Input
                                   value={action.feishuWebhook || ''}
                                   onChange={e => updateAction(i, { feishuWebhook: e.target.value })}
-                                  placeholder="飞书群机器人Webhook地址"
+                                  placeholder={t("ph.飞书群机器人Webhook地址")}
                                 />
                               </div>
                               <div>
-                                <Label className="text-xs mb-1 block">消息内容</Label>
+                                <Label className="text-xs mb-1 block">{t('txt.消息内容')}</Label>
                                 <Textarea
                                   value={action.feishuMessage || ''}
                                   onChange={e => updateAction(i, { feishuMessage: e.target.value })}
-                                  placeholder="发送的消息内容..."
+                                  placeholder={t("ph.发送的消息内容")}
                                   rows={2}
                                 />
                               </div>
@@ -978,7 +981,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                             <div className="space-y-2">
                               <div className="grid grid-cols-4 gap-2">
                                 <div className="col-span-1">
-                                  <Label className="text-xs mb-1 block">方法</Label>
+                                  <Label className="text-xs mb-1 block">{t('txt.方法')}</Label>
                                   <Select
                                     value={action.httpMethod || 'POST'}
                                     onValueChange={v => updateAction(i, { httpMethod: v as typeof action.httpMethod })}
@@ -1003,7 +1006,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                                 </div>
                               </div>
                               <div>
-                                <Label className="text-xs mb-1 block">请求体 (JSON)</Label>
+                                <Label className="text-xs mb-1 block">{t('txt.请求体JSON')}</Label>
                                 <Textarea
                                   value={action.httpBody || ''}
                                   onChange={e => updateAction(i, { httpBody: e.target.value })}
@@ -1017,13 +1020,13 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                           {action.type === 'set_field' && (
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <Label className="text-xs mb-1 block">字段</Label>
+                                <Label className="text-xs mb-1 block">{t('txt.字段')}</Label>
                                 <Select
                                   value={action.fieldToUpdate || ''}
                                   onValueChange={v => updateAction(i, { fieldToUpdate: v })}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="选择字段" />
+                                    <SelectValue placeholder={t("ph.选择字段")} />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {headers.map(h => (
@@ -1033,11 +1036,11 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                                 </Select>
                               </div>
                               <div>
-                                <Label className="text-xs mb-1 block">值</Label>
+                                <Label className="text-xs mb-1 block">{t('txt.值')}</Label>
                                 <Input
                                   value={action.fieldValue || ''}
                                   onChange={e => updateAction(i, { fieldValue: e.target.value })}
-                                  placeholder="设置的值"
+                                  placeholder={t("ph.设置的值")}
                                 />
                               </div>
                             </div>
@@ -1049,7 +1052,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                               <Textarea
                                 value={action.aiPrompt || ''}
                                 onChange={e => updateAction(i, { aiPrompt: e.target.value })}
-                                placeholder="描述你想要AI生成的内容..."
+                                placeholder={t("ph.描述你想要AI生成的内容")}
                                 rows={3}
                               />
                             </div>
@@ -1058,24 +1061,24 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
                           {action.type === 'create_task' && (
                             <div className="space-y-2">
                               <div>
-                                <Label className="text-xs mb-1 block">任务标题</Label>
+                                <Label className="text-xs mb-1 block">{t('txt.任务标题')}</Label>
                                 <Input
                                   value={action.taskTitle || ''}
                                   onChange={e => updateAction(i, { taskTitle: e.target.value })}
-                                  placeholder="任务名称"
+                                  placeholder={t("ph.任务名称")}
                                 />
                               </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <Label className="text-xs mb-1 block">负责人</Label>
+                                  <Label className="text-xs mb-1 block">{t('txt.负责人')}</Label>
                                   <Input
                                     value={action.taskAssignee || ''}
                                     onChange={e => updateAction(i, { taskAssignee: e.target.value })}
-                                    placeholder="人员名称"
+                                    placeholder={t("ph.人员名称")}
                                   />
                                 </div>
                                 <div>
-                                  <Label className="text-xs mb-1 block">截止日期</Label>
+                                  <Label className="text-xs mb-1 block">{t('txt.截止日期')}</Label>
                                   <Input
                                     type="date"
                                     value={action.taskDueDate || ''}

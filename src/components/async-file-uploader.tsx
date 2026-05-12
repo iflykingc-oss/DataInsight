@@ -3,6 +3,7 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { Upload, X, FileSpreadsheet, AlertCircle, CheckCircle, FileText, Shield, Sparkles, Trash2, Eye, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -56,48 +57,48 @@ interface FileUploaderProps {
   enablePreCheck?: boolean;
 }
 
-const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
+const getErrorMessages = (t: (key: string, params?: Record<string, string | number>) => string): Record<string, { title: string; description: string }> => ({
   'invalid_extension': {
-    title: '文件类型不支持',
-    description: '这个文件看起来不是表格文件哦，请上传 Excel (.xlsx/.xls) 或 CSV 格式的文件'
+    title: t('upload.unsupportedType'),
+    description: t('upload.unsupportedTypeDesc')
   },
   'file_too_large': {
-    title: '文件有点大',
-    description: '文件超过了系统限制，建议分拆成多个小文件上传'
+    title: t('upload.fileTooLarge'),
+    description: t('upload.fileTooLargeDesc')
   },
   'empty_file': {
-    title: '文件是空的',
-    description: '这个文件里没有数据，可能是新建的空白表格'
+    title: t('upload.fileEmpty'),
+    description: t('upload.fileEmptyDesc')
   },
   'corrupted_file': {
-    title: '文件好像损坏了',
-    description: '文件打开时出现问题，可能是传输过程中损坏，请重新上传'
+    title: t('upload.fileCorrupted'),
+    description: t('upload.fileCorruptedDesc')
   },
   'no_header': {
-    title: '缺少表头',
-    description: '文件第一行应该包含列名称，比如"姓名"、"金额"等'
+    title: t('upload.missingHeaders'),
+    description: t('upload.missingHeadersDesc')
   },
   'invalid_encoding': {
-    title: '文件编码异常',
-    description: '文件使用了特殊的编码格式，系统已尝试自动修复'
+    title: t('upload.encodingError'),
+    description: t('upload.encodingErrorDesc')
   },
   'mixed_data_types': {
-    title: '数据格式不统一',
-    description: '某些单元格的数据格式不一致，建议统一后再分析'
+    title: t('upload.inconsistentFormat'),
+    description: t('upload.inconsistentFormatDesc')
   },
   'too_many_blank_rows': {
-    title: '空白行有点多',
-    description: '文件中有很多空行，系统已自动过滤掉'
+    title: t('upload.tooManyEmptyRows'),
+    description: t('upload.tooManyEmptyRowsDesc')
   },
   'merged_cells': {
-    title: '发现合并单元格',
-    description: '表格中包含合并的单元格，系统已尝试拆分处理'
+    title: t('upload.mergedCells'),
+    description: t('upload.mergedCellsDesc')
   },
   'unreadable_content': {
-    title: '内容读取失败',
-    description: '部分内容无法正常读取，可能是图片或特殊格式，建议转换为纯文本'
+    title: t('upload.contentReadFailed'),
+    description: t('upload.contentReadFailedDesc')
   }
-};
+});
 
 export function FileUploader({
   onFileUpload,
@@ -110,6 +111,8 @@ export function FileUploader({
   enableAIHealing = true,
   enablePreCheck = true
 }: FileUploaderProps) {
+  const { t } = useI18n();
+  const ERROR_MESSAGES = getErrorMessages(t);
   const [files, setFiles] = useState<UploadFile[]>([]);
   const filesRef = useRef<UploadFile[]>([]);
   const [dragActive, setDragActive] = useState(false);
@@ -258,7 +261,7 @@ export function FileUploader({
           type: 'error',
           code: 'file_too_large',
           message: ERROR_MESSAGES['file_too_large'].title,
-          suggestion: `文件大小 ${(uploadFile.file.size / 1024 / 1024).toFixed(1)}MB 超过了 ${maxSize}MB 限制`
+          suggestion: t('upload.fileSizeExceeded', { size: (uploadFile.file.size / 1024 / 1024).toFixed(1), max: maxSize }),
         });
       }
 
@@ -267,7 +270,7 @@ export function FileUploader({
           type: 'error',
           code: 'empty_file',
           message: ERROR_MESSAGES['empty_file'].title,
-          suggestion: '文件内容为空'
+          suggestion: t('upload.fileContentEmpty')
         });
       }
 
@@ -280,20 +283,20 @@ export function FileUploader({
               type: 'error',
               code: 'empty_file',
               message: ERROR_MESSAGES['empty_file'].title,
-              suggestion: '文件内容为空'
+              suggestion: t('upload.fileContentEmpty')
             });
           } else {
             const hasSpecialChars = /[^\x00-\x7F]/.test(text);
             if (hasSpecialChars) {
-              warnings.push('文件可能包含特殊字符，已尝试自动修复编码');
+              warnings.push(t('upload.specialChars'));
             }
             const lines = text.split('\n').filter(l => l.trim());
             if (lines.length < 2) {
               issues.push({
                 type: 'warning',
                 code: 'too_few_rows',
-                message: '数据行数较少',
-                suggestion: `只有 ${lines.length} 行数据，可能无法进行有意义的分析`
+                message: t('upload.fewRows'),
+                suggestion: t('upload.fewRowsDesc', { count: lines.length }),
               });
             }
           }
@@ -302,20 +305,20 @@ export function FileUploader({
             type: 'error',
             code: 'corrupted_file',
             message: ERROR_MESSAGES['corrupted_file'].title,
-            suggestion: '无法读取文件内容，请检查文件是否损坏'
+            suggestion: t('upload.cannotReadContent')
           });
         }
       }
 
       if (['xlsx', 'xls'].includes(extension || '')) {
-        warnings.push('Excel 文件已标记待解析');
+        warnings.push(t('upload.excelMarked'));
       }
 
       return {
         isValid: issues.filter(i => i.type === 'error').length === 0,
         issues,
         warnings,
-        suggestedFix: issues.length > 0 ? 'AI 智能修复功能可以帮助解决部分问题' : undefined
+        suggestedFix: issues.length > 0 ? t('upload.aiFixSuggestion') : undefined
       };
     } catch {
       return {
@@ -324,7 +327,7 @@ export function FileUploader({
           type: 'error',
           code: 'corrupted_file',
           message: ERROR_MESSAGES['corrupted_file'].title,
-          suggestion: '文件预检过程中发生错误'
+          suggestion: t('upload.preCheckError')
         }],
         warnings: []
       };
@@ -385,7 +388,7 @@ export function FileUploader({
       if (enablePreCheck) {
         const result = await handlePreCheck(uploadFile);
         if (!result.isValid) {
-          updateFileStatus(uploadFile.id, { status: 'error', errorMessage: '预检未通过' });
+          updateFileStatus(uploadFile.id, { status: 'error', errorMessage: t('upload.preCheckFailed') });
           continue;
         }
       }
@@ -466,13 +469,13 @@ export function FileUploader({
 
   const getStatusBadge = (status: UploadFile['status']) => {
     const statusMap: Record<string, { label: string; color: string }> = {
-      pending: { label: '等待中', color: 'bg-muted text-foreground' },
-      checking: { label: '预检中', color: 'bg-chart-4/10 text-chart-4' },
-      parsing: { label: '解析中', color: 'bg-primary/10 text-primary' },
-      analyzing: { label: '分析中', color: 'bg-primary/10 text-primary' },
-      completed: { label: '已完成', color: 'bg-success/10 text-success' },
+      pending: { label: t('upload.statusPending'), color: 'bg-muted text-foreground' },
+      checking: { label: t('upload.statusChecking'), color: 'bg-chart-4/10 text-chart-4' },
+      parsing: { label: t('upload.statusParsing'), color: 'bg-primary/10 text-primary' },
+      analyzing: { label: t('upload.statusAnalyzing'), color: 'bg-primary/10 text-primary' },
+      completed: { label: t('upload.statusCompleted'), color: 'bg-success/10 text-success' },
       cached: { label: '缓存命中', color: 'bg-success/10 text-success' },
-      error: { label: '有问题', color: 'bg-destructive/10 text-destructive' }
+      error: { label: t('upload.statusError'), color: 'bg-destructive/10 text-destructive' }
     };
     const { label, color } = statusMap[status] || statusMap.pending;
     return <Badge className={cn('text-xs', color)}>{label}</Badge>;
@@ -489,13 +492,13 @@ export function FileUploader({
   const getProgressText = (file: UploadFile) => {
     switch (file.status) {
       case 'checking':
-        return '正在预检...';
+        return t('upload.preChecking');
       case 'parsing':
-        return '正在解析...';
+        return t('upload.parsingFile');
       case 'analyzing':
-        return '正在分析...';
+        return t('upload.analyzingFile');
       case 'cached':
-        return '命中缓存';
+        return t('upload.cacheHit');
       default:
         return `${file.progress}%`;
     }
@@ -537,17 +540,17 @@ export function FileUploader({
 
           <div className="text-center">
             <p className="text-sm font-medium text-foreground">
-              {dragActive ? '松开手指上传文件' : '拖拽文件到此处，或点击上传'}
+              {dragActive ? t('upload.releaseToUpload') : t('upload.dragOrClick')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              支持 Excel (.xlsx/.xls)、CSV 格式，单文件最大 {maxSize}MB
+              {t('upload.supportFormat', { max: maxSize })}
             </p>
           </div>
 
           {enableAIHealing && (
             <div className="flex items-center gap-1 text-xs text-primary bg-primary/5 px-2 py-1 rounded-sm">
               <Sparkles className="w-3 h-3" />
-              <span>AI 智能修复表格问题</span>
+              <span>{t('upload.aiSmartFix')}</span>
             </div>
           )}
         </div>
@@ -574,7 +577,7 @@ export function FileUploader({
                       {getStatusBadge(uploadFile.status)}
                       {uploadFile.cacheHit && (
                         <Badge className="text-xs bg-success/10 text-success border-success/20">
-                          极速加载
+                          t('upload.fastLoad')
                         </Badge>
                       )}
                     </div>
@@ -588,8 +591,8 @@ export function FileUploader({
                           uploadFile.validationResult.isValid ? 'text-success' : 'text-destructive'
                         )}>
                           {uploadFile.validationResult.issues.filter(i => i.type === 'error').length > 0
-                            ? `${uploadFile.validationResult.issues.filter(i => i.type === 'error').length} 个问题待处理`
-                            : '预检通过'}
+                            ? t('upload.issuesToProcess', { count: uploadFile.validationResult.issues.filter(i => i.type === 'error').length })
+                            : t('upload.preCheckPassed')}
                         </span>
                       )}
                     </div>
@@ -647,7 +650,7 @@ export function FileUploader({
                   <div className="flex items-center justify-between text-xs text-success mb-1">
                     <span className="flex items-center gap-1">
                       <CheckCircle className="w-3 h-3" />
-                      已从缓存加载
+                      {t('upload.loadedFromCache')}
                     </span>
                   </div>
                   <Progress value={100} className="h-1.5 bg-success/10" />
@@ -689,7 +692,7 @@ export function FileUploader({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
-              文件预检报告
+              t('upload.preCheckReport')
             </DialogTitle>
             <DialogDescription>
               {selectedFileForCheck?.file.name}
@@ -708,16 +711,16 @@ export function FileUploader({
                   <>
                     <CheckCircle className="w-6 h-6 text-success" />
                     <div>
-                      <p className="font-medium text-success">预检通过</p>
-                      <p className="text-sm text-success">文件可以正常导入分析</p>
+                      <p className="font-medium text-success">{t('upload.preCheckPassed')}</p>
+                      <p className="text-sm text-success">t('upload.fileCanImport')</p>
                     </div>
                   </>
                 ) : (
                   <>
                     <AlertCircle className="w-6 h-6 text-destructive" />
                     <div>
-                      <p className="font-medium text-destructive">发现问题</p>
-                      <p className="text-sm text-destructive">需要处理以下问题后才能分析</p>
+                      <p className="font-medium text-destructive">{t('upload.issuesFoundShort')}</p>
+                      <p className="text-sm text-destructive">t('upload.needFixBeforeAnalysis')</p>
                     </div>
                   </>
                 )}
@@ -725,7 +728,7 @@ export function FileUploader({
 
               {selectedFileForCheck.validationResult.issues.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">问题详情</h4>
+                  <h4 className="text-sm font-medium text-foreground">{t('upload.issueDetails')}</h4>
                   {selectedFileForCheck.validationResult.issues.map((issue, idx) => (
                     <div
                       key={idx}
@@ -743,7 +746,7 @@ export function FileUploader({
                             issue.type === 'warning' ? 'bg-warning/10 text-warning' :
                               'bg-primary/10 text-primary'
                         )}>
-                          {issue.type === 'error' ? '错误' : issue.type === 'warning' ? '警告' : '提示'}
+                          {issue.type === 'error' ? t('common.error') : issue.type === 'warning' ? t('common.warning') : t('common.info')}
                         </span>
                         <div>
                           <p className="text-sm font-medium text-foreground">{issue.message}</p>
@@ -762,13 +765,13 @@ export function FileUploader({
                   <div className="flex items-start gap-3">
                     <Sparkles className="w-5 h-5 text-chart-4 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-chart-4">AI 智能修复</p>
+                      <p className="text-sm font-medium text-chart-4">{t('upload.aiSmartFix')}</p>
                       <p className="text-xs text-chart-4 mt-1">
                         {selectedFileForCheck.validationResult.suggestedFix}
                       </p>
                       <Button size="sm" variant="outline" className="mt-2" disabled>
                         <Sparkles className="w-3 h-3 mr-1" />
-                        一键智能修复
+                        t('upload.oneClickFix')
                       </Button>
                     </div>
                   </div>

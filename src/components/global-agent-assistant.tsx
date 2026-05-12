@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn, generateId } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import { callLLMStream, LLMModelConfig } from '@/lib/llm';
 import { FieldStat, ParsedData } from '@/lib/data-processor';
 import { createOrchestrator, ExecutionPlan } from '@/lib/orchestrator-agent';
@@ -124,6 +125,7 @@ export function GlobalAgentAssistant({
   className,
 }: GlobalAgentAssistantProps) {
   // -- 会话状态 --
+  const { t } = useI18n();
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const welcome = getWelcomeMessage(hasData);
     return [{

@@ -37,6 +37,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData } from '@/lib/data-processor';
 
 // 数据库连接错误诊断
@@ -111,6 +112,7 @@ interface DataSourceManagerProps {
 
 export function DataSourceManager({ onDataSourceChange, currentData }: DataSourceManagerProps) {
   // 状态
+  const { t } = useI18n();
   const [dataSources, setDataSources] = useState<DataSourceConfig[]>([
     {
       id: 'local-1',
@@ -355,13 +357,13 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
       <CardContent className="space-y-4">
         <Tabs defaultValue="database" className="space-y-4">
           <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="database">数据库</TabsTrigger>
+            <TabsTrigger value="database">{t('txt.数据库')}</TabsTrigger>
             <TabsTrigger value="api">API接口</TabsTrigger>
-            <TabsTrigger value="history">数据快照</TabsTrigger>
-            <TabsTrigger value="feishu">飞书</TabsTrigger>
-            <TabsTrigger value="wechat">企业微信</TabsTrigger>
-            <TabsTrigger value="dingtalk">钉钉</TabsTrigger>
-            <TabsTrigger value="wps">金山文档</TabsTrigger>
+            <TabsTrigger value="history">{t('txt.数据快照')}</TabsTrigger>
+            <TabsTrigger value="feishu">{t('txt.飞书')}</TabsTrigger>
+            <TabsTrigger value="wechat">{t('txt.企业微信')}</TabsTrigger>
+            <TabsTrigger value="dingtalk">{t('txt.钉钉')}</TabsTrigger>
+            <TabsTrigger value="wps">{t('txt.金山文档')}</TabsTrigger>
           </TabsList>
           
           {/* 数据库连接 - 简化版 */}
@@ -370,7 +372,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-purple-700">智能连接助手</p>
+                  <p className="text-sm font-medium text-purple-700">{t('txt.智能连接助手')}</p>
                   <p className="text-xs text-purple-600 mt-1">
                     只需填写必填项，系统会自动帮您检测并解决连接问题
                   </p>
@@ -382,9 +384,9 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
             <div className="grid gap-4">
               {/* 连接名称 */}
               <div className="space-y-2">
-                <Label>连接名称</Label>
+                <Label>{t('txt.连接名称')}</Label>
                 <Input 
-                  placeholder="给这个连接起个名字"
+                  placeholder={t("ph.给这个连接起个名字")}
                   value={dbConfig.name}
                   onChange={e => setDbConfig(prev => ({ ...prev, name: e.target.value }))}
                 />
@@ -392,7 +394,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
 
               {/* 数据库类型 */}
               <div className="space-y-2">
-                <Label>数据库类型</Label>
+                <Label>{t('txt.数据库类型')}</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
                     { key: 'postgresql', label: 'PostgreSQL', desc: '开源关系型数据库' },
@@ -424,7 +426,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               {/* 连接信息 */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2 space-y-2">
-                  <Label>服务器地址 <span className="text-red-500">*</span></Label>
+                  <Label>{t('txt.服务器地址')}<span className="text-red-500">*</span></Label>
                   <Input 
                     placeholder={dbConfig.type === 'postgresql' ? 'localhost 或 127.0.0.1' : 'localhost 或 127.0.0.1'}
                     value={dbConfig.host}
@@ -432,7 +434,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>端口 <span className="text-red-500">*</span></Label>
+                  <Label>{t('txt.端口')}<span className="text-red-500">*</span></Label>
                   <Input 
                     placeholder={commonPorts[dbConfig.type]}
                     value={dbConfig.port}
@@ -442,9 +444,9 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               </div>
 
               <div className="space-y-2">
-                <Label>数据库名称 <span className="text-red-500">*</span></Label>
+                <Label>{t('txt.数据库名称')}<span className="text-red-500">*</span></Label>
                 <Input 
-                  placeholder="输入数据库名称"
+                  placeholder={t("ph.输入数据库名称")}
                   value={dbConfig.database}
                   onChange={e => setDbConfig(prev => ({ ...prev, database: e.target.value }))}
                 />
@@ -453,19 +455,19 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               {/* 认证信息 */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>用户名</Label>
+                  <Label>{t('txt.用户名')}</Label>
                   <Input 
-                    placeholder="数据库用户名"
+                    placeholder={t("ph.数据库用户名")}
                     value={dbConfig.username}
                     onChange={e => setDbConfig(prev => ({ ...prev, username: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>密码</Label>
+                  <Label>{t('txt.密码')}</Label>
                   <div className="relative">
                     <Input 
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="数据库密码"
+                      placeholder={t("ph.数据库密码")}
                       value={dbConfig.password}
                       onChange={e => setDbConfig(prev => ({ ...prev, password: e.target.value }))}
                     />
@@ -500,7 +502,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                       onChange={e => setDbConfig(prev => ({ ...prev, ssl: e.target.checked }))}
                       className="rounded"
                     />
-                    <Label htmlFor="ssl" className="cursor-pointer">使用 SSL/TLS 加密连接</Label>
+                    <Label htmlFor="ssl" className="cursor-pointer">{t('txt.使用SSLTLS加密连接')}</Label>
                   </div>
                   <div className="space-y-2">
                     <Label>SQL 查询语句</Label>
@@ -580,16 +582,16 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
           <TabsContent value="api" className="space-y-4">
             <div className="grid gap-4">
               <div className="space-y-2">
-                <Label>接口名称</Label>
+                <Label>{t('txt.接口名称')}</Label>
                 <Input 
-                  placeholder="给这个接口起个名字"
+                  placeholder={t("ph.给这个接口起个名字")}
                   value={apiConfig.name}
                   onChange={e => setApiConfig(prev => ({ ...prev, name: e.target.value }))}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>请求地址</Label>
+                <Label>{t('txt.请求地址')}</Label>
                 <div className="flex gap-2">
                   <select
                     value={apiConfig.method}
@@ -609,7 +611,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               </div>
 
               <div className="space-y-2">
-                <Label>请求头 (JSON格式)</Label>
+                <Label>{t('txt.请求头JSON格式')}</Label>
                 <Textarea 
                   placeholder='{"Authorization": "Bearer xxx"}'
                   value={apiConfig.headers}
@@ -620,7 +622,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
 
               {apiConfig.method === 'POST' && (
                 <div className="space-y-2">
-                  <Label>请求体</Label>
+                  <Label>{t('txt.请求体')}</Label>
                   <Textarea 
                     placeholder='{"key": "value"}'
                     value={apiConfig.params}
@@ -650,7 +652,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
                     </span>
                   </div>
                   <div className="bg-white rounded border p-2 max-h-32 overflow-auto">
-                    <p className="text-xs text-muted-foreground mb-1">数据预览:</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t('txt.数据预览')}</p>
                     {apiTestResult.preview.map((item, idx) => (
                       <pre key={idx} className="text-xs text-foreground whitespace-pre-wrap break-all">
                         {item.length > 100 ? item.substring(0, 100) + '...' : item}
@@ -698,8 +700,8 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
             {snapshots.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <History className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p>暂无保存的快照</p>
-                <p className="text-sm">上传数据后可以保存数据快照，防止数据丢失</p>
+                <p>{t('txt.暂无保存的快照')}</p>
+                <p className="text-sm">{t('txt.上传数据后可以保存数据快照防止数据丢失')}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -738,7 +740,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               <div className="flex items-start gap-3">
                 <Cloud className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-blue-700">飞书多维表格集成</p>
+                  <p className="text-sm font-medium text-blue-700">{t('txt.飞书多维表格集成')}</p>
                   <p className="text-xs text-blue-600 mt-1">
                     连接飞书多维表格，实现数据实时同步与协作
                   </p>
@@ -753,7 +755,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               <div className="flex items-start gap-3">
                 <Cloud className="w-5 h-5 text-green-600 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-green-700">企业微信集成</p>
+                  <p className="text-sm font-medium text-green-700">{t('txt.企业微信集成')}</p>
                   <p className="text-xs text-green-600 mt-1">
                     对接企业微信，获取组织成员和业务数据
                   </p>
@@ -768,7 +770,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               <div className="flex items-start gap-3">
                 <Cloud className="w-5 h-5 text-blue-600 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-blue-700">钉钉集成</p>
+                  <p className="text-sm font-medium text-blue-700">{t('txt.钉钉集成')}</p>
                   <p className="text-xs text-blue-600 mt-1">
                     集成钉钉考勤、审批、任务数据
                   </p>
@@ -783,7 +785,7 @@ export function DataSourceManager({ onDataSourceChange, currentData }: DataSourc
               <div className="flex items-start gap-3">
                 <Cloud className="w-5 h-5 text-amber-600 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-amber-700">金山文档集成</p>
+                  <p className="text-sm font-medium text-amber-700">{t('txt.金山文档集成')}</p>
                   <p className="text-xs text-amber-600 mt-1">
                     连接 WPS 云文档，导入表格数据
                   </p>

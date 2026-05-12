@@ -20,6 +20,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/lib/use-auth';
+import { useI18n } from '@/lib/i18n';
 import { request } from '@/lib/request';
 import dynamic from 'next/dynamic';
 const AdminAiUsageDashboard = dynamic(() => import('@/components/admin-ai-usage-dashboard'), { ssr: false });
@@ -33,15 +34,15 @@ const announcementTypeColor: Record<string, string> = {
   urgent: 'bg-destructive/10 text-destructive',
   maintenance: 'bg-chart-4/10 text-chart-4',
 };
-const announcementTypeLabel: Record<string, string> = { info: '通知', warning: '警告', urgent: '紧急', maintenance: '维护' };
-const announcementPriorityLabel: Record<string, string> = { low: '低', normal: '普通', high: '高' };
+const announcementTypeLabel: Record<string, string> = { info: 'Info', warning: 'Warning', urgent: 'Urgent', maintenance: 'Maintenance' };
+const announcementPriorityLabel: Record<string, string> = { low: 'Low', normal: 'Normal', high: 'High' };
 const announcementStatusColor: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
   scheduled: 'bg-warning/10 text-warning',
   published: 'bg-success/10 text-success',
   expired: 'bg-destructive/10 text-destructive',
 };
-const announcementStatusLabel: Record<string, string> = { draft: '草稿', scheduled: '已计划', published: '已发布', expired: '已过期' };
+const announcementStatusLabel: Record<string, string> = { draft: 'Draft', scheduled: 'Scheduled', published: 'Published', expired: 'Expired' };
 
 // Activity event helpers
 const getActivityEventColor = (type: string): string => {
@@ -60,16 +61,16 @@ const getActivityEventColor = (type: string): string => {
 
 const getActivityEventLabel = (type: string): string => {
   const labelMap: Record<string, string> = {
-    login: '登录', logout: '登出', login_failed: '登录失败', register: '注册',
-    bind_email: '绑定邮箱', bind_phone: '绑定手机', password_change: '修改密码',
-    permission_change: '权限变更', role_change: '角色变更', settings_change: '设置变更',
-    payment_init: '发起支付', payment_success: '支付成功', payment_failed: '支付失败',
-    export: '数据导出', share: '分享', ai_analyze: 'AI分析', upload: '文件上传',
-    dashboard_create: '创建仪表盘', report_generate: '生成报表', data_clean: '数据清洗',
-    sql_query: 'SQL查询', formula_generate: 'AI公式', chart_create: '创建图表',
-    homepage: '首页', dashboard: '仪表盘', settings: '设置页', payment: '支付页',
-    analysis: '分析页', data_table: '数据表格', chart_center: '图表中心',
-    metric_center: '指标中心', ai_assistant: 'AI助手', sql_lab: 'SQL实验室', admin_panel: '管理后台',
+    login: 'Login', logout: 'Logout', login_failed: 'Login Failed', register: 'Register',
+    bind_email: 'Bind Email', bind_phone: 'Bind Phone', password_change: 'Change Password',
+    permission_change: 'Permission Change', role_change: 'Role Change', settings_change: 'Settings Change',
+    payment_init: 'Init Payment', payment_success: 'Payment Success', payment_failed: 'Payment Failed',
+    export: 'Data Export', share: 'Share', ai_analyze: 'AI Analysis', upload: 'File Upload',
+    dashboard_create: 'Create Dashboard', report_generate: 'Generate Report', data_clean: 'Data Cleaning',
+    sql_query: 'SQL Query', formula_generate: 'AI Formula', chart_create: 'Create Chart',
+    homepage: 'Home', dashboard: 'Dashboard', settings: 'Settings', payment: 'Payment',
+    analysis: 'Analysis', data_table: 'Data Table', chart_center: 'Chart Center',
+    metric_center: 'Metric Center', ai_assistant: 'AI Assistant', sql_lab: 'SQL Lab', admin_panel: 'Admin Panel',
   };
   return labelMap[type] || type;
 };
@@ -133,10 +134,10 @@ const ROLE_TEMPLATES: Record<Role, Record<string, boolean>> = {
 };
 
 const ROLE_OPTIONS = [
-  { value: 'admin', label: '管理员', desc: '全部权限', restricted: false },
-  { value: 'editor', label: '编辑者', desc: '数据处理+AI', restricted: false },
-  { value: 'analyst', label: '分析师', desc: '分析+SQL', restricted: false },
-  { value: 'viewer', label: '查看者', desc: '只读访问', restricted: false },
+  { value: 'admin', label: 'Admin', desc: 'Full Access', restricted: false },
+  { value: 'editor', label: 'Editor', desc: 'Data + AI', restricted: false },
+  { value: 'analyst', label: 'Analyst', desc: 'Analysis + SQL', restricted: false },
+  { value: 'viewer', label: 'Viewer', desc: 'Read Only', restricted: false },
 ];
 
 interface AdminContentProps {
@@ -153,6 +154,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
   const [loading, setLoading] = useState(false);
   const [userFormOpen, setUserFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
+  const { t } = useI18n();
   const [formData, setFormData] = useState<FormData>({
     username: '', name: '', role: 'editor', password: '', permissions: { ...ROLE_TEMPLATES.editor },
   });
@@ -171,10 +173,10 @@ function AdminContent({ activeTab }: AdminContentProps) {
     features: string[]; active: boolean; users: number;
     aiCallsLimit?: number; scheduledAt?: string;
   }>>([
-    { id: 'free', name: '免费版', price: 0, period: '永久', features: ['基础数据表格', '5 个仪表盘', '基础图表'], active: true, users: 128, aiCallsLimit: 50 },
-    { id: 'pro', name: '专业版', price: 29, period: '月', features: ['全部 AI 功能', '无限仪表盘', '高级图表', '数据导出', '团队协作'], active: true, users: 56, aiCallsLimit: 500 },
-    { id: 'team', name: '团队版', price: 99, period: '月', features: ['专业版全部功能', '成员管理', '权限控制', 'API 接入', '优先支持'], active: true, users: 12, aiCallsLimit: 2000 },
-    { id: 'enterprise', name: '企业版', price: 299, period: '月', features: ['团队版全部功能', '私有化部署', '定制开发', 'SLA 保障', '专属客服'], active: false, users: 0, aiCallsLimit: -1 },
+    { id: 'free', name: 'Free', price: 0, period: 'Forever', features: ['Basic Data Table', '5 Dashboards', 'Basic Charts'], active: true, users: 128, aiCallsLimit: 50 },
+    { id: 'pro', name: 'Pro', price: 29, period: 'Month', features: ['All AI Features', 'Unlimited Dashboards', 'Advanced Charts', 'Data Export', 'Team Collaboration'], active: true, users: 56, aiCallsLimit: 500 },
+    { id: 'team', name: 'Team', price: 99, period: 'Month', features: ['All Pro Features', 'Member Management', 'Permission Control', 'API Access', 'Priority Support'], active: true, users: 12, aiCallsLimit: 2000 },
+    { id: 'enterprise', name: 'Enterprise', price: 299, period: 'Month', features: ['All Team Features', 'Private Deployment', 'Custom Development', 'SLA Guarantee', 'Dedicated Support'], active: false, users: 0, aiCallsLimit: -1 },
   ]);
   const [planFormOpen, setPlanFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
@@ -220,7 +222,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
       const data = await request<{ data: UserData[] }>('/api/admin/users');
       setUsers(data.data || []);
     } catch (e) {
-      showMessage('加载用户列表失败', 'error');
+      showMessage(t('admin.loadUsersFailed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -239,7 +241,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
       setLoginLogs(data.data || []);
       setLogsTotal(data.total || 0);
     } catch {
-      showMessage('加载登录记录失败', 'error');
+      showMessage(t('admin.loadLogsFailed'), 'error');
     } finally {
       setLogsLoading(false);
     }
@@ -252,7 +254,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
       const data = await request<{ data: any[] }>('/api/admin/usage-stats');
       setUsageStats(data.data || []);
     } catch {
-      showMessage('加载使用统计失败', 'error');
+      showMessage(t('admin.loadStatsFailed'), 'error');
     } finally {
       setStatsLoading(false);
     }
@@ -298,7 +300,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
       if (data.stats) setActivityStats(data.stats);
       setActivityPage(page);
     } catch {
-      showMessage('加载用户日志失败', 'error');
+      showMessage(t('admin.loadActivityFailed'), 'error');
     } finally {
       setActivityLoading(false);
     }
@@ -311,7 +313,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
       const data = await request<{ data: any[] }>('/api/admin/announcements');
       setAnnouncements(data.data || []);
     } catch {
-      showMessage('加载公告失败', 'error');
+      showMessage(t('admin.loadAnnouncementsFailed'), 'error');
     } finally {
       setAnnLoading(false);
     }
@@ -319,7 +321,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
 
   const handleSaveAnnouncement = async () => {
     if (!announcementForm.title.trim() || !announcementForm.content.trim()) {
-      showMessage('标题和内容为必填项', 'error');
+      showMessage(t('admin.titleContentRequired'), 'error');
       return;
     }
     try {
@@ -334,27 +336,27 @@ function AdminContent({ activeTab }: AdminContentProps) {
       };
       if (editingAnnouncement) {
         await request(`/api/admin/announcements/${editingAnnouncement.id}`, { method: 'PUT', body: JSON.stringify(body) });
-        showMessage('公告已更新');
+        showMessage(t('admin.announcementUpdated'));
       } else {
         await request('/api/admin/announcements', { method: 'POST', body: JSON.stringify(body) });
-        showMessage('公告已创建');
+        showMessage(t('admin.announcementCreated'));
       }
       setAnnouncementFormOpen(false);
       setEditingAnnouncement(null);
       setAnnouncementForm({ title: '', content: '', type: 'info', priority: 'normal', remind_strategy: 'once', scheduled_at: '', expires_at: '' });
       fetchAnnouncements();
     } catch (e: any) {
-      showMessage(e.message || '保存失败', 'error');
+      showMessage(e.message || t('admin.saveFailed'), 'error');
     }
   };
 
   const handlePublishAnnouncement = async (id: number) => {
     try {
       await request(`/api/admin/announcements/${id}`, { method: 'PUT', body: JSON.stringify({ status: 'published' }) });
-      showMessage('公告已发布');
+      showMessage(t('admin.announcementPublished'));
       fetchAnnouncements();
     } catch {
-      showMessage('发布失败', 'error');
+      showMessage(t('admin.publishFailed'), 'error');
     }
   };
 
@@ -362,10 +364,10 @@ function AdminContent({ activeTab }: AdminContentProps) {
     if (!confirm('确定删除此公告？')) return;
     try {
       await request(`/api/admin/announcements/${id}`, { method: 'DELETE' });
-      showMessage('公告已删除');
+      showMessage(t('admin.announcementDeleted'));
       fetchAnnouncements();
     } catch {
-      showMessage('删除失败', 'error');
+      showMessage(t('admin.deleteFailed'), 'error');
     }
   };
 
@@ -400,7 +402,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
   const handleSaveUser = async () => {
     if (!token) return;
     if (!formData.name || !formData.username) {
-      showMessage('请填写必填项', 'error');
+      showMessage(t('admin.fillRequired'), 'error');
       return;
     }
     setLoading(true);
@@ -436,15 +438,15 @@ function AdminContent({ activeTab }: AdminContentProps) {
           }
           trackAccount('permission_change', { target_user_id: editingUser.id, action: 'update' });
         }
-        showMessage(editingUser ? '用户已更新' : '用户已创建');
+        showMessage(editingUser ? t('admin.userUpdated') : t('admin.userCreated'));
         setUserFormOpen(false);
         setEditingUser(null);
         fetchUsers();
       } else {
-        showMessage(data.error || '操作失败', 'error');
+        showMessage(data.error || t('admin.operationFailed'), 'error');
       }
     } catch {
-      showMessage('网络错误', 'error');
+      showMessage(t('admin.networkError'), 'error');
     } finally {
       setLoading(false);
     }
@@ -460,13 +462,13 @@ function AdminContent({ activeTab }: AdminContentProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        showMessage('用户已删除');
+        showMessage(data.error || t('admin.userDeleted'));
         fetchUsers();
       } else {
-        showMessage(data.error || '删除失败', 'error');
+        showMessage(data.error || t('admin.deleteFailed'), 'error');
       }
     } catch {
-      showMessage('网络错误', 'error');
+      showMessage(t('admin.networkError'), 'error');
     } finally {
       setLoading(false);
     }
@@ -502,10 +504,10 @@ function AdminContent({ activeTab }: AdminContentProps) {
         body: JSON.stringify(aiConfig),
       });
       const data = await res.json();
-      if (res.ok) showMessage('AI配置已保存');
-      else showMessage(data.error || '保存失败', 'error');
+      if (res.ok) showMessage(t('admin.aiConfigSaved'));
+      else showMessage(data.error || t('admin.saveFailed'), 'error');
     } catch {
-      showMessage('网络错误', 'error');
+      showMessage(t('admin.networkError'), 'error');
     } finally {
       setAiConfigLoading(false);
     }
@@ -513,7 +515,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
 
   const handleTestAIConnection = async () => {
     if (!aiConfig.apiKey || !aiConfig.baseUrl) {
-      showMessage('请先填写 API Key 和 Base URL', 'error');
+      showMessage(t('admin.fillApiConfig'), 'error');
       return;
     }
     setAiConfigLoading(true);
@@ -525,9 +527,9 @@ function AdminContent({ activeTab }: AdminContentProps) {
       });
       const data = await res.json();
       if (res.ok && data.success) showMessage(`连接成功！模型: ${data.model || aiConfig.modelName}`);
-      else showMessage(data.error || '连接失败', 'error');
+      else showMessage(data.error || t('admin.connectionFailed'), 'error');
     } catch {
-      showMessage('网络错误，无法测试连接', 'error');
+      showMessage(t('admin.networkTestError'), 'error');
     } finally {
       setAiConfigLoading(false);
     }
@@ -541,19 +543,19 @@ function AdminContent({ activeTab }: AdminContentProps) {
   };
 
   const permissionCategories = [
-    { key: '数据与AI', icon: <Brain className="w-3.5 h-3.5" />, keys: ['upload', 'export', 'ai_analyze', 'ai_table_builder', 'ai_formula', 'ai_field'] },
-    { key: '可视化', icon: <LayoutGrid className="w-3.5 h-3.5" />, keys: ['dashboard', 'report', 'share', 'metric_custom', 'form'] },
-    { key: '高级功能', icon: <Settings2 className="w-3.5 h-3.5" />, keys: ['sql_query', 'workflow', 'custom_ai_model'] },
-    { key: '系统管理', icon: <Shield className="w-3.5 h-3.5" />, keys: ['admin_user', 'admin_ai_config'] },
+    { key: 'Data & AI', icon: <Brain className="w-3.5 h-3.5" />, keys: ['upload', 'export', 'ai_analyze', 'ai_table_builder', 'ai_formula', 'ai_field'] },
+    { key: 'Visualization', icon: <LayoutGrid className="w-3.5 h-3.5" />, keys: ['dashboard', 'report', 'share', 'metric_custom', 'form'] },
+    { key: 'Advanced', icon: <Settings2 className="w-3.5 h-3.5" />, keys: ['sql_query', 'workflow', 'custom_ai_model'] },
+    { key: 'System', icon: <Shield className="w-3.5 h-3.5" />, keys: ['admin_user', 'admin_ai_config'] },
   ];
 
   const getRoleBadge = (role: string) => {
     const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-      admin: { label: '管理员', variant: 'default' },
-      editor: { label: '编辑者', variant: 'secondary' },
-      analyst: { label: '分析师', variant: 'outline' },
-      viewer: { label: '查看者', variant: 'outline' },
-      custom: { label: '自定义', variant: 'destructive' },
+      admin: { label: 'Admin', variant: 'default' },
+      editor: { label: 'Editor', variant: 'secondary' },
+      analyst: { label: 'Analyst', variant: 'outline' },
+      viewer: { label: 'Viewer', variant: 'outline' },
+      custom: { label: 'Custom', variant: 'destructive' },
     };
     const cfg = map[role] || { label: role, variant: 'outline' as const };
     return <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>;
@@ -585,8 +587,8 @@ function AdminContent({ activeTab }: AdminContentProps) {
         <>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-sm font-medium">用户列表</h3>
-              <p className="text-xs text-muted-foreground">共 {users.length} 个用户</p>
+              <h3 className="text-sm font-medium">{t('admin.userList')}</h3>
+              <p className="text-xs text-muted-foreground">{t('admin.totalUsers', { count: users.length })}</p>
             </div>
             <Button size="sm" onClick={openAddForm}>
               <Plus className="w-4 h-4 mr-1" />
@@ -597,12 +599,12 @@ function AdminContent({ activeTab }: AdminContentProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>姓名</TableHead>
-                  <TableHead>账户</TableHead>
-                  <TableHead>邮箱</TableHead>
-                  <TableHead>角色</TableHead>
-                  <TableHead>注册时间</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('admin.name')}</TableHead>
+                  <TableHead>{t('admin.account')}</TableHead>
+                  <TableHead>{t('admin.email')}</TableHead>
+                  <TableHead>{t('admin.role')}</TableHead>
+                  <TableHead>{t('admin.registerTime')}</TableHead>
+                  <TableHead>{t('admin.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -658,7 +660,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                 <LogIn className="w-4 h-4 text-primary" />
                 登录记录
               </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">共 {logsTotal} 条记录</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('admin.totalRecords', { count: logsTotal })}</p>
             </div>
             <Button variant="outline" size="sm" onClick={() => fetchLoginLogs(logsPage)}>
               <RefreshCw className="w-3.5 h-3.5 mr-1" />
@@ -668,7 +670,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
           {/* Filters */}
           <div className="flex flex-wrap gap-2 mb-4 items-center">
             <Input
-              placeholder="用户名"
+              placeholder={t("admin.username")}
               className="h-8 w-32 text-xs"
               value={logsFilter.username}
               onChange={(e) => setLogsFilter(f => ({ ...f, username: e.target.value }))}
@@ -678,9 +680,9 @@ function AdminContent({ activeTab }: AdminContentProps) {
               value={logsFilter.status}
               onChange={(e) => setLogsFilter(f => ({ ...f, status: e.target.value }))}
             >
-              <option value="">全部状态</option>
-              <option value="success">成功</option>
-              <option value="failed">失败</option>
+              <option value="">{t('admin.allStatus')}</option>
+              <option value="success">{t('admin.success')}</option>
+              <option value="failed">{t('admin.failed')}</option>
             </select>
             <Input
               type="date"
@@ -710,9 +712,9 @@ function AdminContent({ activeTab }: AdminContentProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[180px]">时间</TableHead>
-                  <TableHead>账户</TableHead>
-                  <TableHead className="w-[80px]">状态</TableHead>
+                  <TableHead className="w-[180px]">{t('admin.time')}</TableHead>
+                  <TableHead>{t('admin.account')}</TableHead>
+                  <TableHead className="w-[80px]">{t('admin.status')}</TableHead>
                   <TableHead className="w-[120px]">IP</TableHead>
                   <TableHead>错误信息</TableHead>
                 </TableRow>
@@ -874,14 +876,14 @@ function AdminContent({ activeTab }: AdminContentProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[240px]">标题</TableHead>
-                    <TableHead className="w-[80px]">类型</TableHead>
-                    <TableHead className="w-[80px]">优先级</TableHead>
+                    <TableHead className="w-[240px]">{t('admin.title')}</TableHead>
+                    <TableHead className="w-[80px]">{t('admin.type')}</TableHead>
+                    <TableHead className="w-[80px]">{t('admin.priority')}</TableHead>
                     <TableHead className="w-[100px]">提醒策略</TableHead>
-                    <TableHead className="w-[100px]">状态</TableHead>
+                    <TableHead className="w-[100px]">{t('admin.status')}</TableHead>
                     <TableHead className="w-[150px]">计划发布</TableHead>
                     <TableHead className="w-[150px]">过期时间</TableHead>
-                    <TableHead className="w-[100px] text-right">操作</TableHead>
+                    <TableHead className="w-[100px] text-right">{t('admin.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -943,7 +945,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">标题</Label>
+                  <Label className="text-xs font-medium">{t('admin.title')}</Label>
                   <Input
                     placeholder="公告标题"
                     value={announcementForm.title}
@@ -951,7 +953,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">内容</Label>
+                  <Label className="text-xs font-medium">{t('admin.content')}</Label>
                   <textarea
                     className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="公告正文..."
@@ -961,7 +963,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">类型</Label>
+                    <Label className="text-xs font-medium">{t('admin.type')}</Label>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       value={announcementForm.type}
@@ -974,7 +976,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">优先级</Label>
+                    <Label className="text-xs font-medium">{t('admin.priority')}</Label>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       value={announcementForm.priority}
@@ -1019,7 +1021,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setAnnouncementFormOpen(false)}>取消</Button>
+                <Button variant="outline" onClick={() => setAnnouncementFormOpen(false)}>{t('common.cancel')}</Button>
                 <Button onClick={handleSaveAnnouncement}>
                   {editingAnnouncement ? '保存修改' : (announcementForm.scheduled_at ? '计划发布' : '立即发布')}
                 </Button>
@@ -1183,7 +1185,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
               <div className="space-y-4 py-2">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">套餐名称</Label>
+                    <Label className="text-xs font-medium">{t('admin.planName')}</Label>
                     <Input
                       value={planForm.name}
                       onChange={(e) => setPlanForm(p => ({ ...p, name: e.target.value }))}
@@ -1191,7 +1193,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">周期</Label>
+                    <Label className="text-xs font-medium">{t('admin.period')}</Label>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                       value={planForm.period}
@@ -1242,7 +1244,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <p className="text-xs text-muted-foreground">设定未来时间，系统届时自动上架此套餐</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Label className="text-xs font-medium">上架状态</Label>
+                  <Label className="text-xs font-medium">{t('admin.listingStatus')}</Label>
                   <button
                     type="button"
                     onClick={() => setPlanForm(p => ({ ...p, active: !p.active }))}
@@ -1258,7 +1260,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setPlanFormOpen(false)}>取消</Button>
+                <Button variant="outline" onClick={() => setPlanFormOpen(false)}>{t('common.cancel')}</Button>
                 <Button onClick={() => {
                   if (!planForm.name.trim()) {
                     showMessage('请输入套餐名称', 'error');
@@ -1408,7 +1410,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs w-[140px]">时间</TableHead>
+                  <TableHead className="text-xs w-[140px]">{t('admin.time')}</TableHead>
                   <TableHead className="text-xs">用户</TableHead>
                   <TableHead className="text-xs">类别</TableHead>
                   <TableHead className="text-xs">事件</TableHead>

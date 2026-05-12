@@ -15,6 +15,7 @@ import { exportManager, EXPORT_PRESETS } from '@/lib/export/manager';
 import { SessionManager, OperationBuilder } from '@/lib/session-manager';
 import { promptOptimizer, matchScenario, type Scenario } from '@/lib/prompts/scenario-templates';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import {
   Upload,
   FileSpreadsheet,
@@ -40,6 +41,7 @@ interface SpreadsheetAgentPageProps {
 type ViewMode = 'table' | 'analysis' | 'export';
 
 export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
+  const { t } = useI18n();
   const [data, setData] = useState<ParsedData | null>(null);
   const [originalData, setOriginalData] = useState<ParsedData | null>(null);
   const [problemReport, setProblemReport] = useState<ProblemReport | null>(null);

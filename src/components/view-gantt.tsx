@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { ChevronLeft, ChevronRight, GanttChart } from 'lucide-react';
 import type { CellValue } from '@/lib/data-processor';
 
@@ -30,6 +31,7 @@ function formatDateCN(d: Date): string {
 export function GanttView({ rows, headers }: GanttViewProps) {
 
   // 自动检测日期字段
+  const { t } = useI18n();
   const dateFields = useMemo(() => {
     return headers.filter(h => isDateField(rows.map(r => r[h])));
   }, [headers, rows]);
@@ -95,36 +97,36 @@ export function GanttView({ rows, headers }: GanttViewProps) {
       <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-md flex-wrap">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <GanttChart className="w-4 h-4" />
-          <span>甘特图视图</span>
+          <span>{t('txt.甘特图视图')}</span>
         </div>
         <div className="h-4 w-px bg-border" />
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">任务</span>
+          <span className="text-xs text-muted-foreground">{t('txt.任务')}</span>
           <Select value={taskField} onValueChange={setTaskField}>
             <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>{headers.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">开始</span>
+          <span className="text-xs text-muted-foreground">{t('txt.开始')}</span>
           <Select value={startField} onValueChange={setStartField}>
             <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>{dateFields.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">结束</span>
+          <span className="text-xs text-muted-foreground">{t('txt.结束')}</span>
           <Select value={endField} onValueChange={setEndField}>
             <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>{dateFields.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">进度</span>
+          <span className="text-xs text-muted-foreground">{t('txt.进度')}</span>
           <Select value={progressField} onValueChange={setProgressField}>
-            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="可选" /></SelectTrigger>
+            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder={t("ph.可选")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">无</SelectItem>
+              <SelectItem value="">{t('txt.无')}</SelectItem>
               {headers.filter(h => {
                 const vals = rows.map(r => Number(r[h])).filter(n => !isNaN(n) && n >= 0 && n <= 100);
                 return vals.length > rows.length * 0.3;
@@ -145,7 +147,7 @@ export function GanttView({ rows, headers }: GanttViewProps) {
         <div className="border rounded-md overflow-hidden">
           {/* 时间刻度 */}
           <div className="flex border-b bg-muted/50">
-            <div className="w-[200px] flex-shrink-0 p-2 text-xs font-medium text-muted-foreground border-r">任务名称</div>
+            <div className="w-[200px] flex-shrink-0 p-2 text-xs font-medium text-muted-foreground border-r">{t('txt.任务名称')}</div>
             <div className="flex-1 relative h-8">
               {ticks.map((t, i) => (
                 <div key={i} className="absolute top-0 text-xs text-muted-foreground border-l h-full pl-1 pt-1" style={{ left: `${(i * 7 / totalDays) * 100}%` }}>

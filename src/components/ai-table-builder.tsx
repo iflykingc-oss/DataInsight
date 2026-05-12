@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -179,6 +180,7 @@ interface HistoryRecord {
 
 export default function AITableBuilder({ modelConfig, className }: AITableBuilderProps) {
   // 步骤状态
+  const { t } = useI18n();
   const [step, setStep] = useState<'template' | 'generate' | 'design-doc' | 'preview' | 'confirm'>('template');
   const [templates, setTemplates] = useState<SceneTemplate[]>([]);
   const [selectedScene, setSelectedScene] = useState<SceneTemplate | null>(null);
@@ -620,7 +622,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="搜索场景模板..."
+            placeholder={t("ph.搜索场景模板")}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -696,8 +698,8 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
       {filteredTemplates.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <FileSpreadsheet className="h-12 w-12 mx-auto mb-3 opacity-40" />
-          <p>没有找到匹配的模板</p>
-          <p className="text-sm mt-1">尝试更换分类或清空搜索词</p>
+          <p>{t('txt.没有找到匹配的模板')}</p>
+          <p className="text-sm mt-1">{t('txt.尝试更换分类或清空搜索词')}</p>
         </div>
       )}
 
@@ -709,8 +711,8 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-medium">没有找到合适的场景？</p>
-              <p className="text-sm text-muted-foreground">直接描述你的需求，AI 为你定制表格方案</p>
+              <p className="font-medium">{t('txt.没有找到合适的场景')}</p>
+              <p className="text-sm text-muted-foreground">{t('txt.直接描述你的需求AI为你定制表格方案')}</p>
             </div>
             <Button
               onClick={() => {
@@ -730,7 +732,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
       {history.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-base">最近生成</h3>
+            <h3 className="font-semibold text-base">{t('txt.最近生成')}</h3>
             <Button variant="ghost" size="sm" onClick={() => setShowHistory(!showHistory)}>
               {showHistory ? '收起' : `查看全部 (${history.length})`}
             </Button>
@@ -790,7 +792,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             <div className="p-3 bg-muted/50 rounded-md">
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen className="h-4 w-4 text-primary" />
-                <span className="font-medium text-sm">业务背景</span>
+                <span className="font-medium text-sm">{t('txt.业务背景')}</span>
               </div>
               <p className="text-sm text-muted-foreground">{doc.businessBackground}</p>
             </div>
@@ -799,7 +801,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             <div className="p-3 bg-muted/50 rounded-md">
               <div className="flex items-center gap-2 mb-1">
                 <Target className="h-4 w-4 text-success" />
-                <span className="font-medium text-sm">业务目标</span>
+                <span className="font-medium text-sm">{t('txt.业务目标')}</span>
               </div>
               <p className="text-sm text-muted-foreground">{doc.businessGoal}</p>
             </div>
@@ -831,7 +833,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <LayoutDashboard className="h-4 w-4 text-chart-4" />
-                <span className="font-medium text-sm">仪表盘配置</span>
+                <span className="font-medium text-sm">{t('txt.仪表盘配置')}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {doc.dashboardConfig.charts.map((c, i) => (
@@ -847,15 +849,15 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <GitBranch className="h-4 w-4 text-warning" />
-                <span className="font-medium text-sm">工作流配置</span>
+                <span className="font-medium text-sm">{t('txt.工作流配置')}</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <span className="text-muted-foreground">触发器：</span>
+                  <span className="text-muted-foreground">{t('txt.触发器')}</span>
                   {doc.workflowConfig.triggers.join('、')}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">动作：</span>
+                  <span className="text-muted-foreground">{t('txt.动作')}</span>
                   {doc.workflowConfig.actions.join('、')}
                 </div>
               </div>
@@ -865,7 +867,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Shield className="h-4 w-4 text-destructive" />
-                <span className="font-medium text-sm">权限配置</span>
+                <span className="font-medium text-sm">{t('txt.权限配置')}</span>
               </div>
               <div className="space-y-1">
                 {doc.permissionConfig.roles.map((r, i) => (
@@ -943,7 +945,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             {chatMessages.length === 0 && (
               <div className="text-center py-8">
                 <Sparkles className="h-10 w-10 mx-auto mb-3 text-primary/60" />
-                <p className="font-medium">描述你的表格需求</p>
+                <p className="font-medium">{t('txt.描述你的表格需求')}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   AI 将根据你的需求生成标准化表格方案
                 </p>
@@ -955,7 +957,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                 )}
                 {!selectedScene && (
                   <div className="mt-4 space-y-2 text-sm text-left max-w-md mx-auto">
-                    <p className="text-muted-foreground">你可以这样描述：</p>
+                    <p className="text-muted-foreground">{t('txt.你可以这样描述')}</p>
                     {[
                       '我需要一个客户信息登记表，包含姓名、电话、地址和备注',
                       '创建一个月度销售跟踪表，记录每天的产品销售数量和金额',
@@ -1016,7 +1018,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           {!isGenerating && !currentScheme && (
             <div className="border-t p-3 space-y-3">
               <Input
-                placeholder="描述你的表格需求，例如：创建一个客户信息登记表..."
+                placeholder={t("ph.描述你的表格需求例如创建一个客户信息登记表")}
                 value={userRequirement}
                 onChange={e => setUserRequirement(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleStartBuild(); } }}
@@ -1050,7 +1052,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
-                  placeholder="输入修改要求，如：删除XX列、增加保质期字段..."
+                  placeholder={t("ph.输入修改要求如删除XX列增加保质期字段")}
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleIterate(); } }}
@@ -1070,7 +1072,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         {showPreview && currentScheme && (
           <div className="w-80 border rounded-md overflow-hidden flex flex-col">
             <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
-              <span className="font-medium text-sm">方案预览</span>
+              <span className="font-medium text-sm">{t('txt.方案预览')}</span>
               <Button variant="ghost" size="sm" className="h-7" onClick={() => setShowPreview(false)}>
                 <X className="h-3 w-3" />
               </Button>
@@ -1087,8 +1089,8 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">字段名</TableHead>
-                      <TableHead className="text-xs">类型</TableHead>
+                      <TableHead className="text-xs">{t('txt.字段名')}</TableHead>
+                      <TableHead className="text-xs">{t('txt.类型')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1112,7 +1114,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
                 )}
                 {currentScheme.sampleRows.length > 0 && (
                   <div className="pt-2 border-t">
-                    <p className="text-xs text-muted-foreground mb-1">示例数据</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t('txt.示例数据')}</p>
                     <div className="text-xs space-y-0.5">
                       {Object.entries(currentScheme.sampleRows[0] || {}).map(([k, v]) => (
                         <div key={k} className="truncate">
@@ -1169,7 +1171,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
             新建
           </Button>
           <span className="text-muted-foreground">|</span>
-          <span className="font-medium">方案预览</span>
+          <span className="font-medium">{t('txt.方案预览')}</span>
         </div>
         <Badge variant="default" className="gap-1">
           <Check className="h-3 w-3" />
@@ -1188,10 +1190,10 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>字段名</TableHead>
-                    <TableHead>类型</TableHead>
-                    <TableHead>说明</TableHead>
-                    <TableHead>必填</TableHead>
+                    <TableHead>{t('txt.字段名')}</TableHead>
+                    <TableHead>{t('txt.类型')}</TableHead>
+                    <TableHead>{t('txt.说明')}</TableHead>
+                    <TableHead>{t('txt.必填')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1214,7 +1216,7 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
           {currentScheme.sampleRows.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">示例数据</CardTitle>
+                <CardTitle className="text-base">{t('txt.示例数据')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -1264,12 +1266,13 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
   );
 
   // ============= 渲染：完成页面 =============
-  const renderConfirmPage = () => (
+  const renderConfirmPage = () => {
+    return (
     <div className="flex flex-col items-center justify-center py-12 space-y-4">
       <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center">
         <Check className="h-8 w-8 text-success" />
       </div>
-      <h2 className="text-xl font-semibold">表格已生成</h2>
+      <h2 className="text-xl font-semibold">{t('txt.表格已生成')}</h2>
       <p className="text-muted-foreground">Excel文件已准备好，可以开始使用了</p>
       <div className="flex gap-2">
         <Button variant="outline" onClick={handleReset}>
@@ -1291,7 +1294,8 @@ export default function AITableBuilder({ modelConfig, className }: AITableBuilde
         </Button>
       </div>
     </div>
-  );
+    );
+  };
 
   // ============= 主渲染逻辑 =============
   return (

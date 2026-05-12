@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { Table, Database, Link2, Plus, Trash2, Eye, ArrowRightLeft, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -112,6 +113,7 @@ function suggestRelationFields(sourceTable: ParsedData, targetTable: ParsedData)
 }
 
 export function LinkedTablesManager({ tables, activeTable, onTablesChange, onActiveTableChange }: LinkedTablesProps) {
+  const { t } = useI18n();
   const [relations, setRelations] = useState<TableRelation[]>(() => {
     try {
       return readBusinessData<TableRelation[]>('datainsight-relations') || [];
@@ -219,7 +221,7 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
                   </div>
                 </div>
                 {activeTable?.fileName === table.fileName && (
-                  <Badge variant="default" className="text-xs">当前</Badge>
+                  <Badge variant="default" className="text-xs">{t('txt.当前')}</Badge>
                 )}
               </div>
             </Card>
@@ -227,7 +229,7 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
           {tables.length === 0 && (
             <div className="col-span-full text-center py-12 text-muted-foreground">
               <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>暂无数据表，请先上传数据</p>
+              <p>{t('txt.暂无数据表请先上传数据')}</p>
             </div>
           )}
         </div>
@@ -238,7 +240,7 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
           {relations.length === 0 ? (
             <Card className="p-8 text-center text-muted-foreground">
               <Link2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>暂无关联关系</p>
+              <p>{t('txt.暂无关联关系')}</p>
               <p className="text-xs mt-1">
                 {canCreateRelation ? '点击右上角「新建关联」建立表间关联' : '至少需要2张表才能建立关联'}
               </p>
@@ -286,21 +288,21 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
       <Dialog open={showAddRelation} onOpenChange={setShowAddRelation}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>新建表关联</DialogTitle>
-            <DialogDescription>选择两张表之间的关联字段，建立数据关联后可自动拉取Lookup字段。</DialogDescription>
+            <DialogTitle>{t('txt.新建表关联')}</DialogTitle>
+            <DialogDescription>{t('txt.选择两张表之间的关联字段建立数据关联后可自动拉取L')}</DialogDescription>
           </DialogHeader>
           {!canCreateRelation ? (
             <div className="py-6 text-center text-muted-foreground">
               <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-500" />
-              <p>至少需要 2 张数据表才能建立关联</p>
-              <p className="text-xs mt-1">请先上传更多数据文件</p>
+              <p>{t('txt.至少需要2张数据表才能建立关联')}</p>
+              <p className="text-xs mt-1">{t('txt.请先上传更多数据文件')}</p>
             </div>
           ) : (
             <div className="space-y-3 py-2">
               <div>
-                <label className="text-xs font-medium">源表</label>
+                <label className="text-xs font-medium">{t('txt.源表')}</label>
                 <Select value={newRelation.sourceTable} onValueChange={v => setNewRelation({ ...newRelation, sourceTable: v, sourceField: '' })}>
-                  <SelectTrigger><SelectValue placeholder="选择源表" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("ph.选择源表")} /></SelectTrigger>
                   <SelectContent>
                     {tables.map(t => <SelectItem key={t.fileName} value={t.fileName}>{t.fileName}</SelectItem>)}
                   </SelectContent>
@@ -308,9 +310,9 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
               </div>
               {sourceTable && (
                 <div>
-                  <label className="text-xs font-medium">源表关联字段</label>
+                  <label className="text-xs font-medium">{t('txt.源表关联字段')}</label>
                   <Select value={newRelation.sourceField} onValueChange={v => setNewRelation({ ...newRelation, sourceField: v })}>
-                    <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("ph.选择字段")} /></SelectTrigger>
                     <SelectContent>
                       {sourceTable.headers.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
                     </SelectContent>
@@ -318,9 +320,9 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
                 </div>
               )}
               <div>
-                <label className="text-xs font-medium">目标表</label>
+                <label className="text-xs font-medium">{t('txt.目标表')}</label>
                 <Select value={newRelation.targetTable} onValueChange={v => setNewRelation({ ...newRelation, targetTable: v, targetField: '', displayFields: [] })}>
-                  <SelectTrigger><SelectValue placeholder="选择目标表" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("ph.选择目标表")} /></SelectTrigger>
                   <SelectContent>
                     {tables.filter(t => t.fileName !== newRelation.sourceTable).map(t => (
                       <SelectItem key={t.fileName} value={t.fileName}>{t.fileName}</SelectItem>
@@ -333,7 +335,7 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
                   {/* D-14 修复：智能推荐关联字段 */}
                   {sourceTable && newRelation.sourceTable && newRelation.targetTable && !newRelation.sourceField && (
                     <div className="bg-muted/50 rounded-md p-2">
-                      <div className="text-xs font-medium text-muted-foreground mb-1.5">智能推荐关联字段</div>
+                      <div className="text-xs font-medium text-muted-foreground mb-1.5">{t('txt.智能推荐关联字段')}</div>
                       {suggestRelationFields(sourceTable, targetTable).length > 0 ? (
                         <div className="space-y-1">
                           {suggestRelationFields(sourceTable, targetTable).map((s, i) => (
@@ -349,21 +351,21 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-muted-foreground">未发现相似字段，请手动选择</div>
+                        <div className="text-xs text-muted-foreground">{t('txt.未发现相似字段请手动选择')}</div>
                       )}
                     </div>
                   )}
                   <div>
-                    <label className="text-xs font-medium">目标表关联字段</label>
+                    <label className="text-xs font-medium">{t('txt.目标表关联字段')}</label>
                     <Select value={newRelation.targetField} onValueChange={v => setNewRelation({ ...newRelation, targetField: v })}>
-                      <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={t("ph.选择字段")} /></SelectTrigger>
                       <SelectContent>
                         {targetTable.headers.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium">显示字段（可多选，从目标表拉取到源表）</label>
+                    <label className="text-xs font-medium">{t('txt.显示字段可多选从目标表拉取到源表')}</label>
                     <ScrollArea className="h-24 border rounded-md p-2">
                       <div className="space-y-1">
                         {targetTable.headers.map(h => (
@@ -390,7 +392,7 @@ export function LinkedTablesManager({ tables, activeTable, onTablesChange, onAct
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setShowAddRelation(false)}>取消</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowAddRelation(false)}>{t('txt.取消')}</Button>
             {canCreateRelation && (
               <Button size="sm" onClick={handleAddRelation} disabled={!newRelation.sourceField || !newRelation.targetField}>
                 创建关联

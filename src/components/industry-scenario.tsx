@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -121,6 +122,7 @@ function matchIndustry(data: ParsedData, fieldStats: Array<{ field: string; type
 }
 
 export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: IndustryScenarioProps) {
+  const { t } = useI18n();
   const [detectedIndustries, setDetectedIndustries] = useState<string[]>(() => matchIndustry(data, fieldStats));
   const [selectedIndustry, setSelectedIndustry] = useState<string>(detectedIndustries[0] || 'retail');
   const [isDetecting, setIsDetecting] = useState(false);
@@ -159,7 +161,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
       <Card className="h-full">
         <CardContent className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <Building2 className="w-12 h-12 mb-3 opacity-50" />
-          <p>请先上传数据文件</p>
+          <p>{t('txt.请先上传数据文件')}</p>
         </CardContent>
       </Card>
     );
@@ -192,7 +194,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
         <CardContent>
           {detectedIndustries.length > 0 ? (
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-muted-foreground">识别结果:</span>
+              <span className="text-sm text-muted-foreground">{t('txt.识别结果')}</span>
               {detectedIndustries.slice(0, 3).map(id => {
                 const ind = INDUSTRIES.find(i => i.id === id);
                 if (!ind) return null;
@@ -213,7 +215,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">未自动识别，请手动选择:</span>
+              <span className="text-sm text-muted-foreground">{t('txt.未自动识别请手动选择')}</span>
               <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -239,7 +241,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
           <CardContent>
             <div className="space-y-3">
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1.5">预置指标</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1.5">{t('txt.预置指标')}</p>
                 <div className="flex flex-wrap gap-1">
                   {currentIndustry.metrics.map(m => (
                     <Badge key={m} variant="secondary" className="text-xs">{m}</Badge>
@@ -247,7 +249,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
                 </div>
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1.5">仪表盘组件</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1.5">{t('txt.仪表盘组件')}</p>
                 <div className="flex flex-wrap gap-1">
                   {currentIndustry.dashboardWidgets.map(w => (
                     <Badge key={w} variant="outline" className="text-xs">{w}</Badge>
@@ -262,12 +264,12 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">字段与指标映射</CardTitle>
+              <CardTitle className="text-base">{t('txt.字段与指标映射')}</CardTitle>
               <Button variant="outline" size="sm" onClick={() => onNavigate?.('metrics')}>
                 查看指标中心 <ArrowRight className="w-3.5 h-3.5 ml-1" />
               </Button>
             </div>
-            <CardDescription>当前数据字段与行业指标的自动映射关系</CardDescription>
+            <CardDescription>{t('txt.当前数据字段与行业指标的自动映射关系')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -287,7 +289,7 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
                           <Badge key={f} variant="outline" className="text-xs bg-primary/5">{f}</Badge>
                         ))
                       ) : (
-                        <span className="text-xs text-muted-foreground/50">未匹配</span>
+                        <span className="text-xs text-muted-foreground/50">{t('txt.未匹配')}</span>
                       )}
                     </div>
                   </div>
@@ -304,8 +306,8 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
           <CardContent className="flex items-center gap-3 p-4">
             <TrendingUp className="w-5 h-5 text-primary" />
             <div>
-              <p className="text-sm font-medium">行业分析</p>
-              <p className="text-xs text-muted-foreground">一键生成行业报告</p>
+              <p className="text-sm font-medium">{t('txt.行业分析')}</p>
+              <p className="text-xs text-muted-foreground">{t('txt.一键生成行业报告')}</p>
             </div>
           </CardContent>
         </Card>
@@ -313,8 +315,8 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
           <CardContent className="flex items-center gap-3 p-4">
             <LayoutGrid className="w-5 h-5 text-primary" />
             <div>
-              <p className="text-sm font-medium">行业看板</p>
-              <p className="text-xs text-muted-foreground">加载行业仪表盘模板</p>
+              <p className="text-sm font-medium">{t('txt.行业看板')}</p>
+              <p className="text-xs text-muted-foreground">{t('txt.加载行业仪表盘模板')}</p>
             </div>
           </CardContent>
         </Card>
@@ -322,8 +324,8 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
           <CardContent className="flex items-center gap-3 p-4">
             <Target className="w-5 h-5 text-primary" />
             <div>
-              <p className="text-sm font-medium">行业故事</p>
-              <p className="text-xs text-muted-foreground">生成行业数据叙事</p>
+              <p className="text-sm font-medium">{t('txt.行业故事')}</p>
+              <p className="text-xs text-muted-foreground">{t('txt.生成行业数据叙事')}</p>
             </div>
           </CardContent>
         </Card>
@@ -331,8 +333,8 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
           <CardContent className="flex items-center gap-3 p-4">
             <ShoppingCart className="w-5 h-5 text-primary" />
             <div>
-              <p className="text-sm font-medium">行业问答</p>
-              <p className="text-xs text-muted-foreground">对话式行业洞察</p>
+              <p className="text-sm font-medium">{t('txt.行业问答')}</p>
+              <p className="text-xs text-muted-foreground">{t('txt.对话式行业洞察')}</p>
             </div>
           </CardContent>
         </Card>
@@ -341,8 +343,8 @@ export function IndustryScenario({ data, fieldStats, modelConfig, onNavigate }: 
       {/* 其他行业选择 */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">切换行业</CardTitle>
-          <CardDescription>手动选择其他行业查看对应场景包</CardDescription>
+          <CardTitle className="text-base">{t('txt.切换行业')}</CardTitle>
+          <CardDescription>{t('txt.手动选择其他行业查看对应场景包')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">

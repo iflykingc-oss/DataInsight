@@ -31,6 +31,7 @@ import {
   TestTube
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 // 预设模型配置
 const PRESET_MODELS = [
@@ -120,6 +121,7 @@ interface AIModelSettingsProps {
 }
 
 export function AIModelSettings({ onModelChange, className }: AIModelSettingsProps) {
+  const { t } = useI18n();
   const [configs, setConfigs] = useState<AIModelConfig[]>(() => {
     // 初始化时直接从localStorage加载，避免覆盖问题
     if (typeof window !== 'undefined') {
@@ -398,7 +400,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                   {/* 预设模板选择 */}
                   {isAddingNew && (
                     <div className="space-y-2">
-                      <Label>快速选择预设模型</Label>
+                      <Label>{t('aiModel.quickSelectPreset')}</Label>
                       <div className="grid grid-cols-2 gap-2">
                         {PRESET_MODELS.filter(p => p.id !== 'custom').map(preset => (
                           <button
@@ -432,7 +434,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="provider">服务商</Label>
+                      <Label htmlFor="provider">{t('aiModel.provider')}</Label>
                       <Input
                         id="provider"
                         placeholder="如：OpenAI / DeepSeek"
@@ -549,7 +551,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{config.name}</span>
                       {config.isDefault && (
-                        <Badge variant="default" className="text-xs">默认</Badge>
+                        <Badge variant="default" className="text-xs">{t('aiModel.default')}</Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -612,8 +614,8 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
             {configs.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Bot className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p>暂未配置任何 AI 模型</p>
-                <p className="text-sm">点击上方按钮添加</p>
+                <p>{t('aiModel.noModels')}</p>
+                <p className="text-sm">{t('aiModel.clickToAdd')}</p>
               </div>
             )}
           </div>
@@ -626,12 +628,12 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
           <div className="flex items-start gap-3">
             <Key className="w-5 h-5 text-muted-foreground mt-0.5" />
             <div className="space-y-2 text-sm text-foreground">
-              <p className="font-medium text-foreground">使用说明</p>
+              <p className="font-medium text-foreground">{t('aiModel.instructions')}</p>
               <ul className="space-y-1 list-disc list-inside">
                 <li>API Key 仅本地存储，不会上传到服务器</li>
-                <li>支持 OpenAI 兼容格式的模型接入</li>
-                <li>建议设置默认模型，其他功能将自动使用</li>
-                <li>如需更换模型，可直接编辑现有配置</li>
+                <li>{t('aiModel.openaiCompatDesc')}</li>
+                <li>{t('aiModel.suggestDefault')}</li>
+                <li>{t('aiModel.editToChange')}</li>
               </ul>
             </div>
           </div>

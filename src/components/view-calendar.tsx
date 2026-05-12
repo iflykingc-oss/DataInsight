@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import type { ParsedData } from '@/lib/data-processor';
 
@@ -27,6 +28,7 @@ function parseDate(val: unknown): Date | null {
 export function CalendarView({ rows, headers }: CalendarViewProps) {
 
   // 自动检测日期字段
+  const { t } = useI18n();
   const dateFields = useMemo(() => {
     return headers.filter(h => isDateField(rows.map(r => r[h])));
   }, [headers, rows]);
@@ -81,11 +83,11 @@ export function CalendarView({ rows, headers }: CalendarViewProps) {
       <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-md">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <CalendarDays className="w-4 h-4" />
-          <span>日历视图</span>
+          <span>{t('txt.日历视图')}</span>
         </div>
         <div className="h-4 w-px bg-border" />
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">日期字段</span>
+          <span className="text-xs text-muted-foreground">{t('txt.日期字段')}</span>
           <Select value={dateField} onValueChange={setDateField}>
             <SelectTrigger className="w-[160px] h-8 text-xs">
               <SelectValue />
@@ -100,7 +102,7 @@ export function CalendarView({ rows, headers }: CalendarViewProps) {
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">标题字段</span>
+          <span className="text-xs text-muted-foreground">{t('txt.标题字段')}</span>
           <Select value={titleField} onValueChange={setTitleField}>
             <SelectTrigger className="w-[160px] h-8 text-xs">
               <SelectValue />

@@ -46,6 +46,7 @@ import {
   List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 // ============================================
 // 类型定义
@@ -188,6 +189,7 @@ export function TemplateManager({
   className
 }: TemplateManagerProps) {
   // 状态
+  const { t } = useI18n();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [editingTemplate, setEditingTemplate] = useState<Partial<Template> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -401,7 +403,7 @@ export function TemplateManager({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bookmark className="w-5 h-5 text-yellow-500" />
-          <h3 className="font-medium">模板管理</h3>
+          <h3 className="font-medium">{t('txt.模板管理')}</h3>
           <Badge variant="secondary">{templates.length}</Badge>
         </div>
         
@@ -431,7 +433,7 @@ export function TemplateManager({
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="搜索模板..."
+                placeholder={t("ph.搜索模板")}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -499,7 +501,7 @@ export function TemplateManager({
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <Bookmark className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground">没有找到匹配的模板</p>
+                <p className="text-muted-foreground">{t('txt.没有找到匹配的模板')}</p>
               </CardContent>
             </Card>
           ) : viewMode === 'grid' ? (
@@ -588,7 +590,7 @@ export function TemplateManager({
                           <div className="flex items-center gap-2">
                             <h4 className="font-medium truncate">{template.name}</h4>
                             {template.isBuiltIn && (
-                              <Badge variant="secondary" className="text-xs">内置</Badge>
+                              <Badge variant="secondary" className="text-xs">{t('txt.内置')}</Badge>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground truncate">
@@ -643,7 +645,7 @@ export function TemplateManager({
                                     <Edit2 className="w-4 h-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>编辑</TooltipContent>
+                                <TooltipContent>{t('txt.编辑')}</TooltipContent>
                               </Tooltip>
                               
                               <Tooltip>
@@ -660,7 +662,7 @@ export function TemplateManager({
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>删除</TooltipContent>
+                                <TooltipContent>{t('txt.删除')}</TooltipContent>
                               </Tooltip>
                             </>
                           )}
@@ -680,7 +682,7 @@ export function TemplateManager({
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <Bookmark className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground">暂无自定义模板</p>
+                <p className="text-muted-foreground">{t('txt.暂无自定义模板')}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   将常用的仪表盘或报表保存为模板，方便复用
                 </p>
@@ -767,17 +769,17 @@ export function TemplateManager({
               <Label htmlFor="template-name">模板名称 *</Label>
               <Input
                 id="template-name"
-                placeholder="如：月度销售报表"
+                placeholder={t("ph.如月度销售报表")}
                 value={editingTemplate?.name || ''}
                 onChange={e => setEditingTemplate(prev => prev ? { ...prev, name: e.target.value } : null)}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="template-desc">描述</Label>
+              <Label htmlFor="template-desc">{t('txt.描述')}</Label>
               <Textarea
                 id="template-desc"
-                placeholder="描述这个模板的用途..."
+                placeholder={t("ph.描述这个模板的用途")}
                 rows={3}
                 value={editingTemplate?.description || ''}
                 onChange={e => setEditingTemplate(prev => prev ? { ...prev, description: e.target.value } : null)}
@@ -786,23 +788,23 @@ export function TemplateManager({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>类型</Label>
+                <Label>{t('txt.类型')}</Label>
                 <select
                   className="w-full p-2 border rounded"
                   value={editingTemplate?.type || 'dashboard'}
                   onChange={e => setEditingTemplate(prev => prev ? { ...prev, type: e.target.value as TemplateType } : null)}
                 >
-                  <option value="dashboard">仪表盘</option>
-                  <option value="report">报表</option>
-                  <option value="chart">图表</option>
-                  <option value="layout">布局</option>
+                  <option value="dashboard">{t('txt.仪表盘')}</option>
+                  <option value="report">{t('txt.报表')}</option>
+                  <option value="chart">{t('txt.图表')}</option>
+                  <option value="layout">{t('txt.布局')}</option>
                 </select>
               </div>
 
               <div className="space-y-2">
-                <Label>分类标签</Label>
+                <Label>{t('txt.分类标签')}</Label>
                 <Input
-                  placeholder="如：销售,月度"
+                  placeholder={t("ph.如销售月度")}
                   value={editingTemplate?.tags?.join(', ') || ''}
                   onChange={e => setEditingTemplate(prev => prev ? { 
                     ...prev, 

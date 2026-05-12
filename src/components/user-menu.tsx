@@ -17,6 +17,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/use-auth';
@@ -28,6 +29,7 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ onOpenSettings }: UserMenuProps) {
+  const { t } = useI18n();
   const { user, isLoggedIn, isAdmin, logout, setLoginDialogOpen } = useAuth();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
@@ -40,7 +42,7 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
       const res = await fetch('/api/auth/export-data', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('导出失败');
+      if (!res.ok) throw new Error(t('error.exportFailed'));
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -61,7 +63,7 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
         className="gap-1.5"
       >
         <LogIn className="w-4 h-4" />
-        <span className="hidden sm:inline">登录</span>
+        <span className="hidden sm:inline">{t('login.login')}</span>
       </Button>
     );
   }
@@ -70,7 +72,7 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
 
   const handleDeleteAccount = async () => {
     if (!deletePassword) {
-      setDeleteError('请输入密码确认');
+      setDeleteError(t('user.enterPasswordConfirm'));
       return;
     }
     setDeleteLoading(true);
@@ -90,10 +92,10 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
         setDeleteDialogOpen(false);
         logout();
       } else {
-        setDeleteError(data.error || '注销失败');
+        setDeleteError(data.error || t('user.deleteAccountFailed'));
       }
     } catch {
-      setDeleteError('网络错误，请稍后重试');
+      setDeleteError(t('error.networkRetry'));
     } finally {
       setDeleteLoading(false);
     }
@@ -122,7 +124,7 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
               {isAdmin && (
                 <div className="flex items-center gap-1 text-xs text-primary mt-1">
                   <Shield className="w-3 h-3" />
-                  <span>管理员</span>
+                  <span>{t('admin.role')}</span>
                 </div>
               )}
             </div>
@@ -183,17 +185,17 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
 
           <div className="space-y-4 py-2">
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive space-y-1">
-              <p className="font-medium">注销后将失去：</p>
+              <p className="font-medium">{t('user.willLose')}</p>
               <ul className="list-disc list-inside text-xs space-y-0.5">
-                <li>账号信息和登录权限</li>
-                <li>AI 模型配置</li>
-                <li>所有操作记录</li>
-                <li>仪表盘配置和自定义指标</li>
+                <li>{t('user.loseAccount')}</li>
+                <li>{t('user.loseAiConfig')}</li>
+                <li>{t('user.loseRecords')}</li>
+                <li>{t('user.loseDashboards')}</li>
               </ul>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">请输入密码确认注销</label>
+              <label className="text-sm font-medium">{t('user.enterPasswordToDelete')}</label>
               <Input
                 type="password"
                 placeholder="输入当前密码"

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {} from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList} from '@/components/ui/tabs';
@@ -39,6 +40,7 @@ interface ChartRecommendation {
 }
 
 export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderProps) {
+  const { t } = useI18n();
   const [selectedChart, setSelectedChart] = useState<string>('0');
   const [customXField, setCustomXField] = useState<string>('');
   const [customYField, setCustomYField] = useState<string>('');
@@ -73,7 +75,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
         </CardHeader>
         <CardContent>
           {recommendations.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">需要至少一个数值字段才能生成图表推荐</p>
+            <p className="text-muted-foreground text-center py-8">{t('txt.需要至少一个数值字段才能生成图表推荐')}</p>
           ) : (
             <div className="space-y-4">
               {/* 推荐选择器 */}
@@ -144,23 +146,23 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
         <CardContent>
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">图表类型</label>
+              <label className="text-xs text-muted-foreground mb-1 block">{t('txt.图表类型')}</label>
               <Select value={customChartType} onValueChange={v => setCustomChartType(v as ChartType)}>
-                <SelectTrigger><SelectValue placeholder="选择类型" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("ph.选择类型")} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bar">柱状图</SelectItem>
-                  <SelectItem value="line">折线图</SelectItem>
-                  <SelectItem value="pie">饼图</SelectItem>
-                  <SelectItem value="area">面积图</SelectItem>
-                  <SelectItem value="scatter">散点图</SelectItem>
-                  <SelectItem value="radar">雷达图</SelectItem>
+                  <SelectItem value="bar">{t('txt.柱状图')}</SelectItem>
+                  <SelectItem value="line">{t('txt.折线图')}</SelectItem>
+                  <SelectItem value="pie">{t('txt.饼图')}</SelectItem>
+                  <SelectItem value="area">{t('txt.面积图')}</SelectItem>
+                  <SelectItem value="scatter">{t('txt.散点图')}</SelectItem>
+                  <SelectItem value="radar">{t('txt.雷达图')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">X轴字段</label>
               <Select value={customXField} onValueChange={setCustomXField}>
-                <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("ph.选择字段")} /></SelectTrigger>
                 <SelectContent>
                   {data.headers.map(h => (
                     <SelectItem key={h} value={h}>{h}</SelectItem>
@@ -171,7 +173,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Y轴字段</label>
               <Select value={customYField} onValueChange={setCustomYField}>
-                <SelectTrigger><SelectValue placeholder="选择字段" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("ph.选择字段")} /></SelectTrigger>
                 <SelectContent>
                   {data.headers.map(h => (
                     <SelectItem key={h} value={h}>{h}</SelectItem>
@@ -195,7 +197,7 @@ export function SmartChartRecommender({ data, analysis }: SmartChartRecommenderP
               </ResponsiveContainer>
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">请选择X轴和Y轴字段</p>
+            <p className="text-muted-foreground text-center py-8">{t('txt.请选择X轴和Y轴字段')}</p>
           )}
         </CardContent>
       </Card>

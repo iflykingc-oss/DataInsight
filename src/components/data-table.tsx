@@ -51,6 +51,7 @@ import { getAIFieldTypeIcon } from '@/lib/ai-field-engine';
 import { AICellToolbar } from '@/components/ai-cell-toolbar';
 import { RecordShareManager } from '@/components/record-share-manager';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface RecordSubscription {
   rowIndex: number;
@@ -76,6 +77,7 @@ interface DataTableProps {
 }
 
 export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFieldClick, onCellChange, onDeleteRow, onBulkDelete }: DataTableProps) {
+  const { t } = useI18n();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [searchTerm, setSearchTerm] = useState('');
@@ -401,7 +403,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
   
   const formatValue = (value: import('@/lib/data-processor').CellValue, type: string) => {
     if (value === null || value === undefined || value === '') {
-      return <span className="text-muted-foreground italic">空</span>;
+      return <span className="text-muted-foreground italic">{t('txt.空')}</span>;
     }
     if (typeof value === 'object' && value instanceof Date) {
       return value.toLocaleDateString();
@@ -454,7 +456,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="搜索数据..."
+              placeholder={t("搜索数据")}
               value={searchTerm}
               onChange={e => {
                 setSearchTerm(e.target.value);
@@ -470,7 +472,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
         </div>
         
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">每页</span>
+          <span className="text-xs text-muted-foreground">{t('每页')}</span>
           <Select
             value={String(pageSize)}
             onValueChange={v => {
@@ -545,8 +547,8 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                   <TableCell colSpan={data.headers.length + 1} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Search className="h-8 w-8 text-muted-foreground/30" />
-                      <p className="text-sm text-muted-foreground">没有找到匹配的数据</p>
-                      <p className="text-xs text-muted-foreground/60">尝试调整筛选条件或搜索关键词</p>
+                      <p className="text-sm text-muted-foreground">{t('没有找到匹配的数据')}</p>
+                      <p className="text-xs text-muted-foreground/60">{t('尝试调整筛选条件或搜索关键词')}</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -605,7 +607,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                           ) : field.results[actualRowIndex] ? (
                             <span className="text-xs">{String(field.results[actualRowIndex])}</span>
                           ) : (
-                            <span className="text-xs text-muted-foreground italic">未处理</span>
+                            <span className="text-xs text-muted-foreground italic">{t('未处理')}</span>
                           )}
                         </TableCell>
                       ))}
@@ -706,7 +708,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
                     <span className="flex-1 break-all">
                       {detailRow.row[header] !== null && detailRow.row[header] !== undefined 
                         ? String(detailRow.row[header]) 
-                        : <span className="text-muted-foreground italic">空</span>}
+                        : <span className="text-muted-foreground italic">{t('txt.空')}</span>}
                     </span>
                   </div>
                 ))}
@@ -716,7 +718,7 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
               <div className="border-t pt-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="font-medium">智能总结</span>
+                  <span className="font-medium">{t('智能总结')}</span>
                   {summaryLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
                 </div>
                 
@@ -814,9 +816,9 @@ export function DataTable({ data, fieldStats, aiFields = [], modelConfig, onFiel
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="text-sm mb-2 block">你想对这些数据做什么分析？</Label>
+              <Label className="text-sm mb-2 block">{t('你想对这些数据做什么分析')}</Label>
               <Textarea
-                placeholder="例如：总结这些记录的共同点、找出异常值、分析趋势..."
+                placeholder={t("例如总结这些记录的共同点找出异常值分析趋")}
                 value={aiAnalyzeQuery}
                 onChange={e => setAIAnalyzeQuery(e.target.value)}
                 className="min-h-20"

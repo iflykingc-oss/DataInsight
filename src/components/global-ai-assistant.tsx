@@ -17,6 +17,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 import { toUserFriendlyError, type UserFriendlyError } from '@/lib/error-handler';
 
@@ -60,6 +61,7 @@ interface GlobalAIAssistantProps {
 }
 
 export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats, modelConfig, currentView, onAction }: GlobalAIAssistantProps) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   
@@ -372,7 +374,7 @@ export function GlobalAIAssistant({ hasData = false, rowCount, data, fieldStats,
             positionClasses[position]?.panel || 'bottom-24 right-6'
           )}
         >
-          <div className="text-xs text-muted-foreground px-2 py-1 mb-1">选择位置</div>
+          <div className="text-xs text-muted-foreground px-2 py-1 mb-1">{t('txt.选择位置')}</div>
           {[
             { key: 'bottom-right', label: '右下角' },
             { key: 'bottom-center', label: '底部居中' },

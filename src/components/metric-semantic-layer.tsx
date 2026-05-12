@@ -3,6 +3,7 @@
 import React, { useState, useCallback} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -125,6 +126,7 @@ interface MetricSemanticLayerProps {
 }
 
 export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSemanticLayerProps) {
+  const { t } = useI18n();
   const [businessScenario, setBusinessScenario] = useState<string>('general');
   const [customDescription, setCustomDescription] = useState('');
   const [generatedMetrics, setGeneratedMetrics] = useState<MetricItem[]>([]);
@@ -435,7 +437,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
             </label>
             <div className="flex gap-2">
               <Input
-                placeholder="例如：我想分析门店的销售业绩，包括收入、成本、毛利率、客单价等核心指标..."
+                placeholder={t("ph.例如我想分析门店的销售业绩包括收入成本毛利率客单价")}
                 value={customDescription}
                 onChange={e => setCustomDescription(e.target.value)}
                 className="flex-1"
@@ -525,7 +527,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
               {/* 指标分类展示 */}
               <Tabs defaultValue="all" className="space-y-3">
                 <TabsList className="grid grid-cols-5 w-auto">
-                  <TabsTrigger value="all">全部</TabsTrigger>
+                  <TabsTrigger value="all">{t('txt.全部')}</TabsTrigger>
                   {Object.entries(METRIC_CATEGORIES).map(([key, config]) =>
                     groupedMetrics[key] ? (
                       <TabsTrigger key={key} value={key}>
@@ -686,23 +688,23 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
             <div className="bg-gradient-to-r from-muted/50 to-muted rounded-md p-4 space-y-2">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">计算公式：</span>
+                  <span className="text-muted-foreground">{t('txt.计算公式')}</span>
                   <code className="ml-1 bg-background px-2 py-0.5 rounded text-primary">{selectedMetric.expression}</code>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">类别：</span>
+                  <span className="text-muted-foreground">{t('txt.类别')}</span>
                   <Badge variant="outline" className="ml-1 text-xs">
                     {METRIC_CATEGORIES[selectedMetric.category as keyof typeof METRIC_CATEGORIES]?.label}
                   </Badge>
                 </div>
               </div>
               <p className="text-sm text-foreground">
-                <span className="font-medium">业务含义：</span>
+                <span className="font-medium">{t('txt.业务含义')}</span>
                 {selectedMetric.businessMeaning || selectedMetric.description}
               </p>
               {selectedMetric.usageSuggestion && (
                 <p className="text-sm text-foreground">
-                  <span className="font-medium">使用建议：</span>
+                  <span className="font-medium">{t('txt.使用建议')}</span>
                   {selectedMetric.usageSuggestion}
                 </p>
               )}
@@ -742,7 +744,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
           {/* 输入框 */}
           <div className="flex gap-2 pt-2">
             <Input
-              placeholder="继续提问，例如：这个指标最近的趋势如何？"
+              placeholder={t("ph.继续提问例如这个指标最近的趋势如何")}
               value={insightInput}
               onChange={e => setInsightInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSendInsight()}

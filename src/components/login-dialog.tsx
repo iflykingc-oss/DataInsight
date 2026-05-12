@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/lib/use-auth';
+import { useI18n } from '@/lib/i18n';
 import { trackAuth } from '@/lib/activity-tracker';
 import {
   LogIn, Loader2, AlertCircle, Shield, UserPlus, Mail,
@@ -46,6 +47,7 @@ export function LoginDialog() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { t } = useI18n();
   const [needInit, setNeedInit] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -117,15 +119,15 @@ export function LoginDialog() {
 
     const finalQuestion = getFinalQuestion();
     if (!finalQuestion) {
-      setError('请选择或输入安全问题');
+      setError(t('login.selectSecurityQuestion'));
       return;
     }
     if (!securityAnswer.trim()) {
-      setError('请设置安全问题答案');
+      setError(t('login.setSecurityAnswer'));
       return;
     }
     if (!agreedToTerms) {
-      setError('请阅读并同意隐私政策和服务条款');
+      setError(t('login.agreePolicy'));
       return;
     }
 
@@ -152,10 +154,10 @@ export function LoginDialog() {
         }
         window.location.reload();
       } else {
-        setError(data.error || '注册失败');
+        setError(data.error || t('login.registerFailed'));
       }
     } catch {
-      setError('网络错误，请重试');
+      setError(t('login.networkError'));
     } finally {
       setLoading(false);
     }
@@ -168,7 +170,7 @@ export function LoginDialog() {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('请输入有效的邮箱地址');
+      setError(t('login.validEmail'));
       return;
     }
 
@@ -185,10 +187,10 @@ export function LoginDialog() {
         setResetQuestion(data.question);
         setResetStep(2);
       } else {
-        setError(data.error || '获取安全问题失败');
+        setError(data.error || t('login.getQuestionFailed'));
       }
     } catch {
-      setError('网络错误，请重试');
+      setError(t('login.networkError'));
     } finally {
       setLoading(false);
     }
@@ -200,7 +202,7 @@ export function LoginDialog() {
     setError('');
 
     if (!securityAnswer.trim()) {
-      setError('请输入安全问题答案');
+      setError(t('login.enterAnswer'));
       return;
     }
 
@@ -216,10 +218,10 @@ export function LoginDialog() {
       if (data.success) {
         setResetStep(3);
       } else {
-        setError(data.error || '验证失败');
+        setError(data.error || t('login.verifyFailed'));
       }
     } catch {
-      setError('网络错误，请重试');
+      setError(t('login.networkError'));
     } finally {
       setLoading(false);
     }
@@ -231,11 +233,11 @@ export function LoginDialog() {
     setError('');
 
     if (newPassword.length < 8) {
-      setError('密码至少8位字符');
+      setError(t('login.passwordMinLength'));
       return;
     }
     if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
-      setError('密码必须包含字母和数字');
+      setError(t('login.passwordAlphanumeric'));
       return;
     }
 
@@ -258,10 +260,10 @@ export function LoginDialog() {
         // 自动切回登录
         switchMode('login');
       } else {
-        setError(data.error || '密码重置失败');
+        setError(data.error || t('login.resetFailed'));
       }
     } catch {
-      setError('网络错误，请重试');
+      setError(t('login.networkError'));
     } finally {
       setLoading(false);
     }
@@ -288,7 +290,7 @@ export function LoginDialog() {
           }
           window.location.reload();
         } else {
-          setError(data.error || '初始化失败');
+          setError(data.error || t('login.initFailed'));
         }
       } else {
         const result = await login(username, password);
@@ -299,28 +301,28 @@ export function LoginDialog() {
           setPassword('');
         } else {
           trackAuth('login_failed');
-          setError(result.error || '登录失败');
+          setError(result.error || t('login.loginFailed'));
         }
       }
     } catch {
-      setError('网络错误，请重试');
+      setError(t('login.networkError'));
     } finally {
       setLoading(false);
     }
   };
 
   const getTitle = () => {
-    if (mode === 'init') return '初始化管理员账号';
-    if (mode === 'register') return '注册 DataInsight';
-    if (mode === 'reset') return '重置密码';
-    return '登录 DataInsight';
+    if (mode === 'init') return t('login.initAdmin');
+    if (mode === 'register') return t('login.registerTitle');
+    if (mode === 'reset') return t('login.resetPassword');
+    return t('login.loginTitle');
   };
 
   const getDescription = () => {
-    if (mode === 'init') return '系统首次使用，请创建管理员账号';
-    if (mode === 'register') return '创建账号，开始智能数据分析';
-    if (mode === 'reset') return '通过安全问题验证重置密码';
-    return '登录后即可使用全部功能';
+    if (mode === 'init') return t('login.initAdminDesc');
+    if (mode === 'register') return t('login.registerDesc');
+    if (mode === 'reset') return t('login.resetDesc');
+    return t('login.loginDesc');
   };
 
   return (
@@ -347,7 +349,7 @@ export function LoginDialog() {
             className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none mt-1"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            <span className="sr-only">关闭</span>
+            <span className="sr-only">{t('common.close')}</span>
           </button>
         </DialogHeader>
 
@@ -362,7 +364,7 @@ export function LoginDialog() {
         {mode === 'register' && (
           <form onSubmit={handleRegister} className="space-y-4 mt-2">
             <div className="space-y-2">
-              <Label htmlFor="reg-email">邮箱地址</Label>
+              <Label htmlFor="reg-email">{t('login.email')}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -379,11 +381,11 @@ export function LoginDialog() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reg-name">姓名</Label>
+              <Label htmlFor="reg-name">{t('login.name')}</Label>
               <Input
                 id="reg-name"
                 type="text"
-                placeholder="请输入姓名"
+                placeholder={t("login.enterName")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -392,7 +394,7 @@ export function LoginDialog() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reg-question">安全问题</Label>
+              <Label htmlFor="reg-question">{t('login.securityQuestion')}</Label>
               <div className="relative">
                 <HelpCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <select
@@ -402,22 +404,22 @@ export function LoginDialog() {
                   className="w-full h-9 rounded-md border border-input bg-transparent px-3 pl-9 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   required
                 >
-                  <option value="" disabled>请选择安全问题</option>
+                  <option value="" disabled>{t('login.selectQuestion')}</option>
                   {SECURITY_QUESTIONS.map((q, i) => (
                     <option key={i} value={q}>{q}</option>
                   ))}
-                  <option value="__custom__">自定义安全问题...</option>
+                  <option value="__custom__">{t('login.customQuestionPlaceholder')}</option>
                 </select>
               </div>
             </div>
 
             {securityQuestion === '__custom__' && (
               <div className="space-y-2">
-                <Label htmlFor="reg-custom-q">自定义问题</Label>
+                <Label htmlFor="reg-custom-q">{t('login.customQuestion')}</Label>
                 <Input
                   id="reg-custom-q"
                   type="text"
-                  placeholder="请输入您的安全问题"
+                  placeholder={t("login.enterCustomQuestion")}
                   value={customQuestion}
                   onChange={(e) => setCustomQuestion(e.target.value)}
                   required
@@ -427,27 +429,27 @@ export function LoginDialog() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="reg-answer">安全问题答案</Label>
+              <Label htmlFor="reg-answer">{t('login.securityAnswer')}</Label>
               <Input
                 id="reg-answer"
                 type="text"
-                placeholder="请输入答案（用于密码重置验证）"
+                placeholder={t("login.enterAnswerHint")}
                 value={securityAnswer}
                 onChange={(e) => setSecurityAnswer(e.target.value)}
                 required
                 autoComplete="off"
                 minLength={2}
               />
-              <p className="text-xs text-muted-foreground">答案不区分大小写，请牢记此答案以便日后重置密码</p>
+              <p className="text-xs text-muted-foreground">t('login.answerHint')</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reg-password">密码</Label>
+              <Label htmlFor="reg-password">{t('login.password')}</Label>
               <div className="relative">
                 <Input
                   id="reg-password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="至少8位，包含字母和数字"
+                  placeholder={t("login.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -466,11 +468,11 @@ export function LoginDialog() {
             </div>
 
             <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground space-y-1">
-              <p className="font-medium text-foreground/80">账号安全提示</p>
+              <p className="font-medium text-foreground/80">{t('login.securityTip')}</p>
               <ul className="list-disc list-inside space-y-0.5">
-                <li>密码至少8位字符，同时包含字母和数字</li>
-                <li>安全问题用于验证身份和重置密码，请选择只有您知道答案的问题</li>
-                <li>安全问题答案不区分大小写</li>
+                <li>{t('login.passwordRequirement')}</li>
+                <li>{t('login.passwordRule2')}</li>
+                <li>{t('login.passwordRule3')}</li>
               </ul>
             </div>
 
@@ -484,7 +486,7 @@ export function LoginDialog() {
                 className="mt-1 rounded border-input"
               />
               <label htmlFor="agree-terms" className="text-xs text-muted-foreground leading-relaxed">
-                我已阅读并同意
+                {t('login.agreeText')}
                 <button
                   type="button"
                   onClick={() => { setLegalDocType('privacy'); setLegalDocOpen(true); }}
@@ -518,7 +520,7 @@ export function LoginDialog() {
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
-              已有账号？{' '}
+              {t('login.hasAccount')} {' '}
               <button
                 type="button"
                 className="text-primary hover:underline font-medium"
@@ -538,23 +540,23 @@ export function LoginDialog() {
           >
             {/* 步骤指示器 */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className={resetStep >= 1 ? 'text-primary font-medium' : ''}>1. 验证邮箱</span>
+              <span className={resetStep >= 1 ? 'text-primary font-medium' : ''}>{t('login.step1VerifyEmail')}</span>
               <span className="text-border">→</span>
-              <span className={resetStep >= 2 ? 'text-primary font-medium' : ''}>2. 回答问题</span>
+              <span className={resetStep >= 2 ? 'text-primary font-medium' : ''}>{t('login.step2AnswerQuestion')}</span>
               <span className="text-border">→</span>
-              <span className={resetStep >= 3 ? 'text-primary font-medium' : ''}>3. 设置密码</span>
+              <span className={resetStep >= 3 ? 'text-primary font-medium' : ''}>{t('login.step3SetPassword')}</span>
             </div>
 
             {/* 步骤1：输入邮箱 */}
             {resetStep === 1 && (
               <div className="space-y-2">
-                <Label htmlFor="reset-email">注册邮箱</Label>
+                <Label htmlFor="reset-email">{t('login.registerEmail')}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="reset-email"
                     type="email"
-                    placeholder="请输入注册时使用的邮箱"
+                    placeholder={t("login.enterRegisteredEmail")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-9"
@@ -569,15 +571,15 @@ export function LoginDialog() {
             {resetStep === 2 && (
               <>
                 <div className="rounded-md bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground mb-1">您的安全问题</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t('login.yourQuestion')}</p>
                   <p className="text-sm font-medium text-foreground">{resetQuestion}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reset-answer">答案</Label>
+                  <Label htmlFor="reset-answer">{t('login.answer')}</Label>
                   <Input
                     id="reset-answer"
                     type="text"
-                    placeholder="请输入安全问题答案"
+                    placeholder={t("login.enterAnswer")}
                     value={securityAnswer}
                     onChange={(e) => setSecurityAnswer(e.target.value)}
                     required
@@ -591,12 +593,12 @@ export function LoginDialog() {
             {/* 步骤3：设置新密码 */}
             {resetStep === 3 && (
               <div className="space-y-2">
-                <Label htmlFor="reset-new-password">新密码</Label>
+                <Label htmlFor="reset-new-password">{t('login.newPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="reset-new-password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="至少8位，包含字母和数字"
+                    placeholder={t("login.passwordPlaceholder")}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
@@ -612,7 +614,7 @@ export function LoginDialog() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">密码至少8位字符，同时包含字母和数字</p>
+                <p className="text-xs text-muted-foreground">{t('login.passwordRequirement')}</p>
               </div>
             )}
 
@@ -652,11 +654,11 @@ export function LoginDialog() {
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
             {mode === 'init' && (
               <div className="space-y-2">
-                <Label htmlFor="login-name">姓名</Label>
+                <Label htmlFor="login-name">{t('login.name')}</Label>
                 <Input
                   id="login-name"
                   type="text"
-                  placeholder="请输入姓名"
+                  placeholder={t("login.enterName")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -665,11 +667,11 @@ export function LoginDialog() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="login-username">账户</Label>
+              <Label htmlFor="login-username">{t('login.account')}</Label>
               <Input
                 id="login-username"
                 type="text"
-                placeholder="用户名或邮箱"
+                placeholder={t("login.usernameOrEmail")}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -679,12 +681,12 @@ export function LoginDialog() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="login-password">密码</Label>
+              <Label htmlFor="login-password">{t('login.password')}</Label>
               <div className="relative">
                 <Input
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={mode === 'init' ? '至少8位，包含字母和数字' : '请输入密码'}
+                  placeholder={mode === 'init' ? t('login.passwordPlaceholder') : t('login.enterPassword')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -706,9 +708,9 @@ export function LoginDialog() {
               <div className="rounded-md bg-muted/50 p-3 text-xs text-muted-foreground space-y-1">
                 <div className="flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5" />
-                  <span className="font-medium text-foreground/80">密码要求</span>
+                  <span className="font-medium text-foreground/80">{t('login.passwordRequirements')}</span>
                 </div>
-                <div>至少8位字符，同时包含字母和数字</div>
+                <div>{t('login.passwordRequirement')}</div>
               </div>
             )}
 
@@ -716,12 +718,12 @@ export function LoginDialog() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {mode === 'init' ? '创建中...' : '登录中...'}
+                  {mode === 'init' ? t('login.creating') : t('login.loggingIn')}
                 </>
               ) : (
                 <>
                   {mode === 'init' ? <UserPlus className="w-4 h-4 mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
-                  {mode === 'init' ? '创建管理员' : '登录'}
+                  {mode === 'init' ? t('login.createAdmin') : t('login.login')}
                 </>
               )}
             </Button>

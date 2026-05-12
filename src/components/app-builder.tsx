@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Layout, Type, BarChart3, Table, Image, GripVertical, Trash2, Eye, Code } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +18,7 @@ interface AppBlock {
 }
 
 export function AppBuilder() {
+  const { t } = useI18n();
   const [blocks, setBlocks] = useState<AppBlock[]>(() => {
     try { return JSON.parse(localStorage.getItem('datainsight-app-blocks') || '[]'); }
     catch { return []; }
@@ -60,11 +62,11 @@ export function AppBuilder() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Layout className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-medium">应用设计器</h3>
+          <h3 className="text-sm font-medium">{t('txt.应用设计器')}</h3>
           <Badge variant="secondary">{blocks.length} 组件</Badge>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">预览</span>
+          <span className="text-xs text-muted-foreground">{t('txt.预览')}</span>
           <Switch checked={preview} onCheckedChange={setPreview} />
         </div>
       </div>
@@ -86,8 +88,8 @@ export function AppBuilder() {
       {blocks.length === 0 ? (
         <Card className="p-8 text-center text-muted-foreground">
           <Layout className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p>暂无组件</p>
-          <p className="text-xs mt-1">拖拽式搭建业务应用界面</p>
+          <p>{t('txt.暂无组件')}</p>
+          <p className="text-xs mt-1">{t('txt.拖拽式搭建业务应用界面')}</p>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -112,22 +114,22 @@ export function AppBuilder() {
                     {block.type === 'text' && (
                       <Textarea
                         rows={2}
-                        placeholder="输入文本内容..."
+                        placeholder={t("ph.输入文本内容")}
                         value={block.config.content || ''}
                         onChange={e => updateBlock(block.id, { config: { ...block.config, content: e.target.value } })}
                       />
                     )}
                     {block.type === 'header' && (
                       <Input
-                        placeholder="标题内容"
+                        placeholder={t("ph.标题内容")}
                         value={block.config.content || ''}
                         onChange={e => updateBlock(block.id, { config: { ...block.config, content: e.target.value } })}
                       />
                     )}
                     {block.type === 'metric' && (
                       <div className="flex gap-2">
-                        <Input placeholder="指标名" className="h-7 text-xs" value={block.config.label || ''} onChange={e => updateBlock(block.id, { config: { ...block.config, label: e.target.value } })} />
-                        <Input placeholder="数值" className="h-7 text-xs" value={block.config.value || ''} onChange={e => updateBlock(block.id, { config: { ...block.config, value: e.target.value } })} />
+                        <Input placeholder={t("ph.指标名")} className="h-7 text-xs" value={block.config.label || ''} onChange={e => updateBlock(block.id, { config: { ...block.config, label: e.target.value } })} />
+                        <Input placeholder={t("ph.数值")} className="h-7 text-xs" value={block.config.value || ''} onChange={e => updateBlock(block.id, { config: { ...block.config, value: e.target.value } })} />
                       </div>
                     )}
                   </div>

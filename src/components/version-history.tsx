@@ -43,6 +43,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 // ============================================
 // 类型定义
@@ -102,6 +103,7 @@ export function VersionHistory({
   className
 }: VersionHistoryProps) {
   // 状态
+  const { t } = useI18n();
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [resources, setResources] = useState<ResourceInfo[]>([]);
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(resourceId || null);
@@ -276,7 +278,7 @@ export function VersionHistory({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <History className="w-5 h-5 text-blue-500" />
-          <h3 className="font-medium">版本历史</h3>
+          <h3 className="font-medium">{t('txt.版本历史')}</h3>
           {filteredSnapshots.length > 0 && (
             <Badge variant="secondary">{filteredSnapshots.length} 个版本</Badge>
           )}
@@ -295,7 +297,7 @@ export function VersionHistory({
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>创建新快照</DialogTitle>
+              <DialogTitle>{t('txt.创建新快照')}</DialogTitle>
               <DialogDescription>
                 保存当前状态的快照，方便以后恢复或对比
               </DialogDescription>
@@ -306,17 +308,17 @@ export function VersionHistory({
                 <Label htmlFor="snapshot-name">快照名称 *</Label>
                 <Input
                   id="snapshot-name"
-                  placeholder="如：月度报表 v1.0"
+                  placeholder={t("ph.如月度报表v10")}
                   value={newSnapshotName}
                   onChange={e => setNewSnapshotName(e.target.value)}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="snapshot-desc">描述（可选）</Label>
+                <Label htmlFor="snapshot-desc">{t('txt.描述可选')}</Label>
                 <Input
                   id="snapshot-desc"
-                  placeholder="描述这个版本的特点..."
+                  placeholder={t("ph.描述这个版本的特点")}
                   value={newSnapshotDesc}
                   onChange={e => setNewSnapshotDesc(e.target.value)}
                 />
@@ -345,7 +347,7 @@ export function VersionHistory({
       {/* 资源选择 */}
       {resources.length > 0 && (
         <div className="flex items-center gap-2 pb-2 border-b overflow-x-auto">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">资源：</span>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">{t('txt.资源')}</span>
           <button
             onClick={() => setSelectedResourceId(null)}
             className={cn(
@@ -397,7 +399,7 @@ export function VersionHistory({
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <History className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground">暂无版本快照</p>
+                <p className="text-muted-foreground">{t('txt.暂无版本快照')}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {currentContent ? '点击上方按钮创建第一个快照' : '加载数据后可以创建快照'}
                 </p>
@@ -434,7 +436,7 @@ export function VersionHistory({
                             <div className="flex items-center gap-2">
                               <h4 className="font-medium">{snapshot.name}</h4>
                               {isLatest && (
-                                <Badge variant="default" className="text-xs">最新</Badge>
+                                <Badge variant="default" className="text-xs">{t('txt.最新')}</Badge>
                               )}
                               <Badge variant="outline" className="text-xs">
                                 v{snapshot.version}
@@ -474,7 +476,7 @@ export function VersionHistory({
                                 <Eye className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>预览</TooltipContent>
+                            <TooltipContent>{t('txt.预览')}</TooltipContent>
                           </Tooltip>
                           
                           <Tooltip>
@@ -492,7 +494,7 @@ export function VersionHistory({
                                 )}
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>恢复到该版本</TooltipContent>
+                            <TooltipContent>{t('txt.恢复到该版本')}</TooltipContent>
                           </Tooltip>
                           
                           <Tooltip>
@@ -505,7 +507,7 @@ export function VersionHistory({
                                 <Copy className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>复制版本</TooltipContent>
+                            <TooltipContent>{t('txt.复制版本')}</TooltipContent>
                           </Tooltip>
                           
                           <Tooltip>
@@ -518,7 +520,7 @@ export function VersionHistory({
                                 <Download className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>导出</TooltipContent>
+                            <TooltipContent>{t('txt.导出')}</TooltipContent>
                           </Tooltip>
                           
                           <Button
@@ -545,7 +547,7 @@ export function VersionHistory({
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <Copy className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground">需要至少 2 个版本才能对比</p>
+                <p className="text-muted-foreground">{t('txt.需要至少2个版本才能对比')}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   创建更多快照后可以使用对比功能
                 </p>
@@ -555,7 +557,7 @@ export function VersionHistory({
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <Label>选择版本 A</Label>
+                  <Label>{t('txt.选择版本A')}</Label>
                   <select 
                     className="w-full mt-1 p-2 border rounded"
                     onChange={e => {
@@ -574,7 +576,7 @@ export function VersionHistory({
                   <ChevronRight className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <div className="flex-1">
-                  <Label>选择版本 B</Label>
+                  <Label>{t('txt.选择版本B')}</Label>
                   <select 
                     className="w-full mt-1 p-2 border rounded"
                     defaultValue={filteredSnapshots[0]?.id}
@@ -593,7 +595,7 @@ export function VersionHistory({
                   <CardContent className="pt-4">
                     <div className="flex items-center gap-2 mb-3">
                       <CheckCircle2 className="w-5 h-5 text-blue-500" />
-                      <span className="font-medium">对比预览</span>
+                      <span className="font-medium">{t('txt.对比预览')}</span>
                     </div>
                     <pre className="text-xs bg-white p-3 rounded overflow-auto max-h-[300px]">
                       {JSON.stringify(compareSnapshot.content, null, 2)}
@@ -612,12 +614,12 @@ export function VersionHistory({
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-blue-500 mt-0.5" />
             <div className="space-y-2 text-sm text-blue-700">
-              <p className="font-medium">版本管理提示</p>
+              <p className="font-medium">{t('txt.版本管理提示')}</p>
               <ul className="space-y-1 list-disc list-inside">
-                <li>创建快照保存重要节点，方便回滚</li>
-                <li>可以导出快照为 JSON 文件进行备份</li>
-                <li>恢复快照会覆盖当前内容，请谨慎操作</li>
-                <li>建议在重大修改前创建快照</li>
+                <li>{t('txt.创建快照保存重要节点方便回滚')}</li>
+                <li>{t('txt.可以导出快照为JSON文件进行备份')}</li>
+                <li>{t('txt.恢复快照会覆盖当前内容请谨慎操作')}</li>
+                <li>{t('txt.建议在重大修改前创建快照')}</li>
               </ul>
             </div>
           </div>

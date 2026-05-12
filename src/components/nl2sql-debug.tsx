@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,7 @@ interface DebugStep {
 }
 
 export function NL2SQLDebug({ data, modelConfig, onSQLResult }: NL2SQLDebugProps) {
+  const { t } = useI18n();
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [debugSteps, setDebugSteps] = useState<DebugStep[]>([]);
@@ -230,7 +232,7 @@ export function NL2SQLDebug({ data, modelConfig, onSQLResult }: NL2SQLDebugProps
         <Textarea
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="用自然语言描述你想查询的数据，例如：查找销售额超过1万的记录"
+          placeholder={t("ph.用自然语言描述你想查询的数据例如查找销售额超过1万")}
           className="flex-1 min-h-[60px] resize-none"
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); generateAndDebugSQL(); } }}
         />
@@ -272,7 +274,7 @@ export function NL2SQLDebug({ data, modelConfig, onSQLResult }: NL2SQLDebugProps
                   )}
                   {step.fixedSQL && (
                     <div className="mt-1">
-                      <span className="text-amber-500">修复后：</span>
+                      <span className="text-amber-500">{t('txt.修复后')}</span>
                       <pre className="p-2 bg-muted/50 rounded text-xs font-mono overflow-x-auto max-h-20">
                         {step.fixedSQL}
                       </pre>

@@ -7,6 +7,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import {
   MessageSquare,
   X,

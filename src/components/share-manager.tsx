@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +69,7 @@ interface ShareManagerProps {
 }
 
 export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManagerProps) {
+  const { t } = useI18n();
   const [shareConfig, setShareConfig] = useState<ShareConfig>({
     link: '',
     isPublic: false,
@@ -145,11 +147,11 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'owner':
-        return <Badge className="bg-purple-100 text-purple-700">所有者</Badge>;
+        return <Badge className="bg-purple-100 text-purple-700">{t('txt.所有者')}</Badge>;
       case 'editor':
-        return <Badge className="bg-blue-100 text-blue-700">可编辑</Badge>;
+        return <Badge className="bg-blue-100 text-blue-700">{t('txt.可编辑')}</Badge>;
       case 'viewer':
-        return <Badge variant="secondary">仅查看</Badge>;
+        return <Badge variant="secondary">{t('txt.仅查看')}</Badge>;
       default:
         return null;
     }
@@ -190,7 +192,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
             <div className="space-y-4">
               <div className="flex items-center gap-2 p-4 bg-muted/30 rounded-md">
                 <div className="flex-1">
-                  <p className="text-sm font-medium">分享链接</p>
+                  <p className="text-sm font-medium">{t('txt.分享链接')}</p>
                   <p className="text-xs text-muted-foreground truncate">{shareConfig.link}</p>
                 </div>
                 <Button variant="outline" size="sm" onClick={copyLink}>
@@ -218,7 +220,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                       <Lock className="w-5 h-5 text-muted-foreground" />
                     )}
                     <div>
-                      <p className="text-sm font-medium">公开访问</p>
+                      <p className="text-sm font-medium">{t('txt.公开访问')}</p>
                       <p className="text-xs text-muted-foreground">
                         {shareConfig.isPublic ? '任何人可访问' : '仅限受邀人员'}
                       </p>
@@ -237,7 +239,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   <div className="flex items-center gap-3">
                     <Key className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium">访问密码</p>
+                      <p className="text-sm font-medium">{t('txt.访问密码')}</p>
                       <p className="text-xs text-muted-foreground">
                         {shareConfig.password ? '已设置密码保护' : '未设置密码'}
                       </p>
@@ -251,14 +253,14 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                     </DialogTrigger>
                     <DialogContent className="max-w-lg">
                       <DialogHeader>
-                        <DialogTitle>设置访问密码</DialogTitle>
+                        <DialogTitle>{t('txt.设置访问密码')}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label>访问密码</Label>
+                          <Label>{t('txt.访问密码')}</Label>
                           <Input
                             type="password"
-                            placeholder="输入密码"
+                            placeholder={t("ph.输入密码")}
                             value={shareConfig.password || ''}
                             onChange={e => setShareConfig({ ...shareConfig, password: e.target.value })}
                           />
@@ -278,7 +280,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   <div className="flex items-center gap-3">
                     <Clock className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium">链接过期</p>
+                      <p className="text-sm font-medium">{t('txt.链接过期')}</p>
                       <p className="text-xs text-muted-foreground">
                         {shareConfig.expiresAt
                           ? `过期时间: ${new Date(shareConfig.expiresAt).toLocaleString()}`
@@ -297,7 +299,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="never">永不过期</SelectItem>
+                      <SelectItem value="never">{t('txt.永不过期')}</SelectItem>
                       <SelectItem value="1">1天后</SelectItem>
                       <SelectItem value="7">7天后</SelectItem>
                       <SelectItem value="30">30天后</SelectItem>
@@ -311,17 +313,17 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-blue-50 rounded-md text-center">
                   <p className="text-2xl font-bold text-blue-600">{shareConfig.viewCount}</p>
-                  <p className="text-xs text-muted-foreground">浏览次数</p>
+                  <p className="text-xs text-muted-foreground">{t('txt.浏览次数')}</p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-md text-center">
                   <p className="text-2xl font-bold text-green-600">12</p>
-                  <p className="text-xs text-muted-foreground">独立访客</p>
+                  <p className="text-xs text-muted-foreground">{t('txt.独立访客')}</p>
                 </div>
                 <div className="p-4 bg-purple-50 rounded-md text-center">
                   <p className="text-2xl font-bold text-purple-600">
                     {shareConfig.lastViewed ? '2分钟前' : '暂无'}
                   </p>
-                  <p className="text-xs text-muted-foreground">最后访问</p>
+                  <p className="text-xs text-muted-foreground">{t('txt.最后访问')}</p>
                 </div>
               </div>
             </div>
@@ -331,10 +333,10 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
           <TabsContent value="team" className="space-y-4">
             {/* 邀请成员 */}
             <div className="p-4 border rounded-md">
-              <h4 className="font-medium mb-3">邀请团队成员</h4>
+              <h4 className="font-medium mb-3">{t('txt.邀请团队成员')}</h4>
               <div className="flex gap-2">
                 <Input
-                  placeholder="输入邮箱地址"
+                  placeholder={t("ph.输入邮箱地址")}
                   value={inviteEmail}
                   onChange={e => setInviteEmail(e.target.value)}
                   className="flex-1"
@@ -344,8 +346,8 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="editor">可编辑</SelectItem>
-                    <SelectItem value="viewer">仅查看</SelectItem>
+                    <SelectItem value="editor">{t('txt.可编辑')}</SelectItem>
+                    <SelectItem value="viewer">{t('txt.仅查看')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button onClick={inviteMember} disabled={!inviteEmail}>
@@ -387,8 +389,8 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="editor">可编辑</SelectItem>
-                          <SelectItem value="viewer">仅查看</SelectItem>
+                          <SelectItem value="editor">{t('txt.可编辑')}</SelectItem>
+                          <SelectItem value="viewer">{t('txt.仅查看')}</SelectItem>
                         </SelectContent>
                       </Select>
                       <Button
@@ -434,7 +436,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
             {embedCode && (
               <div className="p-4 bg-gray-900 rounded-md">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">嵌入代码</span>
+                  <span className="text-xs text-muted-foreground">{t('txt.嵌入代码')}</span>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -452,7 +454,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
             )}
             
             <div className="p-4 bg-blue-50 rounded-md">
-              <h4 className="font-medium text-blue-800 mb-2">嵌入说明</h4>
+              <h4 className="font-medium text-blue-800 mb-2">{t('txt.嵌入说明')}</h4>
               <ul className="text-sm text-blue-600 space-y-1">
                 <li>• iframe 嵌入：可嵌入到网站中，支持自定义尺寸</li>
                 <li>• 链接嵌入：生成可点击的链接文字</li>
@@ -469,11 +471,11 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   <div className="flex items-center gap-3">
                     <Eye className="w-5 h-5 text-blue-500" />
                     <div>
-                      <p className="text-sm font-medium">查看权限</p>
-                      <p className="text-xs text-muted-foreground">允许查看数据和图表</p>
+                      <p className="text-sm font-medium">{t('txt.查看权限')}</p>
+                      <p className="text-xs text-muted-foreground">{t('txt.允许查看数据和图表')}</p>
                     </div>
                   </div>
-                  <Badge className="bg-green-100 text-green-700">已开启</Badge>
+                  <Badge className="bg-green-100 text-green-700">{t('txt.已开启')}</Badge>
                 </div>
               </div>
               
@@ -482,11 +484,11 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   <div className="flex items-center gap-3">
                     <Edit3 className="w-5 h-5 text-green-500" />
                     <div>
-                      <p className="text-sm font-medium">编辑权限</p>
-                      <p className="text-xs text-muted-foreground">允许修改图表和仪表盘</p>
+                      <p className="text-sm font-medium">{t('txt.编辑权限')}</p>
+                      <p className="text-xs text-muted-foreground">{t('txt.允许修改图表和仪表盘')}</p>
                     </div>
                   </div>
-                  <Badge className="bg-green-100 text-green-700">已开启</Badge>
+                  <Badge className="bg-green-100 text-green-700">{t('txt.已开启')}</Badge>
                 </div>
               </div>
               
@@ -495,11 +497,11 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   <div className="flex items-center gap-3">
                     <Download className="w-5 h-5 text-purple-500" />
                     <div>
-                      <p className="text-sm font-medium">导出权限</p>
-                      <p className="text-xs text-muted-foreground">允许导出数据和报表</p>
+                      <p className="text-sm font-medium">{t('txt.导出权限')}</p>
+                      <p className="text-xs text-muted-foreground">{t('txt.允许导出数据和报表')}</p>
                     </div>
                   </div>
-                  <Badge variant="outline">未开启</Badge>
+                  <Badge variant="outline">{t('txt.未开启')}</Badge>
                 </div>
               </div>
               
@@ -508,11 +510,11 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                   <div className="flex items-center gap-3">
                     <Trash2 className="w-5 h-5 text-red-500" />
                     <div>
-                      <p className="text-sm font-medium">删除权限</p>
-                      <p className="text-xs text-muted-foreground">允许删除仪表盘</p>
+                      <p className="text-sm font-medium">{t('txt.删除权限')}</p>
+                      <p className="text-xs text-muted-foreground">{t('txt.允许删除仪表盘')}</p>
                     </div>
                   </div>
-                  <Badge variant="outline">仅所有者</Badge>
+                  <Badge variant="outline">{t('txt.仅所有者')}</Badge>
                 </div>
               </div>
             </div>

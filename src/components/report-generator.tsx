@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Tabs} from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -55,6 +56,7 @@ interface ReportGeneratorProps {
 }
 
 export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
+  const { t } = useI18n();
   const [selectedTemplate, setSelectedTemplate] = useState<ReportTemplate>('summary');
   const [reportTitle, setReportTitle] = useState('数据分析报告');
   const [reportAuthor, setReportAuthor] = useState('DataInsight');
@@ -84,30 +86,30 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
           <div className="grid grid-cols-4 gap-3">
             <div className="p-3 bg-blue-50 rounded-md text-center">
               <p className="text-2xl font-bold text-blue-700">{analysis.summary.totalRows.toLocaleString()}</p>
-              <p className="text-xs text-blue-500">总行数</p>
+              <p className="text-xs text-blue-500">{t('txt.总行数')}</p>
             </div>
             <div className="p-3 bg-green-50 rounded-md text-center">
               <p className="text-2xl font-bold text-green-700">{analysis.summary.totalColumns}</p>
-              <p className="text-xs text-green-500">总列数</p>
+              <p className="text-xs text-green-500">{t('txt.总列数')}</p>
             </div>
             <div className="p-3 bg-orange-50 rounded-md text-center">
               <p className="text-2xl font-bold text-orange-700">{analysis.summary.numericColumns}</p>
-              <p className="text-xs text-orange-500">数值列</p>
+              <p className="text-xs text-orange-500">{t('txt.数值列')}</p>
             </div>
             <div className="p-3 bg-red-50 rounded-md text-center">
               <p className="text-2xl font-bold text-red-700">{analysis.summary.nullValues}</p>
-              <p className="text-xs text-red-500">空值数</p>
+              <p className="text-xs text-red-500">{t('txt.空值数')}</p>
             </div>
           </div>
           {deep && (
             <div className="grid grid-cols-4 gap-3">
               <div className="p-3 bg-purple-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-purple-700">{deep.dataProfile.dataType}</p>
-                <p className="text-xs text-purple-500">数据类型</p>
+                <p className="text-xs text-purple-500">{t('txt.数据类型')}</p>
               </div>
               <div className="p-3 bg-indigo-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-indigo-700">{deep.dataProfile.suggestedIndustry}</p>
-                <p className="text-xs text-indigo-500">推测行业</p>
+                <p className="text-xs text-indigo-500">{t('txt.推测行业')}</p>
               </div>
               <div className="p-3 bg-cyan-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-cyan-700">
@@ -115,14 +117,14 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                    deep.dataProfile.dataMaturity === 'cleaned' ? '已清洗' :
                    deep.dataProfile.dataMaturity === 'structured' ? '结构化' : '已分析'}
                 </p>
-                <p className="text-xs text-cyan-500">数据成熟度</p>
+                <p className="text-xs text-cyan-500">{t('txt.数据成熟度')}</p>
               </div>
               <div className="p-3 bg-teal-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-teal-700">
                   {deep.dataProfile.analysisPotential === 'high' ? '高' :
                    deep.dataProfile.analysisPotential === 'medium' ? '中' : '低'}
                 </p>
-                <p className="text-xs text-teal-500">分析潜力</p>
+                <p className="text-xs text-teal-500">{t('txt.分析潜力')}</p>
               </div>
             </div>
           )}
@@ -142,7 +144,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                 <div className="text-6xl font-bold" style={{ color: getScoreColor(deep.healthScore.overall) }}>
                   {deep.healthScore.overall}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">综合评分</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('txt.综合评分')}</p>
               </div>
             </div>
             <div className="grid grid-cols-4 gap-3">
@@ -269,13 +271,13 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/30">
-                <th className="text-left py-2 px-3 font-medium">字段</th>
-                <th className="text-left py-2 px-3 font-medium">类型</th>
-                <th className="text-right py-2 px-3 font-medium">非空</th>
-                <th className="text-right py-2 px-3 font-medium">唯一值</th>
-                <th className="text-right py-2 px-3 font-medium">最小值</th>
-                <th className="text-right py-2 px-3 font-medium">最大值</th>
-                <th className="text-right py-2 px-3 font-medium">均值</th>
+                <th className="text-left py-2 px-3 font-medium">{t('txt.字段')}</th>
+                <th className="text-left py-2 px-3 font-medium">{t('txt.类型')}</th>
+                <th className="text-right py-2 px-3 font-medium">{t('txt.非空')}</th>
+                <th className="text-right py-2 px-3 font-medium">{t('txt.唯一值')}</th>
+                <th className="text-right py-2 px-3 font-medium">{t('txt.最小值')}</th>
+                <th className="text-right py-2 px-3 font-medium">{t('txt.最大值')}</th>
+                <th className="text-right py-2 px-3 font-medium">{t('txt.均值')}</th>
               </tr>
             </thead>
             <tbody>
@@ -455,17 +457,17 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>报告标题</Label>
-              <Input value={reportTitle} onChange={e => setReportTitle(e.target.value)} placeholder="输入报告标题" />
+              <Label>{t('txt.报告标题')}</Label>
+              <Input value={reportTitle} onChange={e => setReportTitle(e.target.value)} placeholder={t("ph.输入报告标题")} />
             </div>
             <div className="space-y-2">
-              <Label>报告作者</Label>
-              <Input value={reportAuthor} onChange={e => setReportAuthor(e.target.value)} placeholder="输入作者" />
+              <Label>{t('txt.报告作者')}</Label>
+              <Input value={reportAuthor} onChange={e => setReportAuthor(e.target.value)} placeholder={t("ph.输入作者")} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>报告模板</Label>
+            <Label>{t('txt.报告模板')}</Label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {templates.map(template => {
                 const Icon = template.icon;
@@ -493,7 +495,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
           <Separator />
 
           <div className="space-y-2">
-            <Label>导出</Label>
+            <Label>{t('txt.导出')}</Label>
             {isExporting ? (
               <div className="space-y-2">
                 <Progress value={exportProgress} />
@@ -503,7 +505,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
               <div className="grid grid-cols-3 gap-3">
                 <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3" onClick={() => handleExport('pdf')}>
                   <FileText className="w-5 h-5" />
-                  <span className="text-xs">打印/PDF</span>
+                  <span className="text-xs">{t('txt.打印PDF')}</span>
                 </Button>
                 <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3" onClick={() => handleExport('excel')}>
                   <FileSpreadsheet className="w-5 h-5" />
@@ -511,7 +513,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                 </Button>
                 <Button variant="outline" className="flex flex-col items-center gap-1 h-auto py-3" onClick={() => handleExport('image')}>
                   <Image className="w-5 h-5" />
-                  <span className="text-xs">图片</span>
+                  <span className="text-xs">{t('txt.图片')}</span>
                 </Button>
               </div>
             )}

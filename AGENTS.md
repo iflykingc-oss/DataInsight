@@ -620,3 +620,10 @@ AI 模型连接测试
 17. **API鉴权**: 所有数据处理API路由已添加 `verifyAuth` 中间件，需携带 Bearer Token
 18. **邮箱注册**: 支持 SMTP 邮件发送验证码（环境变量 `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`SMTP_FROM`），未配置 SMTP 时验证码输出到服务器日志（开发模式）
 19. **注册开关**: 环境变量 `DISABLE_REGISTRATION=true` 可关闭公开注册
+20. **国际化 (i18n)**:
+    - 使用 `src/lib/i18n.tsx` 的 `I18nProvider` + `useI18n` hook + `t('key')` 函数
+    - 支持 `zh-CN`（默认）和 `en-US` 两种语言，1400+ 翻译键
+    - 语言偏好存储在 `localStorage`（key: `datainsight-lang`）
+    - 所有组件必须使用 `t('key')` 而非硬编码中文/英文字符串
+    - `useI18n()` 只能在 React 组件内部调用，不可在顶层/回调/工具函数中使用
+    - 新增翻译键需同时在 `zh-CN` 和 `en-US` 字典中添加（TypeScript 类型强制要求键一致）

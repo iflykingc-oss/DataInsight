@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import {
   AlertTriangle,
   CheckCircle,
@@ -63,6 +64,7 @@ const SEVERITY_CONFIG = {
 const CHART_COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa8c16'];
 
 export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigateToCharts }: DataInsightsProps) {
+  const { t } = useI18n();
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<AIEnhancedResult | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -216,7 +218,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
       <Card className="text-center py-12">
         <CardContent>
           <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">正在分析数据...</p>
+          <p className="text-muted-foreground">{t('txt.正在分析数据')}</p>
         </CardContent>
       </Card>
     );
@@ -227,8 +229,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
       <Card className="text-center py-12">
         <CardContent>
           <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground mb-4">深度分析不可用，请重新分析</p>
-          <Button onClick={onAnalyze}>重新分析</Button>
+          <p className="text-muted-foreground mb-4">{t('txt.深度分析不可用请重新分析')}</p>
+          <Button onClick={onAnalyze}>{t('txt.重新分析')}</Button>
         </CardContent>
       </Card>
     );
@@ -260,7 +262,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             {!modelConfig ? (
               <div className="text-center py-4">
                 <AlertCircle className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">请先在设置中配置 AI 模型，即可使用 AI 业务解读</p>
+                <p className="text-sm text-muted-foreground">{t('txt.请先在设置中配置AI模型即可使用AI业务解读')}</p>
               </div>
             ) : aiLoading ? (
               <div className="space-y-3">
@@ -279,7 +281,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               <div className="text-center py-4">
                 <AlertTriangle className="w-6 h-6 text-destructive mx-auto mb-2" />
                 <p className="text-sm text-destructive mb-2">{aiError}</p>
-                <Button variant="outline" size="sm" onClick={handleAIEnhance}>重试</Button>
+                <Button variant="outline" size="sm" onClick={handleAIEnhance}>{t('txt.重试')}</Button>
               </div>
             ) : aiResult ? (
               <div className="space-y-3">
@@ -306,7 +308,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                           <CheckCircle className="w-4 h-4 text-success" />
                         )}
                         <span className="text-sm font-medium">{step.stepName}</span>
-                        {step.isRequired && <Badge variant="outline" className="text-xs py-0">必选</Badge>}
+                        {step.isRequired && <Badge variant="outline" className="text-xs py-0">{t('txt.必选')}</Badge>}
                       </div>
                       {expandedAiStep === step.stepId ? (
                         <ChevronUp className="w-4 h-4 text-muted-foreground" />
@@ -322,7 +324,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                         {step.recommendedChartTypes.length > 0 && (
                           <div className="mt-3 flex items-center gap-1">
                             <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">推荐图表：</span>
+                            <span className="text-xs text-muted-foreground">{t('txt.推荐图表')}</span>
                             {step.recommendedChartTypes.map((ct: string) => (
                               <Badge key={ct} variant="secondary" className="text-xs py-0">{ct}</Badge>
                             ))}
@@ -371,26 +373,26 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                   <div className="mt-3 p-3 border rounded-md bg-background text-left">
                     <div className="flex items-center gap-2 mb-2">
                       <Compass className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">分析规划</span>
+                      <span className="text-sm font-medium">{t('txt.分析规划')}</span>
                       <Badge variant="secondary" className="text-xs">置信度 {analysisPlan.plan.confidence}%</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">{analysisPlan.reasoning}</p>
                     {analysisPlan.plan && (
                       <div className="space-y-1.5">
                         <div className="text-xs">
-                          <span className="font-medium">相关字段：</span>
+                          <span className="font-medium">{t('txt.相关字段')}</span>
                           {analysisPlan.plan.relevantFields.join('、') || '全量字段'}
                         </div>
                         <div className="text-xs">
-                          <span className="font-medium">分析维度：</span>
+                          <span className="font-medium">{t('txt.分析维度')}</span>
                           {analysisPlan.plan.recommendedDimensions.join('、') || '无'}
                         </div>
                         <div className="text-xs">
-                          <span className="font-medium">核心指标：</span>
+                          <span className="font-medium">{t('txt.核心指标')}</span>
                           {analysisPlan.plan.keyMetrics.join('、') || '无'}
                         </div>
                         <div className="text-xs">
-                          <span className="font-medium">执行顺序：</span>
+                          <span className="font-medium">{t('txt.执行顺序')}</span>
                           {analysisPlan.plan.analysisSequence.join(' → ')}
                         </div>
                       </div>
@@ -417,33 +419,33 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             <p className="text-sm text-foreground mb-4">{deep.dataProfile.summary}</p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <div className="bg-primary/5 rounded-md p-3">
-                <p className="text-xs text-primary mb-1">数据类型</p>
+                <p className="text-xs text-primary mb-1">{t('txt.数据类型')}</p>
                 <p className="font-semibold text-foreground text-sm">{deep.dataProfile.dataType}</p>
               </div>
               <div className="bg-chart-4/5 rounded-md p-3">
-                <p className="text-xs text-chart-4 mb-1">推测行业</p>
+                <p className="text-xs text-chart-4 mb-1">{t('txt.推测行业')}</p>
                 <p className="font-semibold text-chart-4 text-sm">{deep.dataProfile.suggestedIndustry}</p>
               </div>
               {deep.dataProfile.subScenario && (
                 <div className="bg-chart-4/5 rounded-md p-3">
-                  <p className="text-xs text-chart-4 mb-1">细分场景</p>
+                  <p className="text-xs text-chart-4 mb-1">{t('txt.细分场景')}</p>
                   <p className="font-semibold text-chart-4 text-sm">{deep.dataProfile.subScenario}</p>
                 </div>
               )}
               {deep.dataProfile.periodFeature && (
                 <div className="bg-primary/5 rounded-md p-3">
-                  <p className="text-xs text-primary mb-1">数据周期</p>
+                  <p className="text-xs text-primary mb-1">{t('txt.数据周期')}</p>
                   <p className="font-semibold text-primary text-sm">{deep.dataProfile.periodFeature}</p>
                 </div>
               )}
               {deep.dataProfile.scaleFeature && (
                 <div className="bg-success/5 rounded-md p-3">
-                  <p className="text-xs text-success mb-1">数据规模</p>
+                  <p className="text-xs text-success mb-1">{t('txt.数据规模')}</p>
                   <p className="font-semibold text-success text-sm">{deep.dataProfile.scaleFeature}</p>
                 </div>
               )}
               <div className="bg-success/5 rounded-md p-3">
-                <p className="text-xs text-success mb-1">分析潜力</p>
+                <p className="text-xs text-success mb-1">{t('txt.分析潜力')}</p>
                 <p className="font-semibold text-success text-sm">
                   {deep.dataProfile.analysisPotential === 'high' ? '高' :
                    deep.dataProfile.analysisPotential === 'medium' ? '中' : '低'}
@@ -460,7 +462,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               <Shield className="w-5 h-5 text-primary" />
               数据健康度
             </CardTitle>
-            <CardDescription>你的数据质量是否足够支撑可靠的分析结论</CardDescription>
+            <CardDescription>{t('txt.你的数据质量是否足够支撑可靠的分析结论')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center mb-4">
@@ -651,20 +653,20 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs font-medium text-foreground">影响</p>
+                            <p className="text-xs font-medium text-foreground">{t('txt.影响')}</p>
                             <p className="text-xs text-muted-foreground">{finding.impact}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-2">
                           <CheckCircle className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
                           <div>
-                            <p className="text-xs font-medium text-foreground">建议</p>
+                            <p className="text-xs font-medium text-foreground">{t('txt.建议')}</p>
                             <p className="text-xs text-muted-foreground">{finding.suggestion}</p>
                           </div>
                         </div>
                         {finding.relatedFields.length > 0 && (
                           <div className="flex items-center gap-1 mt-1">
-                            <span className="text-xs text-muted-foreground">相关字段:</span>
+                            <span className="text-xs text-muted-foreground">{t('txt.相关字段')}</span>
                             {finding.relatedFields.map(f => (
                               <Badge key={f} variant="outline" className="text-xs py-0">{f}</Badge>
                             ))}
@@ -690,7 +692,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                 <Activity className="w-5 h-5 text-primary" />
                 趋势速览
               </CardTitle>
-              <CardDescription>数据变化趋势的业务解读</CardDescription>
+              <CardDescription>{t('txt.数据变化趋势的业务解读')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -747,7 +749,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                 <BarChart3 className="w-5 h-5 text-primary" />
                 数据分布
               </CardTitle>
-              <CardDescription>了解数据的业务含义和分布特征</CardDescription>
+              <CardDescription>{t('txt.了解数据的业务含义和分布特征')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -866,7 +868,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                               {seg.contribution.toFixed(1)}%
                             </span>
                             {seg.isKeyDriver && (
-                              <Badge className="bg-primary text-white hover:bg-primary text-xs py-0 px-1.5">驱动</Badge>
+                              <Badge className="bg-primary text-white hover:bg-primary text-xs py-0 px-1.5">{t('txt.驱动')}</Badge>
                             )}
                           </div>
                         ))}
@@ -901,7 +903,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                         <p className="text-sm text-foreground mb-2">{rc.cause}</p>
                         {/* 证据链 */}
                         <div className="mb-2">
-                          <p className="text-xs text-muted-foreground mb-1">证据链:</p>
+                          <p className="text-xs text-muted-foreground mb-1">{t('txt.证据链')}</p>
                           {rc.evidence.map((ev, ei) => (
                             <div key={ei} className="flex items-start gap-1 ml-2">
                               <span className="text-xs text-muted-foreground mt-0.5">•</span>
@@ -912,7 +914,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
                         {/* 相关维度 */}
                         {rc.relatedDimensions.length > 0 && (
                           <div className="flex items-center gap-1 mb-2">
-                            <span className="text-xs text-muted-foreground">相关维度:</span>
+                            <span className="text-xs text-muted-foreground">{t('txt.相关维度')}</span>
                             {rc.relatedDimensions.map(d => (
                               <Badge key={d} variant="outline" className="text-xs py-0">{d}</Badge>
                             ))}
@@ -942,7 +944,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               关联发现
               <Badge variant="secondary">{deep.correlations.length}</Badge>
             </CardTitle>
-            <CardDescription>数据之间的关联关系，帮你发现隐藏规律</CardDescription>
+            <CardDescription>{t('txt.数据之间的关联关系帮你发现隐藏规律')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -994,7 +996,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               <Sparkles className="w-5 h-5 text-primary" />
               推荐这样看数据
             </CardTitle>
-            <CardDescription>一键生成适合你数据的图表，快速发现规律</CardDescription>
+            <CardDescription>{t('txt.一键生成适合你数据的图表快速发现规律')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1043,7 +1045,7 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               <CheckCircle className="w-5 h-5 text-primary" />
               下一步怎么做
             </CardTitle>
-            <CardDescription>基于数据分析，给你可执行的行动方案</CardDescription>
+            <CardDescription>{t('txt.基于数据分析给你可执行的行动方案')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -1051,8 +1053,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               {deep.actionItems.filter(i => i.priority === 'high').length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10">本周可落地</Badge>
-                    <span className="text-xs text-muted-foreground">低成本、零依赖、立刻执行</span>
+                    <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/10">{t('txt.本周可落地')}</Badge>
+                    <span className="text-xs text-muted-foreground">{t('txt.低成本零依赖立刻执行')}</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'high').map((item, idx) => (
@@ -1072,8 +1074,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               {deep.actionItems.filter(i => i.priority === 'medium').length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-warning/10 text-warning hover:bg-warning/10">本月内落地</Badge>
-                    <span className="text-xs text-muted-foreground">需要少量资源和协调</span>
+                    <Badge className="bg-warning/10 text-warning hover:bg-warning/10">{t('txt.本月内落地')}</Badge>
+                    <span className="text-xs text-muted-foreground">{t('txt.需要少量资源和协调')}</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'medium').map((item, idx) => (
@@ -1093,8 +1095,8 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
               {deep.actionItems.filter(i => i.priority === 'low').length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-primary/10 text-primary hover:bg-primary/10">本季度规划</Badge>
-                    <span className="text-xs text-muted-foreground">需要系统建设和资源投入</span>
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/10">{t('txt.本季度规划')}</Badge>
+                    <span className="text-xs text-muted-foreground">{t('txt.需要系统建设和资源投入')}</span>
                   </div>
                   <div className="space-y-2">
                     {deep.actionItems.filter(i => i.priority === 'low').map((item, idx) => (
@@ -1154,15 +1156,15 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="p-4 bg-muted/50 rounded-md text-center">
-                  <p className="text-xs text-muted-foreground mb-1">当前值</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t('txt.当前值')}</p>
                   <p className="text-2xl font-bold">{lastValue.toLocaleString()}</p>
                 </div>
                 <div className="p-4 bg-primary/5 rounded-md text-center">
-                  <p className="text-xs text-primary mb-1">下一周期预测</p>
+                  <p className="text-xs text-primary mb-1">{t('txt.下一周期预测')}</p>
                   <p className="text-2xl font-bold text-primary">{nextValue.toLocaleString()}</p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-md text-center">
-                  <p className="text-xs text-muted-foreground mb-1">预计变化</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t('txt.预计变化')}</p>
                   <div className={`flex items-center justify-center gap-1 text-2xl font-bold ${
                     trend === 'up' ? 'text-success' : trend === 'down' ? 'text-destructive' : 'text-foreground'
                   }`}>
@@ -1192,14 +1194,14 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 px-3 font-medium text-foreground">字段</th>
-                  <th className="text-left py-2 px-3 font-medium text-foreground">类型</th>
-                  <th className="text-right py-2 px-3 font-medium text-foreground">非空</th>
-                  <th className="text-right py-2 px-3 font-medium text-foreground">唯一值</th>
-                  <th className="text-right py-2 px-3 font-medium text-foreground">最小值</th>
-                  <th className="text-right py-2 px-3 font-medium text-foreground">最大值</th>
-                  <th className="text-right py-2 px-3 font-medium text-foreground">均值</th>
-                  <th className="text-left py-2 px-3 font-medium text-foreground">示例</th>
+                  <th className="text-left py-2 px-3 font-medium text-foreground">{t('txt.字段')}</th>
+                  <th className="text-left py-2 px-3 font-medium text-foreground">{t('txt.类型')}</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">{t('txt.非空')}</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">{t('txt.唯一值')}</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">{t('txt.最小值')}</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">{t('txt.最大值')}</th>
+                  <th className="text-right py-2 px-3 font-medium text-foreground">{t('txt.均值')}</th>
+                  <th className="text-left py-2 px-3 font-medium text-foreground">{t('txt.示例')}</th>
                 </tr>
               </thead>
               <tbody>

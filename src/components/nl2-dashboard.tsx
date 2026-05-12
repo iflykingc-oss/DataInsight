@@ -70,6 +70,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 import {
   BarChart,
@@ -265,6 +266,7 @@ interface NL2DashboardProps {
 // ============================================
 export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2DashboardProps) {
   // 对话状态
+  const { t } = useI18n();
   const [conversations, setConversations] = useState<ConversationMessage[]>([]);
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -741,7 +743,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Wand2 className="w-5 h-5 text-purple-500" />
-          <h3 className="font-semibold text-base">智能仪表盘生成</h3>
+          <h3 className="font-semibold text-base">{t('txt.智能仪表盘生成')}</h3>
           <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">AI 业务驱动</Badge>
         </div>
         <div className="flex items-center gap-2">
@@ -792,7 +794,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
             <div className="space-y-3">
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="w-4 h-4 text-amber-500" />
-                <span className="text-sm font-medium">快速开始 · 场景模板</span>
+                <span className="text-sm font-medium">{t('txt.快速开始场景模板')}</span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {TEMPLATES.map(tpl => (
@@ -825,7 +827,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-purple-500" />
-                  <CardTitle className="text-sm">对话式生成</CardTitle>
+                  <CardTitle className="text-sm">{t('txt.对话式生成')}</CardTitle>
                 </div>
                 {conversations.length > 0 && (
                   <Button
@@ -849,8 +851,8 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                     <div className="text-center py-6 space-y-3">
                       <Sparkles className="w-10 h-10 mx-auto text-purple-300" />
                       <div>
-                        <p className="text-sm font-medium text-foreground">用自然语言描述你的需求</p>
-                        <p className="text-xs text-muted-foreground mt-1">或者从上方选择一个模板快速开始</p>
+                        <p className="text-sm font-medium text-foreground">{t('txt.用自然语言描述你的需求')}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t('txt.或者从上方选择一个模板快速开始')}</p>
                       </div>
                       {/* 示例提示 */}
                       <div className="flex flex-wrap justify-center gap-1.5 mt-2">
@@ -925,7 +927,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
               {/* 输入区域 */}
               <div className="flex gap-2">
                 <Input
-                  placeholder="描述你想要的仪表盘，例如：生成月度销售仪表盘..."
+                  placeholder={t("ph.描述你想要的仪表盘例如生成月度销售仪表盘")}
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => {
@@ -955,7 +957,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
               <div className="flex items-start gap-2">
                 <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                 <div className="text-xs text-amber-800 space-y-0.5">
-                  <p className="font-medium">生成技巧</p>
+                  <p className="font-medium">{t('txt.生成技巧')}</p>
                   <ul className="space-y-0.5 list-disc list-inside text-amber-700">
                     <li>描述越具体，生成越精准：如&ldquo;8月各门店销售额对比&rdquo;</li>
                     <li>指定场景效果更好：如&ldquo;电商店铺复盘&rdquo;</li>
@@ -973,7 +975,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <LayoutDashboard className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground text-sm">暂无仪表盘</p>
+                <p className="text-muted-foreground text-sm">{t('txt.暂无仪表盘')}</p>
                 <Button variant="outline" className="mt-3" onClick={() => setActiveTab('create')}>
                   <Wand2 className="w-4 h-4 mr-1" />
                   去生成
@@ -1056,7 +1058,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                                 <Edit3 className="w-3 h-3" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>修改图表</TooltipContent>
+                            <TooltipContent>{t('txt.修改图表')}</TooltipContent>
                           </Tooltip>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1069,7 +1071,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                                 <RotateCcw className="w-3 h-3" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>换类型</TooltipContent>
+                            <TooltipContent>{t('txt.换类型')}</TooltipContent>
                           </Tooltip>
                         </div>
                       </div>
@@ -1099,7 +1101,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                 <CardContent className="pt-3 pb-3">
                   <div className="flex items-center gap-2">
                     <Input
-                      placeholder="继续调整仪表盘，如：增加复购率图表 / 改成蓝色主题 / 添加数据标签..."
+                      placeholder={t("ph.继续调整仪表盘如增加复购率图表改成蓝色主题添加数据")}
                       className="text-xs h-8"
                       onKeyDown={e => {
                         if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
@@ -1135,8 +1137,8 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <History className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground text-sm">暂无历史记录</p>
-                <p className="text-xs text-muted-foreground mt-1">生成仪表盘后会保存在这里</p>
+                <p className="text-muted-foreground text-sm">{t('txt.暂无历史记录')}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t('txt.生成仪表盘后会保存在这里')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -1179,7 +1181,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>预览</TooltipContent>
+                          <TooltipContent>{t('txt.预览')}</TooltipContent>
                         </Tooltip>
                       </div>
                     </div>
@@ -1195,14 +1197,14 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
       <Dialog open={!!editingChart} onOpenChange={() => setEditingChart(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>修改图表</DialogTitle>
+            <DialogTitle>{t('txt.修改图表')}</DialogTitle>
             <DialogDescription>{editingChart?.title}</DialogDescription>
           </DialogHeader>
           {editingChart && (
             <div className="space-y-3">
               {/* 图表类型切换 */}
               <div>
-                <label className="text-xs font-medium text-foreground mb-1.5 block">图表类型</label>
+                <label className="text-xs font-medium text-foreground mb-1.5 block">{t('txt.图表类型')}</label>
                 <Select
                   value={editingChart.type}
                   onValueChange={type => {
@@ -1217,21 +1219,21 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="line">折线图</SelectItem>
-                    <SelectItem value="bar">条形图</SelectItem>
-                    <SelectItem value="area">面积图</SelectItem>
-                    <SelectItem value="pie">饼图</SelectItem>
-                    <SelectItem value="donut">环形图</SelectItem>
-                    <SelectItem value="radar">雷达图</SelectItem>
-                    <SelectItem value="pivot">透视表</SelectItem>
-                    <SelectItem value="detail">明细表</SelectItem>
-                    <SelectItem value="filter">筛选器</SelectItem>
+                    <SelectItem value="line">{t('txt.折线图')}</SelectItem>
+                    <SelectItem value="bar">{t('txt.条形图')}</SelectItem>
+                    <SelectItem value="area">{t('txt.面积图')}</SelectItem>
+                    <SelectItem value="pie">{t('txt.饼图')}</SelectItem>
+                    <SelectItem value="donut">{t('txt.环形图')}</SelectItem>
+                    <SelectItem value="radar">{t('txt.雷达图')}</SelectItem>
+                    <SelectItem value="pivot">{t('txt.透视表')}</SelectItem>
+                    <SelectItem value="detail">{t('txt.明细表')}</SelectItem>
+                    <SelectItem value="filter">{t('txt.筛选器')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {/* 标题修改 */}
               <div>
-                <label className="text-xs font-medium text-foreground mb-1.5 block">图表标题</label>
+                <label className="text-xs font-medium text-foreground mb-1.5 block">{t('txt.图表标题')}</label>
                 <Input
                   value={editingChart.title}
                   onChange={e => {
@@ -1246,7 +1248,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
               </div>
               {/* 业务解读 */}
               <div>
-                <label className="text-xs font-medium text-foreground mb-1.5 block">业务解读</label>
+                <label className="text-xs font-medium text-foreground mb-1.5 block">{t('txt.业务解读')}</label>
                 <textarea
                   value={editingChart.insight}
                   onChange={e => {
@@ -1257,7 +1259,7 @@ export function NL2Dashboard({ data, fieldStats, className, modelConfig }: NL2Da
                     setCurrentDashboard({ ...currentDashboard, charts: updated });
                   }}
                   className="w-full h-20 px-3 py-2 text-xs border rounded-md resize-none"
-                  placeholder="输入这条数据的业务解读..."
+                  placeholder={t("ph.输入这条数据的业务解读")}
                 />
               </div>
               <div className="flex gap-2 pt-1">

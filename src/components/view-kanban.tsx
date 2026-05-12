@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useI18n } from '@/lib/i18n';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ interface KanbanViewProps {
 }
 
 export function KanbanView({ data }: KanbanViewProps) {
+  const { t } = useI18n();
   const { headers, rows } = data;
   const [groupField, setGroupField] = useState<string>(headers[0] || '');
   const [cardTitleField, setCardTitleField] = useState<string>(headers[0] || '');
@@ -54,11 +56,11 @@ export function KanbanView({ data }: KanbanViewProps) {
       <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-md">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <LayoutGrid className="w-4 h-4" />
-          <span>看板视图</span>
+          <span>{t('txt.看板视图')}</span>
         </div>
         <div className="h-4 w-px bg-border" />
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">分组字段</span>
+          <span className="text-xs text-muted-foreground">{t('txt.分组字段')}</span>
           <Select value={groupField} onValueChange={setGroupField}>
             <SelectTrigger className="w-[160px] h-8 text-xs">
               <SelectValue />
@@ -74,7 +76,7 @@ export function KanbanView({ data }: KanbanViewProps) {
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">卡片标题</span>
+          <span className="text-xs text-muted-foreground">{t('txt.卡片标题')}</span>
           <Select value={cardTitleField} onValueChange={setCardTitleField}>
             <SelectTrigger className="w-[160px] h-8 text-xs">
               <SelectValue />

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface ParsedData {
   headers: string[];
@@ -27,6 +28,7 @@ interface MultimodalFieldsProps {
 // 图转表 - 主打功能
 function ImageToTable({ onResult }: { onResult?: (result: ParsedData) => void }) {
   const [imageUrl, setImageUrl] = useState('');
+  const { t } = useI18n();
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<ParsedData | null>(null);
@@ -116,7 +118,7 @@ function ImageToTable({ onResult }: { onResult?: (result: ParsedData) => void })
             {imageUrl ? (
               <div className="space-y-3">
                 <img src={imageUrl} alt="预览" className="max-h-48 mx-auto rounded-md object-contain" />
-                <p className="text-sm text-muted-foreground">图片已上传</p>
+                <p className="text-sm text-muted-foreground">{t('txt.图片已上传')}</p>
                 <Button variant="outline" size="sm" onClick={() => setImageUrl('')}>
                   重新上传
                 </Button>
@@ -207,6 +209,7 @@ function ImageToTable({ onResult }: { onResult?: (result: ParsedData) => void })
 
 // 图生文
 function ImageToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['modelConfig'] }) {
+  const { t } = useI18n();
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -281,7 +284,7 @@ function ImageToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
           ) : (
             <>
               <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">拖拽或点击上传图片</p>
+              <p className="text-sm text-muted-foreground">{t('txt.拖拽或点击上传图片')}</p>
             </>
           )}
           <input
@@ -333,6 +336,7 @@ function ImageToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
 
 // AI生图 - 简化版
 function AIGenerator({ modelConfig }: { modelConfig: MultimodalFieldsProps['modelConfig'] }) {
+  const { t } = useI18n();
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState('');
@@ -401,7 +405,7 @@ function AIGenerator({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
       </CardHeader>
       <CardContent className="space-y-4">
         <Textarea
-          placeholder="描述你想要生成的图片，例如：一只可爱的橘猫在阳光下打盹"
+          placeholder={t("ph.描述你想要生成的图片例如一只可爱的橘猫在阳光下打盹")}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={3}
@@ -428,7 +432,7 @@ function AIGenerator({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
 
         {generating && (
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground text-center">正在生成，请稍候...</p>
+            <p className="text-sm text-muted-foreground text-center">{t('txt.正在生成请稍候')}</p>
             <Progress value={66} className="animate-pulse" />
           </div>
         )}
@@ -478,6 +482,7 @@ function AIGenerator({ modelConfig }: { modelConfig: MultimodalFieldsProps['mode
 
 // 语音转写
 function SpeechToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['modelConfig'] }) {
+  const { t } = useI18n();
   const [recording, setRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState('');
   const [transcribing, setTranscribing] = useState(false);
@@ -608,6 +613,7 @@ function SpeechToText({ modelConfig }: { modelConfig: MultimodalFieldsProps['mod
 
 // 主组件
 export function MultimodalFields({ data, modelConfig, onImageToTable }: MultimodalFieldsProps) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('image-to-table');
 
   return (
@@ -616,11 +622,11 @@ export function MultimodalFields({ data, modelConfig, onImageToTable }: Multimod
         <TabsList className="grid grid-cols-4 w-full mb-4">
           <TabsTrigger value="image-to-table" className="text-xs sm:text-sm">
             <Table className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">图转表</span>
+            <span className="hidden sm:inline">{t('txt.图转表')}</span>
           </TabsTrigger>
           <TabsTrigger value="image-to-text" className="text-xs sm:text-sm">
             <Image className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">图生文</span>
+            <span className="hidden sm:inline">{t('txt.图生文')}</span>
           </TabsTrigger>
           <TabsTrigger value="generate" className="text-xs sm:text-sm">
             <Wand2 className="h-4 w-4 mr-1" />
@@ -628,7 +634,7 @@ export function MultimodalFields({ data, modelConfig, onImageToTable }: Multimod
           </TabsTrigger>
           <TabsTrigger value="speech" className="text-xs sm:text-sm">
             <Mic className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">语音</span>
+            <span className="hidden sm:inline">{t('txt.语音')}</span>
           </TabsTrigger>
         </TabsList>
 

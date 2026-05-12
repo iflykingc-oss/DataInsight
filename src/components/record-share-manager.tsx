@@ -34,6 +34,7 @@ import {
   QrCode
 } from 'lucide-react';
 import { generateId } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface RecordShareConfig {
   link: string;
@@ -95,6 +96,8 @@ export function RecordShareManager({
     window.open(`mailto:${inviteEmail}?subject=${subject}&body=${body}`);
   }, [inviteEmail, recordData, headers, recordIndex, shareConfig.link]);
 
+  const { t } = useI18n();
+
   const getSharePreview = useCallback(() => {
     const previewFields = shareConfig.includeFields.slice(0, 5);
     return previewFields.map(field => ({
@@ -124,7 +127,7 @@ export function RecordShareManager({
         <div className="space-y-6">
           {/* 分享预览 */}
           <div className="p-4 bg-muted/50 rounded-md">
-            <p className="text-sm font-medium mb-2">分享预览</p>
+            <p className="text-sm font-medium mb-2">{t('txt.分享预览')}</p>
             <div className="space-y-2">
               {getSharePreview().map(({ field, value }) => (
                 <div key={field} className="flex items-start gap-2 text-sm">
@@ -144,14 +147,14 @@ export function RecordShareManager({
 
           {/* 分享链接 */}
           <div className="space-y-3">
-            <Label>分享链接</Label>
+            <Label>{t('txt.分享链接')}</Label>
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Link2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   value={shareConfig.link}
                   onChange={(e) => setShareConfig(prev => ({ ...prev, link: e.target.value }))}
-                  placeholder="点击生成链接"
+                  placeholder={t("ph.点击生成链接")}
                   className="pl-9"
                   readOnly
                 />
@@ -175,7 +178,7 @@ export function RecordShareManager({
                   <Lock className="w-5 h-5 text-muted-foreground" />
                 )}
                 <div>
-                  <p className="text-sm font-medium">公开访问</p>
+                  <p className="text-sm font-medium">{t('txt.公开访问')}</p>
                   <p className="text-xs text-muted-foreground">
                     {shareConfig.isPublic ? '任何人可查看' : '仅受邀人员可查看'}
                   </p>
@@ -191,7 +194,7 @@ export function RecordShareManager({
             </div>
 
             <div className="space-y-2">
-              <Label>访问权限</Label>
+              <Label>{t('txt.访问权限')}</Label>
               <Select
                 value={shareConfig.permissions}
                 onValueChange={(v: 'view' | 'edit') => setShareConfig(prev => ({ ...prev, permissions: v }))}
@@ -203,13 +206,13 @@ export function RecordShareManager({
                   <SelectItem value="view">
                     <div className="flex items-center gap-2">
                       <Eye className="w-4 h-4" />
-                      <span>仅查看</span>
+                      <span>{t('txt.仅查看')}</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="edit">
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4" />
-                      <span>可编辑</span>
+                      <span>{t('txt.可编辑')}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -217,7 +220,7 @@ export function RecordShareManager({
             </div>
 
             <div className="space-y-2">
-              <Label>链接有效期</Label>
+              <Label>{t('txt.链接有效期')}</Label>
               <Select
                 value={shareConfig.expiresAt || 'never'}
                 onValueChange={(v) => setShareConfig(prev => ({ 
@@ -229,7 +232,7 @@ export function RecordShareManager({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="never">永不过期</SelectItem>
+                  <SelectItem value="never">{t('txt.永不过期')}</SelectItem>
                   <SelectItem value="1h">1小时后</SelectItem>
                   <SelectItem value="24h">24小时后</SelectItem>
                   <SelectItem value="7d">7天后</SelectItem>
@@ -241,7 +244,7 @@ export function RecordShareManager({
 
           {/* 邮件邀请 */}
           <div className="space-y-3 pt-4 border-t">
-            <Label>邀请其他人查看</Label>
+            <Label>{t('txt.邀请其他人查看')}</Label>
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -249,7 +252,7 @@ export function RecordShareManager({
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="输入邮箱地址"
+                  placeholder={t("ph.输入邮箱地址")}
                   className="pl-9"
                 />
               </div>

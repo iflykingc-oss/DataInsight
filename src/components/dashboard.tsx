@@ -15,6 +15,7 @@ import {
   Trophy, Timer, Target, Star, Award, Crown, Medal, TrendingDown, Minus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import {
   BarChart, Bar, LineChart as RechartsLineChart, Line, PieChart as RechartsPieChart, Pie, Cell,
@@ -72,6 +73,7 @@ interface ChartWidget {
 // 主组件
 // ============================================
 export function Dashboard({ data, analysis }: DashboardProps) {
+  const { t } = useI18n();
   const [chartType, setChartType] = useState<string>('auto');
   const [filterValues, setFilterValues] = useState<Record<string, string[]>>({});
   const [detailSortField, setDetailSortField] = useState<string>('');
@@ -241,7 +243,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
       <Card className="text-center py-12">
         <CardContent>
           <LayoutGrid className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">需要至少1个数值字段才能生成仪表盘</p>
+          <p className="text-muted-foreground">{t('txt.需要至少1个数值字段才能生成仪表盘')}</p>
         </CardContent>
       </Card>
     );
@@ -274,7 +276,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
             <div className="flex items-start gap-4">
               <div className="flex items-center gap-2 min-w-fit pt-1">
                 <Filter className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium">数据筛选</span>
+                <span className="text-sm font-medium">{t('txt.数据筛选')}</span>
               </div>
               <div className="flex-1 flex flex-wrap gap-4">
                 {filterWidgets.map(fw => {
@@ -324,18 +326,18 @@ export function Dashboard({ data, analysis }: DashboardProps) {
         <div className="flex items-center gap-3">
           <Select value={chartType} onValueChange={setChartType}>
             <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue placeholder="图表类型" />
+              <SelectValue placeholder={t("ph.图表类型")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="auto">全部类型</SelectItem>
-              <SelectItem value="bar">柱状图</SelectItem>
-              <SelectItem value="line">折线图</SelectItem>
-              <SelectItem value="pie">饼图</SelectItem>
-              <SelectItem value="area">面积图</SelectItem>
-              <SelectItem value="radar">雷达图</SelectItem>
-              <SelectItem value="forecast">趋势预测</SelectItem>
-              <SelectItem value="pivot">透视表</SelectItem>
-              <SelectItem value="detail">明细表</SelectItem>
+              <SelectItem value="auto">{t('txt.全部类型')}</SelectItem>
+              <SelectItem value="bar">{t('txt.柱状图')}</SelectItem>
+              <SelectItem value="line">{t('txt.折线图')}</SelectItem>
+              <SelectItem value="pie">{t('txt.饼图')}</SelectItem>
+              <SelectItem value="area">{t('txt.面积图')}</SelectItem>
+              <SelectItem value="radar">{t('txt.雷达图')}</SelectItem>
+              <SelectItem value="forecast">{t('txt.趋势预测')}</SelectItem>
+              <SelectItem value="pivot">{t('txt.透视表')}</SelectItem>
+              <SelectItem value="detail">{t('txt.明细表')}</SelectItem>
             </SelectContent>
           </Select>
           <Badge variant="outline" className="text-xs">
@@ -426,17 +428,17 @@ export function Dashboard({ data, analysis }: DashboardProps) {
       {showSaveDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowSaveDialog(false)}>
           <Card className="w-96" onClick={e => e.stopPropagation()}>
-            <CardHeader><CardTitle className="text-base">保存仪表盘配置</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t('txt.保存仪表盘配置')}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <Input
-                placeholder="配置名称（如：月度销售看板）"
+                placeholder={t("ph.配置名称如月度销售看板")}
                 value={saveName}
                 onChange={e => setSaveName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSaveConfig(); }}
               />
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" size="sm" onClick={() => setShowSaveDialog(false)}>取消</Button>
-                <Button size="sm" onClick={handleSaveConfig}>保存</Button>
+                <Button variant="outline" size="sm" onClick={() => setShowSaveDialog(false)}>{t('txt.取消')}</Button>
+                <Button size="sm" onClick={handleSaveConfig}>{t('txt.保存')}</Button>
               </div>
             </CardContent>
           </Card>
@@ -447,10 +449,10 @@ export function Dashboard({ data, analysis }: DashboardProps) {
       {showLoadDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowLoadDialog(false)}>
           <Card className="w-96 max-h-96 overflow-auto" onClick={e => e.stopPropagation()}>
-            <CardHeader><CardTitle className="text-base">加载仪表盘配置</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t('txt.加载仪表盘配置')}</CardTitle></CardHeader>
             <CardContent>
               {savedConfigs.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">暂无已保存的配置</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t('txt.暂无已保存的配置')}</p>
               ) : (
                 <div className="space-y-2">
                   {savedConfigs.map(config => (
@@ -484,7 +486,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
       <div id="dashboard-chart-area" className="space-y-6">
         <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wide">
           <BarChart3 className="w-3.5 h-3.5" />
-          <span>数据可视化</span>
+          <span>{t('txt.数据可视化')}</span>
         </div>
         <div className="grid md:grid-cols-2 gap-5">
         {chartWidgets.map(widget => {
@@ -495,7 +497,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
-                    <Badge variant="outline" className="text-xs">透视表</Badge>
+                    <Badge variant="outline" className="text-xs">{t('txt.透视表')}</Badge>
                   </div>
                   <CardDescription className="text-xs">
                     {widget.pivotConfig.rowField} &times; {widget.pivotConfig.colField} &rarr; {widget.pivotConfig.aggFunc}({widget.pivotConfig.valField})
@@ -521,7 +523,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
-                    <Badge variant="outline" className="text-xs">明细表</Badge>
+                    <Badge variant="outline" className="text-xs">{t('txt.明细表')}</Badge>
                   </div>
                   <CardDescription className="text-xs">
                     共 {searchedDetailRows.length} 条记录{Object.keys(filterValues).some(k => filterValues[k].length > 0) ? ` (已筛选)` : ''}
@@ -533,7 +535,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                     <div className="relative flex-1 max-w-xs">
                       <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                       <Input
-                        placeholder="搜索数据..."
+                        placeholder={t("ph.搜索数据")}
                         value={detailSearch}
                         onChange={(e) => { setDetailSearch(e.target.value); setDetailPage(0); }}
                         className="h-8 text-xs pl-8"
@@ -740,7 +742,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                     <div className="flex items-end justify-between">
                       <div>
                         <p className="text-2xl font-bold">{currentValue.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">当前值</p>
+                        <p className="text-xs text-muted-foreground">{t('txt.当前值')}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">目标: {maxValue.toLocaleString()}</p>
@@ -872,17 +874,17 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium">{widget.title}</CardTitle>
-                    <Badge variant="outline" className="text-xs">预测</Badge>
+                    <Badge variant="outline" className="text-xs">{t('txt.预测')}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-muted/50 rounded-md">
-                      <p className="text-xs text-muted-foreground mb-1">下一周期预测</p>
+                      <p className="text-xs text-muted-foreground mb-1">{t('txt.下一周期预测')}</p>
                       <p className="text-2xl font-bold">{forecastValue?.toLocaleString() || '-'}</p>
                     </div>
                     <div className="text-center p-3 bg-muted/50 rounded-md">
-                      <p className="text-xs text-muted-foreground mb-1">趋势方向</p>
+                      <p className="text-xs text-muted-foreground mb-1">{t('txt.趋势方向')}</p>
                       <div className={`flex items-center justify-center gap-1 ${trendColor}`}>
                         {trendIcon}
                         <span className="text-lg font-semibold">{trendLabel}</span>
@@ -947,6 +949,7 @@ function PivotTableView({
   valField: string;
   aggFunc: string;
 }) {
+  const { t } = useI18n();
   const pivotData = useMemo(() => {
     // 获取行和列的唯一值
     const rowValues = [...new Set(rows.map(r => String(r[rowField])))].sort();
@@ -1006,7 +1009,7 @@ function PivotTableView({
             {colValues.map(cv => (
               <th key={cv} className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">{cv}</th>
             ))}
-            <th className="px-3 py-2 text-right font-medium text-primary whitespace-nowrap border-l">合计</th>
+            <th className="px-3 py-2 text-right font-medium text-primary whitespace-nowrap border-l">{t('txt.合计')}</th>
           </tr>
         </thead>
         <tbody>
@@ -1023,7 +1026,7 @@ function PivotTableView({
           ))}
           {/* 合计行 */}
           <tr className="border-t bg-muted/30 font-medium">
-            <td className="px-3 py-1.5 text-primary border-r">合计</td>
+            <td className="px-3 py-1.5 text-primary border-r">{t('txt.合计')}</td>
             {colValues.map(cv => (
               <td key={cv} className="px-3 py-1.5 text-right text-primary">{colTotals[cv]}</td>
             ))}
@@ -1123,7 +1126,7 @@ function renderChart(widget: ChartWidget, onDataPointClick?: (field: string, val
         </RadarChart>
       );
     default:
-      return <div className="flex items-center justify-center h-full text-muted-foreground">不支持的图表类型</div>;
+      return <div className="flex items-center justify-center h-full text-muted-foreground">Unsupported chart type</div>;
   }
 }
 

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -193,6 +194,7 @@ function SlideIcon({ type }: { type: StorySlide['type'] }) {
 }
 
 export function DataStorytelling({ data, fieldStats, modelConfig, insights }: DataStorytellingProps) {
+  const { t } = useI18n();
   const [rawContent, setRawContent] = useState('');
   const [slides, setSlides] = useState<StorySlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -311,7 +313,7 @@ export function DataStorytelling({ data, fieldStats, modelConfig, insights }: Da
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>数据故事</title>
+<title>{t('txt.数据故事')}</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
@@ -348,8 +350,8 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
       <Card className="h-full">
         <CardContent className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <BookOpen className="w-12 h-12 mb-3 opacity-50" />
-          <p>请先上传数据文件</p>
-          <p className="text-xs mt-1">上传数据后即可生成数据故事</p>
+          <p>{t('txt.请先上传数据文件')}</p>
+          <p className="text-xs mt-1">{t('txt.上传数据后即可生成数据故事')}</p>
         </CardContent>
       </Card>
     );
@@ -361,7 +363,7 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
       <div className="flex items-center justify-between px-4 py-2 border-b bg-card">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-primary" />
-          <span className="font-medium text-sm">数据故事</span>
+          <span className="font-medium text-sm">{t('txt.数据故事')}</span>
           {slides.length > 0 && (
             <Badge variant="secondary" className="text-xs">
               {slides.length} 页
@@ -376,7 +378,7 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
             disabled={isGenerating}
           >
             {isGenerating ? (
-              <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />生成中...</>
+              <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />{t('txt.生成中')}</>
             ) : (
               <><Sparkles className="w-3.5 h-3.5 mr-1" />{slides.length > 0 ? '重新生成' : '生成故事'}</>
             )}
@@ -407,7 +409,7 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
       {showSettings && (
         <div className="flex items-center gap-4 px-4 py-2 border-b bg-muted/30 text-xs">
           <div className="flex items-center gap-1.5">
-            <span className="text-muted-foreground">受众:</span>
+            <span className="text-muted-foreground">{t('txt.受众')}</span>
             <Select value={audience} onValueChange={setAudience}>
               <SelectTrigger className="h-7 w-36 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -416,7 +418,7 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
             </Select>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-muted-foreground">侧重:</span>
+            <span className="text-muted-foreground">{t('txt.侧重')}</span>
             <Select value={emphasis} onValueChange={setEmphasis}>
               <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -425,7 +427,7 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
             </Select>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-muted-foreground">页数:</span>
+            <span className="text-muted-foreground">{t('txt.页数')}</span>
             <Select value={String(maxSlides)} onValueChange={v => setMaxSlides(Number(v))}>
               <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -454,8 +456,8 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">正在分析数据，生成故事...</p>
-              <p className="text-xs text-muted-foreground mt-1">这可能需要 10-30 秒</p>
+              <p className="text-sm text-muted-foreground">{t('txt.正在分析数据生成故事')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('txt.这可能需要1030秒')}</p>
             </div>
           </div>
         )}
@@ -464,7 +466,7 @@ ${slides.map((s, i) => `<div class="slide"><span class="type-badge type-${s.type
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-md">
               <BookOpen className="w-12 h-12 mx-auto mb-3 text-primary/40" />
-              <h3 className="font-medium mb-2">数据故事 (Data Storytelling)</h3>
+              <h3 className="font-medium mb-2">{t('txt.数据故事DataStorytelling')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 将数据分析结果转化为引人入胜的叙事故事，包含执行摘要、趋势分析、异常发现和行动建议。
               </p>

@@ -60,6 +60,7 @@ import {
   FolderOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 
 // AI 清洗意图识别
@@ -108,6 +109,7 @@ const OPERATION_LABELS: Record<string, { name: string; icon: React.ElementType }
 
 export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps) {
   // 状态
+  const { t } = useI18n();
   const [cleaningSteps, setCleaningSteps] = useState<CleaningStep[]>([]);
   const [previewData, setPreviewData] = useState<{ before: ParsedData; after: ParsedData }>({ before: data, after: data });
   const [isAIProcessing, setIsAIProcessing] = useState(false);
@@ -636,7 +638,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                     <MessageSquare className="w-5 h-5 text-purple-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-purple-700">用自然语言描述清洗需求</p>
+                    <p className="text-sm font-medium text-purple-700">{t('txt.用自然语言描述清洗需求')}</p>
                     <p className="text-xs text-purple-600 mt-1">
                       例如：{'"'}删除所有空行{'"'}、{'"'}去除重复数据{'"'}、{'"'}用0填补空值{'"'}
                     </p>
@@ -646,7 +648,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                 {/* 输入框 */}
                 <div className="mt-4 relative">
                   <Textarea
-                    placeholder="用口语描述你的清洗需求，比如：删除空白行，去掉重复的数据..."
+                    placeholder={t("ph.用口语描述你的清洗需求比如删除空白行去掉重复的数据")}
                     value={aiPrompt}
                     onChange={e => setAiPrompt(e.target.value)}
                     rows={2}
@@ -686,7 +688,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
               
               {/* 快捷指令 */}
               <div>
-                <Label className="text-sm text-muted-foreground mb-2 block">常用指令</Label>
+                <Label className="text-sm text-muted-foreground mb-2 block">{t('txt.常用指令')}</Label>
                 <div className="flex flex-wrap gap-2">
                   {QUICK_ACTIONS.map((action) => (
                     <Tooltip key={action.label}>
@@ -721,7 +723,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                 <div className="grid grid-cols-4 gap-2">
                   <Select value={quickFilterField} onValueChange={setQuickFilterField}>
                     <SelectTrigger>
-                      <SelectValue placeholder="选择字段" />
+                      <SelectValue placeholder={t("ph.选择字段")} />
                     </SelectTrigger>
                     <SelectContent>
                       {data.headers.map(h => (
@@ -734,15 +736,15 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="equals">等于</SelectItem>
-                      <SelectItem value="not_equals">不等于</SelectItem>
-                      <SelectItem value="contains">包含</SelectItem>
-                      <SelectItem value="greater">大于</SelectItem>
-                      <SelectItem value="less">小于</SelectItem>
+                      <SelectItem value="equals">{t('txt.等于')}</SelectItem>
+                      <SelectItem value="not_equals">{t('txt.不等于')}</SelectItem>
+                      <SelectItem value="contains">{t('txt.包含')}</SelectItem>
+                      <SelectItem value="greater">{t('txt.大于')}</SelectItem>
+                      <SelectItem value="less">{t('txt.小于')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Input 
-                    placeholder="筛选值"
+                    placeholder={t("ph.筛选值")}
                     value={quickFilterValue}
                     onChange={e => setQuickFilterValue(e.target.value)}
                   />
@@ -769,7 +771,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                 <div className="grid grid-cols-4 gap-2">
                   <Select value={nullFillField} onValueChange={setNullFillField}>
                     <SelectTrigger>
-                      <SelectValue placeholder="选择字段" />
+                      <SelectValue placeholder={t("ph.选择字段")} />
                     </SelectTrigger>
                     <SelectContent>
                       {data.headers.map(h => (
@@ -782,11 +784,11 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="value">固定值</SelectItem>
-                      <SelectItem value="mean">均值</SelectItem>
-                      <SelectItem value="median">中位数</SelectItem>
-                      <SelectItem value="mode">众数</SelectItem>
-                      <SelectItem value="forward">前向填充</SelectItem>
+                      <SelectItem value="value">{t('txt.固定值')}</SelectItem>
+                      <SelectItem value="mean">{t('txt.均值')}</SelectItem>
+                      <SelectItem value="median">{t('txt.中位数')}</SelectItem>
+                      <SelectItem value="mode">{t('txt.众数')}</SelectItem>
+                      <SelectItem value="forward">{t('txt.前向填充')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Input 
@@ -819,7 +821,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                   <div className="flex items-center gap-3">
                     <Copy className="w-4 h-4 text-orange-500" />
                     <div>
-                      <p className="text-sm font-medium">去除完全重复的行</p>
+                      <p className="text-sm font-medium">{t('txt.去除完全重复的行')}</p>
                       <p className="text-xs text-muted-foreground">
                         当前数据 {data.rowCount} 行，预计去除 {data.rowCount - new Set(data.rows.map(r => JSON.stringify(r))).size} 行重复
                       </p>
@@ -837,8 +839,8 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
             <TabsContent value="advanced" className="space-y-4">
               <div className="text-center py-8 text-muted-foreground">
                 <Settings className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p>高级配置面板</p>
-                <p className="text-sm">支持自定义清洗规则和批量处理</p>
+                <p>{t('txt.高级配置面板')}</p>
+                <p className="text-sm">{t('txt.支持自定义清洗规则和批量处理')}</p>
               </div>
             </TabsContent>
           </Tabs>
@@ -915,7 +917,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                             <Undo2 className="w-3 h-3" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>撤销此步骤</TooltipContent>
+                        <TooltipContent>{t('txt.撤销此步骤')}</TooltipContent>
                       </Tooltip>
                       <Button 
                         size="sm" 
@@ -938,7 +940,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
               <div className="p-3 border-b bg-muted/30 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Eye className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">数据预览</span>
+                  <span className="text-sm font-medium">{t('txt.数据预览')}</span>
                   <Badge variant="outline" className="text-xs">
                     {previewData.before.rowCount} → {previewData.after.rowCount} 行
                   </Badge>
@@ -1004,18 +1006,18 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
       {showTemplateSave && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowTemplateSave(false)}>
           <Card className="w-80" onClick={e => e.stopPropagation()}>
-            <CardHeader><CardTitle className="text-base">保存清洗模板</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t('txt.保存清洗模板')}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <Input
-                placeholder="模板名称（如：电商数据标准清洗）"
+                placeholder={t("ph.模板名称如电商数据标准清洗")}
                 value={templateName}
                 onChange={e => setTemplateName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSaveTemplate(); }}
               />
               <p className="text-xs text-muted-foreground">将保存当前 {cleaningSteps.length} 个清洗步骤，可复用于同类数据</p>
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" size="sm" onClick={() => setShowTemplateSave(false)}>取消</Button>
-                <Button size="sm" onClick={handleSaveTemplate}>保存</Button>
+                <Button variant="outline" size="sm" onClick={() => setShowTemplateSave(false)}>{t('txt.取消')}</Button>
+                <Button size="sm" onClick={handleSaveTemplate}>{t('txt.保存')}</Button>
               </div>
             </CardContent>
           </Card>
@@ -1026,10 +1028,10 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
       {showTemplateLoad && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowTemplateLoad(false)}>
           <Card className="w-96 max-h-80 overflow-auto" onClick={e => e.stopPropagation()}>
-            <CardHeader><CardTitle className="text-base">加载清洗模板</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t('txt.加载清洗模板')}</CardTitle></CardHeader>
             <CardContent>
               {savedTemplates.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">暂无已保存的模板</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t('txt.暂无已保存的模板')}</p>
               ) : (
                 <div className="space-y-2">
                   {savedTemplates.map(tpl => (

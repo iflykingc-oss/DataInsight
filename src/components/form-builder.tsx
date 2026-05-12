@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect, useRef, Dispatch, SetStateAction } from "react";
+import { useI18n } from '@/lib/i18n';
 import { useAuth } from "@/lib/use-auth";
 import { ParsedData } from "@/lib/data-processor/types";
 import { safeSetItem } from "@/lib/safe-storage";
@@ -216,6 +217,7 @@ export function FormBuilder({
   const headers = data?.headers ?? [];
   const rows = data?.rows ?? [];
 
+  const { t } = useI18n();
   const [configs, setConfigs] = useState<FormConfig[]>(() => {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -414,7 +416,7 @@ export function FormBuilder({
             <QrCode className="w-5 h-5" />
             表单二维码
           </DialogTitle>
-          <DialogDescription>扫描二维码或分享链接收集数据</DialogDescription>
+          <DialogDescription>{t('txt.扫描二维码或分享链接收集数据')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {qrDataUrl && (
@@ -475,8 +477,8 @@ export function FormBuilder({
           <Card className="border-dashed">
             <CardContent className="py-12 text-center">
               <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">暂无提交数据</p>
-              <p className="text-xs text-muted-foreground mt-1">分享表单链接后，提交的数据将在此展示</p>
+              <p className="text-muted-foreground">{t('txt.暂无提交数据')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('txt.分享表单链接后提交的数据将在此展示')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -486,14 +488,14 @@ export function FormBuilder({
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-3 py-2 text-left font-medium">#</th>
-                    <th className="px-3 py-2 text-left font-medium">提交时间</th>
+                    <th className="px-3 py-2 text-left font-medium">{t('txt.提交时间')}</th>
                     {formConfig.fields.filter((f) => f.visible).map((f) => (
                       <th key={f.id} className="px-3 py-2 text-left font-medium">
                         {f.label}
                         {f.required && <span className="text-red-500 ml-1">*</span>}
                       </th>
                     ))}
-                    <th className="px-3 py-2 text-left font-medium">操作</th>
+                    <th className="px-3 py-2 text-left font-medium">{t('txt.操作')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -540,7 +542,7 @@ export function FormBuilder({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">表单预览</h3>
+          <h3 className="text-lg font-semibold">{t('txt.表单预览')}</h3>
           <Button variant="outline" onClick={() => setPreviewMode(false)}>
             返回编辑
           </Button>
@@ -555,13 +557,13 @@ export function FormBuilder({
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">编辑表单</h3>
+          <h3 className="text-lg font-semibold">{t('txt.编辑表单')}</h3>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setPreviewMode(true)}>
               <Eye className="w-4 h-4 mr-1" /> 预览
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setEditing(null)}>取消</Button>
-            <Button size="sm" onClick={saveEditing}>保存表单</Button>
+            <Button variant="outline" size="sm" onClick={() => setEditing(null)}>{t('txt.取消')}</Button>
+            <Button size="sm" onClick={saveEditing}>{t('txt.保存表单')}</Button>
           </div>
         </div>
 
@@ -577,11 +579,11 @@ export function FormBuilder({
             <Card>
               <CardContent className="pt-4 space-y-3">
                 <div>
-                  <Label>表单标题</Label>
+                  <Label>{t('txt.表单标题')}</Label>
                   <Input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value, updatedAt: Date.now() })} />
                 </div>
                 <div>
-                  <Label>表单描述</Label>
+                  <Label>{t('txt.表单描述')}</Label>
                   <Textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value, updatedAt: Date.now() })} rows={2} />
                 </div>
               </CardContent>
@@ -602,11 +604,11 @@ export function FormBuilder({
                     <div className="flex-1 space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
-                          <Label className="text-xs">字段名称</Label>
+                          <Label className="text-xs">{t('txt.字段名称')}</Label>
                           <Input value={field.label} onChange={(e) => updateField(index, { label: e.target.value })} />
                         </div>
                         <div>
-                          <Label className="text-xs">关联数据列</Label>
+                          <Label className="text-xs">{t('txt.关联数据列')}</Label>
                           <Select value={field.sourceField} onValueChange={(v) => updateField(index, { sourceField: v })}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -615,7 +617,7 @@ export function FormBuilder({
                           </Select>
                         </div>
                         <div>
-                          <Label className="text-xs">字段类型</Label>
+                          <Label className="text-xs">{t('txt.字段类型')}</Label>
                           <Select value={field.type} onValueChange={(v) => updateField(index, { type: v as FormFieldType })}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -643,17 +645,17 @@ export function FormBuilder({
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-xs">提示文字</Label>
+                          <Label className="text-xs">{t('txt.提示文字')}</Label>
                           <Input
-                            placeholder="请输入..."
+                            placeholder={t("ph.请输入")}
                             value={field.placeholder || ""}
                             onChange={(e) => updateField(index, { placeholder: e.target.value })}
                           />
                         </div>
                         <div>
-                          <Label className="text-xs">字段说明</Label>
+                          <Label className="text-xs">{t('txt.字段说明')}</Label>
                           <Input
-                            placeholder="帮助填写者理解..."
+                            placeholder={t("ph.帮助填写者理解")}
                             value={field.description || ""}
                             onChange={(e) => updateField(index, { description: e.target.value })}
                           />
@@ -663,7 +665,7 @@ export function FormBuilder({
                       {/* Type-specific options */}
                       {["select", "multiselect", "radio"].includes(field.type) && (
                         <div>
-                          <Label className="text-xs">选项（逗号分隔）</Label>
+                          <Label className="text-xs">{t('txt.选项逗号分隔')}</Label>
                           <Input
                             value={(field.options || []).join(", ")}
                             onChange={(e) =>
@@ -671,14 +673,14 @@ export function FormBuilder({
                                 options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
                               })
                             }
-                            placeholder="选项1, 选项2, 选项3"
+                            placeholder={t("ph.选项1选项2选项3")}
                           />
                         </div>
                       )}
 
                       {field.type === "rating" && (
                         <div className="flex items-center gap-3">
-                          <Label className="text-xs">最高评分</Label>
+                          <Label className="text-xs">{t('txt.最高评分')}</Label>
                           <Select
                             value={String(field.maxRating || 5)}
                             onValueChange={(v) => updateField(index, { maxRating: Number(v) })}
@@ -694,19 +696,19 @@ export function FormBuilder({
                       {field.type === "matrix" && (
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-xs">行标题（逗号分隔）</Label>
+                            <Label className="text-xs">{t('txt.行标题逗号分隔')}</Label>
                             <Input
                               value={(field.matrixRows || []).join(", ")}
                               onChange={(e) => updateField(index, { matrixRows: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-                              placeholder="服务态度, 专业能力"
+                              placeholder={t("ph.服务态度专业能力")}
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">列标题（逗号分隔）</Label>
+                            <Label className="text-xs">{t('txt.列标题逗号分隔')}</Label>
                             <Input
                               value={(field.matrixCols || []).join(", ")}
                               onChange={(e) => updateField(index, { matrixCols: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-                              placeholder="非常满意, 满意, 一般, 不满意"
+                              placeholder={t("ph.非常满意满意一般不满意")}
                             />
                           </div>
                         </div>
@@ -715,7 +717,7 @@ export function FormBuilder({
                       {["image", "file"].includes(field.type) && (
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-xs">最大文件大小(MB)</Label>
+                            <Label className="text-xs">{t('txt.最大文件大小MB')}</Label>
                             <Input
                               type="number"
                               value={field.maxFileSize || 10}
@@ -723,7 +725,7 @@ export function FormBuilder({
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">允许类型</Label>
+                            <Label className="text-xs">{t('txt.允许类型')}</Label>
                             <Input
                               value={field.acceptTypes || (field.type === "image" ? "image/*" : "*")}
                               onChange={(e) => updateField(index, { acceptTypes: e.target.value })}
@@ -757,7 +759,7 @@ export function FormBuilder({
           {/* ─── Theme Tab ─── */}
           <TabsContent value="theme" className="space-y-4 mt-4">
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">预设主题</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">{t('txt.预设主题')}</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
                   {PRESET_THEMES.map((t) => (
@@ -776,18 +778,18 @@ export function FormBuilder({
             </Card>
 
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">自定义配色</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">{t('txt.自定义配色')}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>主题色</Label>
+                    <Label>{t('txt.主题色')}</Label>
                     <div className="flex gap-2 mt-1">
                       <input type="color" value={editing.theme.primaryColor} onChange={(e) => setEditing({ ...editing, theme: { ...editing.theme, primaryColor: e.target.value }, updatedAt: Date.now() })} className="w-10 h-10 rounded cursor-pointer" />
                       <Input value={editing.theme.primaryColor} onChange={(e) => setEditing({ ...editing, theme: { ...editing.theme, primaryColor: e.target.value }, updatedAt: Date.now() })} />
                     </div>
                   </div>
                   <div>
-                    <Label>背景色</Label>
+                    <Label>{t('txt.背景色')}</Label>
                     <div className="flex gap-2 mt-1">
                       <input type="color" value={editing.theme.bgColor} onChange={(e) => setEditing({ ...editing, theme: { ...editing.theme, bgColor: e.target.value }, updatedAt: Date.now() })} className="w-10 h-10 rounded cursor-pointer" />
                       <Input value={editing.theme.bgColor} onChange={(e) => setEditing({ ...editing, theme: { ...editing.theme, bgColor: e.target.value }, updatedAt: Date.now() })} />
@@ -798,12 +800,12 @@ export function FormBuilder({
             </Card>
 
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">头图与Logo</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">{t('txt.头图与Logo')}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label>头图URL</Label>
+                  <Label>{t('txt.头图URL')}</Label>
                   <Input
-                    placeholder="输入图片URL或留空"
+                    placeholder={t("ph.输入图片URL或留空")}
                     value={editing.theme.headerImage}
                     onChange={(e) => setEditing({ ...editing, theme: { ...editing.theme, headerImage: e.target.value }, updatedAt: Date.now() })}
                   />
@@ -811,7 +813,7 @@ export function FormBuilder({
                 <div>
                   <Label>Logo URL</Label>
                   <Input
-                    placeholder="输入Logo图片URL或留空"
+                    placeholder={t("ph.输入Logo图片URL或留空")}
                     value={editing.theme.logo}
                     onChange={(e) => setEditing({ ...editing, theme: { ...editing.theme, logo: e.target.value }, updatedAt: Date.now() })}
                   />
@@ -827,7 +829,7 @@ export function FormBuilder({
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>截止时间</Label>
+                    <Label>{t('txt.截止时间')}</Label>
                     <Input
                       type="datetime-local"
                       value={editing.settings.deadline || ""}
@@ -835,14 +837,14 @@ export function FormBuilder({
                     />
                   </div>
                   <div>
-                    <Label>每人限填次数</Label>
+                    <Label>{t('txt.每人限填次数')}</Label>
                     <Select
                       value={String(editing.settings.submitLimit ?? 0)}
                       onValueChange={(v) => setEditing({ ...editing, settings: { ...editing.settings, submitLimit: v === "0" ? null : Number(v) }, updatedAt: Date.now() })}
                     >
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">不限</SelectItem>
+                        <SelectItem value="0">{t('txt.不限')}</SelectItem>
                         <SelectItem value="1">1次</SelectItem>
                         <SelectItem value="2">2次</SelectItem>
                         <SelectItem value="3">3次</SelectItem>
@@ -852,8 +854,8 @@ export function FormBuilder({
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>允许修改已提交数据</Label>
-                    <p className="text-xs text-muted-foreground">填写者可以在提交后修改数据</p>
+                    <Label>{t('txt.允许修改已提交数据')}</Label>
+                    <p className="text-xs text-muted-foreground">{t('txt.填写者可以在提交后修改数据')}</p>
                   </div>
                   <Switch
                     checked={editing.settings.allowModify}
@@ -862,8 +864,8 @@ export function FormBuilder({
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>显示填写进度条</Label>
-                    <p className="text-xs text-muted-foreground">在表单顶部显示完成进度</p>
+                    <Label>{t('txt.显示填写进度条')}</Label>
+                    <p className="text-xs text-muted-foreground">{t('txt.在表单顶部显示完成进度')}</p>
                   </div>
                   <Switch
                     checked={editing.settings.showProgressBar}
@@ -878,8 +880,8 @@ export function FormBuilder({
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>需要登录才能填写</Label>
-                    <p className="text-xs text-muted-foreground">防止恶意刷表</p>
+                    <Label>{t('txt.需要登录才能填写')}</Label>
+                    <p className="text-xs text-muted-foreground">{t('txt.防止恶意刷表')}</p>
                   </div>
                   <Switch
                     checked={editing.settings.requireLogin}
@@ -887,14 +889,14 @@ export function FormBuilder({
                   />
                 </div>
                 <div>
-                  <Label>同一IP限制提交次数</Label>
+                  <Label>{t('txt.同一IP限制提交次数')}</Label>
                   <Select
                     value={String(editing.settings.ipLimit ?? 0)}
                     onValueChange={(v) => setEditing({ ...editing, settings: { ...editing.settings, ipLimit: v === "0" ? null : Number(v) }, updatedAt: Date.now() })}
                   >
                     <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">不限</SelectItem>
+                      <SelectItem value="0">{t('txt.不限')}</SelectItem>
                       <SelectItem value="1">1次</SelectItem>
                       <SelectItem value="3">3次</SelectItem>
                       <SelectItem value="5">5次</SelectItem>
@@ -905,10 +907,10 @@ export function FormBuilder({
             </Card>
 
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">提交后显示</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">{t('txt.提交后显示')}</CardTitle></CardHeader>
               <CardContent>
                 <div>
-                  <Label>成功提示语</Label>
+                  <Label>{t('txt.成功提示语')}</Label>
                   <Textarea
                     value={editing.settings.successMessage}
                     onChange={(e) => setEditing({ ...editing, settings: { ...editing.settings, successMessage: e.target.value }, updatedAt: Date.now() })}
@@ -1021,6 +1023,7 @@ export function FormRenderer({
   readOnly?: boolean;
   onSubmit?: (data: Record<string, string>) => void;
 }) {
+  const { t } = useI18n();
   const [values, setValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, string[]>>({});
@@ -1075,7 +1078,7 @@ export function FormRenderer({
     setUploadedFiles((prev) => ({ ...prev, [fieldId]: names }));
   }, [setVal]);
 
-  const renderField = useCallback((field: FormFieldConfig) => {
+  const renderField = (field: FormFieldConfig) => {
     const val = values[field.id] || "";
     const err = errors[field.id];
 
@@ -1211,7 +1214,7 @@ export function FormRenderer({
             <div className="mt-1">
               <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/50 transition ${readOnly ? "pointer-events-none" : ""}`}>
                 <ImageIcon className="w-8 h-8 text-muted-foreground mb-1" />
-                <span className="text-sm text-muted-foreground">点击上传图片</span>
+                <span className="text-sm text-muted-foreground">{t('txt.点击上传图片')}</span>
                 <span className="text-xs text-muted-foreground">最大 {field.maxFileSize || 10}MB</span>
                 <input type="file" className="sr-only" accept={field.acceptTypes || "image/*"} multiple
                   onChange={(e) => handleFileUpload(field.id, e.target.files, field.acceptTypes || "image/*")}
@@ -1235,7 +1238,7 @@ export function FormRenderer({
             <div className="mt-1">
               <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/50 transition ${readOnly ? "pointer-events-none" : ""}`}>
                 <FileUp className="w-8 h-8 text-muted-foreground mb-1" />
-                <span className="text-sm text-muted-foreground">点击上传文件</span>
+                <span className="text-sm text-muted-foreground">{t('txt.点击上传文件')}</span>
                 <span className="text-xs text-muted-foreground">最大 {field.maxFileSize || 10}MB</span>
                 <input type="file" className="sr-only" accept={field.acceptTypes || "*"} multiple
                   onChange={(e) => handleFileUpload(field.id, e.target.files, field.acceptTypes || "*")}
@@ -1257,9 +1260,9 @@ export function FormRenderer({
         case "address":
           return (
             <div className="mt-1 grid grid-cols-3 gap-2">
-              <Input placeholder="省/市" value={val.split("|")[0] || ""} onChange={(e) => { const parts = val.split("|"); parts[0] = e.target.value; setVal(field.id, parts.join("|")); }} disabled={readOnly} />
-              <Input placeholder="区/县" value={val.split("|")[1] || ""} onChange={(e) => { const parts = val.split("|"); parts[1] = e.target.value; setVal(field.id, parts.join("|")); }} disabled={readOnly} />
-              <Input placeholder="详细地址" value={val.split("|")[2] || ""} onChange={(e) => { const parts = val.split("|"); parts[2] = e.target.value; setVal(field.id, parts.join("|")); }} disabled={readOnly} />
+              <Input placeholder={t("ph.省市")} value={val.split("|")[0] || ""} onChange={(e) => { const parts = val.split("|"); parts[0] = e.target.value; setVal(field.id, parts.join("|")); }} disabled={readOnly} />
+              <Input placeholder={t("ph.区县")} value={val.split("|")[1] || ""} onChange={(e) => { const parts = val.split("|"); parts[1] = e.target.value; setVal(field.id, parts.join("|")); }} disabled={readOnly} />
+              <Input placeholder={t("ph.详细地址")} value={val.split("|")[2] || ""} onChange={(e) => { const parts = val.split("|"); parts[2] = e.target.value; setVal(field.id, parts.join("|")); }} disabled={readOnly} />
             </div>
           );
 
@@ -1294,7 +1297,7 @@ export function FormRenderer({
         {err && <p className="text-xs text-red-500 mt-1">{err}</p>}
       </div>
     );
-  }, [values, errors, readOnly, config.theme?.primaryColor, setVal, handleFileUpload, uploadedFiles]);
+  };
 
   return (
     <div className="max-w-2xl mx-auto" style={{ backgroundColor: config.theme?.bgColor || '#ffffff' }}>

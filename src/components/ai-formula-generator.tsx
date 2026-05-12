@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Loader2, Wand2, Check, Copy, Lightbulb, Sparkles, Code, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData } from '@/lib/data-processor';
 
 interface AIFormulaGeneratorProps {
@@ -268,6 +269,7 @@ const ALL_CATEGORIES = [
 ];
 
 export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIFormulaGeneratorProps) {
+  const { t } = useI18n();
   const [requirement, setRequirement] = useState('');
   const [generatedFormula, setGeneratedFormula] = useState('');
   const [explanation, setExplanation] = useState('');
@@ -399,7 +401,7 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
                 <Textarea
                   value={requirement}
                   onChange={e => setRequirement(e.target.value)}
-                  placeholder="例如：统计A列中状态为已完成的记录数；如果销售额大于10000，提成比例按10%计算..."
+                  placeholder={t("ph.例如统计A列中状态为已完成的记录数如果销售额大于1")}
                   className="min-h-[100px]"
                 />
               </div>
@@ -454,7 +456,7 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
 
                 {explanation && (
                   <div className="space-y-2">
-                    <h5 className="text-sm font-medium text-muted-foreground">公式解释</h5>
+                    <h5 className="text-sm font-medium text-muted-foreground">{t('txt.公式解释')}</h5>
                     <p className="text-sm">{explanation}</p>
                   </div>
                 )}
@@ -475,7 +477,7 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
         <TabsContent value="library" className="space-y-3">
           {/* 搜索框 */}
           <Input
-            placeholder="搜索公式名称、公式或说明..."
+            placeholder={t("ph.搜索公式名称公式或说明")}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full"
@@ -516,7 +518,7 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
               {filteredExamples.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Calculator className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p>未找到匹配的公式</p>
+                  <p>{t('txt.未找到匹配的公式')}</p>
                 </div>
               ) : (
                 filteredExamples.map(example => (
@@ -563,20 +565,20 @@ export function AIFormulaGenerator({ data, modelConfig, onApplyFormula }: AIForm
       <Dialog open={showApplyDialog} onOpenChange={setShowApplyDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>应用公式</DialogTitle>
+            <DialogTitle>{t('txt.应用公式')}</DialogTitle>
             <DialogDescription>
               选择要应用公式的目标列
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">公式</label>
+              <label className="text-sm font-medium">{t('txt.公式')}</label>
               <div className="p-2 bg-muted rounded font-mono text-sm mt-1">
                 {generatedFormula}
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium">目标列</label>
+              <label className="text-sm font-medium">{t('txt.目标列')}</label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {data.headers.map(header => (
                   <button

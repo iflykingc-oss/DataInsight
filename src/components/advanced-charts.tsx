@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -77,6 +78,7 @@ const CHART_TYPES = [
 ];
 
 export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
+  const { t } = useI18n();
   const [selectedChartType, setSelectedChartType] = useState('bar');
   const [xAxisField, setXAxisField] = useState(data.headers[0] || '');
   const [yAxisFields, setYAxisFields] = useState<string[]>([]);
@@ -397,7 +399,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
       {/* 图表选择 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">高级图表</CardTitle>
+          <CardTitle className="text-base">{t('txt.高级图表')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={selectedChartType} onValueChange={setSelectedChartType}>
@@ -419,7 +421,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
       {/* 图表配置 */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">图表配置</CardTitle>
+          <CardTitle className="text-base">{t('txt.图表配置')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-4">
@@ -427,7 +429,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
               <Label>X轴字段 (分类)</Label>
               <Select value={xAxisField} onValueChange={setXAxisField}>
                 <SelectTrigger>
-                  <SelectValue placeholder="选择X轴字段" />
+                  <SelectValue placeholder={t("ph.选择X轴字段")} />
                 </SelectTrigger>
                 <SelectContent>
                   {data.headers.map(h => (
@@ -441,7 +443,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
               <Label>Y轴字段 (数值)</Label>
               <Select value={yAxisFields[0] || ''} onValueChange={v => setYAxisFields([v])}>
                 <SelectTrigger>
-                  <SelectValue placeholder="选择Y轴字段" />
+                  <SelectValue placeholder={t("ph.选择Y轴字段")} />
                 </SelectTrigger>
                 <SelectContent>
                   {numericFields.map(f => (
@@ -452,7 +454,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
             </div>
             
             <div className="space-y-2">
-              <Label>当前图表</Label>
+              <Label>{t('txt.当前图表')}</Label>
               <div className="p-3 bg-primary/10 rounded-md">
                 <div className="flex items-center gap-2">
                   {(() => {
@@ -490,7 +492,7 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
         <CardContent className="pt-6">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="p-4 bg-blue-50 rounded-md">
-              <h4 className="font-medium text-blue-800 mb-2">适用场景</h4>
+              <h4 className="font-medium text-blue-800 mb-2">{t('txt.适用场景')}</h4>
               <p className="text-sm text-blue-600">
                 {selectedChartType === 'bar' && '分类数据对比、数量统计'}
                 {selectedChartType === 'line' && '数据趋势、时间序列分析'}
@@ -504,14 +506,14 @@ export function AdvancedCharts({ data, fieldStats }: AdvancedChartsProps) {
               </p>
             </div>
             <div className="p-4 bg-green-50 rounded-md">
-              <h4 className="font-medium text-green-800 mb-2">数据要求</h4>
+              <h4 className="font-medium text-green-800 mb-2">{t('txt.数据要求')}</h4>
               <p className="text-sm text-green-600">
                 {selectedChartType === 'scatter' && '需要至少2个数值字段'}
                 {selectedChartType !== 'scatter' && '需要1个分类字段 + 1个数值字段'}
               </p>
             </div>
             <div className="p-4 bg-purple-50 rounded-md">
-              <h4 className="font-medium text-purple-800 mb-2">优化建议</h4>
+              <h4 className="font-medium text-purple-800 mb-2">{t('txt.优化建议')}</h4>
               <p className="text-sm text-purple-600">
                 数据量控制在20条以内效果最佳，过多数据建议先聚合
               </p>

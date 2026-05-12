@@ -33,6 +33,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { DataAnalysis } from '@/lib/data-processor';
 
 interface ReportModule {
@@ -51,6 +52,7 @@ interface InsightReportGeneratorProps {
 }
 
 export function InsightReportGenerator({ analysis, fileName }: InsightReportGeneratorProps) {
+  const { t } = useI18n();
   const [modules, setModules] = useState<ReportModule[]>([
     { id: 'summary', label: '基础统计摘要', description: '数据规模、字段类型分布、基础统计量', icon: Target, color: 'text-blue-600', bgColor: 'bg-blue-50', checked: true },
     { id: 'health', label: '数据健康评分', description: '完整性、一致性、质量、可用性四维评分', icon: Shield, color: 'text-emerald-600', bgColor: 'bg-emerald-50', checked: true },
@@ -142,7 +144,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
       <Card className="text-center py-12">
         <CardContent>
           <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">暂无分析数据，请先进行智能分析</p>
+          <p className="text-muted-foreground">{t('txt.暂无分析数据请先进行智能分析')}</p>
         </CardContent>
       </Card>
     );
@@ -239,12 +241,12 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
           <ScrollArea className="flex-1">
             <div ref={reportRef} className="p-6 space-y-6">
               {!analysis ? (
-                <div className="text-center py-10 text-muted-foreground">暂无分析数据</div>
+                <div className="text-center py-10 text-muted-foreground">{t('txt.暂无分析数据')}</div>
               ) : (
               <div className="space-y-6">
               {/* 报告标题 */}
               <div className="text-center pb-6 border-b">
-                <h1 className="text-2xl font-bold">数据洞察报告</h1>
+                <h1 className="text-2xl font-bold">{t('txt.数据洞察报告')}</h1>
                 <p className="text-muted-foreground mt-1">{fileName || 'DataInsight'}</p>
                 <p className="text-sm text-muted-foreground">生成时间：{new Date().toLocaleString()}</p>
               </div>
@@ -264,13 +266,13 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                     <MetricCard label="文本列" value={analysis.fieldStats.filter(f => f.type === 'string' || f.type === 'id').length.toString()} />
                   </div>
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium mb-2">字段概览</h4>
+                    <h4 className="text-sm font-medium mb-2">{t('txt.字段概览')}</h4>
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left py-2">字段名</th>
-                          <th className="text-left py-2">类型</th>
-                          <th className="text-left py-2">非空率</th>
+                          <th className="text-left py-2">{t('txt.字段名')}</th>
+                          <th className="text-left py-2">{t('txt.类型')}</th>
+                          <th className="text-left py-2">{t('txt.非空率')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -298,7 +300,7 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                   <div className="flex items-center gap-4 mb-4">
                     <div className="text-center">
                       <div className="text-4xl font-bold text-primary">{deep.healthScore.overall}</div>
-                      <div className="text-sm text-muted-foreground">综合评分</div>
+                      <div className="text-sm text-muted-foreground">{t('txt.综合评分')}</div>
                     </div>
                     <div className="flex-1 grid grid-cols-2 gap-3">
                       <ScoreBar label="完整性" score={deep.healthScore.completeness} color="bg-blue-500" />
@@ -363,11 +365,11 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left py-2">字段1</th>
-                        <th className="text-left py-2">字段2</th>
-                        <th className="text-left py-2">相关系数</th>
-                        <th className="text-left py-2">关联强度</th>
-                        <th className="text-left py-2">方向</th>
+                        <th className="text-left py-2">{t('txt.字段1')}</th>
+                        <th className="text-left py-2">{t('txt.字段2')}</th>
+                        <th className="text-left py-2">{t('txt.相关系数')}</th>
+                        <th className="text-left py-2">{t('txt.关联强度')}</th>
+                        <th className="text-left py-2">{t('txt.方向')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -514,8 +516,8 @@ export function InsightReportGenerator({ analysis, fileName }: InsightReportGene
 
               {/* 报告底部 */}
               <div className="text-center pt-6 border-t text-sm text-muted-foreground">
-                <p>本报告由 DataInsight AI 自动生成</p>
-                <p className="mt-1">报告内容基于数据分析结果，仅供参考</p>
+                <p>{t('txt.本报告由DataInsightAI自动生成')}</p>
+                <p className="mt-1">{t('txt.报告内容基于数据分析结果仅供参考')}</p>
               </div>
               </div>
               )}

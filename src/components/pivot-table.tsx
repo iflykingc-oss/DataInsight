@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -114,6 +115,7 @@ export function PivotTable({
   const numericFields = fieldStats.filter(f => f.type === 'number' || f.type === 'id').map(f => f.field);
   const allFields = headers;
 
+  const { t } = useI18n();
   const [config, setConfig] = useState<PivotConfig>({
     rowField: '',
     colField: '',
@@ -175,10 +177,10 @@ export function PivotTable({
         <CardContent>
           <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-1.5 min-w-[160px]">
-              <label className="text-xs font-medium text-muted-foreground">行字段</label>
+              <label className="text-xs font-medium text-muted-foreground">{t('txt.行字段')}</label>
               <Select value={config.rowField} onValueChange={v => setConfig(prev => ({ ...prev, rowField: v }))}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="选择行字段" />
+                  <SelectValue placeholder={t("ph.选择行字段")} />
                 </SelectTrigger>
                 <SelectContent>
                   {allFields.map(f => (
@@ -188,10 +190,10 @@ export function PivotTable({
               </Select>
             </div>
             <div className="space-y-1.5 min-w-[160px]">
-              <label className="text-xs font-medium text-muted-foreground">列字段</label>
+              <label className="text-xs font-medium text-muted-foreground">{t('txt.列字段')}</label>
               <Select value={config.colField} onValueChange={v => setConfig(prev => ({ ...prev, colField: v }))}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="选择列字段" />
+                  <SelectValue placeholder={t("ph.选择列字段")} />
                 </SelectTrigger>
                 <SelectContent>
                   {allFields.map(f => (
@@ -201,10 +203,10 @@ export function PivotTable({
               </Select>
             </div>
             <div className="space-y-1.5 min-w-[160px]">
-              <label className="text-xs font-medium text-muted-foreground">值字段</label>
+              <label className="text-xs font-medium text-muted-foreground">{t('txt.值字段')}</label>
               <Select value={config.valField} onValueChange={v => setConfig(prev => ({ ...prev, valField: v }))}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="选择值字段" />
+                  <SelectValue placeholder={t("ph.选择值字段")} />
                 </SelectTrigger>
                 <SelectContent>
                   {numericFields.map(f => (
@@ -214,7 +216,7 @@ export function PivotTable({
               </Select>
             </div>
             <div className="space-y-1.5 min-w-[120px]">
-              <label className="text-xs font-medium text-muted-foreground">聚合方式</label>
+              <label className="text-xs font-medium text-muted-foreground">{t('txt.聚合方式')}</label>
               <Select
                 value={config.aggFunc}
                 onValueChange={v => setConfig(prev => ({ ...prev, aggFunc: v as AggFunc }))}
@@ -233,7 +235,7 @@ export function PivotTable({
 
           {history.length > 0 && (
             <div className="mt-4 pt-4 border-t">
-              <p className="text-xs font-medium text-muted-foreground mb-2">历史配置</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">{t('txt.历史配置')}</p>
               <div className="flex flex-wrap gap-2">
                 {history.map((h, i) => (
                   <div key={i} className="flex items-center gap-1 bg-muted rounded-md px-2 py-1 text-xs">
@@ -313,7 +315,7 @@ export function PivotTable({
                       </TableRow>
                     ))}
                     <TableRow className="bg-muted/50 font-semibold">
-                      <TableCell className="sticky left-0 bg-muted/50 z-10 text-primary">合计</TableCell>
+                      <TableCell className="sticky left-0 bg-muted/50 z-10 text-primary">{t('txt.合计')}</TableCell>
                       {result.colLabels.map(cl => (
                         <TableCell key={cl} className="text-right text-primary tabular-nums whitespace-nowrap">
                           {formatNum(result.colTotals[cl], config.aggFunc)}
@@ -333,8 +335,8 @@ export function PivotTable({
         <Card className="flex-1 flex items-center justify-center min-h-[300px]">
           <CardContent className="text-center text-muted-foreground">
             <GripVertical className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">请选择行字段、列字段和值字段来生成透视表</p>
-            <p className="text-xs mt-1 opacity-60">支持求和、平均、计数、最大、最小五种聚合方式</p>
+            <p className="text-sm">{t('txt.请选择行字段列字段和值字段来生成透视表')}</p>
+            <p className="text-xs mt-1 opacity-60">{t('txt.支持求和平均计数最大最小五种聚合方式')}</p>
           </CardContent>
         </Card>
       )}

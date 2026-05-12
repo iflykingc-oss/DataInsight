@@ -154,15 +154,16 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<ViewMode>('home');
   const [adminTab, setAdminTab] = useState<AdminTab>('users');
   const [adminSidebarCollapsed, setAdminSidebarCollapsed] = useState(false);
+  const { t } = useI18n();
   const adminTabTitles: Record<AdminTab, string> = {
-    users: '用户管理',
-    logs: '登录记录',
-    'activity-logs': '用户日志',
-    'ai-config': 'AI模型配置',
-    'ai-usage': 'AI使用量',
-    stats: '使用统计',
-    plans: '套餐管理',
-    announcements: '公告管理',
+    users: t('admin.users'),
+    logs: t('admin.loginLogs'),
+    'activity-logs': t('admin.activityLogs'),
+    'ai-config': t('admin.aiConfig'),
+    'ai-usage': t('admin.aiUsage'),
+    stats: t('admin.usageStats'),
+    plans: t('admin.plans'),
+    announcements: t('admin.announcements'),
   };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [tableView, setTableView] = useState<'table' | 'kanban' | 'calendar' | 'gantt'>('table');
@@ -280,8 +281,8 @@ export default function HomePage() {
   useEffect(() => {
     const ttlCheck = checkTTLWarning();
     if (ttlCheck.hasWarning) {
-      const items = ttlCheck.items.map(i => `${i.key} (剩余${i.remainingHours}h)`).join('、');
-      toast.warning(`部分数据即将过期清理: ${items}`, { duration: 8000 });
+      const items = ttlCheck.items.map(i => `${i.key} (${t('common.remaining')} ${i.remainingHours}h)`).join(', ');
+      toast.warning(`${t('warn.dataExpiring')}: ${items}`, { duration: 8000 });
     }
   }, []);
 
@@ -345,7 +346,7 @@ export default function HomePage() {
         .filter((d): d is ParsedData => d != null);
 
       if (allParsedData.length === 0) {
-        throw new Error('文件解析失败');
+        throw new Error(t('error.fileParseFailed'));
       }
 
       // 第一个文件显示在主视图
@@ -369,8 +370,8 @@ export default function HomePage() {
 
       // 多文件上传时显示通知
       if (completedFiles.length > 1) {
-        toast.success(`已处理 ${completedFiles.length} 个文件`, {
-          description: `主视图显示: ${firstParsedData.fileName}，其余可在关联表中查看`,
+        toast.success(`${t('success.filesProcessed', { count: completedFiles.length })}`, {
+          description: `${t('success.mainView')}: ${firstParsedData.fileName}`,
         });
       }
 
@@ -391,18 +392,18 @@ export default function HomePage() {
           setAnalysis(analyzeResult.analysis);
         } else {
           console.error('[Upload] Invalid analysis result:', analyzeResult.error);
-          setError('数据分析失败: ' + (analyzeResult.error || '未知错误'));
+          setError(t('error.dataAnalysisFailed') + ': ' + (analyzeResult.error || t('error.unknownError')));
         }
       } else {
         console.error('[Upload] Analysis request failed:', analyzeResponse.status);
-        setError('分析请求失败，HTTP ' + analyzeResponse.status);
+        setError(t('error.analysisRequestFailed') + ' ' + analyzeResponse.status);
       }
 
       pendingUploadRef.current = null;
 
     } catch (err) {
       console.error('[Upload] File processing error:', err);
-      setError(err instanceof Error ? err.message : '处理失败');
+      setError(err instanceof Error ? err.message : t('error.processFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -476,15 +477,15 @@ export default function HomePage() {
   const handleAnalyzeWith = (data: ParsedData) => {
     // AI分析权限检查
     if (!hasPermission('ai_analyze')) {
-      toast.error('无权使用 AI 分析', { description: '管理员已禁用 AI 分析功能' });
-      return Promise.reject(new Error('无 AI 分析权限'));
+      toast.error(t('error.noAIPermission'), { description: t('error.aiAnalysisDisabled') });
+      return Promise.reject(new Error(t('error.noAIPermission')));
     }
     // 前端确定性分析优先，不依赖LLM
     try {
       import('@/lib/client-data-engine').then(({ analyzeDataClient }) => {
         const clientAnalysis = analyzeDataClient(data);
         setAnalysis(clientAnalysis);
-        toast.success('数据分析完成', { description: `已分析 ${data.rowCount} 行数据` });
+        toast.success(t('success.dataAnalysisComplete'), { description: `${t('success.rowsAnalyzed', { count: data.rowCount })}` });
       });
       return Promise.resolve();
     } catch (err) {
@@ -495,14 +496,14 @@ export default function HomePage() {
         body: JSON.stringify({ data }),
       })
         .then(res => {
-          if (!res.ok) throw new Error('分析请求失败');
+          if (!res.ok) throw new Error(t('error.analysisRequestFailed'));
           return res.json();
         })
         .then(result => {
           if (result.success && result.analysis) {
             setAnalysis(result.analysis);
           } else {
-            throw new Error(result.error || '分析结果无效');
+            throw new Error(result.error || t('error.invalidAnalysisResult'));
           }
         })
         .catch(err => {
@@ -527,7 +528,7 @@ export default function HomePage() {
       return (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-          <p className="text-muted-foreground">正在解析文件...</p>
+          <p className="text-muted-foreground">{t('page.parsingFile')}</p>
         </div>
       );
     }
@@ -539,7 +540,7 @@ export default function HomePage() {
           <Database className="w-12 h-12 text-destructive mb-4" />
           <p className="text-destructive">{error}</p>
           <Button variant="outline" className="mt-4" onClick={() => { setError(null); setParsedData(null); setAnalysis(null); setViewMode('home'); }}>
-            重新上传
+            {t('page.reupload')}
           </Button>
         </div>
       );
@@ -552,8 +553,8 @@ export default function HomePage() {
         <div className="w-full px-6 py-5">
           {/* 页面标题区 - 规范: 20px加粗主标题 + 14px辅助说明 */}
           <div className="mb-6">
-            <h1 className="text-xl font-bold text-foreground">工作台</h1>
-            <p className="text-sm text-muted-foreground mt-1">上传数据，开始智能分析</p>
+            <h1 className="text-xl font-bold text-foreground">{t('page.workbench')}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t('page.uploadDataStart')}</p>
           </div>
 
           {/* 已有数据 - 紧凑信息条 + 上传新数据入口 */}
@@ -565,15 +566,15 @@ export default function HomePage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">{parsedData.fileName}</p>
-                  <p className="text-xs text-muted-foreground">{parsedData?.rowCount?.toLocaleString() ?? '0'} 行 · {parsedData?.columnCount ?? 0} 列</p>
+                  <p className="text-xs text-muted-foreground">{parsedData?.rowCount?.toLocaleString() ?? '0'} {t('page.rows')} · {parsedData?.columnCount ?? 0} {t('page.columns')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => setViewMode('data-table')} className="h-8 px-4 rounded-sm text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                  查看表格
+                  {t('page.viewTable')}
                 </button>
                 <button onClick={handleGoHome} className="h-8 px-3 rounded-sm text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-colors border border-border">
-                  清除数据
+                  {t('page.clearData')}
                 </button>
               </div>
             </div>
@@ -581,7 +582,7 @@ export default function HomePage() {
 
           {/* 数据获取区 - 上传文件为独立行，数据源+AI并排 */}
           <div className="mb-6">
-            <h2 className="text-base font-semibold text-foreground mb-4">获取数据</h2>
+            <h2 className="text-base font-semibold text-foreground mb-4">{t('page.getData')}</h2>
             {/* 上传文件 - 独占一行，左侧上传区右侧拖拽提示 */}
             <div className="mb-2 rounded-sm border border-border bg-card overflow-hidden">
               <div className="p-4">
@@ -589,8 +590,8 @@ export default function HomePage() {
                   <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
                     <Upload className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <span className="text-sm font-semibold text-foreground">上传文件</span>
-                  <span className="text-xs text-muted-foreground">支持 Excel (.xlsx/.xls)、CSV，单文件最大 50MB</span>
+                  <span className="text-sm font-semibold text-foreground">{t('page.uploadFile')}</span>
+                  <span className="text-xs text-muted-foreground">{t('page.supportExcel')}</span>
                 </div>
                 <AsyncFileUploader onFileUpload={handleFileUpload} />
               </div>
@@ -602,9 +603,9 @@ export default function HomePage() {
                   <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
                     <Database className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <span className="text-sm font-semibold text-foreground">连接数据源</span>
+                  <span className="text-sm font-semibold text-foreground">{t('page.connectDataSource')}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">连接数据库或API，实时同步数据</p>
+                <p className="text-xs text-muted-foreground">{t('page.connectDataSourceDesc')}</p>
               </div>
               <div className="rounded-sm border border-border bg-card hover:border-primary/30 cursor-pointer transition-all hover:shadow-float p-4" onClick={() => {
                 if (!isLoggedIn) { setLoginDialogOpen(true); return; }
@@ -614,10 +615,10 @@ export default function HomePage() {
                   <div className="w-6 h-6 rounded-sm bg-primary/8 flex items-center justify-center">
                     <Sparkles className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <span className="text-sm font-semibold text-foreground">AI 生成表格</span>
+                  <span className="text-sm font-semibold text-foreground">{t('page.aiGenerateTable')}</span>
                   <span className="text-xs font-semibold px-1.5 rounded-sm bg-primary/8 text-primary leading-5">AI</span>
                 </div>
-                <p className="text-xs text-muted-foreground">描述需求，AI自动创建表格模板</p>
+                <p className="text-xs text-muted-foreground">{t('page.aiGenerateTableDesc')}</p>
               </div>
             </div>
           </div>
@@ -645,10 +646,10 @@ export default function HomePage() {
           <div className="w-12 h-12 bg-muted/50 rounded-sm flex items-center justify-center mb-4">
             <Upload className="w-6 h-6 text-muted-foreground/40" />
           </div>
-          <h3 className="text-xl font-bold text-foreground mb-2">请先上传数据</h3>
-          <p className="text-sm text-muted-foreground mb-4">此功能需要加载数据后才能使用</p>
+          <h3 className="text-xl font-bold text-foreground mb-2">{t('page.pleaseUpload')}</h3>
+          <p className="text-sm text-muted-foreground mb-4">{t('page.thisFeatureNeedsData')}</p>
           <button onClick={() => setViewMode('home')} className="h-8 px-4 rounded-sm bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
-            去上传数据
+            {t('page.goUpload')}
           </button>
         </div>
       );
@@ -683,12 +684,12 @@ export default function HomePage() {
         <div className="relative">
           <Tabs defaultValue="table" key="table" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="table">数据视图</TabsTrigger>
-            <TabsTrigger value="linked">关联表</TabsTrigger>
-            <TabsTrigger value="workflow">自动化</TabsTrigger>
-            <TabsTrigger value="comments">评论</TabsTrigger>
-            <TabsTrigger value="ai-field">智能处理</TabsTrigger>
-            <TabsTrigger value="ai-formula">智能公式</TabsTrigger>
+            <TabsTrigger value="table">{t('tab.dataView')}</TabsTrigger>
+            <TabsTrigger value="linked">{t('tab.linkedTable')}</TabsTrigger>
+            <TabsTrigger value="workflow">{t('tab.automation')}</TabsTrigger>
+            <TabsTrigger value="comments">{t('tab.comments')}</TabsTrigger>
+            <TabsTrigger value="ai-field">{t('tab.aiField')}</TabsTrigger>
+            <TabsTrigger value="ai-formula">{t('tab.aiFormula')}</TabsTrigger>
           </TabsList>
           <TabsContent value="table">
             <Card>
@@ -696,13 +697,13 @@ export default function HomePage() {
                 {/* 视图切换 */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">视图:</span>
+                    <span className="text-sm text-muted-foreground">{t('tab.viewLabel')}</span>
                     <div className="flex bg-muted rounded-md p-0.5">
                       {([
-                        { key: 'table', label: '表格', icon: TableIcon },
-                        { key: 'kanban', label: '看板', icon: LayoutIcon },
-                        { key: 'calendar', label: '日历', icon: CalendarIcon },
-                        { key: 'gantt', label: '甘特图', icon: GanttIcon },
+                        { key: 'table', label: t('tab.table'), icon: TableIcon },
+                        { key: 'kanban', label: t('tab.kanban'), icon: LayoutIcon },
+                        { key: 'calendar', label: t('tab.calendar'), icon: CalendarIcon },
+                        { key: 'gantt', label: t('tab.gantt'), icon: GanttIcon },
                       ] as const).map(v => {
                         const Icon = v.icon;
                         return (
@@ -727,7 +728,7 @@ export default function HomePage() {
                       value={kanbanField}
                       onChange={e => setKanbanField(e.target.value)}
                     >
-                      <option value="">选择分组字段</option>
+                      <option value="">{t('tab.selectGroupField')}</option>
                       {parsedData.headers.map(h => (
                         <option key={h} value={h}>{h}</option>
                       ))}
@@ -739,7 +740,7 @@ export default function HomePage() {
                       value={dateField}
                       onChange={e => setDateField(e.target.value)}
                     >
-                      <option value="">选择日期字段</option>
+                      <option value="">{t('tab.selectDateField')}</option>
                       {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => (
                         <option key={f.field} value={f.field}>{f.field}</option>
                       ))}
@@ -748,15 +749,15 @@ export default function HomePage() {
                   {tableView === 'gantt' && (
                     <div className="flex gap-2">
                       <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.nameField} onChange={e => setGanttConfig(p => ({ ...p, nameField: e.target.value }))}>
-                        <option value="">任务名称</option>
+                        <option value="">{t('tab.taskName')}</option>
                         {parsedData.headers.map(h => <option key={h} value={h}>{h}</option>)}
                       </select>
                       <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.startField} onChange={e => setGanttConfig(p => ({ ...p, startField: e.target.value }))}>
-                        <option value="">开始日期</option>
+                        <option value="">{t('tab.startDate')}</option>
                         {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => <option key={f.field} value={f.field}>{f.field}</option>)}
                       </select>
                       <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.endField} onChange={e => setGanttConfig(p => ({ ...p, endField: e.target.value }))}>
-                        <option value="">结束日期</option>
+                        <option value="">{t('tab.endDate')}</option>
                         {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => <option key={f.field} value={f.field}>{f.field}</option>)}
                       </select>
                     </div>
@@ -810,29 +811,29 @@ export default function HomePage() {
         <div className="relative">
           <Tabs value={dataPrepTab} onValueChange={setDataPrepTab} className="space-y-4">
             <TabsList>
-              <TabsTrigger value="smart" disabled={!parsedData}>智能准备</TabsTrigger>
-              <TabsTrigger value="clean" disabled={!parsedData}>数据清洗</TabsTrigger>
-              <TabsTrigger value="quality" disabled={!parsedData || !analysis}>质量检测</TabsTrigger>
+              <TabsTrigger value="smart" disabled={!parsedData}>{t('tab.smartPrep')}</TabsTrigger>
+              <TabsTrigger value="clean" disabled={!parsedData}>{t('tab.dataClean')}</TabsTrigger>
+              <TabsTrigger value="quality" disabled={!parsedData || !analysis}>{t('tab.qualityCheck')}</TabsTrigger>
             </TabsList>
             <TabsContent value="smart">
               {parsedData && analysis ? (
                 <SmartDataPrep data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig || undefined} onDataReady={handleDataCleaned} />
               ) : (
-                <div className="flex items-center justify-center py-12 text-muted-foreground/50">请先上传数据</div>
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">{t('page.pleaseUpload')}</div>
               )}
             </TabsContent>
             <TabsContent value="clean">
               {parsedData && analysis ? (
                 <DataCleaner data={parsedData} fieldStats={analysis.fieldStats} onDataChange={handleDataCleaned} />
               ) : (
-                <div className="flex items-center justify-center py-12 text-muted-foreground/50">请先上传数据</div>
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">{t('page.pleaseUpload')}</div>
               )}
             </TabsContent>
             <TabsContent value="quality">
               {parsedData && analysis ? (
                 <DataQualityChecker data={parsedData} fieldStats={analysis.fieldStats} />
               ) : (
-                <div className="flex items-center justify-center py-12 text-muted-foreground/50">请先上传数据</div>
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">{t('page.pleaseUpload')}</div>
               )}
             </TabsContent>
           </Tabs>
@@ -850,8 +851,8 @@ export default function HomePage() {
           <Card className="text-center py-16">
             <CardContent>
               <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-4">请先上传数据，即可使用自动分析</p>
-              <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+              <p className="text-muted-foreground mb-4">{t('page.pleaseUpload')}，{t('page.uploadDataStart').toLowerCase()}</p>
+              <Button onClick={() => setViewMode('home')}>{t('page.goUpload')}</Button>
             </CardContent>
           </Card>
         );
@@ -861,8 +862,8 @@ export default function HomePage() {
           <Card className="text-center py-16">
             <CardContent className="space-y-4">
               <Brain className="w-12 h-12 text-primary mx-auto mb-2 animate-pulse" />
-              <p className="text-lg font-medium">正在自动分析数据...</p>
-              <p className="text-sm text-muted-foreground">AI 正在扫描数据特征、识别模式、检测异常</p>
+              <p className="text-lg font-medium">{t('page.analyzing')}</p>
+              <p className="text-sm text-muted-foreground">{t('page.aiScanning')}</p>
               {isAnalyzing && <Progress value={45} className="w-64 mx-auto" />}
             </CardContent>
           </Card>
@@ -872,13 +873,13 @@ export default function HomePage() {
         <div className="relative">
           <Tabs defaultValue="insights" key="insights" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="insights">深度分析</TabsTrigger>
+              <TabsTrigger value="insights">{t('tab.deepAnalysis')}</TabsTrigger>
               <TabsTrigger value="report">
                 <FileText className="w-3.5 h-3.5 mr-1" />
-                分析报告
+                {t('tab.analysisReport')}
               </TabsTrigger>
-              <TabsTrigger value="data-story">数据故事</TabsTrigger>
-              <TabsTrigger value="industry">行业场景</TabsTrigger>
+              <TabsTrigger value="data-story">{t('tab.dataStory')}</TabsTrigger>
+              <TabsTrigger value="industry">{t('tab.industryScene')}</TabsTrigger>
             </TabsList>
             <TabsContent value="insights">
               <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
@@ -917,16 +918,16 @@ export default function HomePage() {
           <ErrorBoundary moduleName="仪表盘">
             <Tabs defaultValue="dashboard" key="dashboard" className="space-y-4">
               <TabsList>
-                <TabsTrigger value="dashboard">快速看板</TabsTrigger>
-                <TabsTrigger value="nl2dash">AI 建看板</TabsTrigger>
-                <TabsTrigger value="designer">看板设计</TabsTrigger>
+                <TabsTrigger value="dashboard">{t('tab.quickDashboard')}</TabsTrigger>
+                <TabsTrigger value="nl2dash">{t('tab.aiBuildDash')}</TabsTrigger>
+                <TabsTrigger value="designer">{t('tab.dashboardDesign')}</TabsTrigger>
                 <TabsTrigger value="charts">
                   <BarChart3 className="w-3.5 h-3.5 mr-1" />
-                  图表中心
+                  {t('tab.chartCenter')}
                 </TabsTrigger>
                 <TabsTrigger value="metrics">
                   <TrendingUp className="w-3.5 h-3.5 mr-1" />
-                  指标体系
+                  {t('tab.metricSystem')}
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="dashboard">
@@ -938,7 +939,7 @@ export default function HomePage() {
                 ) : (
                   <Card className="p-8 text-center text-muted-foreground">
                     <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                    <p>管理员已禁用看板创建功能</p>
+                    <p>{t('page.noDashboardPermission')}</p>
                   </Card>
                 )}
               </TabsContent>
@@ -948,16 +949,16 @@ export default function HomePage() {
                 ) : (
                   <Card className="p-8 text-center text-muted-foreground">
                     <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                    <p>管理员已禁用看板设计功能</p>
+                    <p>{t('page.noDesignerPermission')}</p>
                   </Card>
                 )}
               </TabsContent>
               <TabsContent value="charts">
                 <Tabs defaultValue="ai-chart" className="mt-4">
                   <TabsList>
-                    <TabsTrigger value="ai-chart">AI 选图</TabsTrigger>
-                    <TabsTrigger value="advanced">高级图表</TabsTrigger>
-                    <TabsTrigger value="echarts">专业图表</TabsTrigger>
+                    <TabsTrigger value="ai-chart">{t('tab.aiSelectChart')}</TabsTrigger>
+                    <TabsTrigger value="advanced">{t('tab.advancedChart')}</TabsTrigger>
+                    <TabsTrigger value="echarts">{t('tab.proChart')}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="ai-chart">
                     <SmartChartRecommender data={parsedData} analysis={analysis} />
@@ -973,8 +974,8 @@ export default function HomePage() {
               <TabsContent value="metrics">
                 <Tabs defaultValue="ai-metric" className="mt-4">
                   <TabsList>
-                    <TabsTrigger value="ai-metric">AI 建指标</TabsTrigger>
-                    <TabsTrigger value="metric-lib">指标列表</TabsTrigger>
+                    <TabsTrigger value="ai-metric">{t('tab.aiBuildMetric')}</TabsTrigger>
+                    <TabsTrigger value="metric-lib">{t('tab.metricList')}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="ai-metric">
                     <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig || undefined} />
@@ -1000,9 +1001,9 @@ export default function HomePage() {
           <Card className="text-center py-16">
             <CardContent>
               <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-2">AI问数 - 用自然语言查询和分析数据</p>
-              <p className="text-sm text-muted-foreground/60 mb-4">上传数据后，即可通过对话方式查询、统计、分析数据</p>
-              <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+              <p className="text-muted-foreground mb-2">{t('chat.title')}</p>
+              <p className="text-sm text-muted-foreground/60 mb-4">{t('chat.uploadFirst')}</p>
+              <Button onClick={() => setViewMode('home')}>{t('page.goUpload')}</Button>
             </CardContent>
           </Card>
         );
@@ -1012,8 +1013,8 @@ export default function HomePage() {
           <Card className="text-center py-16">
             <CardContent className="space-y-4">
               <MessageSquare className="w-12 h-12 text-primary mx-auto mb-2 animate-pulse" />
-              <p className="text-lg font-medium">数据正在分析中...</p>
-              <p className="text-sm text-muted-foreground">分析完成后即可使用AI问数</p>
+              <p className="text-lg font-medium">{t('page.dataAnalyzing')}</p>
+              <p className="text-sm text-muted-foreground">{t('page.analysisReady')}</p>
             </CardContent>
           </Card>
         );
@@ -1039,22 +1040,22 @@ export default function HomePage() {
           <Card>
             <CardContent className="pt-6 space-y-4">
               <div className="p-4 bg-primary/5 rounded-md border border-primary/10">
-                <h4 className="font-medium text-primary mb-2">你能问什么？</h4>
+                <h4 className="font-medium text-primary mb-2">{t('chat.whatToAsk')}</h4>
                 <ul className="text-sm text-primary/70 space-y-1.5">
-                  <li className="flex items-start gap-2"><Search className="w-4 h-4 mt-0.5 shrink-0" />查找数据 - &ldquo;销售额超过10万的订单有哪些？&rdquo;</li>
-                  <li className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 shrink-0" />统计计算 - &ldquo;各区域平均绩效得分是多少？&rdquo;</li>
-                  <li className="flex items-start gap-2"><TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />原因分析 - &ldquo;为什么本月销售额下降了15%？&rdquo;</li>
-                  <li className="flex items-start gap-2"><BarChart3 className="w-4 h-4 mt-0.5 shrink-0" />趋势预测 - &ldquo;下月新增用户数预计多少？&rdquo;</li>
-                  <li className="flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />分析报告 - &ldquo;帮我生成本周项目进展周报&rdquo;</li>
+                  <li className="flex items-start gap-2"><Search className="w-4 h-4 mt-0.5 shrink-0" />{t('chat.searchData')}</li>
+                  <li className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 shrink-0" />{t('chat.statCalc')}</li>
+                  <li className="flex items-start gap-2"><TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />{t('chat.reasonAnalysis')}</li>
+                  <li className="flex items-start gap-2"><BarChart3 className="w-4 h-4 mt-0.5 shrink-0" />{t('chat.trendPredict')}</li>
+                  <li className="flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />{t('chat.analysisReport')}</li>
                 </ul>
               </div>
               <div className="p-4 bg-success/5 rounded-md border border-success/10">
-                <h4 className="font-medium text-success mb-2">试试这些问题</h4>
+                <h4 className="font-medium text-success mb-2">{t('chat.tryQuestions')}</h4>
                 <div className="space-y-2 text-sm text-success/80">
-                  <p>&ldquo;哪些产品销量最高？&rdquo;</p>
-                  <p>&ldquo;月度收入变化趋势如何？&rdquo;</p>
-                  <p>&ldquo;用户年龄分布是什么样的？&rdquo;</p>
-                  <p>&ldquo;帮我找出异常数据并分析原因&rdquo;</p>
+                  <p>{t('chat.q1')}</p>
+                  <p>{t('chat.q2')}</p>
+                  <p>{t('chat.q3')}</p>
+                  <p>{t('chat.q4')}</p>
                 </div>
               </div>
             </CardContent>
@@ -1076,10 +1077,10 @@ export default function HomePage() {
           <Card className="text-center py-16">
             <CardContent>
               <Code2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-2">SQL查询 - 使用SQL语句分析数据</p>
-              <p className="text-sm text-muted-foreground/60 mb-2">支持对已上传的数据表执行SQL查询（浏览器端SQLite引擎）</p>
-              <p className="text-xs text-muted-foreground/40 mb-4">数据源：上传的Excel/CSV文件会自动创建SQLite内存数据库</p>
-              <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+              <p className="text-muted-foreground mb-2">{t('sql.title')}</p>
+              <p className="text-sm text-muted-foreground/60 mb-2">{t('sql.descBrowser')}</p>
+              <p className="text-xs text-muted-foreground/40 mb-4">{t('sql.dataSource')}</p>
+              <Button onClick={() => setViewMode('home')}>{t('page.goUpload')}</Button>
             </CardContent>
           </Card>
         );
@@ -1113,9 +1114,9 @@ export default function HomePage() {
           <Card className="text-center py-16">
             <CardContent>
               <Download className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-2">报表导出 - 生成和导出分析报告</p>
-              <p className="text-sm text-muted-foreground/60 mb-4">上传数据后，可生成报告、导出图表、分享数据</p>
-              <Button onClick={() => setViewMode('home')}>去上传数据</Button>
+              <p className="text-muted-foreground mb-2">{t('report.titleExport')}</p>
+              <p className="text-sm text-muted-foreground/60 mb-4">{t('report.descExport')}</p>
+              <Button onClick={() => setViewMode('home')}>{t('page.goUpload')}</Button>
             </CardContent>
           </Card>
         );
@@ -1124,20 +1125,20 @@ export default function HomePage() {
         <div className="relative">
           <Tabs defaultValue="report" key="report" className="space-y-4">
             <TabsList>
-              <TabsTrigger value="report" disabled={!analysis}>生成报告</TabsTrigger>
-              <TabsTrigger value="export">导出图表</TabsTrigger>
-              <TabsTrigger value="app">应用设计</TabsTrigger>
-              <TabsTrigger value="share">分享管理</TabsTrigger>
+              <TabsTrigger value="report" disabled={!analysis}>{t('report.generateReport')}</TabsTrigger>
+              <TabsTrigger value="export">{t('report.exportChart')}</TabsTrigger>
+              <TabsTrigger value="app">{t('report.appDesign')}</TabsTrigger>
+              <TabsTrigger value="share">{t('report.shareManage')}</TabsTrigger>
             </TabsList>
             <TabsContent value="report">
               {analysis ? (
                 <ReportGenerator data={parsedData} analysis={analysis} />
               ) : (
-                <div className="flex items-center justify-center py-12 text-muted-foreground/50">数据正在分析中...</div>
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">{t('page.dataAnalyzing')}</div>
               )}
             </TabsContent>
             <TabsContent value="export">
-              <ChartExporter chartName={parsedData.fileName || '图表'} />
+              <ChartExporter chartName={parsedData.fileName || t('chart.chartName')} />
             </TabsContent>
             <TabsContent value="app">
               {hasPermission('dashboard') ? (
@@ -1145,7 +1146,7 @@ export default function HomePage() {
               ) : (
                 <Card className="p-8 text-center text-muted-foreground">
                   <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                  <p>管理员已禁用应用创建功能</p>
+                  <p>{t('page.appDisabled')}</p>
                 </Card>
               )}
             </TabsContent>
@@ -1155,7 +1156,7 @@ export default function HomePage() {
               ) : (
                 <Card className="p-8 text-center text-muted-foreground">
                   <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                  <p>管理员已禁用分享功能</p>
+                  <p>{t('page.shareDisabled')}</p>
                 </Card>
               )}
             </TabsContent>
@@ -1250,17 +1251,17 @@ export default function HomePage() {
   // ============================================
   const getCurrentViewTitle = () => {
     const titles: Record<string, string> = {
-      'home': '工作台', 'ai-table-builder': 'AI生成表格',
-      'data-table': '数据预览', 'data-prep': '数据工作台',
-      'insights': '智能洞察', 'visualization': '可视化',
-      'chat': '问答数据', 'multimodal': '图片处理',
-      'sql-lab': 'SQL 查询',
-      'report-export': '导出分享',
-      'alerting': '数据预警', 'version-history': '版本快照', 'template-manager': '模板管理',
-      'pivot-table': '透视表',
-      'form-collection': '表单收集',
-	      'pricing': '定价方案',
-	      'data-compliance': '数据合规',
+      'home': t('page.workbench'), 'ai-table-builder': t('page.aiBuildTable'),
+      'data-table': t('page.dataPreview'), 'data-prep': t('page.dataWorkbench'),
+      'insights': t('page.smartInsight'), 'visualization': t('page.visualization'),
+      'chat': t('page.qaData'), 'multimodal': t('page.imageProcess'),
+      'sql-lab': t('page.sqlQuery'),
+      'report-export': t('page.exportShare'),
+      'alerting': t('page.dataAlert'), 'version-history': t('page.versionSnapshot'), 'template-manager': t('page.templateManager'),
+      'pivot-table': t('page.pivotTable'),
+      'form-collection': t('page.formCollection'),
+      'pricing': t('page.pricingPlan'),
+      'data-compliance': t('page.dataCompliance'),
     };
     return titles[viewMode] || '';
   };
@@ -1303,7 +1304,7 @@ export default function HomePage() {
           <header className="h-12 border-b border-border flex items-center px-6 shrink-0 bg-background">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Shield className="w-4 h-4" />
-              <span>管理后台</span>
+              <span>{t('page.adminPanel')}</span>
               <span className="text-muted-foreground/40">/</span>
               <span className="text-foreground font-medium">{adminTabTitles[adminTab] || adminTab}</span>
             </div>
@@ -1357,7 +1358,7 @@ export default function HomePage() {
               onClick={() => setViewMode('home')}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              工作台
+              {t('page.workbench')}
             </button>
             {viewMode !== 'home' && (
               <>
@@ -1375,7 +1376,7 @@ export default function HomePage() {
                 className="flex items-center gap-1 text-xs h-6 px-2 rounded-sm bg-primary/8 text-primary border border-primary/15 hover:bg-primary/12 transition-colors cursor-pointer"
               >
                 <AlertCircle className="w-3 h-3" />
-                配置AI模型
+                {t('page.configureAI')}
               </button>
             )}
             {/* 数据状态指示 - 规范: 24px标签, 12px文字 */}
@@ -1383,7 +1384,7 @@ export default function HomePage() {
               <span className="flex items-center gap-1 text-xs h-6 px-2 rounded-sm bg-muted cursor-pointer hover:bg-muted/80 transition-colors" onClick={handleGoHome}>
                 <CheckCircle className="w-3 h-3 text-primary" />
                 {parsedData.fileName}
-                <span className="text-muted-foreground ml-0.5">{parsedData.rowCount?.toLocaleString() ?? '0'}行</span>
+                <span className="text-muted-foreground ml-0.5">{parsedData.rowCount?.toLocaleString() ?? '0'} {t('page.rows')}</span>
               </span>
             )}
 
@@ -1400,7 +1401,7 @@ export default function HomePage() {
                   <Settings className="w-4 h-4 text-muted-foreground" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>设置</TooltipContent>
+              <TooltipContent>{t('page.settings')}</TooltipContent>
             </Tooltip>
 
             {/* 用户登录入口 */}

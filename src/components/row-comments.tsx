@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { MessageSquare, Send, Paperclip, Smile, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ interface RowCommentsProps {
 }
 
 export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
+  const { t } = useI18n();
   const [comments, setComments] = useState<Comment[]>(() => {
     try { return readBusinessData<Comment[]>('datainsight-comments') || []; }
     catch { return []; }
@@ -62,14 +64,14 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <MessageSquare className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-medium">行内评论</h3>
+        <h3 className="text-sm font-medium">{t('txt.行内评论')}</h3>
         <Badge variant="secondary">{comments.length} 条</Badge>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* 行选择 */}
         <Card className="p-2 max-h-96 overflow-auto">
-          <p className="text-xs font-medium px-2 py-1">选择行</p>
+          <p className="text-xs font-medium px-2 py-1">{t('txt.选择行')}</p>
           <div className="space-y-1">
             {rows.slice(0, 50).map((row, idx) => (
               <button
@@ -91,7 +93,7 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
 
           <div className="space-y-2 max-h-64 overflow-auto">
             {rowComments.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">暂无评论</p>
+              <p className="text-xs text-muted-foreground text-center py-4">{t('txt.暂无评论')}</p>
             ) : (
               rowComments.map(c => (
                 <div key={c.id} className="flex gap-2">
@@ -113,7 +115,7 @@ export function RowComments({ rows, rowKeyField }: RowCommentsProps) {
 
           <div className="space-y-2">
             <Textarea
-              placeholder="输入评论..."
+              placeholder={t("ph.输入评论")}
               rows={2}
               value={newComment}
               onChange={e => setNewComment(e.target.value)}

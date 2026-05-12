@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -83,6 +84,7 @@ interface MetricManagerProps {
 }
 
 export function MetricManager({ data, detectedScenario = 'general' }: MetricManagerProps) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('preset');
   const [selectedScenario, setSelectedScenario] = useState(detectedScenario);
   const [searchQuery, setSearchQuery] = useState('');
@@ -364,7 +366,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
             <Gauge className="w-6 h-6 text-primary" />
             指标管理中心
           </h2>
-          <p className="text-muted-foreground mt-1">预置指标库 + 自定义指标，统一管理和计算</p>
+          <p className="text-muted-foreground mt-1">{t('txt.预置指标库自定义指标统一管理和计算')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={computeAllVisible}>
@@ -383,7 +385,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="搜索指标名称、标签..."
+            placeholder={t("ph.搜索指标名称标签")}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -392,7 +394,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
         <Select value={selectedScenario} onValueChange={setSelectedScenario}>
           <SelectTrigger className="w-[180px]">
             <Filter className="w-4 h-4 mr-1" />
-            <SelectValue placeholder="选择场景" />
+            <SelectValue placeholder={t("ph.选择场景")} />
           </SelectTrigger>
           <SelectContent>
             {scenarioOptions.map(opt => (
@@ -409,13 +411,13 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">{applicablePresets.length}</div>
-            <div className="text-xs text-muted-foreground">适配预置指标</div>
+            <div className="text-xs text-muted-foreground">{t('txt.适配预置指标')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">{customMetrics.length}</div>
-            <div className="text-xs text-muted-foreground">自定义指标</div>
+            <div className="text-xs text-muted-foreground">{t('txt.自定义指标')}</div>
           </CardContent>
         </Card>
         <Card>
@@ -423,7 +425,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
             <div className="text-2xl font-bold">
               {Object.values(computedResults).filter(r => r.value !== null && !r.error).length}
             </div>
-            <div className="text-xs text-muted-foreground">成功计算</div>
+            <div className="text-xs text-muted-foreground">{t('txt.成功计算')}</div>
           </CardContent>
         </Card>
         <Card>
@@ -431,7 +433,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
             <div className="text-2xl font-bold text-destructive">
               {Object.values(computedResults).filter(r => r.error).length}
             </div>
-            <div className="text-xs text-muted-foreground">计算异常</div>
+            <div className="text-xs text-muted-foreground">{t('txt.计算异常')}</div>
           </CardContent>
         </Card>
       </div>
@@ -457,8 +459,8 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
           {filteredPresets.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>当前场景暂无适配的预置指标</p>
-              <p className="text-sm">尝试切换其他场景或上传包含更多字段的数据</p>
+              <p>{t('txt.当前场景暂无适配的预置指标')}</p>
+              <p className="text-sm">{t('txt.尝试切换其他场景或上传包含更多字段的数据')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -471,7 +473,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
           {filteredCustom.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>暂无自定义指标</p>
+              <p>{t('txt.暂无自定义指标')}</p>
               <Button className="mt-3" size="sm" onClick={() => setShowCreateDialog(true)}>
                 <Plus className="w-4 h-4 mr-1" />
                 创建第一个自定义指标
@@ -499,23 +501,23 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
               <Plus className="w-5 h-5" />
               创建自定义指标
             </DialogTitle>
-            <DialogDescription>通过公式定义您自己的业务指标</DialogDescription>
+            <DialogDescription>{t('txt.通过公式定义您自己的业务指标')}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">指标名称</label>
+              <label className="text-sm font-medium mb-1 block">{t('txt.指标名称')}</label>
               <Input
-                placeholder="例如：客户终身价值"
+                placeholder={t("ph.例如客户终身价值")}
                 value={newMetricForm.name}
                 onChange={e => setNewMetricForm(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">描述</label>
+              <label className="text-sm font-medium mb-1 block">{t('txt.描述')}</label>
               <Input
-                placeholder="简要说明指标的业务含义"
+                placeholder={t("ph.简要说明指标的业务含义")}
                 value={newMetricForm.description}
                 onChange={e => setNewMetricForm(prev => ({ ...prev, description: e.target.value }))}
               />
@@ -523,7 +525,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">分类</label>
+                <label className="text-sm font-medium mb-1 block">{t('txt.分类')}</label>
                 <Select
                   value={newMetricForm.category}
                   onValueChange={(v: MetricDefinition['category']) =>
@@ -534,16 +536,16 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="kpi">核心KPI</SelectItem>
-                    <SelectItem value="process">过程指标</SelectItem>
-                    <SelectItem value="composite">复合指标</SelectItem>
-                    <SelectItem value="trend">趋势指标</SelectItem>
-                    <SelectItem value="custom">自定义</SelectItem>
+                    <SelectItem value="kpi">{t('txt.核心KPI')}</SelectItem>
+                    <SelectItem value="process">{t('txt.过程指标')}</SelectItem>
+                    <SelectItem value="composite">{t('txt.复合指标')}</SelectItem>
+                    <SelectItem value="trend">{t('txt.趋势指标')}</SelectItem>
+                    <SelectItem value="custom">{t('txt.自定义')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">显示格式</label>
+                <label className="text-sm font-medium mb-1 block">{t('txt.显示格式')}</label>
                 <Select
                   value={newMetricForm.format || 'number'}
                   onValueChange={(v: string) =>
@@ -554,20 +556,20 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="number">数值</SelectItem>
-                    <SelectItem value="percent">百分比</SelectItem>
-                    <SelectItem value="currency">货币</SelectItem>
-                    <SelectItem value="ratio">比率</SelectItem>
+                    <SelectItem value="number">{t('txt.数值')}</SelectItem>
+                    <SelectItem value="percent">{t('txt.百分比')}</SelectItem>
+                    <SelectItem value="currency">{t('txt.货币')}</SelectItem>
+                    <SelectItem value="ratio">{t('txt.比率')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">计算公式</label>
+              <label className="text-sm font-medium mb-1 block">{t('txt.计算公式')}</label>
               <div className="relative">
                 <Input
-                  placeholder="例如：SUM(销售额) / COUNT(客户ID)"
+                  placeholder={t("ph.例如SUM销售额COUNT客户ID")}
                   value={newMetricForm.formula}
                   onChange={e => setNewMetricForm(prev => ({ ...prev, formula: e.target.value }))}
                   className="font-mono"
@@ -579,7 +581,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">依赖字段</label>
+              <label className="text-sm font-medium mb-1 block">{t('txt.依赖字段')}</label>
               <div className="flex flex-wrap gap-2">
                 {data.headers.map(h => (
                   <Badge
@@ -603,15 +605,15 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">单位</label>
+                <label className="text-sm font-medium mb-1 block">{t('txt.单位')}</label>
                 <Input
-                  placeholder="例如：元、人、%"
+                  placeholder={t("ph.例如元人")}
                   value={newMetricForm.unit}
                   onChange={e => setNewMetricForm(prev => ({ ...prev, unit: e.target.value }))}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">小数位数</label>
+                <label className="text-sm font-medium mb-1 block">{t('txt.小数位数')}</label>
                 <Input
                   type="number"
                   min={0}
@@ -627,7 +629,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
             {/* 公式预览 */}
             {newMetricForm.formula && (
               <div className="bg-muted p-3 rounded-md">
-                <div className="text-xs text-muted-foreground mb-1">公式预览</div>
+                <div className="text-xs text-muted-foreground mb-1">{t('txt.公式预览')}</div>
                 <code className="text-sm font-mono">{newMetricForm.formula}</code>
               </div>
             )}
@@ -700,7 +702,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
               </div>
 
               <div>
-                <h4 className="text-sm font-medium mb-2">依赖字段</h4>
+                <h4 className="text-sm font-medium mb-2">{t('txt.依赖字段')}</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedMetric.dependencies.map(dep => (
                     <Badge key={dep} variant="secondary">
@@ -719,19 +721,19 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
                   <div className="grid grid-cols-3 gap-2">
                     {selectedMetric.thresholds.target !== undefined && (
                       <div className="bg-green-50 p-2 rounded text-center">
-                        <div className="text-xs text-muted-foreground">目标值</div>
+                        <div className="text-xs text-muted-foreground">{t('txt.目标值')}</div>
                         <div className="font-semibold">{selectedMetric.thresholds.target}</div>
                       </div>
                     )}
                     {selectedMetric.thresholds.warning !== undefined && (
                       <div className="bg-amber-50 p-2 rounded text-center">
-                        <div className="text-xs text-muted-foreground">警告值</div>
+                        <div className="text-xs text-muted-foreground">{t('txt.警告值')}</div>
                         <div className="font-semibold">{selectedMetric.thresholds.warning}</div>
                       </div>
                     )}
                     {selectedMetric.thresholds.critical !== undefined && (
                       <div className="bg-red-50 p-2 rounded text-center">
-                        <div className="text-xs text-muted-foreground">临界值</div>
+                        <div className="text-xs text-muted-foreground">{t('txt.临界值')}</div>
                         <div className="font-semibold">{selectedMetric.thresholds.critical}</div>
                       </div>
                     )}

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 import { RefreshCw, Cpu, Filter, TrendingUp, Zap, AlertTriangle, DollarSign, Clock, Users, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 
 const CHART_COLORS = ['var(--color-primary)', 'var(--color-chart-2)', 'var(--color-chart-3)', 'var(--color-chart-4)', 'var(--color-chart-5)', 'var(--color-destructive)'];
 
@@ -35,6 +36,7 @@ interface AiUsageSummary {
 }
 
 export default function AdminAiUsageDashboard() {
+  const { t } = useI18n();
   const [summary, setSummary] = useState<AiUsageSummary | null>(null);
   const [byFunction, setByFunction] = useState<Record<string, { count: number; tokens: number; errors: number; avgLatency: number }>>({});
   const [byModel, setByModel] = useState<Record<string, { count: number; tokens: number }>>({});

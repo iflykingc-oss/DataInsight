@@ -38,6 +38,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData } from '@/lib/data-processor';
 import initSqlJs from 'sql.js';
 import type { SqlJsStatic, SqlValue } from 'sql.js';
@@ -70,6 +71,7 @@ interface TableSchema {
 // 组件
 // ============================================
 export function SqlLab({ data, className }: SqlLabProps) {
+  const { t } = useI18n();
   const [sql, setSql] = useState('SELECT * FROM data LIMIT 10;');
   const [results, setResults] = useState<Array<Record<string, unknown>> | null>(null);
   const [columns, setColumns] = useState<string[]>([]);
@@ -346,8 +348,8 @@ export function SqlLab({ data, className }: SqlLabProps) {
           <Database className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground font-medium">{error}</p>
           <div className="text-xs text-muted-foreground/60 space-y-1">
-            <p>数据源：上传的 Excel/CSV 文件会自动创建 SQLite 内存数据库</p>
-            <p>支持标准 SQL 语法（SELECT, JOIN, GROUP BY, 子查询等）</p>
+            <p>{t('txt.数据源上传的ExcelCSV文件会自动创建SQLi')}</p>
+            <p>{t('txt.支持标准SQL语法SELECTJOINGROUPB')}</p>
           </div>
           <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
             重新加载
@@ -362,7 +364,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
       <Card className={className}>
         <CardContent className="p-8 text-center">
           <Loader2 className="w-8 h-8 text-muted-foreground mx-auto mb-3 animate-spin" />
-          <p className="text-muted-foreground">正在加载 SQL 引擎...</p>
+          <p className="text-muted-foreground">{t('txt.正在加载SQL引擎')}</p>
         </CardContent>
       </Card>
     );
@@ -454,7 +456,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
             </CardHeader>
             <CardContent className="space-y-2 max-h-[300px] overflow-auto">
               {history.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">暂无查询记录</p>
+                <p className="text-xs text-muted-foreground text-center py-4">{t('txt.暂无查询记录')}</p>
               ) : (
                 history.map(entry => (
                   <div
@@ -497,7 +499,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
         <div className="space-y-4">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              <TabsTrigger value="query">查询</TabsTrigger>
+              <TabsTrigger value="query">{t('txt.查询')}</TabsTrigger>
               <TabsTrigger value="results" disabled={results === null}>
                 结果 {results !== null && `(${results.length})`}
               </TabsTrigger>
@@ -510,19 +512,19 @@ export function SqlLab({ data, className }: SqlLabProps) {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm">SQL 编辑器</CardTitle>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">示例:</span>
+                      <span className="text-xs text-muted-foreground">{t('txt.示例')}</span>
                       <Select onValueChange={generateExample}>
                         <SelectTrigger className="w-[140px] h-7 text-xs">
-                          <SelectValue placeholder="选择示例" />
+                          <SelectValue placeholder={t("ph.选择示例")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="basic">基础查询</SelectItem>
-                          <SelectItem value="count">计数统计</SelectItem>
-                          <SelectItem value="sum">求和</SelectItem>
-                          <SelectItem value="group">分组聚合</SelectItem>
-                          <SelectItem value="filter">条件筛选</SelectItem>
-                          <SelectItem value="sort">排序</SelectItem>
-                          <SelectItem value="aggregate">综合统计</SelectItem>
+                          <SelectItem value="basic">{t('txt.基础查询')}</SelectItem>
+                          <SelectItem value="count">{t('txt.计数统计')}</SelectItem>
+                          <SelectItem value="sum">{t('txt.求和')}</SelectItem>
+                          <SelectItem value="group">{t('txt.分组聚合')}</SelectItem>
+                          <SelectItem value="filter">{t('txt.条件筛选')}</SelectItem>
+                          <SelectItem value="sort">{t('txt.排序')}</SelectItem>
+                          <SelectItem value="aggregate">{t('txt.综合统计')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -533,7 +535,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
                     value={sql}
                     onChange={e => setSql(e.target.value)}
                     className="w-full h-40 p-3 font-mono text-sm bg-muted/30 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-primary"
-                    placeholder="输入 SQL 查询语句..."
+                    placeholder={t("ph.输入SQL查询语句")}
                     spellCheck={false}
                   />
                   <div className="flex items-center justify-between">

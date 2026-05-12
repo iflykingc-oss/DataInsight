@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -161,6 +162,7 @@ export function EnhancedLLMAssistant({
   onNavigate,
 }: EnhancedLLMAssistantProps) {
   // 状态
+  const { t } = useI18n();
   const [currentMode, setCurrentMode] = useState<AIMode>('analysis');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -645,13 +647,13 @@ export function EnhancedLLMAssistant({
         {showHistory && (
           <div className="mb-3 p-3 bg-muted/50 rounded-md max-h-64 overflow-auto">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium">历史会话</p>
+              <p className="text-sm font-medium">{t('txt.历史会话')}</p>
               <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setShowHistory(false)}>
                 <X className="w-3 h-3" />
               </Button>
             </div>
             {sessions.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">暂无历史会话</p>
+              <p className="text-xs text-muted-foreground text-center py-4">{t('txt.暂无历史会话')}</p>
             ) : (
               <div className="space-y-1">
                 {sessions.slice(0, 10).map(session => (
@@ -686,7 +688,7 @@ export function EnhancedLLMAssistant({
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <p className="text-xs font-medium text-primary">基于你的数据，推荐这些问题</p>
+              <p className="text-xs font-medium text-primary">{t('txt.基于你的数据推荐这些问题')}</p>
             </div>
             <div className="space-y-1.5">
               {(() => {
@@ -720,7 +722,7 @@ export function EnhancedLLMAssistant({
         {messages.length === 0 && (
           <div className="mb-3">
             <div className="flex items-center gap-2 mb-2">
-              <p className="text-xs text-muted-foreground">更多操作</p>
+              <p className="text-xs text-muted-foreground">{t('txt.更多操作')}</p>
               <Badge variant="outline" className="text-xs h-5">
                 {currentModeConfig.label}
               </Badge>
@@ -918,13 +920,13 @@ export function EnhancedLLMAssistant({
 
         {showContext && (
           <div className="mt-2 p-3 bg-muted/50 rounded-md text-xs space-y-1">
-            <p className="font-medium">数据概况：</p>
+            <p className="font-medium">{t('txt.数据概况')}</p>
             <p>文件: {data.fileName}</p>
             <p>行数: {(data.rowCount ?? 0).toLocaleString()} | 列数: {data.columnCount ?? 0}</p>
             <p>字段: {data.headers.join(', ')}</p>
             {analysis.deepAnalysis && (
               <>
-                <p className="font-medium mt-2">深度分析：</p>
+                <p className="font-medium mt-2">{t('txt.深度分析')}</p>
                 <p>健康评分: {analysis.deepAnalysis.healthScore.overall}/100</p>
                 <p>关键发现: {analysis.deepAnalysis.keyFindings.length} 项</p>
               </>

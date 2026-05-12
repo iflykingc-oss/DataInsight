@@ -32,6 +32,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import type { ParsedData } from '@/lib/data-processor';
@@ -160,6 +161,7 @@ export function ChartExporter({
   className
 }: ChartExporterProps) {
   // 状态
+  const { t } = useI18n();
   const [config, setConfig] = useState<ExportConfig>({
     format: 'png',
     quality: 95,
@@ -256,7 +258,7 @@ export function ChartExporter({
     }
     
     if (config.includeLegend) {
-      svg += `  <text x="20" y="${height - 20}" font-family="Arial, sans-serif" font-size="14" fill="#666">图例区域</text>\n`;
+      svg += `  <text x="20" y="${height - 20}" font-family="Arial, sans-serif" font-size="14" fill="#666">{t('txt.图例区域')}</text>\n`;
     }
     
     svg += '</svg>';
@@ -501,7 +503,7 @@ export function ChartExporter({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Download className="w-5 h-5 text-green-500" />
-          <h3 className="font-medium">图表导出</h3>
+          <h3 className="font-medium">{t('txt.图表导出')}</h3>
         </div>
       </div>
 
@@ -526,7 +528,7 @@ export function ChartExporter({
         <TabsContent value="export" className="mt-4 space-y-4">
           {/* 格式选择 */}
           <div className="space-y-3">
-            <Label>选择导出格式</Label>
+            <Label>{t('txt.选择导出格式')}</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {FORMAT_PRESETS.map(preset => {
                 const FormatIcon = preset.icon;
@@ -608,7 +610,7 @@ export function ChartExporter({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    <span className="font-medium text-green-700">导出成功</span>
+                    <span className="font-medium text-green-700">{t('txt.导出成功')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={handleCopyToClipboard}>
@@ -634,7 +636,7 @@ export function ChartExporter({
         <TabsContent value="settings" className="mt-4 space-y-4">
           {/* 质量设置 */}
           <div className="space-y-3">
-            <Label>导出质量</Label>
+            <Label>{t('txt.导出质量')}</Label>
             <div className="flex gap-2">
               {QUALITY_PRESETS.map(preset => (
                 <button
@@ -656,7 +658,7 @@ export function ChartExporter({
 
           {/* 尺寸设置 */}
           <div className="space-y-3">
-            <Label>输出尺寸</Label>
+            <Label>{t('txt.输出尺寸')}</Label>
             <select
               className="w-full p-3 border rounded-md"
               value={config.width ? `${config.width}x${config.height}` : '0x0'}
@@ -677,7 +679,7 @@ export function ChartExporter({
 
           {/* 分辨率 */}
           <div className="space-y-3">
-            <Label>图片分辨率</Label>
+            <Label>{t('txt.图片分辨率')}</Label>
             <div className="flex gap-2">
               {[1, 2, 3].map(scale => (
                 <button
@@ -701,7 +703,7 @@ export function ChartExporter({
 
           {/* 背景色 */}
           <div className="space-y-3">
-            <Label>背景颜色</Label>
+            <Label>{t('txt.背景颜色')}</Label>
             <div className="flex items-center gap-3">
               <input
                 type="color"
@@ -726,7 +728,7 @@ export function ChartExporter({
 
           {/* 包含内容 */}
           <div className="space-y-3">
-            <Label>包含内容</Label>
+            <Label>{t('txt.包含内容')}</Label>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -734,7 +736,7 @@ export function ChartExporter({
                   checked={config.includeTitle}
                   onCheckedChange={checked => setConfig(prev => ({ ...prev, includeTitle: !!checked }))}
                 />
-                <label htmlFor="include-title" className="text-sm">包含标题</label>
+                <label htmlFor="include-title" className="text-sm">{t('txt.包含标题')}</label>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -742,7 +744,7 @@ export function ChartExporter({
                   checked={config.includeLegend}
                   onCheckedChange={checked => setConfig(prev => ({ ...prev, includeLegend: !!checked }))}
                 />
-                <label htmlFor="include-legend" className="text-sm">包含图例</label>
+                <label htmlFor="include-legend" className="text-sm">{t('txt.包含图例')}</label>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -750,7 +752,7 @@ export function ChartExporter({
                   checked={config.includeData}
                   onCheckedChange={checked => setConfig(prev => ({ ...prev, includeData: !!checked }))}
                 />
-                <label htmlFor="include-data" className="text-sm">包含原始数据</label>
+                <label htmlFor="include-data" className="text-sm">{t('txt.包含原始数据')}</label>
               </div>
             </div>
           </div>
@@ -762,7 +764,7 @@ export function ChartExporter({
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <Clock className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground">暂无导出历史</p>
+                <p className="text-muted-foreground">{t('txt.暂无导出历史')}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   导出文件后会显示在这里
                 </p>

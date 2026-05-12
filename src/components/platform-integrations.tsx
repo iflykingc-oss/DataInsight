@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -43,6 +44,7 @@ interface PlatformIntegrationProps {
 
 // 飞书集成
 function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[]; rows: Record<string, string | number>[] }) => void }) {
+  const { t } = useI18n();
   const [appId, setAppId] = useState('');
   const [appSecret, setAppSecret] = useState('');
   const [appToken, setAppToken] = useState('');
@@ -150,9 +152,9 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
   return (
     <Tabs defaultValue="connect" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="connect">连接配置</TabsTrigger>
-        <TabsTrigger value="guide">集成指南</TabsTrigger>
-        <TabsTrigger value="preview">数据预览</TabsTrigger>
+        <TabsTrigger value="connect">{t('txt.连接配置')}</TabsTrigger>
+        <TabsTrigger value="guide">{t('txt.集成指南')}</TabsTrigger>
+        <TabsTrigger value="preview">{t('txt.数据预览')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="connect" className="space-y-4">
@@ -163,29 +165,29 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
           </div>
           <div className="space-y-2">
             <Label htmlFor="feishu-secret">App Secret</Label>
-            <Input id="feishu-secret" type="password" placeholder="请输入 App Secret" value={appSecret} onChange={e => setAppSecret(e.target.value)} />
+            <Input id="feishu-secret" type="password" placeholder={t("ph.请输入AppSecret")} value={appSecret} onChange={e => setAppSecret(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="feishu-token">多维表格 App Token</Label>
+            <Label htmlFor="feishu-token">{t('txt.多维表格AppToken')}</Label>
             <Input id="feishu-token" placeholder="BxxxxxxxxxxRxxxx" value={appToken} onChange={e => setAppToken(e.target.value)} />
-            <p className="text-xs text-muted-foreground">在飞书多维表格 URL 中获取</p>
+            <p className="text-xs text-muted-foreground">{t('txt.在飞书多维表格URL中获取')}</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="feishu-tableid">数据表 ID</Label>
+            <Label htmlFor="feishu-tableid">{t('txt.数据表ID')}</Label>
             <Input id="feishu-tableid" placeholder="tblxxxxxxxxxx" value={tableId} onChange={e => setTableId(e.target.value)} />
           </div>
 
           <Button className="w-full" disabled={!appId || !appSecret || !appToken || isConnecting} onClick={handleConnect}>
-            {isConnecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />连接中...</> : <>连接飞书多维表格 <ArrowRight className="w-4 h-4 ml-2" /></>}
+            {isConnecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('txt.连接中')}</> : <>{t('txt.连接飞书多维表格')}<ArrowRight className="w-4 h-4 ml-2" /></>}
           </Button>
 
           {isConnected && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-md">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">连接成功</span>
+                <span className="font-medium">{t('txt.连接成功')}</span>
               </div>
-              <p className="text-sm text-green-600 mt-2">已成功连接到飞书多维表格，可以开始导入数据</p>
+              <p className="text-sm text-green-600 mt-2">{t('txt.已成功连接到飞书多维表格可以开始导入数据')}</p>
               <Button
                 className="mt-3 w-full"
                 variant="outline"
@@ -193,9 +195,9 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
                 disabled={isSyncing || !tableId}
               >
                 {isSyncing ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />同步中...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('txt.同步中')}</>
                 ) : (
-                  <><ArrowRight className="w-4 h-4 mr-2" />同步数据</>
+                  <><ArrowRight className="w-4 h-4 mr-2" />{t('txt.同步数据')}</>
                 )}
               </Button>
               {syncMessage && (
@@ -208,7 +210,7 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
             <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">连接失败</span>
+                <span className="font-medium">{t('txt.连接失败')}</span>
               </div>
               <p className="text-sm text-red-600 mt-2">{connectionError}</p>
             </div>
@@ -231,7 +233,7 @@ function FeishuPanel({ onImportData }: { onImportData?: (d: { headers: string[];
                 )}
                 {item.perms && (
                   <div className="mt-2">
-                    <p className="text-xs text-muted-foreground mb-1">所需权限：</p>
+                    <p className="text-xs text-muted-foreground mb-1">{t('txt.所需权限')}</p>
                     <div className="flex flex-wrap gap-1">
                       {item.perms.map(perm => (
                         <Badge key={perm} variant="outline" className="text-xs font-mono">{perm}</Badge>
@@ -264,7 +266,7 @@ const resp = await fetch(
 
       <TabsContent value="preview" className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="font-medium">示例销售数据</span>
+          <span className="font-medium">{t('txt.示例销售数据')}</span>
           <Button size="sm" onClick={() => onImportData?.(sampleData)}>
             导入此数据 <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
@@ -290,6 +292,7 @@ const resp = await fetch(
 
 // 微信企业版集成
 function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[]; rows: Record<string, string | number>[] }) => void }) {
+  const { t } = useI18n();
   const [corpId, setCorpId] = useState('');
   const [corpSecret, setCorpSecret] = useState('');
   const [agentId, setAgentId] = useState('');
@@ -383,42 +386,42 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
   return (
     <Tabs defaultValue="connect" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="connect">连接配置</TabsTrigger>
-        <TabsTrigger value="guide">集成指南</TabsTrigger>
-        <TabsTrigger value="preview">数据预览</TabsTrigger>
+        <TabsTrigger value="connect">{t('txt.连接配置')}</TabsTrigger>
+        <TabsTrigger value="guide">{t('txt.集成指南')}</TabsTrigger>
+        <TabsTrigger value="preview">{t('txt.数据预览')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="connect" className="space-y-4">
         <div className="grid gap-4">
           <div className="space-y-2">
-            <Label htmlFor="wx-corpid">企业 ID (Corp ID)</Label>
+            <Label htmlFor="wx-corpid">{t('txt.企业IDCorpID')}</Label>
             <Input id="wx-corpid" placeholder="wwxxxxxxxxxxxxxx" value={corpId} onChange={e => setCorpId(e.target.value)} />
             <p className="text-xs text-muted-foreground">在微信企业微信管理后台 → 我的企业中获取</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="wx-secret">应用密钥 (Secret)</Label>
-            <Input id="wx-secret" type="password" placeholder="请输入应用密钥" value={corpSecret} onChange={e => setCorpSecret(e.target.value)} />
+            <Label htmlFor="wx-secret">{t('txt.应用密钥Secret')}</Label>
+            <Input id="wx-secret" type="password" placeholder={t("ph.请输入应用密钥")} value={corpSecret} onChange={e => setCorpSecret(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="wx-agentid">应用 ID (Agent ID)</Label>
+            <Label htmlFor="wx-agentid">{t('txt.应用IDAgentID')}</Label>
             <Input id="wx-agentid" placeholder="1000001" value={agentId} onChange={e => setAgentId(e.target.value)} />
-            <p className="text-xs text-muted-foreground">在应用管理页面获取</p>
+            <p className="text-xs text-muted-foreground">{t('txt.在应用管理页面获取')}</p>
           </div>
 
           <Button className="w-full" disabled={!corpId || !corpSecret || isConnecting} onClick={handleConnect}>
-            {isConnecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />连接中...</> : <>连接微信企业版 <ArrowRight className="w-4 h-4 ml-2" /></>}
+            {isConnecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('txt.连接中')}</> : <>{t('txt.连接微信企业版')}<ArrowRight className="w-4 h-4 ml-2" /></>}
           </Button>
 
           {isConnected && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-md">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">连接成功</span>
+                <span className="font-medium">{t('txt.连接成功')}</span>
               </div>
-              <p className="text-sm text-green-600 mt-2">已成功连接到微信企业版</p>
+              <p className="text-sm text-green-600 mt-2">{t('txt.已成功连接到微信企业版')}</p>
               {departments.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs text-muted-foreground">选择部门：</p>
+                  <p className="text-xs text-muted-foreground">{t('txt.选择部门')}</p>
                   <select
                     className="w-full mt-1 p-2 border rounded"
                     onChange={(e) => handleSync(e.target.value)}
@@ -436,9 +439,9 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
                 disabled={isSyncing}
               >
                 {isSyncing ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />同步中...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('txt.同步中')}</>
                 ) : (
-                  <><ArrowRight className="w-4 h-4 mr-2" />同步数据</>
+                  <><ArrowRight className="w-4 h-4 mr-2" />{t('txt.同步数据')}</>
                 )}
               </Button>
               {syncMessage && (
@@ -451,7 +454,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
             <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">连接失败</span>
+                <span className="font-medium">{t('txt.连接失败')}</span>
               </div>
               <p className="text-sm text-red-600 mt-2">{connectionError}</p>
             </div>
@@ -485,7 +488,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
 
       <TabsContent value="preview" className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="font-medium">示例部门数据</span>
+          <span className="font-medium">{t('txt.示例部门数据')}</span>
           <Button size="sm" onClick={() => onImportData?.(sampleData)}>
             导入此数据 <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
@@ -511,6 +514,7 @@ function WeChatPanel({ onImportData }: { onImportData?: (d: { headers: string[];
 
 // 钉钉集成
 function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[]; rows: Record<string, string | number>[] }) => void }) {
+  const { t } = useI18n();
   const [appKey, setAppKey] = useState('');
   const [appSecret, setAppSecret] = useState('');
   const [agentId, setAgentId] = useState('');
@@ -605,9 +609,9 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
   return (
     <Tabs defaultValue="connect" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="connect">连接配置</TabsTrigger>
-        <TabsTrigger value="guide">集成指南</TabsTrigger>
-        <TabsTrigger value="preview">数据预览</TabsTrigger>
+        <TabsTrigger value="connect">{t('txt.连接配置')}</TabsTrigger>
+        <TabsTrigger value="guide">{t('txt.集成指南')}</TabsTrigger>
+        <TabsTrigger value="preview">{t('txt.数据预览')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="connect" className="space-y-4">
@@ -619,7 +623,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
           </div>
           <div className="space-y-2">
             <Label htmlFor="dt-secret">App Secret</Label>
-            <Input id="dt-secret" type="password" placeholder="请输入 App Secret" value={appSecret} onChange={e => setAppSecret(e.target.value)} />
+            <Input id="dt-secret" type="password" placeholder={t("ph.请输入AppSecret")} value={appSecret} onChange={e => setAppSecret(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="dt-agentid">Agent ID</Label>
@@ -627,16 +631,16 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
           </div>
 
           <Button className="w-full" disabled={!appKey || !appSecret || isConnecting} onClick={handleConnect}>
-            {isConnecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />连接中...</> : <>连接钉钉 <ArrowRight className="w-4 h-4 ml-2" /></>}
+            {isConnecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('txt.连接中')}</> : <>{t('txt.连接钉钉')}<ArrowRight className="w-4 h-4 ml-2" /></>}
           </Button>
 
           {isConnected && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-md">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">连接成功</span>
+                <span className="font-medium">{t('txt.连接成功')}</span>
               </div>
-              <p className="text-sm text-green-600 mt-2">已成功连接到钉钉</p>
+              <p className="text-sm text-green-600 mt-2">{t('txt.已成功连接到钉钉')}</p>
               <Button
                 className="mt-3 w-full"
                 variant="outline"
@@ -644,9 +648,9 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
                 disabled={isSyncing}
               >
                 {isSyncing ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />同步中...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('txt.同步中')}</>
                 ) : (
-                  <><ArrowRight className="w-4 h-4 mr-2" />同步考勤数据</>
+                  <><ArrowRight className="w-4 h-4 mr-2" />{t('txt.同步考勤数据')}</>
                 )}
               </Button>
               {syncMessage && (
@@ -659,7 +663,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
             <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">连接失败</span>
+                <span className="font-medium">{t('txt.连接失败')}</span>
               </div>
               <p className="text-sm text-red-600 mt-2">{connectionError}</p>
             </div>
@@ -693,7 +697,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
 
       <TabsContent value="preview" className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="font-medium">示例考勤数据</span>
+          <span className="font-medium">{t('txt.示例考勤数据')}</span>
           <Button size="sm" onClick={() => onImportData?.(sampleData)}>
             导入此数据 <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
@@ -719,6 +723,7 @@ function DingTalkPanel({ onImportData }: { onImportData?: (d: { headers: string[
 
 // WPS金山文档集成
 function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; rows: Record<string, string | number>[] }) => void }) {
+  const { t } = useI18n();
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
   const [docId, setDocId] = useState('');
@@ -809,9 +814,9 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
   return (
     <Tabs defaultValue="connect" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="connect">连接配置</TabsTrigger>
-        <TabsTrigger value="guide">集成指南</TabsTrigger>
-        <TabsTrigger value="preview">数据预览</TabsTrigger>
+        <TabsTrigger value="connect">{t('txt.连接配置')}</TabsTrigger>
+        <TabsTrigger value="guide">{t('txt.集成指南')}</TabsTrigger>
+        <TabsTrigger value="preview">{t('txt.数据预览')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="connect" className="space-y-4">
@@ -824,34 +829,34 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
           </div>
           <div className="space-y-2">
             <Label htmlFor="wps-apikey">API Key</Label>
-            <Input id="wps-apikey" placeholder="请输入 API Key" value={apiKey} onChange={e => setApiKey(e.target.value)} />
-            <p className="text-xs text-muted-foreground">在金山文档开放平台获取</p>
+            <Input id="wps-apikey" placeholder={t("ph.请输入APIKey")} value={apiKey} onChange={e => setApiKey(e.target.value)} />
+            <p className="text-xs text-muted-foreground">{t('txt.在金山文档开放平台获取')}</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="wps-secret">API Secret</Label>
-            <Input id="wps-secret" type="password" placeholder="请输入 API Secret" value={apiSecret} onChange={e => setApiSecret(e.target.value)} />
+            <Input id="wps-secret" type="password" placeholder={t("ph.请输入APISecret")} value={apiSecret} onChange={e => setApiSecret(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="wps-docid">文档 ID</Label>
-            <Input id="wps-docid" placeholder="金山文档链接中的文档ID" value={docId} onChange={e => setDocId(e.target.value)} />
-            <p className="text-xs text-muted-foreground">在金山文档 URL 中获取，例如：https://kdocs.cn/office/xxx/document</p>
+            <Label htmlFor="wps-docid">{t('txt.文档ID')}</Label>
+            <Input id="wps-docid" placeholder={t("ph.金山文档链接中的文档ID")} value={docId} onChange={e => setDocId(e.target.value)} />
+            <p className="text-xs text-muted-foreground">{t('txt.在金山文档URL中获取例如httpskdocscn')}</p>
           </div>
 
           <Button className="w-full" disabled={!apiKey || !apiSecret || isConnecting} onClick={handleConnect}>
-            {isConnecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />连接中...</> : <>连接金山文档 <ArrowRight className="w-4 h-4 ml-2" /></>}
+            {isConnecting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('txt.连接中')}</> : <>{t('txt.连接金山文档')}<ArrowRight className="w-4 h-4 ml-2" /></>}
           </Button>
 
           {isConnected && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-md">
               <div className="flex items-center gap-2 text-green-700">
                 <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">连接成功</span>
+                <span className="font-medium">{t('txt.连接成功')}</span>
               </div>
-              <p className="text-sm text-green-600 mt-2">已成功连接到金山文档</p>
+              <p className="text-sm text-green-600 mt-2">{t('txt.已成功连接到金山文档')}</p>
               <div className="mt-3">
-                <Label>文档 ID</Label>
+                <Label>{t('txt.文档ID')}</Label>
                 <Input
-                  placeholder="输入文档 ID"
+                  placeholder={t("ph.输入文档ID")}
                   value={docId}
                   onChange={(e) => setDocId(e.target.value)}
                   className="mt-1"
@@ -864,9 +869,9 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
                 disabled={isSyncing || !docId}
               >
                 {isSyncing ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />同步中...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('txt.同步中')}</>
                 ) : (
-                  <><ArrowRight className="w-4 h-4 mr-2" />同步文档</>
+                  <><ArrowRight className="w-4 h-4 mr-2" />{t('txt.同步文档')}</>
                 )}
               </Button>
               {syncMessage && (
@@ -879,7 +884,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
             <div className="p-4 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-700">
                 <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">连接失败</span>
+                <span className="font-medium">{t('txt.连接失败')}</span>
               </div>
               <p className="text-sm text-red-600 mt-2">{connectionError}</p>
             </div>
@@ -913,7 +918,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
 
       <TabsContent value="preview" className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="font-medium">示例文档数据</span>
+          <span className="font-medium">{t('txt.示例文档数据')}</span>
           <Button size="sm" onClick={() => onImportData?.(sampleData)}>
             导入此数据 <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
@@ -940,6 +945,7 @@ function WPSPanel({ onImportData }: { onImportData?: (d: { headers: string[]; ro
 // 主组件：多平台集成面板
 export function PlatformIntegrations({ onImportData }: PlatformIntegrationProps) {
   const [savedConnections, setSavedConnections] = useState<Array<{ id: string; name: string; type: string; status: 'connected' | 'error' }>>([]);
+  const { t } = useI18n();
   // showAddDialog unused
   
 
@@ -981,7 +987,7 @@ export function PlatformIntegrations({ onImportData }: PlatformIntegrationProps)
       {savedConnections.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">已保存的连接</CardTitle>
+            <CardTitle className="text-sm">{t('txt.已保存的连接')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -992,9 +998,9 @@ export function PlatformIntegrations({ onImportData }: PlatformIntegrationProps)
                     <span className="text-sm font-medium">{conn.name}</span>
                     <Badge variant="outline" className="text-xs">{conn.type}</Badge>
                     {conn.status === 'connected' ? (
-                      <Badge className="bg-green-100 text-green-700 text-xs">已连接</Badge>
+                      <Badge className="bg-green-100 text-green-700 text-xs">{t('txt.已连接')}</Badge>
                     ) : (
-                      <Badge variant="destructive" className="text-xs">连接失败</Badge>
+                      <Badge variant="destructive" className="text-xs">{t('txt.连接失败')}</Badge>
                     )}
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => setSavedConnections(prev => prev.filter(c => c.id !== conn.id))}>
@@ -1010,10 +1016,10 @@ export function PlatformIntegrations({ onImportData }: PlatformIntegrationProps)
       {/* 各平台详细配置 */}
       <Tabs defaultValue="feishu" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="feishu">飞书</TabsTrigger>
-          <TabsTrigger value="wechat">企业微信</TabsTrigger>
-          <TabsTrigger value="dingtalk">钉钉</TabsTrigger>
-          <TabsTrigger value="wps">金山文档</TabsTrigger>
+          <TabsTrigger value="feishu">{t('txt.飞书')}</TabsTrigger>
+          <TabsTrigger value="wechat">{t('txt.企业微信')}</TabsTrigger>
+          <TabsTrigger value="dingtalk">{t('txt.钉钉')}</TabsTrigger>
+          <TabsTrigger value="wps">{t('txt.金山文档')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="feishu">
@@ -1037,6 +1043,7 @@ export function PlatformIntegrations({ onImportData }: PlatformIntegrationProps)
 function PlatformCard({ name, badge, badgeColor, desc, icon }: {
   name: string; badge: string; badgeColor: string; desc: string; icon: React.ReactNode;
 }) {
+  const { t } = useI18n();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -1059,8 +1066,8 @@ function PlatformCard({ name, badge, badgeColor, desc, icon }: {
           <p className="text-sm text-foreground">请在下方「连接配置」标签页中填写 {name} 的凭证信息，完成连接配置。</p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>关闭</Button>
-          <Button onClick={() => setIsDialogOpen(false)}>去配置 <ArrowRight className="w-4 h-4 ml-1" /></Button>
+          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>{t('txt.关闭')}</Button>
+          <Button onClick={() => setIsDialogOpen(false)}>{t('txt.去配置')}<ArrowRight className="w-4 h-4 ml-1" /></Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

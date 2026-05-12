@@ -60,6 +60,7 @@ import {
 	Info
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 import type { ParsedData, FieldStat } from '@/lib/data-processor';
 
 // ============================================
@@ -310,6 +311,7 @@ export function DataAlerting({
   className
 }: DataAlertingProps) {
   // 状态
+  const { t } = useI18n();
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [history, setHistory] = useState<AlertHistory[]>([]);
   const [editingRule, setEditingRule] = useState<AlertRule | null>(null);
@@ -801,7 +803,7 @@ export function DataAlerting({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell className="w-5 h-5 text-orange-500" />
-          <h3 className="font-medium">数据预警</h3>
+          <h3 className="font-medium">{t('txt.数据预警')}</h3>
           {triggeredRules.length > 0 && (
             <Badge variant="destructive" className="animate-pulse">
               {triggeredRules.length} 个告警
@@ -837,17 +839,17 @@ export function DataAlerting({
                   <Label htmlFor="rule-name">告警名称 *</Label>
                   <Input
                     id="rule-name"
-                    placeholder="如：日销售额超过10万"
+                    placeholder={t("ph.如日销售额超过10万")}
                     value={editingRule?.name || ''}
                     onChange={e => setEditingRule(prev => prev ? { ...prev, name: e.target.value } : null)}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="rule-desc">描述（可选）</Label>
+                  <Label htmlFor="rule-desc">{t('txt.描述可选')}</Label>
                   <Textarea
                     id="rule-desc"
-                    placeholder="描述这个告警的业务含义..."
+                    placeholder={t("ph.描述这个告警的业务含义")}
                     rows={2}
                     value={editingRule?.description || ''}
                     onChange={e => setEditingRule(prev => prev ? { ...prev, description: e.target.value } : null)}
@@ -864,7 +866,7 @@ export function DataAlerting({
                     onValueChange={v => setEditingRule(prev => prev ? { ...prev, field: v } : null)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择字段" />
+                      <SelectValue placeholder={t("ph.选择字段")} />
                     </SelectTrigger>
                     <SelectContent>
                       {fieldStats.map(f => (
@@ -903,7 +905,7 @@ export function DataAlerting({
                   <Label>阈值 {editingRule?.condition === 'between' && '(下限)'} *</Label>
                   <Input
                     type="number"
-                    placeholder="输入阈值..."
+                    placeholder={t("ph.输入阈值")}
                     value={editingRule?.threshold || ''}
                     onChange={e => setEditingRule(prev => prev ? { ...prev, threshold: Number(e.target.value) } : null)}
                   />
@@ -915,7 +917,7 @@ export function DataAlerting({
                   <Label>阈值上限 *</Label>
                   <Input
                     type="number"
-                    placeholder="输入上限..."
+                    placeholder={t("ph.输入上限")}
                     value={editingRule?.threshold2 || ''}
                     onChange={e => setEditingRule(prev => prev ? { ...prev, threshold2: Number(e.target.value) } : null)}
                   />
@@ -945,7 +947,7 @@ export function DataAlerting({
 
               {/* 通知渠道 */}
               <div className="space-y-2">
-                <Label>通知渠道</Label>
+                <Label>{t('txt.通知渠道')}</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {(Object.entries(CHANNEL_CONFIG) as [NotificationChannel, typeof CHANNEL_CONFIG.in_app][]).map(([key, config]) => {
                     const Icon = config.icon;
@@ -1059,8 +1061,8 @@ export function DataAlerting({
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <Bell className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground">暂未创建任何告警规则</p>
-                <p className="text-sm text-muted-foreground mt-1">创建规则后，当数据满足条件时会自动通知你</p>
+                <p className="text-muted-foreground">{t('txt.暂未创建任何告警规则')}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('txt.创建规则后当数据满足条件时会自动通知你')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -1131,7 +1133,7 @@ export function DataAlerting({
                             <Send className="w-4 h-4" />
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>发送测试通知</TooltipContent>
+                        <TooltipContent>{t('txt.发送测试通知')}</TooltipContent>
                       </Tooltip>
 
                       {/* 编辑 */}
@@ -1166,8 +1168,8 @@ export function DataAlerting({
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
                 <History className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground">暂无告警历史</p>
-                <p className="text-sm text-muted-foreground mt-1">告警触发后会显示在这里</p>
+                <p className="text-muted-foreground">{t('txt.暂无告警历史')}</p>
+                <p className="text-sm text-muted-foreground mt-1">{t('txt.告警触发后会显示在这里')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -1210,8 +1212,8 @@ export function DataAlerting({
         <TabsContent value="settings" className="mt-4 space-y-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold text-base">通知渠道配置</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">配置告警通知的发送渠道和凭证，配置后自动保存</p>
+              <h3 className="font-semibold text-base">{t('txt.通知渠道配置')}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('txt.配置告警通知的发送渠道和凭证配置后自动保存')}</p>
             </div>
           </div>
 
@@ -1248,8 +1250,8 @@ export function DataAlerting({
                         <Mail className="w-4 h-4 text-blue-600" />
                       </div>
                       <div>
-                        <CardTitle className="text-sm">邮件通知</CardTitle>
-                        <CardDescription className="text-xs">通过 SMTP 发送告警邮件</CardDescription>
+                        <CardTitle className="text-sm">{t('txt.邮件通知')}</CardTitle>
+                        <CardDescription className="text-xs">{t('txt.通过SMTP发送告警邮件')}</CardDescription>
                       </div>
                     </div>
                     <Switch
@@ -1282,7 +1284,7 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-foreground mb-1 block">用户名</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">{t('txt.用户名')}</label>
                       <Input
                         placeholder="your@email.com"
                         value={channelConfig.email?.username ?? ''}
@@ -1292,10 +1294,10 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-foreground mb-1 block">密码 / 授权码</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">{t('txt.密码授权码')}</label>
                       <Input
                         type="password"
-                        placeholder="邮箱密码或授权码"
+                        placeholder={t("ph.邮箱密码或授权码")}
                         value={channelConfig.email?.password ?? ''}
                         onChange={(e) => updateSubConfig('email', { password: e.target.value })}
                         disabled={!channelConfig.email?.enabled}
@@ -1303,7 +1305,7 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-foreground mb-1 block">发件人名称</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">{t('txt.发件人名称')}</label>
                       <Input
                         placeholder="DataInsight"
                         value={channelConfig.email?.senderName ?? ''}
@@ -1313,7 +1315,7 @@ export function DataAlerting({
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-foreground mb-1 block">发件人邮箱</label>
+                      <label className="text-xs font-medium text-foreground mb-1 block">{t('txt.发件人邮箱')}</label>
                       <Input
                         placeholder="sender@example.com"
                         value={channelConfig.email?.senderEmail ?? ''}
@@ -1324,7 +1326,7 @@ export function DataAlerting({
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-foreground mb-1 block">收件人邮箱 <span className="text-red-500">*</span></label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">{t('txt.收件人邮箱')}<span className="text-red-500">*</span></label>
                     <Input
                       placeholder="receiver1@example.com, receiver2@example.com（多个用逗号分隔）"
                       value={channelConfig.email?.recipients ?? ''}
@@ -1332,7 +1334,7 @@ export function DataAlerting({
                       disabled={!channelConfig.email?.enabled}
                       className="text-sm h-9"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">支持多个收件人，用英文逗号分隔</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t('txt.支持多个收件人用英文逗号分隔')}</p>
                   </div>
                   <div className="flex justify-end pt-2 border-t">
                     <Button
@@ -1360,7 +1362,7 @@ export function DataAlerting({
                   <div className="flex items-start gap-2">
                     <Info className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                     <div className="text-xs text-amber-700 space-y-0.5">
-                      <p className="font-medium text-amber-800">常用邮箱 SMTP 配置参考</p>
+                      <p className="font-medium text-amber-800">{t('txt.常用邮箱SMTP配置参考')}</p>
                       <p>QQ邮箱：smtp.qq.com:587（SSL: smtp.qq.com:465）</p>
                       <p>163邮箱：smtp.163.com:465 | 阿里邮箱：smtp.aliyun.com:465</p>
                       <p>Gmail：smtp.gmail.com:587 | 企业邮箱：请咨询邮箱服务商</p>
@@ -1381,8 +1383,8 @@ export function DataAlerting({
                         <MessageSquare className="w-4 h-4 text-green-600" />
                       </div>
                       <div>
-                        <CardTitle className="text-sm">飞书 Webhook 通知</CardTitle>
-                        <CardDescription className="text-xs">通过飞书群机器人发送告警卡片</CardDescription>
+                        <CardTitle className="text-sm">{t('txt.飞书Webhook通知')}</CardTitle>
+                        <CardDescription className="text-xs">{t('txt.通过飞书群机器人发送告警卡片')}</CardDescription>
                       </div>
                     </div>
                     <Switch
@@ -1405,10 +1407,10 @@ export function DataAlerting({
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-foreground mb-1 block">签名密钥（可选）</label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">{t('txt.签名密钥可选')}</label>
                     <Input
                       type="password"
-                      placeholder="开启签名校验后填写密钥，否则留空"
+                      placeholder={t("ph.开启签名校验后填写密钥否则留空")}
                       value={channelConfig.feishu?.secret ?? ''}
                       onChange={(e) => updateSubConfig('feishu', { secret: e.target.value })}
                       disabled={!channelConfig.feishu?.enabled}
@@ -1440,11 +1442,11 @@ export function DataAlerting({
                   <div className="flex items-start gap-2">
                     <Info className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
                     <div className="text-xs text-green-700 space-y-1">
-                      <p className="font-medium text-green-800">如何获取飞书 Webhook？</p>
+                      <p className="font-medium text-green-800">{t('txt.如何获取飞书Webhook')}</p>
                       <p>1. 打开飞书群 → 右上角「群设置」→「群机器人」→「添加机器人」</p>
                       <p>2. 选择「自定义机器人」→ 填写机器人名称</p>
                       <p>3. 复制 Webhook 地址（格式：.../hook/xxx-xxx-xxx）</p>
-                      <p className="mt-1 text-green-900">如开启签名校验，保存密钥并在配置中填写</p>
+                      <p className="mt-1 text-green-900">{t('txt.如开启签名校验保存密钥并在配置中填写')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -1462,7 +1464,7 @@ export function DataAlerting({
                       </div>
                       <div>
                         <CardTitle className="text-sm">Webhook 通知</CardTitle>
-                        <CardDescription className="text-xs">向任意 HTTP 端点发送告警请求</CardDescription>
+                        <CardDescription className="text-xs">{t('txt.向任意HTTP端点发送告警请求')}</CardDescription>
                       </div>
                     </div>
                     <Switch
@@ -1495,7 +1497,7 @@ export function DataAlerting({
                     )}
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-foreground mb-1 block">请求方法</label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">{t('txt.请求方法')}</label>
                     <Select
                       value={channelConfig.webhook?.method ?? 'POST'}
                       onValueChange={(v) => updateSubConfig('webhook', { method: v as 'POST' | 'GET' })}
@@ -1511,7 +1513,7 @@ export function DataAlerting({
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-foreground mb-1 block">自定义请求头</label>
+                    <label className="text-xs font-medium text-foreground mb-1 block">{t('txt.自定义请求头')}</label>
                     <Textarea
                       placeholder='{"Authorization":"Bearer xxx","Content-Type":"application/json"}'
                       value={channelConfig.webhook?.headers ?? ''}
@@ -1561,16 +1563,16 @@ export function DataAlerting({
               <div className="space-y-4">
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">告警抑制（去重）</CardTitle>
-                    <CardDescription className="text-xs">同类告警在设定时间内不重复发送，避免告警风暴</CardDescription>
+                    <CardTitle className="text-sm">{t('txt.告警抑制去重')}</CardTitle>
+                    <CardDescription className="text-xs">{t('txt.同类告警在设定时间内不重复发送避免告警风暴')}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm">启用告警抑制</p>
+                      <p className="text-sm">{t('txt.启用告警抑制')}</p>
                       <Switch defaultChecked />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-foreground">冷却时间</label>
+                      <label className="text-xs font-medium text-foreground">{t('txt.冷却时间')}</label>
                       <Select defaultValue="30">
                         <SelectTrigger className="h-9">
                           <SelectValue />
@@ -1580,7 +1582,7 @@ export function DataAlerting({
                           <SelectItem value="15">15 分钟（标准场景）</SelectItem>
                           <SelectItem value="30">30 分钟（推荐）</SelectItem>
                           <SelectItem value="60">1 小时（低频监控）</SelectItem>
-                          <SelectItem value="0">不限制</SelectItem>
+                          <SelectItem value="0">{t('txt.不限制')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1589,13 +1591,13 @@ export function DataAlerting({
 
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">静默时段</CardTitle>
-                    <CardDescription className="text-xs">设置不发送告警的时间段（如夜间维护窗口）</CardDescription>
+                    <CardTitle className="text-sm">{t('txt.静默时段')}</CardTitle>
+                    <CardDescription className="text-xs">{t('txt.设置不发送告警的时间段如夜间维护窗口')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium">启用静默时段</p>
+                        <p className="text-sm font-medium">{t('txt.启用静默时段')}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">00:00 ~ 06:00 期间不发送告警</p>
                       </div>
                       <Switch />
@@ -1612,15 +1614,15 @@ export function DataAlerting({
                           <Bell className="w-4 h-4 text-indigo-600" />
                         </div>
                         <div>
-                          <CardTitle className="text-sm">应用内通知</CardTitle>
-                          <CardDescription className="text-xs">在界面内实时显示告警弹窗（默认开启）</CardDescription>
+                          <CardTitle className="text-sm">{t('txt.应用内通知')}</CardTitle>
+                          <CardDescription className="text-xs">{t('txt.在界面内实时显示告警弹窗默认开启')}</CardDescription>
                         </div>
                       </div>
                       <Switch checked disabled />
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-muted-foreground">应用内通知无需额外配置，告警实时显示。此功能始终启用。</p>
+                    <p className="text-xs text-muted-foreground">{t('txt.应用内通知无需额外配置告警实时显示此功能始终启用')}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -1635,8 +1637,8 @@ export function DataAlerting({
           <div className="bg-white rounded-md shadow-xl w-[600px] max-h-[80vh] overflow-hidden flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <div>
-                <h3 className="font-medium">从模板创建告警</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">选择预置模板快速创建告警规则</p>
+                <h3 className="font-medium">{t('txt.从模板创建告警')}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('txt.选择预置模板快速创建告警规则')}</p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setShowTemplates(false)}>
                 关闭
