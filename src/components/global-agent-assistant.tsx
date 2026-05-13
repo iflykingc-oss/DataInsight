@@ -96,16 +96,16 @@ const SCENE_LABELS: Record<string, string> = {
 // 欢迎消息
 // ========================================
 
-function getWelcomeMessage(hasData: boolean): { content: string; suggestions: string[] } {
+function getWelcomeMessage(hasData: boolean, t: (key: string) => string): { content: string; suggestions: string[] } {
   if (hasData) {
     return {
-      content: '**你好！我是 DataInsight 智能助手。**\n\n我已经检测到您已上传数据，可以帮您：\n\n- 分析数据特征和洞察\n- 生成可视化图表和仪表盘\n- 清洗和转换数据\n- 创建数据报表\n- 执行SQL查询\n\n请告诉我您想做什么？',
-      suggestions: ['分析数据洞察', '生成仪表盘', '数据清洗', '创建报表'],
+      content: t('assistant.welcomeWithData'),
+      suggestions: [t('assistant.suggestInsight'), t('assistant.suggestDashboard'), t('assistant.suggestClean'), t('assistant.suggestReport')],
     };
   }
   return {
-    content: '**你好！我是 DataInsight 智能助手。**\n\n我可以帮您：\n\n- AI智能建表（场景模板+对话生成）\n- 上传并分析数据文件\n- 执行SQL查询\n- 生成数据报表\n- 创建表单收集数据\n\n请先上传数据或选择「AI建表」开始！',
-    suggestions: ['AI建表', '上传数据文件', 'SQL查询', '表单收集'],
+    content: t('assistant.welcomeNoData'),
+    suggestions: [t('assistant.suggestBuild'), t('assistant.suggestUpload'), t('assistant.suggestSQL'), t('assistant.suggestForm')],
   };
 }
 
@@ -127,7 +127,7 @@ export function GlobalAgentAssistant({
   // -- 会话状态 --
   const { t } = useI18n();
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const welcome = getWelcomeMessage(hasData);
+    const welcome = getWelcomeMessage(hasData, t);
     return [{
       id: generateId('msg'),
       role: 'assistant',

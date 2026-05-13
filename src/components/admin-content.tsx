@@ -362,7 +362,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
   };
 
   const handleDeleteAnnouncement = async (id: number) => {
-    if (!confirm('确定删除此公告？')) return;
+    if (!confirm(t('admin.confirmDeleteAnnouncement'))) return;
     try {
       await request(`/api/admin/announcements/${id}`, { method: 'DELETE' });
       showMessage(t('admin.announcementDeleted'));
@@ -455,7 +455,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
   };
 
   const handleDeleteUser = async (id: number) => {
-    if (!confirm('确定要删除该用户吗？')) return;
+    if (!confirm(t('admin.confirmDeleteUser'))) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/users?id=${id}`, {

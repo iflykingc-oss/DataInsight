@@ -303,6 +303,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'admin.permissions': '权限',
     'admin.active': '活跃',
     'admin.disabled': '禁用',
+    'admin.confirmDeleteUser': '确定要删除用户 {name} 吗？此操作不可恢复。',
+    'admin.confirmDeleteLog': '确定要删除这条登录记录吗？',
 
     // === 用户菜单 ===
     'user.aiModelSettings': 'AI模型设置',
@@ -1646,6 +1648,18 @@ const translations: Record<Locale, Record<string, string>> = {
     'settings.notConfiguredShort': '未配置',
     'settings.configuredShort': '已配置',
 
+    // === AI助手 ===
+    'assistant.welcomeWithData': '**Hello! I am your DataInsight AI Assistant.**\n\nI have detected that you have uploaded data. I can help you:\n\n- Analyze data features and insights\n- Generate visual charts and dashboards\n- Clean and transform data\n- Create data reports\n- Execute SQL queries\n\nWhat would you like to do?',
+    'assistant.welcomeNoData': '**Hello! I am your DataInsight AI Assistant.**\n\nI can help you:\n\n- AI Smart Table Builder (scenario templates + conversation)\n- Upload and analyze data files\n- Execute SQL queries\n- Generate data reports\n- Create forms to collect data\n\nPlease upload data or select "AI Table Builder" to get started!',
+    'assistant.suggestInsight': 'Analyze Data Insights',
+    'assistant.suggestDashboard': 'Generate Dashboard',
+    'assistant.suggestClean': 'Data Cleaning',
+    'assistant.suggestReport': 'Create Report',
+    'assistant.suggestBuild': 'AI Table Builder',
+    'assistant.suggestUpload': 'Upload Data File',
+    'assistant.suggestSQL': 'SQL Query',
+    'assistant.suggestForm': 'Form Collection',
+
     // === 错误边界 ===
     'errorBoundary.moduleError': '{name}加载异常',
     'errorBoundary.componentError': '组件加载异常',
@@ -1774,6 +1788,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'admin.userUpdated': 'User updated',
     'admin.username': 'Username',
     'admin.users': 'User Management',
+    'admin.confirmDeleteUser': 'Are you sure you want to delete user {name}? This action cannot be undone.',
+    'admin.confirmDeleteLog': 'Are you sure you want to delete this login record?',
 
     // === AI Field / Formula ===
     'ai.apply': 'Apply',
@@ -3304,6 +3320,18 @@ const translations: Record<Locale, Record<string, string>> = {
     'announcement.gotIt': 'Got it',
     'announcement.next': 'Next',
 
+    // === AI Assistant ===
+    'assistant.welcomeWithData': '**Hello! I am your DataInsight AI Assistant.**\n\nI have detected that you have uploaded data. I can help you:\n\n- Analyze data features and insights\n- Generate visual charts and dashboards\n- Clean and transform data\n- Create data reports\n- Execute SQL queries\n\nWhat would you like to do?',
+    'assistant.welcomeNoData': '**Hello! I am your DataInsight AI Assistant.**\n\nI can help you:\n\n- AI Smart Table Builder (scenario templates + conversation)\n- Upload and analyze data files\n- Execute SQL queries\n- Generate data reports\n- Create forms to collect data\n\nPlease upload data or select "AI Table Builder" to get started!',
+    'assistant.suggestInsight': 'Analyze Data Insights',
+    'assistant.suggestDashboard': 'Generate Dashboard',
+    'assistant.suggestClean': 'Data Cleaning',
+    'assistant.suggestReport': 'Create Report',
+    'assistant.suggestBuild': 'AI Table Builder',
+    'assistant.suggestUpload': 'Upload Data File',
+    'assistant.suggestSQL': 'SQL Query',
+    'assistant.suggestForm': 'Form Collection',
+
   },
 };
 
@@ -3323,7 +3351,7 @@ const I18nContext = createContext<I18nContextValue>({
 });
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('zh-CN');
+  const [locale, setLocaleState] = useState<Locale>('en-US');
 
   // 客户端挂载后从 localStorage 读取
   useEffect(() => {
@@ -3349,7 +3377,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
-    let text = translations[locale]?.[key] || translations['zh-CN']?.[key] || key;
+    let text = translations[locale]?.[key] || translations['en-US']?.[key] || key;
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
         text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));

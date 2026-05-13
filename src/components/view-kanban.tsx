@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
@@ -20,35 +20,29 @@ export function KanbanView({ data }: KanbanViewProps) {
   const [cardTitleField, setCardTitleField] = useState<string>(headers[0] || '');
 
   // 自动选择最佳分组字段（非ID的文本/分类字段）
-  const candidateFields = useMemo(() => {
-    return headers.filter(h => {
-      const vals = rows.map(r => String(r[h] ?? '')).filter(v => v && v !== 'null' && v !== 'undefined');
-      const unique = new Set(vals);
-      // 排除ID字段（唯一值太多）和全空字段（唯一值太少）
-      return unique.size > 1 && unique.size <= Math.min(rows.length * 0.3, 20);
-    });
-  }, [headers, rows]);
+  const candidateFields = headers.filter(h => {
+    const vals = rows.map(r => String(r[h] ?? '')).filter(v => v && v !== 'null' && v !== 'undefined');
+    const unique = new Set(vals);
+    // 排除ID字段（唯一值太多）和全空字段（唯一值太少）
+    return unique.size > 1 && unique.size <= Math.min(rows.length * 0.3, 20);
+  });
 
   // 分组数据
-  const grouped = useMemo(() => {
-    const groups: Record<string, Record<string, CellValue>[]> = {};
-    rows.forEach(row => {
-      const key = String(row[groupField] ?? t('kanban.uncategorized'));
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(row);
-    });
-    // 按组内数量排序
-    return Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
-  }, [rows, groupField]);
+  const groups: Record<string, Record<string, CellValue>[]> = {};
+  rows.forEach(row => {
+    const key = String(row[groupField] ?? t('kanban.uncategorized'));
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(row);
+  });
+  // 按组内数量排序
+  const grouped = Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
 
   // 为卡片选择展示字段（优先数值字段作为指标）
-  const metricField = useMemo(() => {
-    return headers.find(h => {
-      if (h === groupField || h === cardTitleField) return false;
-      const vals = rows.map(r => Number(r[h])).filter(n => !isNaN(n));
-      return vals.length > rows.length * 0.5;
-    }) || headers.find(h => h !== groupField && h !== cardTitleField) || '';
-  }, [headers, rows, groupField, cardTitleField]);
+  const metricField = headers.find(h => {
+    if (h === groupField || h === cardTitleField) return false;
+    const vals = rows.map(r => Number(r[h])).filter(n => !isNaN(n));
+    return vals.length > rows.length * 0.5;
+  }) || headers.find(h => h !== groupField && h !== cardTitleField) || '';
 
   return (
     <div className="space-y-4">

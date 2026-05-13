@@ -8,34 +8,33 @@ import { I18nProvider } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: {
-    default: 'DataInsight Pro | 智能数据分析平台',
+    default: 'DataInsight Pro | AI-Powered Data Analysis Platform',
     template: '%s | DataInsight Pro',
   },
   description:
-    'DataInsight Pro - 企业级智能数据分析平台，支持AI驱动分析、NL2Dashboard、多数据源集成，一键生成仪表盘和报表。',
+    'DataInsight Pro - Enterprise-grade AI data analysis platform. AI-driven analytics, NL2Dashboard, multi-source data integration, one-click dashboards and reports.',
   keywords: [
-    '数据分析',
-    '智能分析',
-    'AI分析',
-    '数据可视化',
-    '仪表盘',
-    '报表生成',
+    'data analysis',
+    'AI analytics',
+    'business intelligence',
+    'data visualization',
+    'dashboard',
+    'report generation',
     'Excel',
     'CSV',
-    '数据清洗',
-    '指标体系',
+    'data cleaning',
+    'metrics',
+    'NL2SQL',
+    'NL2Dashboard',
   ],
   authors: [{ name: 'DataInsight Team' }],
   generator: 'DataInsight Pro',
-  // icons: {
-  //   icon: '',
-  // },
   openGraph: {
-    title: 'DataInsight Pro | 智能数据分析平台',
+    title: 'DataInsight Pro | AI-Powered Data Analysis Platform',
     description:
-      '企业级智能数据分析平台，支持AI驱动分析、NL2Dashboard、多数据源集成，一键生成仪表盘和报表。',
+      'Enterprise-grade AI data analysis platform with AI-driven analytics, NL2Dashboard, multi-source data integration, and one-click dashboards.',
     siteName: 'DataInsight Pro',
-    locale: 'zh_CN',
+    locale: 'en_US',
     type: 'website',
   },
   // twitter: {
