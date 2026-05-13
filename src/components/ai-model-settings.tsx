@@ -386,7 +386,7 @@ export function AIModelSettings({ onModelChange, className }: AIModelSettingsPro
                   添加模型
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
+              <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>
                     {isAddingNew ? '添加 AI 模型' : '编辑 AI 模型'}

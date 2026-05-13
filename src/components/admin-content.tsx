@@ -732,7 +732,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   </TableRow>
                 ) : loginLogs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap truncate">
                       {new Date(log.created_at).toLocaleString('zh-CN')}
                     </TableCell>
                     <TableCell className="text-sm font-mono">{typeof log.username === 'string' ? log.username : (log.username && typeof log.username === 'object' ? JSON.stringify(log.username) : String(log.username ?? ''))}</TableCell>
@@ -1442,7 +1442,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   </TableRow>
                 ) : activityLogs.map((log: Record<string, unknown>) => (
                   <TableRow key={log.id as number}>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap truncate">
                       {log.created_at ? new Date(log.created_at as string).toLocaleString('zh-CN', {
                         month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
                       }) : '-'}

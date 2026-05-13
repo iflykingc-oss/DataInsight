@@ -407,7 +407,7 @@ export function MetricManager({ data, detectedScenario = 'general' }: MetricMana
       </div>
 
       {/* 统计概览 */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold">{applicablePresets.length}</div>

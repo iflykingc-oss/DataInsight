@@ -550,7 +550,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                           {data.headers.map(h => (
                             <th
                               key={h}
-                              className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap cursor-pointer hover:bg-muted"
+                              className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap truncate cursor-pointer hover:bg-muted"
                               onClick={() => {
                                 if (detailSortField === h) {
                                   setDetailSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
@@ -695,7 +695,7 @@ export function Dashboard({ data, analysis }: DashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-4">
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                       {timeBlocks.map((block, idx) => (
                         <div key={idx} className="bg-primary/5 rounded-md p-3">
                           <div className="text-3xl font-bold text-primary">

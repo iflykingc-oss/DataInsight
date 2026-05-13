@@ -281,7 +281,7 @@ export function WorkflowAutomation({ headers, tableName = '当前表' }: Workflo
 
       {/* 统计卡片 */}
       {rules.length > 0 && (
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">{t('txt.总规则数')}</p>
             <p className="text-2xl font-bold">{rules.length}</p>
@@ -979,7 +979,7 @@ const [triggerType, setTriggerType] = useState<TriggerType>(rule?.trigger.type |
 
                           {action.type === 'http_request' && (
                             <div className="space-y-2">
-                              <div className="grid grid-cols-4 gap-2">
+                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                                 <div className="col-span-1">
                                   <Label className="text-xs mb-1 block">{t('txt.方法')}</Label>
                                   <Select

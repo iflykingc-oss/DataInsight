@@ -693,7 +693,7 @@ export function DataQualityChecker({
                   <CardTitle className="text-sm">{t('txt.检测摘要')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 text-center">
                     <div className="p-2 bg-green-50 rounded-md">
                       <p className="text-2xl font-bold text-green-600">{report.summary.passedFields}</p>
                       <p className="text-xs text-muted-foreground">{t('txt.通过')}</p>

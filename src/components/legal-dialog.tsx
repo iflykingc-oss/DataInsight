@@ -19,7 +19,7 @@ export function LegalDocumentDialog({ open, onOpenChange, type }: LegalDocumentD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isPrivacy ? '隐私政策' : '服务条款'}</DialogTitle>
         </DialogHeader>

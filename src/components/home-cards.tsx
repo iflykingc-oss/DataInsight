@@ -35,10 +35,10 @@ const quickEntries = [
 const scenarios = [
   { key: 'retail', labelKey: 'industry.retail', icon: '🛒' },
   { key: 'finance', labelKey: 'industry.finance', icon: '💰' },
-  { key: 'project', labelKey: 'industry.hrm', icon: '📋' },
+  { key: 'project', labelKey: 'industry.project', icon: '📋' },
   { key: 'hr', labelKey: 'industry.hrm', icon: '👥' },
   { key: 'education', labelKey: 'industry.education', icon: '📚' },
-  { key: 'marketing', labelKey: 'industry.tech', icon: '📢' },
+  { key: 'marketing', labelKey: 'industry.marketing', icon: '📢' },
   { key: 'logistics', labelKey: 'industry.logistics', icon: '🚚' },
   { key: 'manufacturing', labelKey: 'industry.manufacturing', icon: '🏭' },
 ] as const;

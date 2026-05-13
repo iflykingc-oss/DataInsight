@@ -570,7 +570,7 @@ export function SqlLab({ data, className }: SqlLabProps) {
               </Card>
 
               {/* 快捷操作 */}
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                 {[
                   { label: '查看全部', sql: 'SELECT * FROM data LIMIT 100;' },
                   { label: '统计行数', sql: 'SELECT COUNT(*) FROM data;' },

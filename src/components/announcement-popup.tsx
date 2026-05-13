@@ -164,7 +164,7 @@ export function AnnouncementPopup({ isLoggedIn }: AnnouncementPopupProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleSkipAll(); }}>
-      <DialogContent className="sm:max-w-lg border-l-4 border-l-0">
+      <DialogContent className="sm:max-w-md">
         <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${TYPE_BORDER[currentAnnouncement.type] ?? 'border-l-blue-500'}`} 
              style={{ borderLeftWidth: '4px', borderLeftStyle: 'solid', borderLeftColor: 'var(--tw-border-opacity, 1)' }} />
         <DialogHeader className="pl-4">

@@ -503,7 +503,7 @@ export function MetricSemanticLayer({ data, fieldStats, modelConfig }: MetricSem
             </CardHeader>
             <CardContent>
               {/* 统计概览 */}
-              <div className="grid grid-cols-4 gap-3 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                 {Object.entries(groupedMetrics).map(([cat, metrics]) => {
                   const config = METRIC_CATEGORIES[cat as keyof typeof METRIC_CATEGORIES];
                   return (

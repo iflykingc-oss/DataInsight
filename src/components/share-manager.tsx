@@ -251,7 +251,7 @@ export function ShareManager({ dashboardName = '数据仪表盘' }: ShareManager
                         {shareConfig.password ? '修改密码' : '设置密码'}
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-lg">
+                    <DialogContent className="sm:max-w-lg">
                       <DialogHeader>
                         <DialogTitle>{t('txt.设置访问密码')}</DialogTitle>
                       </DialogHeader>

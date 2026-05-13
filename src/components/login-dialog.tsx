@@ -327,7 +327,7 @@ export function LoginDialog() {
 
   return (
     <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
-      <DialogContent showCloseButton={false} className="sm:max-w-[420px]">
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
         <DialogHeader className="flex flex-row items-start justify-between">
           <div className="space-y-1.5">
             <DialogTitle className="flex items-center gap-2 text-lg">

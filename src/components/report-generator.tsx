@@ -83,7 +83,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
       icon: BarChart3,
       content: (
         <div className="space-y-4">
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <div className="p-3 bg-blue-50 rounded-md text-center">
               <p className="text-2xl font-bold text-blue-700">{analysis.summary.totalRows.toLocaleString()}</p>
               <p className="text-xs text-blue-500">{t('txt.总行数')}</p>
@@ -102,7 +102,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
             </div>
           </div>
           {deep && (
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               <div className="p-3 bg-purple-50 rounded-md text-center">
                 <p className="text-2xl font-bold text-purple-700">{deep.dataProfile.dataType}</p>
                 <p className="text-xs text-purple-500">{t('txt.数据类型')}</p>
@@ -147,7 +147,7 @@ export function ReportGenerator({ data, analysis }: ReportGeneratorProps) {
                 <p className="text-sm text-muted-foreground mt-1">{t('txt.综合评分')}</p>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {[
                 { label: '完整性', value: deep.healthScore.completeness, color: '#1890ff' },
                 { label: '一致性', value: deep.healthScore.consistency, color: '#52c41a' },

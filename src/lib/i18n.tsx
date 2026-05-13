@@ -565,6 +565,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'industry.manufacturing': '制造',
     'industry.logistics': '物流',
     'industry.hrm': '人力资源',
+    'industry.project': '项目管理',
+    'industry.marketing': '市场营销',
     'industry.tech': '科技',
 
     // === 多模态 ===
@@ -4803,6 +4805,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'industry.manufacturing': 'Manufacturing',
     'industry.retail': 'Retail',
     'industry.tech': 'Technology',
+    'industry.project': 'Project Management',
+    'industry.marketing': 'Marketing',
     'industry.title': 'Industry Scenarios',
 
     // === Auth / Login ===

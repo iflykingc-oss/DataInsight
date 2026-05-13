@@ -720,7 +720,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                   <Filter className="w-4 h-4 text-blue-500" />
                   快速筛选
                 </h4>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                   <Select value={quickFilterField} onValueChange={setQuickFilterField}>
                     <SelectTrigger>
                       <SelectValue placeholder={t("ph.选择字段")} />
@@ -768,7 +768,7 @@ export function DataCleaner({ data, fieldStats, onDataChange }: DataCleanerProps
                   <Hash className="w-4 h-4 text-green-500" />
                   填补空值
                 </h4>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                   <Select value={nullFillField} onValueChange={setNullFillField}>
                     <SelectTrigger>
                       <SelectValue placeholder={t("ph.选择字段")} />

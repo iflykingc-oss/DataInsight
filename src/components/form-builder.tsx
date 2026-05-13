@@ -502,7 +502,7 @@ export function FormBuilder({
                   {submissions.map((sub, idx) => (
                     <tr key={sub.id} className="border-b hover:bg-muted/30">
                       <td className="px-3 py-2 text-muted-foreground">{idx + 1}</td>
-                      <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
+                      <td className="px-3 py-2 text-muted-foreground whitespace-nowrap truncate">
                         {new Date(sub.submittedAt).toLocaleString()}
                       </td>
                       {formConfig.fields.filter((f) => f.visible).map((f) => (
