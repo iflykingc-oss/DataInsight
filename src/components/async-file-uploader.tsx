@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, X, FileSpreadsheet, AlertCircle, CheckCircle, FileText, Shield, Sparkles, Trash2, Eye, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
@@ -221,7 +221,7 @@ export function FileUploader({
 
   const generateId = () => `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-  const checkCache = useCallback((file: File): ParsedData | null => {
+  const checkCache = (file: File): ParsedData | null => {
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (extension !== 'csv' && extension !== 'xlsx' && extension !== 'xls') {
       return null;
@@ -239,9 +239,9 @@ export function FileUploader({
     } catch {
       return null;
     }
-  }, []);
+  };
 
-  const preCheckFile = useCallback(async (uploadFile: UploadFile): Promise<FileValidationResult> => {
+  const preCheckFile = async (uploadFile: UploadFile): Promise<FileValidationResult> => {
     const issues: ValidationIssue[] = [];
     const warnings: string[] = [];
 
@@ -332,13 +332,13 @@ export function FileUploader({
         warnings: []
       };
     }
-  }, [maxSize]);
+  };
 
-  const updateFileStatus = useCallback((id: string, updates: Partial<UploadFile>) => {
+  const updateFileStatus = (id: string, updates: Partial<UploadFile>) => {
     setFiles(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f));
-  }, []);
+  };
 
-  const handlePreCheck = useCallback(async (uploadFile: UploadFile) => {
+  const handlePreCheck = async (uploadFile: UploadFile) => {
     updateFileStatus(uploadFile.id, { status: 'checking', progress: 0 });
 
     for (let i = 0; i <= 100; i += 20) {
@@ -354,9 +354,9 @@ export function FileUploader({
     });
 
     return result;
-  }, [preCheckFile, updateFileStatus]);
+  };
 
-  const parseFileAsync = useCallback((file: File, fileId: string): Promise<ParsedData> => {
+  const parseFileAsync = (file: File, fileId: string): Promise<ParsedData> => {
     return new Promise((resolve) => {
       pendingParseRef.current.set(fileId, resolve);
       workerRef.current?.postMessage({
@@ -366,13 +366,13 @@ export function FileUploader({
         options: { enableProgress: true }
       });
     });
-  }, []);
+  };
 
-  const cancelParse = useCallback((fileId: string) => {
+  const cancelParse = (fileId: string) => {
     workerRef.current?.postMessage({ type: 'cancel', id: fileId });
-  }, []);
+  };
 
-  const processFiles = useCallback(async (newFiles: File[]) => {
+  const processFiles = async (newFiles: File[]) => {
     console.log('[Uploader] processFiles called, count:', newFiles.length, newFiles.map(f => f.name));
     const uploadFiles: UploadFile[] = newFiles.map(file => ({
       file,
@@ -419,9 +419,9 @@ export function FileUploader({
       await parseFileAsync(uploadFile.file, uploadFile.id);
     }
     // 不需要额外在for结束后调用onFileUpload，Worker回调中已经处理了
-  }, [multiple, enablePreCheck, handlePreCheck, updateFileStatus, checkCache, parseFileAsync]);
+  };
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
+  const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === 'dragenter' || e.type === 'dragover') {
@@ -429,24 +429,24 @@ export function FileUploader({
     } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
-  }, []);
+  };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
 
     const droppedFiles = Array.from(e.dataTransfer.files);
     processFiles(droppedFiles);
-  }, [processFiles]);
+  };
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const selectedFiles = Array.from(e.target.files);
     processFiles(selectedFiles);
-  }, [processFiles]);
+  };
 
-  const removeFile = useCallback((id: string) => {
+  const removeFile = (id: string) => {
     const file = filesRef.current.find(f => f.id === id);
     if (file && file.status === 'parsing') {
       cancelParse(id);
@@ -454,7 +454,7 @@ export function FileUploader({
     reportedFileIdsRef.current.delete(id);
     setFiles(prev => prev.filter(f => f.id !== id));
     // removeFile 不需要调用 onFileUpload，父组件只关心新增的完成文件
-  }, [cancelParse]);
+  };
 
   const openPreCheckDetails = (file: UploadFile) => {
     setSelectedFileForCheck(file);

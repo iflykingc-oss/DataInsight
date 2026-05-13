@@ -90,8 +90,8 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-6 py-8">
+    <div className="w-full">
+      <div className="max-w-5xl mx-auto px-2 py-6">
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-xl font-semibold text-foreground">{t('pricing.title')}</h2>

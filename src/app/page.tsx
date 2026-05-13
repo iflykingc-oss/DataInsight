@@ -547,6 +547,16 @@ export default function HomePage() {
       );
     }
 
+    // Pricing page
+    if (viewMode === 'pricing') {
+      return <PricingPage />;
+    }
+
+    // Data compliance page
+    if (viewMode === 'data-compliance') {
+      return <DataCompliancePage onBack={() => setViewMode('home')} />;
+    }
+
     // 首页（工作台）- 规范: 页面外层左右24px上下20px, 模块间24px分割
     if (viewMode === 'home') {
       const hasData = !!parsedData;
@@ -1271,23 +1281,8 @@ export default function HomePage() {
   // 渲染
   // ============================================
 
-  // ============================================
-  // 定价方案（独立功能，不依赖数据）
-  // ============================================
-  if (viewMode === 'pricing') {
-    return (
-      <PricingPage />
-    );
-  }
-
-  // ============================================
-  // 数据合规中心（独立功能，不依赖数据）
-  // ============================================
-  if (viewMode === 'data-compliance') {
-    return (
-      <DataCompliancePage />
-    );
-  }
+  // Pricing and data-compliance are rendered within the main layout
+  // to preserve sidebar + header navigation
 
   // 管理后台：独立布局，替换整个页面
   if (viewMode === 'admin' && user?.role === 'admin') {
