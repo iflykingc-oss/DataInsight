@@ -164,6 +164,7 @@ export default function HomePage() {
     stats: t('admin.usageStats'),
     plans: t('admin.plans'),
     announcements: t('admin.announcements'),
+    feedback: t('admin.feedback'),
   };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [tableView, setTableView] = useState<'table' | 'kanban' | 'calendar' | 'gantt'>('table');

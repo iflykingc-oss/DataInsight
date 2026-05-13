@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
+import { FeedbackAdminPanel } from '@/components/feedback-admin-panel';
 import { useAuth } from '@/lib/use-auth';
 import { useI18n } from '@/lib/i18n';
 import { request } from '@/lib/request';
@@ -1031,6 +1032,10 @@ function AdminContent({ activeTab }: AdminContentProps) {
             </DialogContent>
           </Dialog>
         </>
+      )}
+
+      {activeTab === 'feedback' && (
+        <FeedbackAdminPanel />
       )}
 
       {activeTab === 'stats' && (

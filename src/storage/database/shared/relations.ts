@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { users, loginLogs, usageStats, adminAiConfig } from "./schema";
+import { users, loginLogs, usageStats, adminAiConfig, feedback } from "./schema";
 
 export const usersRelations = relations(users, ({one, many}) => ({
 	user: one(users, {
@@ -32,6 +32,17 @@ export const usageStatsRelations = relations(usageStats, ({one}) => ({
 export const adminAiConfigRelations = relations(adminAiConfig, ({one}) => ({
 	user: one(users, {
 		fields: [adminAiConfig.updatedBy],
+		references: [users.id]
+	}),
+}));
+
+export const feedbackRelations = relations(feedback, ({one}) => ({
+	user: one(users, {
+		fields: [feedback.userId],
+		references: [users.id]
+	}),
+	replier: one(users, {
+		fields: [feedback.repliedBy],
 		references: [users.id]
 	}),
 }));

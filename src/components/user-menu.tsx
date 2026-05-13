@@ -21,8 +21,9 @@ import { useI18n } from '@/lib/i18n';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/lib/use-auth';
-import { LogIn, LogOut, Settings, Users, Shield, Trash2, AlertTriangle, Loader2, Download } from 'lucide-react';
+import { LogIn, LogOut, Settings, Users, Shield, Trash2, AlertTriangle, Loader2, Download, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+import { FeedbackDialog } from '@/components/feedback-dialog';
 
 interface UserMenuProps {
   onOpenSettings?: () => void;
@@ -35,6 +36,7 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const handleExportData = async () => {
     try {
@@ -56,15 +58,27 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
   };
   if (!isLoggedIn) {
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setLoginDialogOpen(true)}
-        className="gap-1.5"
-      >
-        <LogIn className="w-4 h-4" />
-        <span className="hidden sm:inline">{t('login.login')}</span>
-      </Button>
+      <>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setFeedbackOpen(true)}
+          className="gap-1.5"
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span className="hidden sm:inline">{t('feedback.title')}</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setLoginDialogOpen(true)}
+          className="gap-1.5"
+        >
+          <LogIn className="w-4 h-4" />
+          <span className="hidden sm:inline">{t('login.login')}</span>
+        </Button>
+        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      </>
     );
   }
 
@@ -148,9 +162,14 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
 
           <DropdownMenuSeparator />
 
+          <DropdownMenuItem onClick={() => setFeedbackOpen(true)} className="cursor-pointer">
+            <MessageSquare className="w-4 h-4 mr-2" />
+            {t('feedback.title')}
+          </DropdownMenuItem>
+
           <DropdownMenuItem onClick={handleExportData} className="cursor-pointer">
             <Download className="w-4 h-4 mr-2" />
-            导出我的数据
+            {t('common.export')}
           </DropdownMenuItem>
 
           {!isAdmin && (
@@ -169,6 +188,8 @@ export function UserMenu({ onOpenSettings }: UserMenuProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
 
       {/* 注销账号确认弹窗 */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

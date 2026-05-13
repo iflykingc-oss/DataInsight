@@ -195,6 +195,41 @@ export const userSubscriptions = pgTable("user_subscriptions", {
 			}).onDelete("cascade"),
 ]);
 
+// Feedback - User feedback and support tickets
+// - GDPR compliant: user can view/delete own feedback
+// - Anonymous feedback supported (userId nullable)
+// - XSS protected: content sanitized before storage
+// - 90-day auto-cleanup for resolved tickets
+export const feedback = pgTable("feedback", {
+	id: serial().primaryKey().notNull(),
+	userId: integer("user_id"), // nullable for anonymous feedback
+	type: varchar({ length: 50 }).notNull(), // bug, feature, question, complaint, other
+	title: varchar({ length: 255 }).notNull(),
+	content: text().notNull(),
+	contact: varchar({ length: 255 }), // optional email/phone for follow-up
+	status: varchar({ length: 50 }).default('open'), // open, in_progress, resolved, closed
+	priority: varchar({ length: 50 }).default('normal'), // low, normal, high, urgent
+	adminReply: text("admin_reply"),
+	repliedBy: integer("replied_by"),
+	repliedAt: timestamp("replied_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+	foreignKey({
+				columns: [table.userId],
+				foreignColumns: [users.id],
+				name: "fk_feedback_user_id"
+			}).onDelete("set null"),
+	foreignKey({
+				columns: [table.repliedBy],
+				foreignColumns: [users.id],
+				name: "fk_feedback_replied_by"
+			}).onDelete("set null"),
+	check("chk_feedback_type", sql`(type)::text = ANY ((ARRAY['bug'::character varying, 'feature'::character varying, 'question'::character varying, 'complaint'::character varying, 'other'::character varying])::text[])`),
+	check("chk_feedback_status", sql`(status)::text = ANY ((ARRAY['open'::character varying, 'in_progress'::character varying, 'resolved'::character varying, 'closed'::character varying])::text[])`),
+	check("chk_feedback_priority", sql`(priority)::text = ANY ((ARRAY['low'::character varying, 'normal'::character varying, 'high'::character varying, 'urgent'::character varying])::text[])`),
+]);
+
 // Audit Logs - Immutable audit trail for security compliance
 // - No UPDATE/DELETE allowed (append-only)
 // - Covers: data access, export, delete, permission changes, admin actions
