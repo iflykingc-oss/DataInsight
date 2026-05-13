@@ -1,7 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/lib/use-auth';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Check, X, Zap, Sparkles, ArrowRight, Clock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PricingPlan {
   id: number;
@@ -14,181 +19,425 @@ interface PricingPlan {
   price_yearly: number;
   currency: string;
   features: Record<string, unknown>;
+  highlight_features: string[];
   is_popular: boolean;
   sort_order: number;
+  promotion_type: string | null;
+  promotion_label: string | null;
+  promotion_label_en: string | null;
+  promotion_price_monthly: number | null;
+  promotion_price_yearly: number | null;
+  promotion_start_at: string | null;
+  promotion_end_at: string | null;
+  _promotion_active: boolean;
 }
 
-export default function PricingPage() {
+interface PricingPageProps {
+  onBack?: () => void;
+}
+
+export default function PricingPage({ onBack }: PricingPageProps) {
   const { t, locale } = useI18n();
+  const { isLoggedIn } = useAuth();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+  const [loading, setLoading] = useState(true);
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('yearly');
   const [currentPlan, setCurrentPlan] = useState('free');
 
-  const fetchPlans = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/pricing');
-      const data = await res.json();
-      if (data.success) setPlans(data.plans);
-
-      // Check current plan
-      const token = localStorage.getItem('datainsight_token');
-      if (token) {
-        const usageRes = await fetch('/api/ai-usage', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const usageData = await usageRes.json();
-        if (usageData.success && usageData.quota) {
-          setCurrentPlan(usageData.quota.plan);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch pricing:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
+    const fetchPlans = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/pricing');
+        const data = await res.json();
+        if (data.success) setPlans(data.plans);
+
+        const token = typeof window !== 'undefined' ? localStorage.getItem('datainsight_token') : null;
+        if (token) {
+          const usageRes = await fetch('/api/ai-usage', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const usageData = await usageRes.json();
+          if (usageData.success && usageData.quota) {
+            setCurrentPlan(usageData.quota.plan);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch pricing:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchPlans();
-  }, [fetchPlans]);
+  }, []);
 
   const getName = (plan: PricingPlan) => locale === 'en-US' ? (plan.name_en || plan.name) : plan.name;
   const getDesc = (plan: PricingPlan) => locale === 'en-US' ? (plan.description_en || plan.description) : plan.description;
+  const getPromoLabel = (plan: PricingPlan) => locale === 'en-US' ? (plan.promotion_label_en || plan.promotion_label) : plan.promotion_label;
 
-  const formatPrice = (cents: number, currency: string) => {
+  const formatPrice = (cents: number | null, currency: string) => {
+    if (cents === null || cents === undefined) return '';
     if (cents === 0) return t('pricing.free');
     const amount = cents / 100;
     if (currency === 'CNY') return `¥${amount}`;
     return `$${amount}`;
   };
 
-  const featureLabels: Record<string, string> = {
-    maxProjects: t('pricing.maxProjects'),
-    maxFileSize: t('pricing.maxFileSize'),
-    aiCallLimit: t('pricing.aiCallLimit'),
-    chartTypes: t('pricing.chartTypes'),
-    exportFormats: t('pricing.exportFormats'),
-    support: t('pricing.support'),
-    customMetrics: t('pricing.customMetrics'),
-    dataStory: t('pricing.dataStory'),
-    nl2dashboard: t('pricing.nl2dashboard'),
-    apiAccess: t('pricing.apiAccess'),
-    sso: t('pricing.sso'),
+  const getPrice = (plan: PricingPlan) => {
+    if (plan._promotion_active && plan.promotion_type) {
+      if (billing === 'monthly') {
+        return plan.promotion_price_monthly ?? plan.price_monthly;
+      }
+      return plan.promotion_price_yearly ?? plan.price_yearly;
+    }
+    return billing === 'monthly' ? plan.price_monthly : plan.price_yearly;
   };
 
-  const renderFeatureValue = (key: string, value: unknown) => {
+  const getOriginalPrice = (plan: PricingPlan) => {
+    if (plan._promotion_active && plan.promotion_type && plan.promotion_price_monthly !== null) {
+      return billing === 'monthly' ? plan.price_monthly : plan.price_yearly;
+    }
+    return null;
+  };
+
+  // Feature rendering helpers
+  const featureIcon = (value: unknown) => {
+    if (value === true) return <Check className="w-3.5 h-3.5 text-primary shrink-0" />;
+    if (value === false) return <X className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />;
+    return <Check className="w-3.5 h-3.5 text-primary shrink-0" />;
+  };
+
+  const renderFeatureValue = (key: string, value: unknown): string => {
     if (typeof value === 'number') {
-      if (value === -1) return '∞';
-      if (key === 'maxFileSize') return `${value}MB`;
+      if (value >= 999999999) return '∞';
+      if (value >= 999) return '∞';
+      if (key === 'maxRows') {
+        if (value >= 1000000) return `${(value / 1000000).toFixed(0)}M`;
+        if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+        return String(value);
+      }
       if (key === 'aiCallLimit') return `${value}${t('pricing.times')}`;
+      if (key === 'maxTables' && value >= 999) return '∞';
       return String(value);
     }
-    if (typeof value === 'boolean') return value ? '✓' : '✗';
+    if (typeof value === 'boolean') return '';
+    if (typeof value === 'string') {
+      if (value === 'all') return t('pricing.allTypes');
+      if (value === 'basic') return t('pricing.basicTypes');
+    }
     return String(value);
   };
 
+  const featureLabelMap: Record<string, string> = {
+    maxRows: t('pricing.maxRows'),
+    maxTables: t('pricing.maxTables'),
+    aiCallLimit: t('pricing.aiCallLimit'),
+    chartTypes: t('pricing.chartTypes'),
+    exportFormats: t('pricing.exportFormats'),
+    sqlLab: t('pricing.sqlLab'),
+    nl2dashboard: t('pricing.nl2dashboard'),
+    aiField: t('pricing.aiField'),
+    aiFormula: t('pricing.aiFormula'),
+    customMetrics: t('pricing.customMetrics'),
+    industryTemplates: t('pricing.industryTemplates'),
+    dataCleaning: t('pricing.dataCleaning'),
+    dataStory: t('pricing.dataStory'),
+  };
+
+  const highlightFeatureMap: Record<string, string> = {
+    unlimited_tables: t('pricing.hlUnlimitedTables'),
+    sql_lab: t('pricing.hlSqlLab'),
+    ai_field: t('pricing.hlAiField'),
+    ai_formula: t('pricing.hlAiFormula'),
+    echarts_10: t('pricing.hlEcharts10'),
+    unlimited_ai: t('pricing.hlUnlimitedAi'),
+    nl2dashboard: t('pricing.hlNl2dashboard'),
+    data_story: t('pricing.hlDataStory'),
+    industry_all: t('pricing.hlIndustryAll'),
+    metric_semantic: t('pricing.hlMetricSemantic'),
+    deep_analysis: t('pricing.hlDeepAnalysis'),
+    priority_support: t('pricing.hlPrioritySupport'),
+  };
+
+  const planIconMap: Record<string, React.ReactNode> = {
+    free: <Zap className="w-5 h-5" />,
+    pro: <Sparkles className="w-5 h-5" />,
+    business: <Sparkles className="w-5 h-5" />,
+  };
+
+  const handleUpgrade = (planKey: string) => {
+    if (!isLoggedIn) {
+      // Trigger login dialog
+      window.dispatchEvent(new CustomEvent('show-login'));
+      return;
+    }
+    if (planKey === 'free') return;
+    // TODO: Integrate Creem checkout
+    window.dispatchEvent(new CustomEvent('show-upgrade', { detail: { planKey, billing } }));
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center h-64 text-muted-foreground">
+        {t('common.loading')}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
-      <div className="max-w-5xl mx-auto px-2 py-6">
+      <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h2 className="text-xl font-semibold text-foreground">{t('pricing.title')}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{t('pricing.subtitle')}</p>
+          {onBack && (
+            <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1">
+              ← {t('common.back')}
+            </button>
+          )}
+          <h2 className="text-2xl font-bold text-foreground">{t('pricing.title')}</h2>
+          <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">{t('pricing.subtitle')}</p>
+
+          {/* Competitor comparison badge */}
+          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+            <Zap className="w-3.5 h-3.5" />
+            {t('pricing.competitorBadge')}
+          </div>
         </div>
 
         {/* Billing Toggle */}
-        <div className="flex items-center justify-center gap-3 py-4 border-b border-border">
+        <div className="flex items-center justify-center gap-3 mb-8">
           <button
             onClick={() => setBilling('monthly')}
-            className={`px-4 py-1.5 text-xs rounded-md transition-colors ${billing === 'monthly' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+            className={cn(
+              'px-5 py-2 text-sm rounded-lg transition-all',
+              billing === 'monthly'
+                ? 'bg-foreground text-background font-medium shadow-sm'
+                : 'bg-muted text-muted-foreground hover:text-foreground'
+            )}
           >{t('pricing.monthly')}</button>
           <button
             onClick={() => setBilling('yearly')}
-            className={`px-4 py-1.5 text-xs rounded-md transition-colors ${billing === 'yearly' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-          >{t('pricing.yearly')}</button>
-          {billing === 'yearly' && <span className="text-xs text-success">{t('pricing.saveYearly')}</span>}
+            className={cn(
+              'px-5 py-2 text-sm rounded-lg transition-all relative',
+              billing === 'yearly'
+                ? 'bg-foreground text-background font-medium shadow-sm'
+                : 'bg-muted text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {t('pricing.yearly')}
+            <span className="ml-1.5 text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded-sm font-medium">
+              {t('pricing.saveYearly')}
+            </span>
+          </button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">{t('common.loading')}</div>
-        ) : (
-          <div className="p-6">
-            <div className="grid grid-cols-3 gap-4">
-              {plans.map(plan => {
-                const isCurrent = plan.plan_key === currentPlan;
-                const price = billing === 'monthly' ? plan.price_monthly : plan.price_yearly;
-                const features = plan.features as Record<string, unknown> || {};
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {plans.map(plan => {
+            const isCurrent = plan.plan_key === currentPlan;
+            const price = getPrice(plan);
+            const originalPrice = getOriginalPrice(plan);
+            const isPromoActive = plan._promotion_active && plan.promotion_type;
+            const features = plan.features as Record<string, unknown> || {};
+            const highlights = plan.highlight_features as string[] || [];
 
-                return (
-                  <div
-                    key={plan.plan_key}
-                    className={`relative bg-card border rounded-md p-5 flex flex-col ${
-                      plan.is_popular ? 'border-primary shadow-float' : 'border-border'
-                    } ${isCurrent ? 'ring-2 ring-primary/30' : ''}`}
-                  >
-                    {plan.is_popular && (
-                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-primary text-primary-foreground text-[10px] font-medium rounded-md">
-                        {t('pricing.popular')}
-                      </div>
-                    )}
-                    {isCurrent && (
-                      <div className="absolute -top-2.5 right-3 px-2 py-0.5 bg-muted text-muted-foreground text-[10px] rounded-md">
-                        {t('pricing.currentPlan')}
-                      </div>
-                    )}
-
-                    <h3 className="text-base font-semibold text-foreground">{getName(plan)}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{getDesc(plan)}</p>
-
-                    <div className="mt-4 mb-4">
-                      <span className="text-2xl font-bold text-foreground">{formatPrice(price, plan.currency)}</span>
-                      {price > 0 && <span className="text-xs text-muted-foreground">/{billing === 'monthly' ? t('pricing.month') : t('pricing.year')}</span>}
-                    </div>
-
-                    <div className="flex-1 space-y-2">
-                      {Object.entries(features).map(([key, value]) => (
-                        <div key={key} className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">{featureLabels[key] || key}</span>
-                          <span className={`font-medium ${value === false ? 'text-muted-foreground/50' : 'text-foreground'}`}>
-                            {renderFeatureValue(key, value)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button
-                      className={`mt-4 w-full py-2 text-sm rounded-md transition-colors ${
-                        isCurrent
-                          ? 'bg-muted text-muted-foreground cursor-default'
-                          : plan.is_popular
-                            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                            : 'bg-muted text-foreground hover:bg-muted/80'
-                      }`}
-                      disabled={isCurrent}
-                    >
-                      {isCurrent ? t('pricing.currentPlan') : t('pricing.upgrade')}
-                    </button>
+            return (
+              <div
+                key={plan.plan_key}
+                className={cn(
+                  'relative bg-card border rounded-xl p-6 flex flex-col transition-all',
+                  plan.is_popular
+                    ? 'border-primary shadow-lg ring-1 ring-primary/20 scale-[1.02]'
+                    : 'border-border',
+                  isCurrent && 'ring-2 ring-primary/40'
+                )}
+              >
+                {/* Popular badge */}
+                {plan.is_popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
+                    {t('pricing.popular')}
                   </div>
-                );
-              })}
-            </div>
+                )}
 
-            {/* FAQ */}
-            <div className="mt-8 border-t border-border pt-6">
-              <h3 className="text-sm font-medium text-foreground mb-4">{t('pricing.faq')}</h3>
-              <div className="space-y-3">
-                {([1, 2, 3] as const).map(i => (
-                  <div key={i} className="bg-muted/30 rounded-md p-3">
-                    <div className="text-xs font-medium text-foreground">{t(`pricing.faqQ${i}`)}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{t(`pricing.faqA${i}`)}</div>
+                {/* Current plan badge */}
+                {isCurrent && (
+                  <div className="absolute -top-3 right-4 px-2.5 py-1 bg-muted text-muted-foreground text-xs rounded-full">
+                    {t('pricing.currentPlan')}
                   </div>
-                ))}
+                )}
+
+                {/* Promotion badge */}
+                {isPromoActive && (
+                  <div className="absolute -top-3 left-4 px-2.5 py-1 bg-destructive text-destructive-foreground text-xs font-semibold rounded-full flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {getPromoLabel(plan)}
+                  </div>
+                )}
+
+                {/* Plan header */}
+                <div className="flex items-center gap-2.5 mb-3 mt-1">
+                  <div className={cn(
+                    'w-9 h-9 rounded-lg flex items-center justify-center',
+                    plan.is_popular ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                  )}>
+                    {planIconMap[plan.plan_key] || <Zap className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">{getName(plan)}</h3>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">{getDesc(plan)}</p>
+
+                {/* Price */}
+                <div className="mb-5">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-foreground">{formatPrice(price, plan.currency)}</span>
+                    {price > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        /{billing === 'monthly' ? t('pricing.month') : t('pricing.year')}
+                      </span>
+                    )}
+                  </div>
+                  {originalPrice && originalPrice > 0 && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-sm text-muted-foreground line-through">
+                        {formatPrice(originalPrice, plan.currency)}
+                      </span>
+                      {billing === 'yearly' && (
+                        <span className="text-xs text-primary font-medium">
+                          {t('pricing.saveYearly')}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {billing === 'yearly' && price > 0 && !originalPrice && (
+                    <span className="text-xs text-primary font-medium mt-0.5 block">
+                      {t('pricing.yearlyNote', { amount: formatPrice(Math.round(price / 12), plan.currency) })}
+                    </span>
+                  )}
+                </div>
+
+                {/* Highlight features */}
+                {highlights.length > 0 && (
+                  <div className="mb-4 space-y-1.5">
+                    {highlights.map(hl => (
+                      <div key={hl} className="flex items-center gap-2 text-xs">
+                        <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <span className="text-foreground font-medium">{highlightFeatureMap[hl] || hl}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Feature list */}
+                <div className="flex-1 space-y-2 border-t border-border/50 pt-4">
+                  {Object.entries(features).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2 text-xs">
+                      {featureIcon(value)}
+                      <span className="text-muted-foreground flex-1">{featureLabelMap[key] || key}</span>
+                      <span className={cn(
+                        'font-medium text-right',
+                        value === false ? 'text-muted-foreground/40' : 'text-foreground'
+                      )}>
+                        {renderFeatureValue(key, value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA Button */}
+                <Button
+                  className={cn(
+                    'mt-5 w-full',
+                    isCurrent
+                      ? 'bg-muted text-muted-foreground'
+                      : plan.is_popular
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        : 'bg-foreground text-background hover:bg-foreground/90'
+                  )}
+                  disabled={isCurrent}
+                  onClick={() => handleUpgrade(plan.plan_key)}
+                >
+                  {isCurrent ? t('pricing.currentPlan') : t('pricing.upgrade')}
+                  {!isCurrent && <ArrowRight className="w-4 h-4 ml-1" />}
+                </Button>
               </div>
-            </div>
+            );
+          })}
+        </div>
+
+        {/* Feature Comparison Table */}
+        <div className="mt-12">
+          <h3 className="text-base font-semibold text-foreground mb-4">{t('pricing.featureComparison')}</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-3 text-muted-foreground font-medium">{t('pricing.feature')}</th>
+                  {plans.map(plan => (
+                    <th key={plan.plan_key} className="text-center py-3 px-3 font-medium text-foreground">
+                      {getName(plan)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Object.keys(plans[0]?.features || {}).map(featureKey => (
+                  <tr key={featureKey} className="border-b border-border/50">
+                    <td className="py-2.5 px-3 text-muted-foreground">{featureLabelMap[featureKey] || featureKey}</td>
+                    {plans.map(plan => {
+                      const value = (plan.features as Record<string, unknown>)?.[featureKey];
+                      return (
+                        <td key={plan.plan_key} className="text-center py-2.5 px-3">
+                          {typeof value === 'boolean' ? (
+                            value ? <Check className="w-4 h-4 text-primary mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/40 mx-auto" />
+                          ) : (
+                            <span className="font-medium text-foreground">{renderFeatureValue(featureKey, value)}</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
+
+        {/* FAQ */}
+        <div className="mt-12 border-t border-border pt-8">
+          <h3 className="text-base font-semibold text-foreground mb-4">{t('pricing.faq')}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {([1, 2, 3, 4, 5, 6] as const).map(i => (
+              <div key={i} className="bg-muted/30 rounded-lg p-4">
+                <div className="text-xs font-medium text-foreground">{t(`pricing.faqQ${i}`)}</div>
+                <div className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{t(`pricing.faqA${i}`)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Trust badges */}
+        <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground/60">
+          <div className="flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+            {t('pricing.securePayment')}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+            </svg>
+            {t('pricing.cancelAnytime')}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+            </svg>
+            {t('pricing.noCreditCard')}
+          </div>
+        </div>
       </div>
     </div>
   );

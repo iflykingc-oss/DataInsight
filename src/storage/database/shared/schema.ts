@@ -155,18 +155,27 @@ export const aiUsageLogs = pgTable("ai_usage_logs", {
 // Pricing Plans - Admin configurable pricing tiers
 export const pricingPlans = pgTable("pricing_plans", {
 	id: serial().primaryKey().notNull(),
-	planKey: varchar("plan_key", { length: 50 }).notNull(), // free, pro, enterprise
+	planKey: varchar("plan_key", { length: 50 }).notNull(), // free, pro, business
 	name: varchar({ length: 100 }).notNull(),
 	nameEn: varchar("name_en", { length: 100 }),
 	description: text(),
 	descriptionEn: text("description_en"),
 	priceMonthly: integer("price_monthly").default(0), // in cents
 	priceYearly: integer("price_yearly").default(0), // in cents
-	currency: varchar({ length: 10 }).default('CNY'),
-	features: jsonb().default({}), // { maxProjects: 3, maxFileSize: 5, aiCallLimit: 100, ... }
+	currency: varchar({ length: 10 }).default('USD'),
+	features: jsonb().default({}), // { maxRows: 5000, maxTables: 3, aiCallLimit: 20, chartTypes: 'basic', ... }
+	highlightFeatures: jsonb("highlight_features").default([]), // ['unlimited_ai', 'sql_lab', 'nl2dashboard']
 	isPopular: boolean("is_popular").default(false),
 	sortOrder: integer("sort_order").default(0),
 	status: varchar({ length: 20 }).default('active'),
+	// Promotional fields
+	promotionType: varchar("promotion_type", { length: 30 }), // limited_free, discount, trial, null
+	promotionLabel: varchar("promotion_label", { length: 100 }), // e.g. "Limited Time Free", "50% OFF"
+	promotionLabelEn: varchar("promotion_label_en", { length: 100 }),
+	promotionPriceMonthly: integer("promotion_price_monthly"), // promotional price in cents
+	promotionPriceYearly: integer("promotion_price_yearly"),
+	promotionStartAt: timestamp("promotion_start_at", { withTimezone: true, mode: 'string' }),
+	promotionEndAt: timestamp("promotion_end_at", { withTimezone: true, mode: 'string' }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
@@ -179,9 +188,12 @@ export const userSubscriptions = pgTable("user_subscriptions", {
 	userId: integer("user_id").notNull(),
 	planKey: varchar("plan_key", { length: 50 }).default('free'),
 	aiCallsUsed: integer("ai_calls_used").default(0),
-	aiCallsLimit: integer("ai_calls_limit").default(100),
+	aiCallsLimit: integer("ai_calls_limit").default(20),
 	storageUsedMb: integer("storage_used_mb").default(0),
 	storageLimitMb: integer("storage_limit_mb").default(5),
+	billingCycle: varchar("billing_cycle", { length: 20 }).default('monthly'), // monthly, yearly
+	paymentProvider: varchar("payment_provider", { length: 50 }), // creem, stripe, manual
+	paymentReferenceId: varchar("payment_reference_id", { length: 255 }), // checkout session id, etc
 	periodStart: timestamp("period_start", { withTimezone: true, mode: 'string' }),
 	periodEnd: timestamp("period_end", { withTimezone: true, mode: 'string' }),
 	status: varchar({ length: 20 }).default('active'),

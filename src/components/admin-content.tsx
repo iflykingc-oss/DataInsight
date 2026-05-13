@@ -168,22 +168,19 @@ function AdminContent({ activeTab }: AdminContentProps) {
   const [logsTotal, setLogsTotal] = useState(0);
   const [logsFilter, setLogsFilter] = useState({ username: '', status: '', startDate: '', endDate: '' });
 
-  // Plans management state
-  const [plans, setPlans] = useState<Array<{
-    id: string; name: string; price: number; period: string;
-    features: string[]; active: boolean; users: number;
-    aiCallsLimit?: number; scheduledAt?: string;
-  }>>([
-    { id: 'free', name: 'Free', price: 0, period: 'Forever', features: ['Basic Data Table', '5 Dashboards', 'Basic Charts'], active: true, users: 128, aiCallsLimit: 50 },
-    { id: 'pro', name: 'Pro', price: 29, period: 'Month', features: ['All AI Features', 'Unlimited Dashboards', 'Advanced Charts', 'Data Export', 'Team Collaboration'], active: true, users: 56, aiCallsLimit: 500 },
-    { id: 'team', name: 'Team', price: 99, period: 'Month', features: ['All Pro Features', 'Member Management', 'Permission Control', 'API Access', 'Priority Support'], active: true, users: 12, aiCallsLimit: 2000 },
-    { id: 'enterprise', name: 'Enterprise', price: 299, period: 'Month', features: ['All Team Features', 'Private Deployment', 'Custom Development', 'SLA Guarantee', 'Dedicated Support'], active: false, users: 0, aiCallsLimit: -1 },
-  ]);
+  // Plans management state (loaded from API)
+  const [plans, setPlans] = useState<any[]>([]);
+  const [plansLoading, setPlansLoading] = useState(false);
   const [planFormOpen, setPlanFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [planForm, setPlanForm] = useState({
-    name: '', price: 0, period: '月', features: '' as string, active: true,
-    aiCallsLimit: 50, scheduledAt: '',
+    name: '', nameEn: '', description: '', descriptionEn: '',
+    priceMonthly: 0, priceYearly: 0, currency: 'USD',
+    features: '' as string, highlightFeatures: '' as string,
+    isPopular: false, sortOrder: 0, status: 'active',
+    promotionType: '', promotionLabel: '', promotionLabelEn: '',
+    promotionPriceMonthly: 0, promotionPriceYearly: 0,
+    promotionStartAt: '', promotionEndAt: '',
   });
 
   // Announcements management state
@@ -280,8 +277,26 @@ function AdminContent({ activeTab }: AdminContentProps) {
       fetchAIConfig();
       fetchAnnouncements();
       fetchActivityLogs();
+      fetchPlans();
     }
   }, [user?.role]);
+
+  // ===== Plans Query =====
+  const fetchPlans = async () => {
+    setPlansLoading(true);
+    try {
+      const token = localStorage.getItem('datainsight_token');
+      const res = await fetch('/api/pricing', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) setPlans(data.plans || []);
+    } catch (err) {
+      console.error('Failed to fetch plans:', err);
+    } finally {
+      setPlansLoading(false);
+    }
+  };
 
   // ===== Activity Logs Query =====
   const fetchActivityLogs = async (page = 1) => {
@@ -1095,215 +1110,336 @@ function AdminContent({ activeTab }: AdminContentProps) {
             <div>
               <h3 className="text-base font-medium flex items-center gap-1.5">
                 <CreditCard className="w-4 h-4 text-primary" />
-                订阅套餐管理
+                {t('admin.planManagement')}
               </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">配置用户订阅套餐、价格与功能权限</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('admin.planManagementDesc')}</p>
             </div>
             <Button size="sm" onClick={() => {
               setEditingPlan(null);
-              setPlanForm({ name: '', price: 0, period: '月', features: '', active: true, aiCallsLimit: 50, scheduledAt: '' });
+              setPlanForm({
+                name: '', nameEn: '', description: '', descriptionEn: '',
+                priceMonthly: 0, priceYearly: 0, currency: 'USD',
+                features: '', highlightFeatures: '',
+                isPopular: false, sortOrder: plans.length + 1, status: 'active',
+                promotionType: '', promotionLabel: '', promotionLabelEn: '',
+                promotionPriceMonthly: 0, promotionPriceYearly: 0,
+                promotionStartAt: '', promotionEndAt: '',
+              });
               setPlanFormOpen(true);
             }}>
               <Plus className="w-3.5 h-3.5 mr-1" />
-              新增套餐
+              {t('admin.addPlan')}
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {plans.map((plan) => (
-              <div key={plan.id} className={`relative rounded-md border p-5 transition-all hover:shadow-md ${
-                plan.active ? 'border-primary/20 bg-card' : 'border-border/60 bg-muted/30 opacity-70'
-              }`}>
-                {plan.id === 'pro' && (
-                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">
-                      <Star className="w-3 h-3 mr-0.5" />
-                      推荐
-                    </Badge>
-                  </div>
-                )}
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
-                    plan.active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+
+          {plansLoading ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">{t('common.loading')}</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {plans.map((plan: any) => {
+                const features = plan.features || {};
+                const promoActive = plan._promotion_active;
+                return (
+                  <div key={plan.plan_key} className={`relative rounded-md border p-5 transition-all hover:shadow-md ${
+                    plan.status === 'active' ? 'border-primary/20 bg-card' : 'border-border/60 bg-muted/30 opacity-70'
                   }`}>
-                    {plan.id === 'free' ? <Zap className="w-4 h-4" /> : plan.id === 'enterprise' ? <Crown className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium truncate">{plan.name}</h4>
-                    <p className="text-xs text-muted-foreground">{plan.users} 位用户</p>
-                  </div>
-                </div>
-                <div className="mb-3">
-                  <span className="text-2xl font-semibold">¥{plan.price}</span>
-                  <span className="text-xs text-muted-foreground ml-1">/ {plan.period}</span>
-                </div>
-                <div className="space-y-1.5 mb-4">
-                  {plan.features.map((f: string, i: number) => (
-                    <div key={i} className="flex items-start gap-1.5 text-xs">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">{f}</span>
+                    {plan.is_popular && (
+                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">
+                          <Star className="w-3 h-3 mr-0.5" />
+                          {t('pricing.popular')}
+                        </Badge>
+                      </div>
+                    )}
+                    {promoActive && (
+                      <div className="absolute -top-2.5 right-3 px-2 py-0.5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {plan.promotion_label}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                        plan.status === 'active' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {plan.plan_key === 'free' ? <Zap className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium truncate">{plan.name} / {plan.name_en}</h4>
+                        <p className="text-xs text-muted-foreground truncate">{plan.description}</p>
+                      </div>
                     </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-xs h-8"
-                    onClick={() => {
-                      setEditingPlan(plan);
-                      setPlanForm({
-                        name: plan.name,
-                        price: plan.price,
-                        period: plan.period,
-                        features: plan.features.join('\n'),
-                        active: plan.active,
-                        aiCallsLimit: plan.aiCallsLimit || 50,
-                        scheduledAt: plan.scheduledAt || '',
-                      });
-                      setPlanFormOpen(true);
-                    }}
-                  >
-                    <Settings2 className="w-3 h-3 mr-1" />
-                    配置
-                  </Button>
-                  <Button
-                    variant={plan.active ? 'outline' : 'default'}
-                    size="sm"
-                    className="text-xs h-8"
-                    onClick={() => {
-                      setPlans(plans.map((p) => p.id === plan.id ? { ...p, active: !p.active } : p));
-                      showMessage(`${plan.name} 已${plan.active ? '下架' : '上架'}`);
-                    }}
-                  >
-                    {plan.active ? '下架' : '上架'}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                    <div className="mb-3">
+                      <span className="text-2xl font-semibold">
+                        {plan.price_monthly === 0 ? t('pricing.free') : `$${(plan.price_monthly/100).toFixed(0)}`}
+                      </span>
+                      {plan.price_monthly > 0 && (
+                        <span className="text-xs text-muted-foreground ml-1">/ {t('pricing.monthly')}</span>
+                      )}
+                      {plan.price_yearly > 0 && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ${(plan.price_yearly/100).toFixed(0)}/{t('pricing.yearly')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-1 mb-3 text-xs text-muted-foreground">
+                      <div>{t('pricing.aiCallLimit')}: {features.aiCallLimit === 9999 ? '∞' : features.aiCallLimit}</div>
+                      <div>{t('pricing.maxRows')}: {features.maxRows >= 999999999 ? '∞' : features.maxRows?.toLocaleString()}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 text-xs h-8"
+                        onClick={() => {
+                          setEditingPlan(plan);
+                          setPlanForm({
+                            name: plan.name || '', nameEn: plan.name_en || '',
+                            description: plan.description || '', descriptionEn: plan.description_en || '',
+                            priceMonthly: plan.price_monthly || 0, priceYearly: plan.price_yearly || 0,
+                            currency: plan.currency || 'USD',
+                            features: JSON.stringify(plan.features, null, 2),
+                            highlightFeatures: (plan.highlight_features || []).join(', '),
+                            isPopular: plan.is_popular || false, sortOrder: plan.sort_order || 0,
+                            status: plan.status || 'active',
+                            promotionType: plan.promotion_type || '',
+                            promotionLabel: plan.promotion_label || '',
+                            promotionLabelEn: plan.promotion_label_en || '',
+                            promotionPriceMonthly: plan.promotion_price_monthly || 0,
+                            promotionPriceYearly: plan.promotion_price_yearly || 0,
+                            promotionStartAt: plan.promotion_start_at ? plan.promotion_start_at.slice(0, 16) : '',
+                            promotionEndAt: plan.promotion_end_at ? plan.promotion_end_at.slice(0, 16) : '',
+                          });
+                          setPlanFormOpen(true);
+                        }}
+                      >
+                        <Settings2 className="w-3 h-3 mr-1" />
+                        {t('admin.configure')}
+                      </Button>
+                      <Button
+                        variant={plan.status === 'active' ? 'outline' : 'default'}
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={async () => {
+                          const token = localStorage.getItem('datainsight_token');
+                          await fetch('/api/pricing', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({
+                              planKey: plan.plan_key,
+                              updates: { status: plan.status === 'active' ? 'inactive' : 'active' }
+                            })
+                          });
+                          showMessage(plan.status === 'active' ? t('admin.planDeactivated') : t('admin.planActivated'));
+                          fetchPlans();
+                        }}
+                      >
+                        {plan.status === 'active' ? t('admin.deactivate') : t('admin.activate')}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* 套餐编辑弹窗 */}
           <Dialog open={planFormOpen} onOpenChange={setPlanFormOpen}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingPlan ? '编辑套餐' : '新增套餐'}</DialogTitle>
-                <DialogDescription>配置套餐的价格、功能列表与上架状态</DialogDescription>
+                <DialogTitle>{editingPlan ? t('admin.editPlan') : t('admin.addPlan')}</DialogTitle>
+                <DialogDescription>{t('admin.editPlanDesc')}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{t('admin.planName')}</Label>
-                    <Input
-                      value={planForm.name}
-                      onChange={(e) => setPlanForm(p => ({ ...p, name: e.target.value }))}
-                      placeholder="如：专业版"
-                    />
+                    <Label className="text-xs font-medium">{t('admin.planNameCn')}</Label>
+                    <Input value={planForm.name} onChange={(e) => setPlanForm(p => ({ ...p, name: e.target.value }))} placeholder={t('admin.planNameCnPlaceholder')} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">{t('admin.period')}</Label>
-                    <select
-                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                      value={planForm.period}
-                      onChange={(e) => setPlanForm(p => ({ ...p, period: e.target.value }))}
-                    >
-                      <option value="永久">永久</option>
-                      <option value="月">月</option>
-                      <option value="年">年</option>
-                    </select>
+                    <Label className="text-xs font-medium">{t('admin.planNameEn')}</Label>
+                    <Input value={planForm.nameEn} onChange={(e) => setPlanForm(p => ({ ...p, nameEn: e.target.value }))} placeholder="Pro / Business" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">价格（¥）</Label>
-                    <Input
-                      type="number"
-                      value={planForm.price}
-                      onChange={(e) => setPlanForm(p => ({ ...p, price: Number(e.target.value) }))}
-                      placeholder="0"
-                    />
+                    <Label className="text-xs font-medium">{t('admin.planDescCn')}</Label>
+                    <Input value={planForm.description} onChange={(e) => setPlanForm(p => ({ ...p, description: e.target.value }))} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">AI 调用次数限制</Label>
-                    <Input
-                      type="number"
-                      value={planForm.aiCallsLimit}
-                      onChange={(e) => setPlanForm(p => ({ ...p, aiCallsLimit: Number(e.target.value) }))}
-                      placeholder="50"
-                    />
+                    <Label className="text-xs font-medium">{t('admin.planDescEn')}</Label>
+                    <Input value={planForm.descriptionEn} onChange={(e) => setPlanForm(p => ({ ...p, descriptionEn: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{t('admin.priceMonthly')} (cents)</Label>
+                    <Input type="number" value={planForm.priceMonthly} onChange={(e) => setPlanForm(p => ({ ...p, priceMonthly: Number(e.target.value) }))} placeholder="900" />
+                    <p className="text-[10px] text-muted-foreground">{planForm.priceMonthly > 0 ? `$${(planForm.priceMonthly/100).toFixed(2)}` : '$0'}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{t('admin.priceYearly')} (cents)</Label>
+                    <Input type="number" value={planForm.priceYearly} onChange={(e) => setPlanForm(p => ({ ...p, priceYearly: Number(e.target.value) }))} placeholder="7500" />
+                    <p className="text-[10px] text-muted-foreground">{planForm.priceYearly > 0 ? `$${(planForm.priceYearly/100).toFixed(2)}` : '$0'}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{t('admin.currency')}</Label>
+                    <select className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" value={planForm.currency} onChange={(e) => setPlanForm(p => ({ ...p, currency: e.target.value }))}>
+                      <option value="USD">USD ($)</option>
+                      <option value="CNY">CNY (¥)</option>
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">功能列表（每行一项）</Label>
+                  <Label className="text-xs font-medium">{t('admin.featuresJson')}</Label>
                   <textarea
-                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    placeholder="全部 AI 功能&#10;无限仪表盘&#10;高级图表"
+                    className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    placeholder='{"maxRows":50000,"aiCallLimit":500,"sqlLab":true}'
                     value={planForm.features}
                     onChange={(e) => setPlanForm(p => ({ ...p, features: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">定时上架（可选）</Label>
-                  <Input
-                    type="datetime-local"
-                    value={planForm.scheduledAt}
-                    onChange={(e) => setPlanForm(p => ({ ...p, scheduledAt: e.target.value }))}
-                  />
-                  <p className="text-xs text-muted-foreground">设定未来时间，系统届时自动上架此套餐</p>
+                  <Label className="text-xs font-medium">{t('admin.highlightFeatures')}</Label>
+                  <Input value={planForm.highlightFeatures} onChange={(e) => setPlanForm(p => ({ ...p, highlightFeatures: e.target.value }))} placeholder="unlimited_tables,sql_lab,ai_field" />
+                  <p className="text-[10px] text-muted-foreground">{t('admin.highlightFeaturesHint')}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs font-medium">{t('admin.listingStatus')}</Label>
-                  <button
-                    type="button"
-                    onClick={() => setPlanForm(p => ({ ...p, active: !p.active }))}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                      planForm.active ? 'bg-primary' : 'bg-muted'
-                    }`}
-                  >
-                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                      planForm.active ? 'translate-x-4' : 'translate-x-1'
-                    }`} />
-                  </button>
-                  <span className="text-xs text-muted-foreground">{planForm.active ? '已上架' : '已下架'}</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-medium">{t('admin.isPopular')}</Label>
+                    <button type="button" onClick={() => setPlanForm(p => ({ ...p, isPopular: !p.isPopular }))} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${planForm.isPopular ? 'bg-primary' : 'bg-muted'}`}>
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${planForm.isPopular ? 'translate-x-4' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">{t('admin.sortOrder')}</Label>
+                    <Input type="number" value={planForm.sortOrder} onChange={(e) => setPlanForm(p => ({ ...p, sortOrder: Number(e.target.value) }))} />
+                  </div>
+                </div>
+
+                {/* Promotion section */}
+                <div className="border-t border-border/50 pt-3">
+                  <h4 className="text-xs font-medium text-foreground mb-3 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    {t('admin.promotionSettings')}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{t('admin.promotionType')}</Label>
+                      <select className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm" value={planForm.promotionType} onChange={(e) => setPlanForm(p => ({ ...p, promotionType: e.target.value }))}>
+                        <option value="">{t('admin.noPromotion')}</option>
+                        <option value="limited_free">{t('admin.limitedFree')}</option>
+                        <option value="discount">{t('admin.discount')}</option>
+                        <option value="trial">{t('admin.trial')}</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{t('admin.promotionLabelCn')}</Label>
+                      <Input value={planForm.promotionLabel} onChange={(e) => setPlanForm(p => ({ ...p, promotionLabel: e.target.value }))} placeholder={t('admin.promotionLabelPlaceholder')} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{t('admin.promotionLabelEn')}</Label>
+                      <Input value={planForm.promotionLabelEn} onChange={(e) => setPlanForm(p => ({ ...p, promotionLabelEn: e.target.value }))} placeholder="50% OFF Launch" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{t('admin.promoPriceMonthly')} (cents)</Label>
+                      <Input type="number" value={planForm.promotionPriceMonthly} onChange={(e) => setPlanForm(p => ({ ...p, promotionPriceMonthly: Number(e.target.value) }))} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mt-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{t('admin.promoPriceYearly')} (cents)</Label>
+                      <Input type="number" value={planForm.promotionPriceYearly} onChange={(e) => setPlanForm(p => ({ ...p, promotionPriceYearly: Number(e.target.value) }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{t('admin.promoStart')}</Label>
+                      <Input type="datetime-local" value={planForm.promotionStartAt} onChange={(e) => setPlanForm(p => ({ ...p, promotionStartAt: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{t('admin.promoEnd')}</Label>
+                      <Input type="datetime-local" value={planForm.promotionEndAt} onChange={(e) => setPlanForm(p => ({ ...p, promotionEndAt: e.target.value }))} />
+                    </div>
+                  </div>
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setPlanFormOpen(false)}>{t('common.cancel')}</Button>
-                <Button onClick={() => {
+                <Button onClick={async () => {
                   if (!planForm.name.trim()) {
-                    showMessage('请输入套餐名称', 'error');
+                    showMessage(t('admin.planNameRequired'), 'error');
                     return;
                   }
-                  const features = planForm.features.split('\n').filter(f => f.trim());
-                  if (editingPlan) {
-                    setPlans(plans.map(p => p.id === editingPlan.id ? {
-                      ...p,
-                      name: planForm.name,
-                      price: planForm.price,
-                      period: planForm.period,
-                      features,
-                      active: planForm.active,
-                      aiCallsLimit: planForm.aiCallsLimit,
-                      scheduledAt: planForm.scheduledAt,
-                    } : p));
-                    showMessage('套餐已更新');
-                  } else {
-                    const newPlan = {
-                      id: planForm.name.toLowerCase().replace(/\s+/g, '-'),
-                      name: planForm.name,
-                      price: planForm.price,
-                      period: planForm.period,
-                      features,
-                      active: planForm.active,
-                      users: 0,
-                      aiCallsLimit: planForm.aiCallsLimit,
-                      scheduledAt: planForm.scheduledAt,
-                    };
-                    setPlans([...plans, newPlan]);
-                    showMessage('套餐已创建');
+                  const token = localStorage.getItem('datainsight_token');
+                  try {
+                    let featuresObj = {};
+                    try { featuresObj = JSON.parse(planForm.features); } catch {}
+                    const highlightArr = planForm.highlightFeatures.split(',').map(s => s.trim()).filter(Boolean);
+                    
+                    if (editingPlan) {
+                      const res = await fetch('/api/pricing', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                          planKey: editingPlan.plan_key,
+                          updates: {
+                            name: planForm.name, name_en: planForm.nameEn,
+                            description: planForm.description, description_en: planForm.descriptionEn,
+                            price_monthly: planForm.priceMonthly, price_yearly: planForm.priceYearly,
+                            currency: planForm.currency,
+                            features: featuresObj, highlight_features: highlightArr,
+                            is_popular: planForm.isPopular, sort_order: planForm.sortOrder,
+                            promotion_type: planForm.promotionType || null,
+                            promotion_label: planForm.promotionLabel || null,
+                            promotion_label_en: planForm.promotionLabelEn || null,
+                            promotion_price_monthly: planForm.promotionPriceMonthly || null,
+                            promotion_price_yearly: planForm.promotionPriceYearly || null,
+                            promotion_start_at: planForm.promotionStartAt || null,
+                            promotion_end_at: planForm.promotionEndAt || null,
+                          }
+                        })
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        showMessage(t('admin.planUpdated'));
+                      } else {
+                        showMessage(data.error || t('admin.planUpdateFailed'), 'error');
+                      }
+                    } else {
+                      const res = await fetch('/api/pricing', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                          planKey: planForm.nameEn?.toLowerCase().replace(/\s+/g, '-') || planForm.name.toLowerCase(),
+                          name: planForm.name, nameEn: planForm.nameEn,
+                          description: planForm.description, descriptionEn: planForm.descriptionEn,
+                          priceMonthly: planForm.priceMonthly, priceYearly: planForm.priceYearly,
+                          currency: planForm.currency,
+                          features: featuresObj, highlightFeatures: highlightArr,
+                          isPopular: planForm.isPopular, sortOrder: planForm.sortOrder,
+                          promotionType: planForm.promotionType || null,
+                          promotionLabel: planForm.promotionLabel || null,
+                          promotionLabelEn: planForm.promotionLabelEn || null,
+                          promotionPriceMonthly: planForm.promotionPriceMonthly || null,
+                          promotionPriceYearly: planForm.promotionPriceYearly || null,
+                          promotionStartAt: planForm.promotionStartAt || null,
+                          promotionEndAt: planForm.promotionEndAt || null,
+                        })
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        showMessage(t('admin.planCreated'));
+                      } else {
+                        showMessage(data.error || t('admin.planCreateFailed'), 'error');
+                      }
+                    }
+                    setPlanFormOpen(false);
+                    fetchPlans();
+                  } catch (err) {
+                    showMessage(t('admin.planSaveError'), 'error');
                   }
-                  setPlanFormOpen(false);
                 }}>
-                  {editingPlan ? '保存修改' : '创建套餐'}
+                  {editingPlan ? t('admin.saveChanges') : t('admin.createPlan')}
                 </Button>
               </DialogFooter>
             </DialogContent>

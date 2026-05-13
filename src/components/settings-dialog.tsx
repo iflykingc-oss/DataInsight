@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { AIModelSettings } from '@/components/ai-model-settings';
 import { DataAlerting } from '@/components/data-alerting';
+import { UsageStatsPanel } from '@/components/usage-stats-panel';
 import { VersionHistory } from '@/components/version-history';
 import { TemplateManager } from '@/components/template-manager';
 import { RowPermissions } from '@/components/row-permissions';
@@ -174,11 +175,11 @@ export default function SettingsDialog({
                     </div>
                     <Badge variant="outline" className="text-xs">
                       <Lock className="w-3 h-3 mr-1" />
-                      由管理员配置
+                      {t('settings.managedByAdmin')}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    您当前使用的是管理员配置的AI模型。如需自定义模型，请联系管理员开启权限。
+                    {t('settings.managedByAdminDesc')}
                   </p>
                   <div className="space-y-3 bg-muted/50 rounded-md p-4">
                     <div className="flex items-center gap-3">
@@ -206,6 +207,11 @@ export default function SettingsDialog({
                 </CardContent>
               </Card>
             )}
+            {/* AI Usage Stats */}
+            <UsageStatsPanel onUpgrade={() => {
+              onOpenChange?.(false);
+              window.dispatchEvent(new CustomEvent('navigate', { detail: 'pricing' }));
+            }} />
           </div>
         );
 
@@ -283,7 +289,7 @@ export default function SettingsDialog({
                 URL.revokeObjectURL(url);
               }}>
                 <Download className="w-4 h-4 mr-2" />
-                导出配置
+                {t('settings.exportConfig')}
               </Button>
             </div>
           </div>
@@ -379,10 +385,10 @@ export default function SettingsDialog({
                 }}
               >
                 {isTestingNotif ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <TestTube className="w-3.5 h-3.5 mr-1" />}
-                测试通知
+                    {t('settings.testNotification')}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setNotifTestResult(null)}>
-                清除结果
+                {t('settings.clearResult')}
               </Button>
             </div>
             {notifTestResult && (
@@ -407,7 +413,7 @@ export default function SettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="sm:max-w-3xl max-w-[calc(100%-2rem)] max-h-[85vh] p-0 gap-0 overflow-hidden">
+      <DialogContent showCloseButton={false} className="sm:max-w-4xl max-w-[calc(100%-2rem)] max-h-[85vh] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-5 pb-0 flex flex-row items-center justify-between">
           <DialogTitle className="text-base">{t('settings.title')}</DialogTitle>
           <DialogDescription className="sr-only">{t('settings.dialogDescription')}</DialogDescription>
@@ -421,7 +427,7 @@ export default function SettingsDialog({
         </DialogHeader>
         <div className="flex min-h-[480px]">
           {/* 左侧导航列表 */}
-          <nav className="w-44 border-r border-border bg-muted/20 py-2 px-2 shrink-0">
+          <nav className="w-48 border-r border-border bg-muted/20 py-2 px-2 shrink-0">
             {SETTINGS_TAB_IDS.map((tabDef) => {
               const TabIcon = tabDef.icon;
               const tabLabel = t(SETTINGS_TAB_LABELS[tabDef.id]);
@@ -438,13 +444,13 @@ export default function SettingsDialog({
                   )}
                 >
                   {TabIcon && <TabIcon className="w-4 h-4 shrink-0" />}
-                  <span>{tabLabel}</span>
+                  <span className="truncate">{tabLabel}</span>
                 </button>
               );
             })}
           </nav>
           {/* 右侧内容区 */}
-          <div className="flex-1 px-6 py-4 overflow-y-auto">
+          <div className="flex-1 min-w-0 px-6 py-4 overflow-y-auto">
             {renderTabContent()}
           </div>
         </div>
