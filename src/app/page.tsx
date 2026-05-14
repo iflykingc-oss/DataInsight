@@ -549,7 +549,7 @@ export default function HomePage() {
 
     // Pricing page
     if (viewMode === 'pricing') {
-      return <PricingPage />;
+      return <PricingPage onBack={() => setViewMode('home')} />;
     }
 
     // Data compliance page
