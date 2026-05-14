@@ -724,6 +724,26 @@ const translations: Record<Locale, Record<string, string>> = {
     'pricing.faqQ6': '支持哪些支付方式？',
     'pricing.faqA6': '支持Visa、Mastercard等国际信用卡，以及支付宝、微信支付等本地支付方式。',
 
+    // === Upgrade / Payment ===
+    'upgrade.confirmTitle': '确认升级',
+    'upgrade.confirmDesc': '请确认以下套餐信息，点击确认后将跳转至安全支付页面',
+    'upgrade.plan': '套餐',
+    'upgrade.billing': '计费周期',
+    'upgrade.price': '价格',
+    'upgrade.confirm': '确认支付',
+    'upgrade.processing': '正在处理...',
+    'upgrade.error': '支付初始化失败，请稍后重试',
+    'upgrade.notConfigured': '支付系统尚未配置，请联系管理员',
+    'upgrade.monthly': '月付',
+    'upgrade.yearly': '年付',
+    'upgrade.cancel': '取消',
+    'upgrade.benefits': '升级后将获得',
+    'upgrade.loadPlanFailed': '加载套餐信息失败',
+    'payment.success': '支付成功',
+    'payment.successDesc': '您的订阅已激活，可以立即使用全部功能',
+    'payment.failed': '支付失败',
+    'payment.failedDesc': '支付未完成，如有问题请联系客服',
+
     // === Legal Documents ===
     'legal.lastUpdated': '最后更新',
     'legal.termsTitle': '服务条款',
@@ -5415,6 +5435,26 @@ const translations: Record<Locale, Record<string, string>> = {
     'pricing.faqA5': "It's a launch promotion — enjoy all Pro features for free during the event period.",
     'pricing.faqQ6': 'What payment methods are supported?',
     'pricing.faqA6': 'We accept Visa, Mastercard, plus Alipay and WeChat Pay.',
+
+    // === Upgrade / Payment ===
+    'upgrade.confirmTitle': 'Confirm Upgrade',
+    'upgrade.confirmDesc': 'Please review the plan details below. You will be redirected to a secure payment page.',
+    'upgrade.plan': 'Plan',
+    'upgrade.billing': 'Billing Cycle',
+    'upgrade.price': 'Price',
+    'upgrade.confirm': 'Confirm Payment',
+    'upgrade.processing': 'Processing...',
+    'upgrade.error': 'Payment initialization failed. Please try again later.',
+    'upgrade.notConfigured': 'Payment system is not configured. Please contact the administrator.',
+    'upgrade.monthly': 'Monthly',
+    'upgrade.yearly': 'Yearly',
+    'upgrade.cancel': 'Cancel',
+    'upgrade.benefits': 'You will get',
+    'upgrade.loadPlanFailed': 'Failed to load plan information',
+    'payment.success': 'Payment Successful',
+    'payment.successDesc': 'Your subscription is now active. Enjoy all features!',
+    'payment.failed': 'Payment Failed',
+    'payment.failedDesc': 'Payment was not completed. Please contact support if you need help.',
 
     // === Legal Documents ===
     'legal.lastUpdated': 'Last Updated',

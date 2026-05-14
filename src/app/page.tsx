@@ -101,6 +101,7 @@ const WorkflowAutomation = dynamic(() => import('@/components/workflow-automatio
 const AppBuilder = dynamic(() => import('@/components/app-builder').then(m => ({ default: m.AppBuilder })), { ssr: false });
 const RowComments = dynamic(() => import('@/components/row-comments').then(m => ({ default: m.RowComments })), { ssr: false });
 const SpreadsheetAgentPage = dynamic(() => import('@/components/SpreadsheetAgentPage').then(m => ({ default: m.SpreadsheetAgentPage })), { ssr: false });
+const UpgradeDialog = dynamic(() => import('@/components/upgrade-dialog').then(m => ({ default: m.UpgradeDialog })), { ssr: false });
 
 // ============================================
 // 视图模式类型（整合后：10个入口，功能零删除）
@@ -136,9 +137,12 @@ export default function HomePage() {
     }
   }, []);
 
-
-
   const [showSettings, setShowSettings] = useState(false);
+
+  // Upgrade dialog state
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [upgradePlanKey, setUpgradePlanKey] = useState('');
+  const [upgradeBilling, setUpgradeBilling] = useState<'monthly' | 'yearly'>('yearly');
 
   const { isLoggedIn, setLoginDialogOpen, hasPermission, user } = useAuth();
 
@@ -157,6 +161,35 @@ export default function HomePage() {
   const [adminTab, setAdminTab] = useState<AdminTab>('users');
   const [adminSidebarCollapsed, setAdminSidebarCollapsed] = useState(false);
   const { t } = useI18n();
+
+  // Listen for show-upgrade event from pricing page
+  useEffect(() => {
+    const handleShowUpgrade = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.planKey) {
+        setUpgradePlanKey(detail.planKey);
+        setUpgradeBilling(detail.billing || 'yearly');
+        setUpgradeDialogOpen(true);
+      }
+    };
+    window.addEventListener('show-upgrade', handleShowUpgrade);
+    return () => window.removeEventListener('show-upgrade', handleShowUpgrade);
+  }, []);
+
+  // Handle payment success callback from Creem
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      toast.success(t('payment.success'), { description: t('payment.successDesc') });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    if (params.get('payment') === 'failed') {
+      toast.error(t('payment.failed'), { description: t('payment.failedDesc') });
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [t]);
+
   const adminTabTitles: Record<AdminTab, string> = {
     users: t('admin.users'),
     logs: t('admin.loginLogs'),
@@ -1429,6 +1462,14 @@ export default function HomePage() {
       />
       {/* 登录弹窗 */}
       <LoginDialog />
+
+      {/* 升级弹窗 */}
+      <UpgradeDialog
+        open={upgradeDialogOpen}
+        onOpenChange={setUpgradeDialogOpen}
+        planKey={upgradePlanKey}
+        billingCycle={upgradeBilling}
+      />
 
       {/* 全局 AI 助手 */}
       <GlobalAgentAssistant
