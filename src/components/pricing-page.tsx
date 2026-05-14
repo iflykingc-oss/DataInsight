@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/use-auth';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Check, X, Zap, Sparkles, ArrowRight, Clock } from 'lucide-react';
+import { Check, X, Zap, Sparkles, ArrowRight, Clock, Shield, RotateCcw, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PricingPlan {
@@ -101,7 +100,6 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
     return null;
   };
 
-  // Feature rendering helpers
   const featureIcon = (value: unknown) => {
     if (value === true) return <Check className="w-3.5 h-3.5 text-primary shrink-0" />;
     if (value === false) return <X className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />;
@@ -168,12 +166,10 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
 
   const handleUpgrade = (planKey: string) => {
     if (!isLoggedIn) {
-      // Trigger login dialog
       window.dispatchEvent(new CustomEvent('show-login'));
       return;
     }
     if (planKey === 'free') return;
-    // TODO: Integrate Creem checkout
     window.dispatchEvent(new CustomEvent('show-upgrade', { detail: { planKey, billing } }));
   };
 
@@ -189,28 +185,28 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
     <div className="w-full">
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           {onBack && (
-            <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground mb-4 inline-flex items-center gap-1">
+            <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground mb-3 inline-flex items-center gap-1">
               ← {t('common.back')}
             </button>
           )}
-          <h2 className="text-2xl font-bold text-foreground">{t('pricing.title')}</h2>
+          <h2 className="text-2xl font-bold text-foreground whitespace-nowrap">{t('pricing.title')}</h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">{t('pricing.subtitle')}</p>
 
           {/* Competitor comparison badge */}
-          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium">
+          <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium whitespace-nowrap">
             <Zap className="w-3.5 h-3.5" />
             {t('pricing.competitorBadge')}
           </div>
         </div>
 
         {/* Billing Toggle */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex items-center justify-center gap-2 mb-6">
           <button
             onClick={() => setBilling('monthly')}
             className={cn(
-              'px-5 py-2 text-sm rounded-lg transition-all',
+              'px-4 py-1.5 text-sm rounded-md transition-all',
               billing === 'monthly'
                 ? 'bg-foreground text-background font-medium shadow-sm'
                 : 'bg-muted text-muted-foreground hover:text-foreground'
@@ -219,21 +215,21 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
           <button
             onClick={() => setBilling('yearly')}
             className={cn(
-              'px-5 py-2 text-sm rounded-lg transition-all relative',
+              'px-4 py-1.5 text-sm rounded-md transition-all relative',
               billing === 'yearly'
                 ? 'bg-foreground text-background font-medium shadow-sm'
                 : 'bg-muted text-muted-foreground hover:text-foreground'
             )}
           >
             {t('pricing.yearly')}
-            <span className="ml-1.5 text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded-sm font-medium">
+            <span className="ml-1 text-[10px] px-1 py-0.5 bg-primary/20 text-primary rounded-sm font-medium">
               {t('pricing.saveYearly')}
             </span>
           </button>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
           {plans.map(plan => {
             const isCurrent = plan.plan_key === currentPlan;
             const price = getPrice(plan);
@@ -248,28 +244,21 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
                 className={cn(
                   'relative bg-card border rounded-xl p-6 flex flex-col transition-all',
                   plan.is_popular
-                    ? 'border-primary shadow-lg ring-1 ring-primary/20 scale-[1.02]'
+                    ? 'border-primary shadow-md ring-1 ring-primary/20'
                     : 'border-border',
                   isCurrent && 'ring-2 ring-primary/40'
                 )}
               >
-                {/* Popular badge */}
+                {/* Popular badge - sits on top edge */}
                 {plan.is_popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded-full whitespace-nowrap">
                     {t('pricing.popular')}
                   </div>
                 )}
 
-                {/* Current plan badge */}
-                {isCurrent && (
-                  <div className="absolute -top-3 right-4 px-2.5 py-1 bg-muted text-muted-foreground text-xs rounded-full">
-                    {t('pricing.currentPlan')}
-                  </div>
-                )}
-
-                {/* Promotion badge */}
-                {isPromoActive && (
-                  <div className="absolute -top-3 left-4 px-2.5 py-1 bg-destructive text-destructive-foreground text-xs font-semibold rounded-full flex items-center gap-1">
+                {/* Promotion badge - sits on top edge left */}
+                {isPromoActive && !plan.is_popular && (
+                  <div className="absolute -top-3 left-4 px-2.5 py-0.5 bg-destructive text-destructive-foreground text-xs font-semibold rounded-full flex items-center gap-1 whitespace-nowrap">
                     <Clock className="w-3 h-3" />
                     {getPromoLabel(plan)}
                   </div>
@@ -278,14 +267,12 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
                 {/* Plan header */}
                 <div className="flex items-center gap-2.5 mb-3 mt-1">
                   <div className={cn(
-                    'w-9 h-9 rounded-lg flex items-center justify-center',
+                    'w-9 h-9 rounded-lg flex items-center justify-center shrink-0',
                     plan.is_popular ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                   )}>
                     {planIconMap[plan.plan_key] || <Zap className="w-5 h-5" />}
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">{getName(plan)}</h3>
-                  </div>
+                  <h3 className="text-lg font-semibold text-foreground whitespace-nowrap">{getName(plan)}</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">{getDesc(plan)}</p>
 
@@ -312,7 +299,7 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
                     </div>
                   )}
                   {billing === 'yearly' && price > 0 && !originalPrice && (
-                    <span className="text-xs text-primary font-medium mt-0.5 block">
+                    <span className="text-xs text-primary font-medium mt-0.5 block whitespace-nowrap">
                       {t('pricing.yearlyNote', { amount: formatPrice(Math.round(price / 12), plan.currency) })}
                     </span>
                   )}
@@ -337,7 +324,7 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
                       {featureIcon(value)}
                       <span className="text-muted-foreground flex-1">{featureLabelMap[key] || key}</span>
                       <span className={cn(
-                        'font-medium text-right',
+                        'font-medium text-right whitespace-nowrap',
                         value === false ? 'text-muted-foreground/40' : 'text-foreground'
                       )}>
                         {renderFeatureValue(key, value)}
@@ -368,42 +355,44 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
         </div>
 
         {/* Feature Comparison Table */}
-        <div className="mt-12">
-          <h3 className="text-base font-semibold text-foreground mb-4">{t('pricing.featureComparison')}</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-3 text-muted-foreground font-medium">{t('pricing.feature')}</th>
-                  {plans.map(plan => (
-                    <th key={plan.plan_key} className="text-center py-3 px-3 font-medium text-foreground">
-                      {getName(plan)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Object.keys(plans[0]?.features || {}).map(featureKey => (
-                  <tr key={featureKey} className="border-b border-border/50">
-                    <td className="py-2.5 px-3 text-muted-foreground">{featureLabelMap[featureKey] || featureKey}</td>
-                    {plans.map(plan => {
-                      const value = (plan.features as Record<string, unknown>)?.[featureKey];
-                      return (
-                        <td key={plan.plan_key} className="text-center py-2.5 px-3">
-                          {typeof value === 'boolean' ? (
-                            value ? <Check className="w-4 h-4 text-primary mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/40 mx-auto" />
-                          ) : (
-                            <span className="font-medium text-foreground">{renderFeatureValue(featureKey, value)}</span>
-                          )}
-                        </td>
-                      );
-                    })}
+        {plans.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-base font-semibold text-foreground mb-4">{t('pricing.featureComparison')}</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-3 text-muted-foreground font-medium">{t('pricing.feature')}</th>
+                    {plans.map(plan => (
+                      <th key={plan.plan_key} className="text-center py-3 px-3 font-medium text-foreground whitespace-nowrap">
+                        {getName(plan)}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {Object.keys(plans[0]?.features || {}).map(featureKey => (
+                    <tr key={featureKey} className="border-b border-border/50">
+                      <td className="py-2.5 px-3 text-muted-foreground">{featureLabelMap[featureKey] || featureKey}</td>
+                      {plans.map(plan => {
+                        const value = (plan.features as Record<string, unknown>)?.[featureKey];
+                        return (
+                          <td key={plan.plan_key} className="text-center py-2.5 px-3">
+                            {typeof value === 'boolean' ? (
+                              value ? <Check className="w-4 h-4 text-primary mx-auto" /> : <X className="w-4 h-4 text-muted-foreground/40 mx-auto" />
+                            ) : (
+                              <span className="font-medium text-foreground">{renderFeatureValue(featureKey, value)}</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* FAQ */}
         <div className="mt-12 border-t border-border pt-8">
@@ -419,23 +408,17 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
         </div>
 
         {/* Trust badges */}
-        <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground/60">
-          <div className="flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-            </svg>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground/60">
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <Shield className="w-4 h-4" />
             {t('pricing.securePayment')}
           </div>
-          <div className="flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
-            </svg>
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <RotateCcw className="w-4 h-4" />
             {t('pricing.cancelAnytime')}
           </div>
-          <div className="flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-            </svg>
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
+            <CreditCard className="w-4 h-4" />
             {t('pricing.noCreditCard')}
           </div>
         </div>

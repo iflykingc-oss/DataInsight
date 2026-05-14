@@ -25,11 +25,11 @@ export function LegalDocumentDialog({ open, onOpenChange, type }: LegalDocumentD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{titles[type] || t('legal.termsTitle')}</DialogTitle>
         </DialogHeader>
-        <div className="text-sm text-muted-foreground leading-relaxed space-y-4">
+        <div className="flex-1 overflow-y-auto text-sm text-muted-foreground leading-relaxed space-y-4 min-w-0 pr-1">
           {type === 'privacy' && <PrivacyContent />}
           {type === 'terms' && <TermsContent />}
           {type === 'refund' && <RefundContent />}
