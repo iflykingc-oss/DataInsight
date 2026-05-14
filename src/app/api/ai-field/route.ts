@@ -9,12 +9,20 @@ import { callLLM } from '@/lib/llm';
 import { buildAIFieldPrompt, type AIField, type AIFieldExecuteContext } from '@/lib/ai-field-engine';
 import type { CellValue } from '@/types';
 import { verifyAuth } from '@/lib/auth-middleware';
+import { checkQuota } from '@/lib/quota-check';
 
 export async function POST(req: NextRequest) {
   const callStart = Date.now();
   const auth = await verifyAuth(req);
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
   if (!auth.user?.permissions?.ai_analyze) return NextResponse.json({ error: '无AI分析权限' }, { status: 403 });
+
+  // Quota check
+  const planKey = auth.user?.subscription?.planKey || 'free';
+  const quota = checkQuota(auth.user.id, planKey, 'ai_field');
+  if (!quota.allowed) {
+    return NextResponse.json({ error: quota.message || 'AI字段配额已用完' }, { status: 429 });
+  }
 
   try {
     const body = await req.json();

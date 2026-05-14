@@ -36,9 +36,37 @@ export interface User {
   permissions: UserPermissions;
   createdBy: number | null;
   createdAt: string;
+  subscription?: {
+    planKey: string;
+    status: 'active' | 'canceled' | 'expired';
+    currentPeriodEnd: string;
+    paymentProvider?: string;
+  };
 }
 
 export type PermissionKey = keyof User['permissions'];
+
+// Check if user subscription has expired and downgrade plan if needed
+function checkSubscriptionExpiry(user: User | null): User | null {
+  if (!user) return null;
+  try {
+    const subRaw = localStorage.getItem(`datainsight_subscription_${user.id}`);
+    if (!subRaw) return user;
+    const sub = JSON.parse(subRaw);
+    if (sub.planKey && sub.planKey !== 'free' && sub.expiresAt) {
+      const expiry = new Date(sub.expiresAt);
+      if (expiry < new Date()) {
+        // Expired - downgrade to free
+        sub.planKey = 'free';
+        sub.status = 'expired';
+        sub.autoRenew = false;
+        localStorage.setItem(`datainsight_subscription_${user.id}`, JSON.stringify(sub));
+        console.log('[Auth] Subscription expired, downgraded to free');
+      }
+    }
+  } catch { /* ignore */ }
+  return user;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -93,8 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (res.ok) {
         const data = await res.json();
-        setUser(data.user);
-        setCurrentUserId(data.user?.id ?? null);
+        const checkedUser = checkSubscriptionExpiry(data.user);
+        setUser(checkedUser);
+        setCurrentUserId(checkedUser?.id ?? null);
         setInitialized(true);
       } else if (res.status === 401) {
         // Token 过期，尝试刷新
@@ -117,8 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 });
                 if (retryRes.ok) {
                   const retryData = await retryRes.json();
-                  setUser(retryData.user);
-                  setCurrentUserId(retryData.user?.id ?? null);
+                  // Check subscription expiry and auto-downgrade if needed
+                  const sub = checkSubscriptionExpiry(retryData.user);
+                  setUser(sub);
+                  setCurrentUserId(sub?.id ?? null);
                   setInitialized(true);
                   setIsLoading(false);
                   return;

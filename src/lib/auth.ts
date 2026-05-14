@@ -40,6 +40,12 @@ export interface User {
   permissions: UserPermissions;
   createdBy: number | null;
   createdAt: string;
+  subscription?: {
+    planKey: string;
+    status: 'active' | 'canceled' | 'expired';
+    currentPeriodEnd: string;
+    paymentProvider?: string;
+  };
 }
 
 export interface LoginLog {

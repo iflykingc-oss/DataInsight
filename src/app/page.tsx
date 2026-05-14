@@ -102,6 +102,7 @@ const AppBuilder = dynamic(() => import('@/components/app-builder').then(m => ({
 const RowComments = dynamic(() => import('@/components/row-comments').then(m => ({ default: m.RowComments })), { ssr: false });
 const SpreadsheetAgentPage = dynamic(() => import('@/components/SpreadsheetAgentPage').then(m => ({ default: m.SpreadsheetAgentPage })), { ssr: false });
 const UpgradeDialog = dynamic(() => import('@/components/upgrade-dialog').then(m => ({ default: m.UpgradeDialog })), { ssr: false });
+const LicenseRedeemDialog = dynamic(() => import('@/components/license-redeem-dialog').then(m => ({ default: m.default })), { ssr: false });
 
 // ============================================
 // 视图模式类型（整合后：10个入口，功能零删除）
@@ -144,6 +145,9 @@ export default function HomePage() {
   const [upgradePlanKey, setUpgradePlanKey] = useState('');
   const [upgradeBilling, setUpgradeBilling] = useState<'monthly' | 'yearly'>('yearly');
 
+  // License redeem dialog state
+  const [licenseDialogOpen, setLicenseDialogOpen] = useState(false);
+
   const { isLoggedIn, setLoginDialogOpen, hasPermission, user } = useAuth();
 
   // D-04修复：统一API请求头，携带JWT token
@@ -174,6 +178,13 @@ export default function HomePage() {
     };
     window.addEventListener('show-upgrade', handleShowUpgrade);
     return () => window.removeEventListener('show-upgrade', handleShowUpgrade);
+  }, []);
+
+  // Listen for show-license-redeem event
+  useEffect(() => {
+    const handleShowLicense = () => setLicenseDialogOpen(true);
+    window.addEventListener('show-license-redeem', handleShowLicense);
+    return () => window.removeEventListener('show-license-redeem', handleShowLicense);
   }, []);
 
   // Handle payment success callback from Creem
@@ -1469,6 +1480,12 @@ export default function HomePage() {
         onOpenChange={setUpgradeDialogOpen}
         planKey={upgradePlanKey}
         billingCycle={upgradeBilling}
+      />
+
+      {/* 激活码兑换弹窗 */}
+      <LicenseRedeemDialog
+        open={licenseDialogOpen}
+        onOpenChange={setLicenseDialogOpen}
       />
 
       {/* 全局 AI 助手 */}

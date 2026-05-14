@@ -10,9 +10,19 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, Loader2, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
+import {
+  Check,
+  Loader2,
+  Sparkles,
+  ArrowRight,
+  AlertCircle,
+  Gift,
+  CreditCard,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/use-auth';
+
+type PaymentMethod = 'creem' | 'paypal' | 'license';
 
 interface UpgradeDialogProps {
   open: boolean;
@@ -37,12 +47,18 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
   const [error, setError] = useState<string | null>(null);
   const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('creem');
+  const [licenseCode, setLicenseCode] = useState('');
+  const [redeemResult, setRedeemResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
-  // Fetch plan details when dialog opens
   useEffect(() => {
     if (!open || !planKey) return;
     setPlanLoading(true);
     setError(null);
+    setRedeemResult(null);
 
     fetch('/api/pricing')
       .then(res => res.json())
@@ -73,11 +89,17 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
       return;
     }
 
+    if (paymentMethod === 'license') {
+      handleLicenseRedeem();
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch('/api/checkout', {
+      const endpoint = paymentMethod === 'paypal' ? '/api/checkout/paypal' : '/api/checkout';
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -85,21 +107,24 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
           billingCycle,
           userId: user.id,
           userEmail: user.email || user.username,
+          successUrl: `${window.location.origin}?payment=success`,
+          cancelUrl: `${window.location.origin}?payment=cancel`,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        const errMsg = data.code === 'PAYMENT_NOT_CONFIGURED'
+        const errMsg = data.code === 'PAYMENT_NOT_CONFIGURED' || data.code === 'PAYPAL_NOT_CONFIGURED'
           ? t('upgrade.notConfigured')
           : (data.error || t('upgrade.error'));
         setError(errMsg);
         return;
       }
 
-      // Redirect to Creem checkout page
-      if (data.data?.checkoutUrl) {
+      if (paymentMethod === 'paypal' && data.data?.approvalUrl) {
+        window.location.href = data.data.approvalUrl;
+      } else if (data.data?.checkoutUrl) {
         window.location.href = data.data.checkoutUrl;
       } else {
         setError(t('upgrade.error'));
@@ -107,6 +132,52 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
     } catch (err) {
       console.error('Checkout error:', err);
       setError(t('upgrade.error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLicenseRedeem = async () => {
+    if (!licenseCode.trim()) return;
+    if (!user) {
+      setError(t('auth.loginRequired'));
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setRedeemResult(null);
+
+    try {
+      const res = await fetch('/api/license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'redeem', code: licenseCode.trim() }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setRedeemResult({
+          success: true,
+          message: t('license.redeemSuccess') || '激活成功！您的订阅已激活。',
+        });
+        window.location.reload();
+      } else {
+        const errorMap: Record<string, string> = {
+          invalid_code: t('license.invalidCode') || '激活码无效',
+          already_redeemed: t('license.alreadyRedeemed') || '该激活码已被使用',
+          expired: t('license.expired') || '该激活码已过期',
+        };
+        setRedeemResult({
+          success: false,
+          message: errorMap[data.code] || data.error || '激活失败',
+        });
+      }
+    } catch {
+      setRedeemResult({
+        success: false,
+        message: t('license.networkError') || '网络错误，请稍后重试',
+      });
     } finally {
       setLoading(false);
     }
@@ -144,6 +215,12 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
     deep_analysis: t('pricing.hlDeepAnalysis'),
     priority_support: t('pricing.hlPrioritySupport'),
   };
+
+  const paymentMethods: { key: PaymentMethod; label: string; icon: React.ReactNode }[] = [
+    { key: 'creem', label: t('upgrade.payCreem') || '信用卡 / 借记卡', icon: <CreditCard className="w-4 h-4" /> },
+    { key: 'paypal', label: 'PayPal', icon: <span className="text-xs font-bold">P</span> },
+    { key: 'license', label: t('upgrade.payLicense') || '激活码', icon: <Gift className="w-4 h-4" /> },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -187,6 +264,48 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
                 </div>
               </div>
 
+              {/* Payment method selector */}
+              <div>
+                <div className="text-sm font-medium text-foreground mb-2">{t('upgrade.paymentMethod') || '支付方式'}</div>
+                <div className="grid grid-cols-3 gap-2">
+                  {paymentMethods.map(m => (
+                    <button
+                      key={m.key}
+                      onClick={() => {
+                        setPaymentMethod(m.key);
+                        setError(null);
+                        setRedeemResult(null);
+                      }}
+                      className={cn(
+                        'flex flex-col items-center gap-1 p-2 rounded-lg border text-xs transition-all',
+                        paymentMethod === m.key
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-border text-muted-foreground hover:border-primary/30'
+                      )}
+                    >
+                      {m.icon}
+                      <span>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* License code input */}
+              {paymentMethod === 'license' && (
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">
+                    {t('license.codePlaceholder') || '激活码'}
+                  </label>
+                  <input
+                    type="text"
+                    value={licenseCode}
+                    onChange={e => setLicenseCode(e.target.value.toUpperCase())}
+                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm font-mono tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+              )}
+
               {/* Benefits */}
               {planInfo.features.length > 0 && (
                 <div>
@@ -205,6 +324,25 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
           ) : (
             <div className="text-center py-8 text-muted-foreground text-sm">
               {t('upgrade.loadPlanFailed')}
+            </div>
+          )}
+
+          {/* Redeem result */}
+          {redeemResult && (
+            <div
+              className={cn(
+                'mt-4 flex items-start gap-2 p-3 rounded-lg text-xs',
+                redeemResult.success
+                  ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300'
+                  : 'bg-destructive/10 text-destructive'
+              )}
+            >
+              {redeemResult.success ? (
+                <Check className="w-4 h-4 shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              )}
+              <span>{redeemResult.message}</span>
             </div>
           )}
 
@@ -230,7 +368,7 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
           <Button
             className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={handleCheckout}
-            disabled={loading || planLoading || !planInfo}
+            disabled={loading || planLoading || !planInfo || (paymentMethod === 'license' && !licenseCode.trim())}
           >
             {loading ? (
               <>
@@ -239,7 +377,9 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
               </>
             ) : (
               <>
-                {t('upgrade.confirm')}
+                {paymentMethod === 'license'
+                  ? (t('license.redeem') || '兑换')
+                  : t('upgrade.confirm')}
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </>
             )}

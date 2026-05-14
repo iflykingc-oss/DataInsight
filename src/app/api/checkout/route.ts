@@ -1,25 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckout, isCreemConfigured } from '@/lib/creem-payment';
+import { verifyAuth } from '@/lib/auth-middleware';
+import { redeemLicenseCode } from '@/lib/license-key';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if payment is configured
+    const body = await request.json();
+
+    // License code redeem path
+    if (body.action === 'redeem') {
+      const authResult = await verifyAuth(request);
+      if (authResult.error || !authResult.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const { code } = body;
+      if (!code) {
+        return NextResponse.json({ error: 'Code required' }, { status: 400 });
+      }
+
+      const result = redeemLicenseCode(code, authResult.user.id, authResult.user.email);
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error, code: result.error },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json({ success: true, data: result.subscription });
+    }
+
+    // Standard checkout path
+    const { planKey, billingCycle, userId, userEmail, successUrl } = body;
+
     if (!isCreemConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Payment system not configured. Please contact admin.',
-          code: 'PAYMENT_NOT_CONFIGURED'
+          code: 'PAYMENT_NOT_CONFIGURED',
         },
         { status: 503 }
       );
     }
 
-    // Parse request body
-    const body = await request.json();
-    const { planKey, billingCycle, userId, userEmail, successUrl } = body;
-
-    // Validate inputs
     if (!planKey || !billingCycle || !userId) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields: planKey, billingCycle, userId' },
@@ -41,7 +65,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create checkout session
     const checkout = await createCheckout({
       planKey,
       billingCycle,

@@ -32,6 +32,10 @@ import {
   Lock,
   Globe,
   Key,
+  Crown,
+  Gift,
+  CreditCard,
+  Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
@@ -57,6 +61,7 @@ const DEFAULT_NOTIFICATION_CONFIG: NotificationChannelConfig = {
 // 侧边导航项定义
 const SETTINGS_TAB_IDS = [
   { id: 'ai-settings', icon: Bot },
+  { id: 'subscription', icon: Crown },
   { id: 'alert', icon: Bell },
   { id: 'version', icon: History },
   { id: 'template', icon: BookTemplate },
@@ -67,6 +72,7 @@ const SETTINGS_TAB_IDS = [
 
 const SETTINGS_TAB_LABELS: Record<string, string> = {
   'ai-settings': 'settings.currentModel',
+  'subscription': 'subscription.mySubscription',
   'alert': 'settings.dataAlert',
   'version': 'settings.versionSnapshot',
   'template': 'settings.templateManager',
@@ -155,6 +161,184 @@ export default function SettingsDialog({
     try {
       localStorage.setItem('datainsight_notification_config', JSON.stringify(config));
     } catch { /* ignore */ }
+  };
+
+  // Subscription Panel 子组件
+  const SubscriptionPanel = () => {
+    const [subscription, setSubscription] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const { t } = useI18n();
+    const { user } = useAuth();
+
+    useEffect(() => {
+      fetch('/api/license?action=my-subscription', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}` },
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) setSubscription(data.data);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+          {t('common.loading')}
+        </div>
+      );
+    }
+
+    const isActive = subscription?.status === 'active' && new Date(subscription?.expiresAt || 0) > new Date();
+    const planNames: Record<string, string> = { pro: 'Pro', business: 'Business' };
+
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">{t('subscription.mySubscription')}</h3>
+              </div>
+              <Badge variant={isActive ? 'default' : 'secondary'}>
+                {isActive ? t('subscription.active') : t('subscription.expired')}
+              </Badge>
+            </div>
+
+            {subscription?.planKey && subscription.planKey !== 'free' ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-border/50">
+                  <span className="text-sm text-muted-foreground">{t('subscription.currentPlan')}</span>
+                  <span className="font-medium">{planNames[subscription.planKey] || subscription.planKey}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border/50">
+                  <span className="text-sm text-muted-foreground">{t('subscription.status')}</span>
+                  <span className="font-medium capitalize">{subscription.status}</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-border/50">
+                  <span className="text-sm text-muted-foreground">{t('subscription.expiresAt')}</span>
+                  <span className="font-medium">
+                    {subscription.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : '-'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-sm text-muted-foreground">{t('subscription.autoRenew')}</span>
+                  <span className="font-medium">{subscription.autoRenew ? 'On' : 'Off'}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 space-y-3">
+                <p className="text-muted-foreground">{t('subscription.noSubscription')}</p>
+                <p className="text-sm text-muted-foreground">{t('subscription.freePlan')}</p>
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('show-upgrade', { detail: { planKey: 'pro', billing: 'yearly' } }));
+                }}
+              >
+                <CreditCard className="w-4 h-4 mr-1.5" />
+                {t('pricing.upgrade')}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => window.dispatchEvent(new Event('show-license-redeem'))}
+              >
+                <Gift className="w-4 h-4 mr-1.5" />
+                {t('license.redeemTitle')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quota Overview */}
+        <QuotaOverview userId={user?.id} />
+      </div>
+    );
+  };
+
+  // Quota Overview 子组件
+  const QuotaOverview = ({ userId }: { userId?: number }) => {
+    const [quotas, setQuotas] = useState<Record<string, { used: number; limit: number; unlimited: boolean }>>({});
+    const [loading, setLoading] = useState(true);
+    const { t } = useI18n();
+
+    useEffect(() => {
+      if (!userId) { setLoading(false); return; }
+      fetch('/api/quota', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('datainsight_token') || ''}` },
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) setQuotas(data.data || {});
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, [userId]);
+
+    const features = [
+      { key: 'ai_call', label: t('quota.aiCalls') },
+      { key: 'export', label: t('quota.exports') },
+      { key: 'dashboard', label: t('quota.dashboards') },
+      { key: 'table', label: t('quota.tables') },
+    ];
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-8 text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          {t('common.loading')}
+        </div>
+      );
+    }
+
+    return (
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            {t('quota.title')}
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {features.map(f => {
+              const q = quotas[f.key];
+              const used = q?.used || 0;
+              const limit = q?.limit || 0;
+              const unlimited = q?.unlimited || false;
+              const percent = unlimited ? 0 : limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
+
+              return (
+                <div key={f.key} className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <div className="text-xs text-muted-foreground">{f.label}</div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-bold">{used}</span>
+                    <span className="text-xs text-muted-foreground">
+                      / {unlimited ? '∞' : limit}
+                    </span>
+                  </div>
+                  {!unlimited && limit > 0 && (
+                    <div className="w-full bg-muted rounded-full h-1.5">
+                      <div
+                        className="bg-primary h-1.5 rounded-full transition-all"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   // 渲染各Tab内容
@@ -405,6 +589,9 @@ export default function SettingsDialog({
 
       case 'permissions':
         return <RowPermissions headers={parsedData?.headers || []} />;
+
+      case 'subscription':
+        return <SubscriptionPanel />;
 
       default:
         return null;

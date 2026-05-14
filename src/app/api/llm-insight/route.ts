@@ -3,6 +3,7 @@ import { callLLMStreamWithFallback, validateModelConfig, type LLMModelConfig } f
 import { IndustryTemplateManager } from '@/lib/analysis/industry-templates';
 import { verifyAuth } from '@/lib/auth-middleware';
 import { trackAiUsage, estimateTokens } from '@/lib/ai-usage-tracker';
+import { checkQuota } from '@/lib/quota-check';
 
 const templateManager = new IndustryTemplateManager();
 
@@ -67,6 +68,17 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' }
     });
   }
+
+  // Quota check - verify feature is available on current plan
+  const planKey = auth.user?.subscription?.planKey || 'free';
+  const quota = checkQuota(auth.user.id, planKey, 'ai_call');
+  if (!quota.allowed) {
+    return new Response(JSON.stringify({ error: quota.message || 'AI调用配额已用完' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  // Note: usage count is tracked client-side for accuracy
 
   try {
     const body = await request.json();
