@@ -336,11 +336,11 @@ function Sidebar({
       {/* Footer Links */}
       {!collapsed && (
         <div className="px-3 pb-3 flex items-center gap-3 text-[10px] text-sidebar-foreground/20">
-          <a href="/privacy" target="_blank" className="hover:text-sidebar-foreground/40 transition-colors">Privacy</a>
+          <a href="/privacy" target="_blank" className="hover:text-sidebar-foreground/40 transition-colors">{t('sidebar.privacy')}</a>
           <span>·</span>
-          <button onClick={() => onViewChange('pricing')} className="hover:text-sidebar-foreground/40 transition-colors">Pricing</button>
+          <button onClick={() => onViewChange('pricing')} className="hover:text-sidebar-foreground/40 transition-colors">{t('sidebar.pricing')}</button>
           <span>·</span>
-          <button onClick={() => onViewChange('data-compliance')} className="hover:text-sidebar-foreground/40 transition-colors">Data</button>
+          <button onClick={() => onViewChange('data-compliance')} className="hover:text-sidebar-foreground/40 transition-colors">{t('sidebar.dataCompliance')}</button>
         </div>
       )}
     </aside>
