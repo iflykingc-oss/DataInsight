@@ -64,7 +64,7 @@ export function LoginDialog() {
   // 隐私政策/服务条款
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [legalDocOpen, setLegalDocOpen] = useState(false);
-  const [legalDocType, setLegalDocType] = useState<'privacy' | 'terms'>('privacy');
+  const [legalDocType, setLegalDocType] = useState<'privacy' | 'terms' | 'refund'>('privacy');
 
   // 重置表单状态
   const resetForm = useCallback(() => {
@@ -486,21 +486,28 @@ export function LoginDialog() {
                 className="mt-1 rounded border-input"
               />
               <label htmlFor="agree-terms" className="text-xs text-muted-foreground leading-relaxed">
-                {t('login.agreeText')}
-                <button
-                  type="button"
-                  onClick={() => { setLegalDocType('privacy'); setLegalDocOpen(true); }}
-                  className="text-primary hover:underline mx-0.5"
-                >
-                  隐私政策
-                </button>
-                和
                 <button
                   type="button"
                   onClick={() => { setLegalDocType('terms'); setLegalDocOpen(true); }}
                   className="text-primary hover:underline mx-0.5"
                 >
-                  服务条款
+                  {t('login.termsOfService')}
+                </button>
+                {' '}
+                <button
+                  type="button"
+                  onClick={() => { setLegalDocType('privacy'); setLegalDocOpen(true); }}
+                  className="text-primary hover:underline mx-0.5"
+                >
+                  {t('login.privacyPolicy')}
+                </button>
+                {t('login.and')}
+                <button
+                  type="button"
+                  onClick={() => { setLegalDocType('refund'); setLegalDocOpen(true); }}
+                  className="text-primary hover:underline mx-0.5"
+                >
+                  {t('login.refundPolicy')}
                 </button>
               </label>
             </div>
