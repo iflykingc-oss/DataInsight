@@ -5,6 +5,7 @@ import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/use-auth';
 import { Button } from '@/components/ui/button';
 import { Check, X, Zap, Sparkles, ArrowRight, Clock, Shield, RotateCcw, CreditCard } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 interface PricingPlan {
@@ -33,10 +34,9 @@ interface PricingPlan {
 
 interface PricingPageProps {
   onBack?: () => void;
-  onOpenLegal?: (type: 'terms' | 'privacy' | 'refund') => void;
 }
 
-export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
+export default function PricingPage({ onBack }: PricingPageProps) {
   const { t, locale } = useI18n();
   const { isLoggedIn } = useAuth();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
@@ -424,16 +424,14 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
         </div>
 
         {/* Legal Links */}
-        {onOpenLegal && (
-          <div className="mt-6 pt-4 border-t border-border/50 text-center text-xs text-muted-foreground">
-            {t('pricing.byPurchasing')}{' '}
-            <button type="button" className="underline hover:text-foreground transition-colors" onClick={() => onOpenLegal('terms')}>{t('legal.termsTitle')}</button>
-            {' · '}
-            <button type="button" className="underline hover:text-foreground transition-colors" onClick={() => onOpenLegal('privacy')}>{t('legal.privacyTitle')}</button>
-            {' · '}
-            <button type="button" className="underline hover:text-foreground transition-colors" onClick={() => onOpenLegal('refund')}>{t('legal.refundTitle')}</button>
-          </div>
-        )}
+        <div className="mt-6 pt-4 border-t border-border/50 text-center text-xs text-muted-foreground">
+          {t('pricing.byPurchasing')}{' '}
+          <Link href="/terms" className="underline hover:text-foreground transition-colors">{t('legal.termsTitle')}</Link>
+          {' · '}
+          <Link href="/privacy" className="underline hover:text-foreground transition-colors">{t('legal.privacyTitle')}</Link>
+          {' · '}
+          <Link href="/refund" className="underline hover:text-foreground transition-colors">{t('legal.refundTitle')}</Link>
+        </div>
       </div>
     </div>
   );

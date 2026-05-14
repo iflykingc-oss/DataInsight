@@ -7,8 +7,8 @@ export default function TermsPage() {
   const { t } = useI18n();
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-4xl px-6 py-12">
+    <div className="min-h-screen bg-background w-full">
+      <div className="mx-auto max-w-4xl px-6 py-12 w-full">
         <Link href="/" className="inline-flex items-center gap-1 text-sm text-primary hover:underline mb-8">
           ← {t('backToHome') || 'Back to DataInsight'}
         </Link>

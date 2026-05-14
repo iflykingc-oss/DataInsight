@@ -15,12 +15,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/lib/use-auth';
 import { useI18n } from '@/lib/i18n';
 import { trackAuth } from '@/lib/activity-tracker';
+import Link from 'next/link';
 import {
   LogIn, Loader2, AlertCircle, Shield, UserPlus, Mail,
   KeyRound, ArrowLeft, Eye, EyeOff, Lock, HelpCircle,
   FileText, ShieldCheck,
 } from 'lucide-react';
-import { LegalDocumentDialog } from '@/components/legal-dialog';
 
 type AuthMode = 'login' | 'register' | 'init' | 'reset';
 
@@ -63,8 +63,7 @@ export function LoginDialog() {
 
   // 隐私政策/服务条款
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [legalDocOpen, setLegalDocOpen] = useState(false);
-  const [legalDocType, setLegalDocType] = useState<'privacy' | 'terms' | 'refund'>('privacy');
+
 
   // 重置表单状态
   const resetForm = useCallback(() => {
@@ -486,29 +485,17 @@ export function LoginDialog() {
                 className="mt-1 rounded border-input"
               />
               <label htmlFor="agree-terms" className="text-xs text-muted-foreground leading-relaxed">
-                <button
-                  type="button"
-                  onClick={() => { setLegalDocType('terms'); setLegalDocOpen(true); }}
-                  className="text-primary hover:underline mx-0.5"
-                >
+                <Link href="/terms" target="_blank" className="text-primary hover:underline mx-0.5">
                   {t('login.termsOfService')}
-                </button>
+                </Link>
                 {' '}
-                <button
-                  type="button"
-                  onClick={() => { setLegalDocType('privacy'); setLegalDocOpen(true); }}
-                  className="text-primary hover:underline mx-0.5"
-                >
+                <Link href="/privacy" target="_blank" className="text-primary hover:underline mx-0.5">
                   {t('login.privacyPolicy')}
-                </button>
+                </Link>
                 {t('login.and')}
-                <button
-                  type="button"
-                  onClick={() => { setLegalDocType('refund'); setLegalDocOpen(true); }}
-                  className="text-primary hover:underline mx-0.5"
-                >
+                <Link href="/refund" target="_blank" className="text-primary hover:underline mx-0.5">
                   {t('login.refundPolicy')}
-                </button>
+                </Link>
               </label>
             </div>
 
@@ -780,12 +767,7 @@ export function LoginDialog() {
         )}
       </DialogContent>
 
-      {/* 隐私政策/服务条款弹窗 */}
-      <LegalDocumentDialog
-        open={legalDocOpen}
-        onOpenChange={setLegalDocOpen}
-        type={legalDocType}
-      />
+
     </Dialog>
   );
 }

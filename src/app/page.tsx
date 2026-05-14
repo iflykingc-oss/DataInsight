@@ -75,7 +75,7 @@ const AITableBuilder = dynamic(() => import('@/components/ai-table-builder'), { 
 const MetricSemanticLayer = dynamic(() => import('@/components/metric-semantic-layer').then(m => ({ default: m.MetricSemanticLayer })), { ssr: false });
 const DataQualityChecker = dynamic(() => import('@/components/data-quality-checker').then(m => ({ default: m.DataQualityChecker })), { ssr: false });
 const SmartDataPrep = dynamic(() => import('@/components/smart-data-prep').then(m => ({ default: m.SmartDataPrep })), { ssr: false });
-const LegalDocumentDialog = dynamic(() => import('@/components/legal-dialog').then(m => ({ default: m.LegalDocumentDialog })), { ssr: false });
+
 const DataStorytelling = dynamic(() => import('@/components/data-storytelling').then(m => ({ default: m.DataStorytelling })), { ssr: false });
 const IndustryScenario = dynamic(() => import('@/components/industry-scenario').then(m => ({ default: m.IndustryScenario })), { ssr: false });
 const NL2Dashboard = dynamic(() => import('@/components/nl2-dashboard').then(m => ({ default: m.NL2Dashboard })), { ssr: false });
@@ -139,9 +139,7 @@ export default function HomePage() {
 
 
   const [showSettings, setShowSettings] = useState(false);
-  const [legalDocType, setLegalDocType] = useState<'terms' | 'privacy' | 'refund' | null>(null);
-  const openLegalDialog = (type: 'terms' | 'privacy' | 'refund') => setLegalDocType(type);
-  const [legalDialogOpen, setLegalDialogOpen] = useState(false);
+
   const { isLoggedIn, setLoginDialogOpen, hasPermission, user } = useAuth();
 
   // D-04修复：统一API请求头，携带JWT token
@@ -553,7 +551,7 @@ export default function HomePage() {
 
     // Pricing page
     if (viewMode === 'pricing') {
-      return <PricingPage onBack={() => setViewMode('home')} onOpenLegal={openLegalDialog} />;
+      return <PricingPage onBack={() => setViewMode('home')} />;
     }
 
     // Data compliance page
@@ -1330,11 +1328,6 @@ export default function HomePage() {
           onModelChange={handleModelChange}
         />
         <LoginDialog />
-        <LegalDocumentDialog
-          open={!!legalDocType}
-          onOpenChange={(open) => { if (!open) setLegalDocType(null); }}
-          type={legalDocType || 'terms'}
-        />
       </div>
     );
   }
@@ -1434,12 +1427,6 @@ export default function HomePage() {
         onDarkModeChange={setDarkMode}
         onModelChange={handleModelChange}
       />
-      <LegalDocumentDialog
-        open={!!legalDocType}
-        onOpenChange={(open) => { if (!open) setLegalDocType(null); }}
-        type={legalDocType || 'terms'}
-      />
-
       {/* 登录弹窗 */}
       <LoginDialog />
 
