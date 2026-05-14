@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     const offset = (page - 1) * limit;
 
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ success: true, data: [], total: 0 });
     let query = supabase
       .from('feedback')
       .select('*', { count: 'exact' })
@@ -65,6 +66,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ success: false, message: 'Database not configured' }, { status: 503 });
     const updateData: Record<string, unknown> = {};
 
     if (adminReply !== undefined) {
@@ -112,6 +114,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ success: false, message: 'Database not configured' }, { status: 503 });
     const { error } = await supabase
       .from('feedback')
       .delete()

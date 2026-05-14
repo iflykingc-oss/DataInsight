@@ -18,6 +18,9 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ success: false, error: 'Database not configured' }, { status: 503 });
+    }
 
     // Get user subscription
     const { data: subscription, error: subError } = await supabase

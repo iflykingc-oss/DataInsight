@@ -22,6 +22,7 @@ export interface AiUsageRecord {
 export async function trackAiUsage(record: AiUsageRecord): Promise<void> {
   try {
     const client = getSupabaseClient(getSupabaseServiceRoleKey());
+    if (!client) return;
     await client.from('ai_usage_logs').insert({
       user_id: record.userId || null,
       function_type: record.functionType,

@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ success: true, data: [], total: 0 });
   let query = supabase
     .from('announcements')
     .select('*', { count: 'exact' })
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   try {
     const body = await request.json();
     const { title, content, type, priority, remindStrategy, scheduledAt, expiresAt } = body;

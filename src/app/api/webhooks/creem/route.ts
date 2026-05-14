@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     // Process the event based on type
     if (result.type === 'payment_success' && result.userId) {
       const supabase = getSupabaseClient();
+      if (!supabase) return NextResponse.json({ received: true });
       
       // Update user subscription in database
       const { error } = await supabase
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
     if (result.type === 'subscription_canceled') {
       // Mark subscription as canceled
       const supabase = getSupabaseClient();
+      if (!supabase) return NextResponse.json({ received: true });
       await supabase
         .from('user_subscriptions')
         .update({ status: 'canceled', updated_at: new Date().toISOString() })

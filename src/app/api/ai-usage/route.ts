@@ -28,6 +28,9 @@ export async function POST(request: NextRequest) {
 
     // Check user quota
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ success: true, quota: null });
+    }
     const { data: subscription } = await supabase
       .from('user_subscriptions')
       .select('ai_calls_used, ai_calls_limit, plan_key')
@@ -100,6 +103,9 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ success: true, quota: { plan: 'free', aiCallsUsed: 0, aiCallsLimit: 50, remaining: 50 }, byFunction: {}, totalCalls: 0 });
+    }
     const { data: subscription } = await supabase
       .from('user_subscriptions')
       .select('plan_key, ai_calls_used, ai_calls_limit, storage_used_mb, storage_limit_mb, period_start, period_end')

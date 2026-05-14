@@ -12,6 +12,9 @@ export async function GET(request: NextRequest) {
 
     const userId = authResult.user!.id;
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
 
     // Collect all user data from DB
     const [profile, loginLogs, usageStats, activityLogs, aiUsage, subscription] = await Promise.all([
@@ -68,6 +71,9 @@ export async function DELETE(request: NextRequest) {
 
     const userId = authResult.user!.id;
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
 
     // Verify user confirmation
     const body = await request.json().catch(() => ({}));

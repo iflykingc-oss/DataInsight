@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   const endDate = url.searchParams.get('endDate') || '';
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ success: true, data: [], total: 0 });
 
   let query = supabase
     .from('login_logs')

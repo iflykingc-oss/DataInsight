@@ -40,6 +40,9 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ success: false, message: 'Database not configured' }, { status: 503 });
+    }
     const { data, error } = await supabase
       .from('feedback')
       .insert({
@@ -73,6 +76,9 @@ export async function GET(req: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return NextResponse.json({ success: true, data: [] });
+    }
     const { data, error } = await supabase
       .from('feedback')
       .select('*')

@@ -6,6 +6,7 @@ import { verifyAuth } from '@/lib/auth-middleware';
 export async function GET() {
   try {
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ success: true, plans: [] });
     const { data: plans, error } = await supabase
       .from('pricing_plans')
       .select('*')
@@ -59,6 +60,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
 
     // Build update object
     const updateFields: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -114,6 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
     const { error } = await supabase.from('pricing_plans').insert({
       plan_key: planKey,
       name,
@@ -164,6 +167,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
     const { error } = await supabase
       .from('pricing_plans')
       .delete()

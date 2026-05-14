@@ -5,6 +5,7 @@ import { getSupabaseClient } from '@/storage/database/supabase-client';
 // 合规：此接口不记录任何用户访问行为，不追踪谁查看了公告
 export async function GET() {
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ success: true, data: [] });
   try {
     const now = new Date().toISOString();
 

@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const modelName = searchParams.get('modelName');
 
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ success: true, data: { logs: [], summary: { totalCalls: 0, totalTokens: 0, avgLatency: 0, errorRate: 0 }, byFunction: {}, byModel: {} } });
 
     // Calculate date range
     const now = new Date();

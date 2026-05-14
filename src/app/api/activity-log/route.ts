@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
   const userAgent = (request.headers.get('user-agent') || '').slice(0, 500);
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ success: true, inserted: 0, skipped: events.length });
   const rows: Record<string, unknown>[] = [];
 
   for (const event of events) {
@@ -136,6 +137,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ success: true, message: 'Database not configured' });
   const { error } = await supabase
     .from('user_activity_logs')
     .delete()

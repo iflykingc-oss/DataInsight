@@ -65,17 +65,14 @@ except Exception as e:
   }
 }
 
-function getSupabaseCredentials(): SupabaseCredentials {
+function getSupabaseCredentials(): SupabaseCredentials | null {
   loadEnv();
 
   const url = process.env.COZE_SUPABASE_URL;
   const anonKey = process.env.COZE_SUPABASE_ANON_KEY;
 
-  if (!url) {
-    throw new Error('COZE_SUPABASE_URL is not set');
-  }
-  if (!anonKey) {
-    throw new Error('COZE_SUPABASE_ANON_KEY is not set');
+  if (!url || !anonKey) {
+    return null;
   }
 
   return { url, anonKey };
@@ -86,15 +83,16 @@ function getSupabaseServiceRoleKey(): string | undefined {
   return process.env.COZE_SUPABASE_SERVICE_ROLE_KEY;
 }
 
-function getSupabaseClient(token?: string): SupabaseClient {
-  const { url, anonKey } = getSupabaseCredentials();
+function getSupabaseClient(token?: string): SupabaseClient | null {
+  const creds = getSupabaseCredentials();
+  if (!creds) return null;
 
   let key: string;
   if (token) {
-    key = anonKey;
+    key = creds.anonKey;
   } else {
     const serviceRoleKey = getSupabaseServiceRoleKey();
-    key = serviceRoleKey ?? anonKey;
+    key = serviceRoleKey ?? creds.anonKey;
   }
 
   const globalOptions: Record<string, unknown> = {};
@@ -110,7 +108,7 @@ function getSupabaseClient(token?: string): SupabaseClient {
     // Silent — reporting setup failure should not block client creation
   }
 
-  return createClient(url, key, {
+  return createClient(creds.url, key, {
     global: globalOptions,
     db: {
       timeout: 60000,
@@ -123,3 +121,9 @@ function getSupabaseClient(token?: string): SupabaseClient {
 }
 
 export { loadEnv, getSupabaseCredentials, getSupabaseServiceRoleKey, getSupabaseClient };
+
+/** 检查 Supabase 是否已配置（环境变量存在） */
+export function isSupabaseConfigured(): boolean {
+  loadEnv();
+  return !!(process.env.COZE_SUPABASE_URL && process.env.COZE_SUPABASE_ANON_KEY);
+}

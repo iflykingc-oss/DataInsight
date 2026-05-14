@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
   const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '20'), 100);
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ success: true, data: [], total: 0 });
 
   // First, purge expired records (compliance: data retention)
   await supabase

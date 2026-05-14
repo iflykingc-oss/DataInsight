@@ -19,7 +19,7 @@ import {
   setAuthStorage,
   ROLE_TEMPLATES,
 } from './auth';
-import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { getSupabaseClient, isSupabaseConfigured } from '@/storage/database/supabase-client';
 import { users, loginLogs, usageStats, adminAiConfig } from '@/storage/database/shared/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
 
@@ -121,16 +121,29 @@ function mapAIConfigToDbUpdate(config: AIConfig): Record<string, unknown> {
 // ==================== Supabase 存储实现 ====================
 
 class SupabaseAuthStorage implements AuthStorage {
+  private _available: boolean;
+
   constructor() {
-    this.initDefaultData().catch(err => {
-      console.error('[SupabaseAuth] 初始化默认数据失败:', err);
-    });
+    this._available = isSupabaseConfigured();
+    if (this._available) {
+      this.initDefaultData().catch(err => {
+        console.error('[SupabaseAuth] 初始化默认数据失败:', err);
+      });
+    } else {
+      console.warn('[SupabaseAuth] ⚠️ Supabase 未配置（缺少 COZE_SUPABASE_URL / COZE_SUPABASE_ANON_KEY），认证功能不可用。请在环境变量中配置 Supabase 连接信息。');
+    }
+  }
+
+  /** 检查 Supabase 是否可用 */
+  get available(): boolean {
+    return this._available;
   }
 
   /** 初始化：若无用户则创建默认账号 */
   private async initDefaultData(): Promise<void> {
     try {
       const supabase = getSupabaseClient();
+      if (!supabase) return;
       const { data: existing } = await supabase
         .from('users')
         .select('id')
@@ -218,6 +231,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async getUsersAsync(): Promise<Map<number, User>> {
     const supabase = getSupabaseClient();
+    if (!supabase) return new Map();
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -242,6 +256,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async saveUserAsync(user: User): Promise<void> {
     const supabase = getSupabaseClient();
+    if (!supabase) return;
     const dbData = {
       username: user.username,
       email: user.email || null,
@@ -262,6 +277,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async createUserAsync(userData: Omit<User, 'id'>): Promise<User> {
     const supabase = getSupabaseClient();
+    if (!supabase) throw new Error('Supabase 未配置，无法创建用户');
     const dbData = mapUserToDbInsert(userData as Omit<User, 'id'>);
 
     const { data, error } = await supabase
@@ -286,6 +302,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async deleteUserAsync(id: number): Promise<boolean> {
     const supabase = getSupabaseClient();
+    if (!supabase) return false;
     const { error } = await supabase
       .from('users')
       .delete()
@@ -305,6 +322,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async getLoginLogsAsync(limit = 50): Promise<LoginLog[]> {
     const supabase = getSupabaseClient();
+    if (!supabase) return [];
     const { data, error } = await supabase
       .from('login_logs')
       .select('*, users(username)')
@@ -329,6 +347,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async addLoginLogAsync(log: LoginLog): Promise<void> {
     const supabase = getSupabaseClient();
+    if (!supabase) return;
     await supabase.from('login_logs').insert({
       user_id: log.userId,
       status: log.status,
@@ -347,6 +366,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async getUsageStatsAsync(): Promise<UsageStat[]> {
     const supabase = getSupabaseClient();
+    if (!supabase) return [];
     const { data, error } = await supabase
       .from('usage_stats')
       .select('*')
@@ -365,6 +385,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async addUsageStatAsync(stat: UsageStat): Promise<void> {
     const supabase = getSupabaseClient();
+    if (!supabase) return;
     const today = stat.date || new Date().toISOString().split('T')[0];
 
     // 检查今日是否已有记录，有则增量，无则新增
@@ -407,6 +428,9 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async getAIConfigAsync(): Promise<AIConfig> {
     const supabase = getSupabaseClient();
+    if (!supabase) {
+      return { id: 1, apiKey: '', baseUrl: '', modelName: '', updatedBy: null, updatedAt: new Date().toISOString() };
+    }
     const { data, error } = await supabase
       .from('admin_ai_config')
       .select('*')
@@ -441,6 +465,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async saveAIConfigAsync(config: AIConfig): Promise<void> {
     const supabase = getSupabaseClient();
+    if (!supabase) return;
     const dbData = mapAIConfigToDbUpdate(config);
 
     const { data: existing } = await supabase
@@ -463,6 +488,7 @@ class SupabaseAuthStorage implements AuthStorage {
 
   async cleanupExpiredLoginLogsAsync(): Promise<number> {
     const supabase = getSupabaseClient();
+    if (!supabase) return 0;
     const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
     const { count, error } = await supabase
       .from('login_logs')
@@ -492,6 +518,7 @@ export async function getAllUsersAsync(): Promise<User[]> {
 /** 异步按用户名查询用户 */
 export async function getUserByUsernameAsync(username: string): Promise<User | null> {
   const supabase = getSupabaseClient();
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -506,6 +533,7 @@ export async function getUserByUsernameAsync(username: string): Promise<User | n
 /** 异步按 ID 查询用户 */
 export async function getUserByIdAsync(id: number): Promise<User | null> {
   const supabase = getSupabaseClient();
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -552,6 +580,7 @@ export async function updateUserAsync(id: number, data: Partial<{
   password: string;
 }>): Promise<User | null> {
   const supabase = getSupabaseClient();
+  if (!supabase) return null;
   const updates: Record<string, unknown> = {};
   if (data.username) updates.username = data.username;
   if (data.email !== undefined) updates.email = data.email || null;
@@ -582,6 +611,7 @@ export async function updateUserAsync(id: number, data: Partial<{
 /** 异步删除用户 */
 export async function deleteUserAsync(id: number): Promise<boolean> {
   const supabase = getSupabaseClient();
+  if (!supabase) return false;
   const { error } = await supabase
     .from('users')
     .delete()
@@ -612,6 +642,7 @@ export async function addLoginLogAsync(data: {
 /** 异步按用户名获取登录日志（数据导出用） */
 export async function getLoginLogsByUsernameAsync(username: string): Promise<LoginLog[]> {
   const supabase = getSupabaseClient();
+  if (!supabase) return [];
   // 先获取用户ID
   const { data: user } = await supabase
     .from('users')
@@ -672,6 +703,7 @@ export async function saveAIConfigAsync(config: AIConfig): Promise<void> {
 /** 异步检查：Supabase 中是否有用户 */
 export async function isInitializedAsync(): Promise<boolean> {
   const supabase = getSupabaseClient();
+  if (!supabase) return false;
   const { data } = await supabase.from('users').select('id').limit(1);
   return !!(data && data.length > 0);
 }
@@ -746,6 +778,7 @@ export async function registerByEmailAsync(data: {
 
   // 2. 检查邮箱是否已被注册
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('数据库未配置，无法注册');
   const { data: existingUser } = await supabase
     .from('users')
     .select('id')
@@ -760,6 +793,7 @@ export async function registerByEmailAsync(data: {
   let username = baseUsername;
   let suffix = 1;
   while (true) {
+    if (!supabase) break;
     const { data: conflictUser } = await supabase
       .from('users')
       .select('id')
@@ -807,6 +841,7 @@ export async function verifySecurityAnswerAsync(
   const supabase = getSupabaseClient();
 
   // 查找用户
+  if (!supabase) return { valid: false, error: '数据库未配置' };
   const { data: userData, error } = await supabase
     .from('users')
     .select('id, security_answer, security_question')
@@ -853,6 +888,7 @@ export async function resetPasswordAsync(data: {
 
   // 更新密码
   const supabase = getSupabaseClient();
+  if (!supabase) return { success: false, error: '数据库未配置' };
   const newPasswordHash = await bcrypt.hash(newPassword, 12);
   const { error: updateError } = await supabase
     .from('users')
@@ -870,6 +906,7 @@ export async function resetPasswordAsync(data: {
 /** 获取用户的安全问题（密码重置时展示） */
 export async function getSecurityQuestionAsync(email: string): Promise<{ question?: string; error?: string }> {
   const supabase = getSupabaseClient();
+  if (!supabase) return { error: '数据库未配置' };
 
   const { data, error } = await supabase
     .from('users')
@@ -892,6 +929,7 @@ export async function getSecurityQuestionAsync(email: string): Promise<{ questio
 /** 按邮箱查询用户 */
 export async function getUserByEmailAsync(email: string): Promise<User | null> {
   const supabase = getSupabaseClient();
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from('users')
     .select('*')

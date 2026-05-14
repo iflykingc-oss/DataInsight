@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseClient();
+    if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
 
     // 验证密码
     const { data: user, error: fetchError } = await supabase

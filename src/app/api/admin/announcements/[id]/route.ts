@@ -13,6 +13,7 @@ export async function PUT(
   }
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   try {
     const { id } = await params;
     const body = await request.json();
@@ -72,6 +73,7 @@ export async function DELETE(
   }
 
   const supabase = getSupabaseClient();
+  if (!supabase) return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   try {
     const { id } = await params;
 
