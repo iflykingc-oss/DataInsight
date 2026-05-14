@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, memo } from 'react';
+import Link from 'next/link';
 import {
   BarChart3, Settings, LayoutDashboard, Table2,
   Brain, FileSpreadsheet, Sparkles, MessageSquare,
@@ -333,14 +334,14 @@ function Sidebar({
         </button>
       </div>
 
-      {/* Footer Links */}
+      {/* Footer Links — 法律条款独立页面，满足合规 URL 路径要求 */}
       {!collapsed && (
-        <div className="px-3 pb-3 flex items-center gap-3 text-[10px] text-sidebar-foreground/20">
-          <a href="/privacy" target="_blank" className="hover:text-sidebar-foreground/40 transition-colors">{t('sidebar.privacy')}</a>
+        <div className="px-3 pb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-sidebar-foreground/20">
+          <Link href="/terms" className="hover:text-sidebar-foreground/40 transition-colors">{t('legal.termsTitle')}</Link>
           <span>·</span>
-          <button onClick={() => onViewChange('pricing')} className="hover:text-sidebar-foreground/40 transition-colors">{t('sidebar.pricing')}</button>
+          <Link href="/privacy" className="hover:text-sidebar-foreground/40 transition-colors">{t('sidebar.privacy')}</Link>
           <span>·</span>
-          <button onClick={() => onViewChange('data-compliance')} className="hover:text-sidebar-foreground/40 transition-colors">{t('sidebar.dataCompliance')}</button>
+          <Link href="/refund" className="hover:text-sidebar-foreground/40 transition-colors">{t('legal.refundTitle')}</Link>
         </div>
       )}
     </aside>
