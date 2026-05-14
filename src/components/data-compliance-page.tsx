@@ -122,7 +122,7 @@ export default function DataCompliancePage({ onBack }: DataCompliancePageProps) 
 
       {/* Content */}
       {activeTab === 'privacy' && (
-        <div className="max-w-3xl space-y-6 text-sm text-foreground/80 leading-relaxed">
+        <div className="space-y-6 text-sm text-foreground/80 leading-relaxed">
           {/* Privacy Overview Card */}
           <div className="bg-muted/30 border border-border rounded-lg p-5">
             <div className="flex items-start gap-3">

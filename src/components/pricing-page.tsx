@@ -192,7 +192,7 @@ export default function PricingPage({ onBack, onOpenLegal }: PricingPageProps) {
             </button>
           )}
           <h2 className="text-2xl font-bold text-foreground whitespace-nowrap">{t('pricing.title')}</h2>
-          <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto">{t('pricing.subtitle')}</p>
+          <p className="text-sm text-muted-foreground mt-2">{t('pricing.subtitle')}</p>
 
           {/* Competitor comparison badge */}
           <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-medium whitespace-nowrap">

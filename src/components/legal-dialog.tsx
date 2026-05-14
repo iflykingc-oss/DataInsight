@@ -25,7 +25,7 @@ export function LegalDocumentDialog({ open, onOpenChange, type }: LegalDocumentD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl w-[calc(100vw-2rem)] max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-4xl w-[calc(100vw-1rem)] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{titles[type] || t('legal.termsTitle')}</DialogTitle>
         </DialogHeader>

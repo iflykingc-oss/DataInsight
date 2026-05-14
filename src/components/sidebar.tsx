@@ -119,7 +119,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-200 ease-in-out ${
+      className={`hidden md:flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-200 ease-in-out ${
         collapsed ? 'w-[52px]' : 'w-[216px]'
       }`}
     >
