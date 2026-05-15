@@ -470,8 +470,9 @@ function AdminContent({ activeTab }: AdminContentProps) {
     }
   };
 
-  const handleDeleteUser = async (id: number) => {
-    if (!confirm(t('admin.confirmDeleteUser'))) return;
+  const handleDeleteUser = async (id: number, name?: string) => {
+    const msg = t('admin.confirmDeleteUser').replace('{name}', name || String(id));
+    if (!confirm(msg)) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/users?id=${id}`, {
@@ -648,7 +649,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                           <Edit3 className="w-3.5 h-3.5" />
                         </Button>
                         {u.id !== user?.id && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteUser(u.id)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteUser(u.id, u.name as string || u.username as string)}>
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         )}
@@ -1579,7 +1580,7 @@ Product analytics · GDPR/CCPA compliant · Device ID hashed · No PII stored ·
                 ) : activityLogs.map((log: Record<string, unknown>) => (
                   <TableRow key={log.id as number}>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap truncate">
-                      {log.created_at ? new Date(log.created_at as string).toLocaleString('zh-CN', {
+                      {log.created_at ? new Date(log.created_at as string).toLocaleString('en-US', {
                         month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
                       }) : '-'}
                     </TableCell>
