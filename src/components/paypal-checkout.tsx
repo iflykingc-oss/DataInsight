@@ -27,7 +27,9 @@ export function PayPalCheckout({
   const [status, setStatus] = useState<'idle' | 'creating' | 'approving' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
-  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || '';
+  // PayPal Client ID is public by design (visible in frontend JS).
+  // Fallback to hardcoded production ID if env var not available at build time.
+  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'AY3oWB9WeyCXOeZlllfp3t-6hEmfUURdJUz_FIbBlqZs56AEiOgQc_Y1-HDJ2RyGjgp06Ay8AgkvrSZI';
   const isSandbox = process.env.NEXT_PUBLIC_PAYPAL_SANDBOX !== 'false';
 
   if (!clientId) {
