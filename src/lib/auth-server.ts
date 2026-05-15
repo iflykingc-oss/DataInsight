@@ -120,7 +120,7 @@ function mapAIConfigToDbUpdate(config: AIConfig): Record<string, unknown> {
 
 // ==================== Supabase 存储实现 ====================
 
-class SupabaseAuthStorage implements AuthStorage {
+export class SupabaseAuthStorage implements AuthStorage {
   private _available: boolean;
 
   constructor() {

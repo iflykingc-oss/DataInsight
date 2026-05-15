@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/use-auth';
+import { PayPalCheckout } from '@/components/paypal-checkout';
 
 type PaymentMethod = 'creem' | 'paypal' | 'license';
 
@@ -306,6 +307,30 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
                 </div>
               )}
 
+              {/* PayPal Buttons */}
+              {paymentMethod === 'paypal' && planInfo && (
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">
+                    {t('upgrade.paySecurely')}
+                  </label>
+                  <div className="border border-input rounded-md p-2 bg-background">
+                    <PayPalCheckout
+                      planKey={planKey}
+                      billingCycle={billingCycle}
+                      price={billingCycle === 'yearly' ? planInfo.priceYearly : planInfo.priceMonthly}
+                      currency={planInfo.currency}
+                      onSuccess={() => {
+                        onOpenChange(false);
+                        window.location.reload();
+                      }}
+                      onError={err => {
+                        setError(err);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Benefits */}
               {planInfo.features.length > 0 && (
                 <div>
@@ -359,31 +384,33 @@ export function UpgradeDialog({ open, onOpenChange, planKey, billingCycle }: Upg
         <div className="flex gap-3 pt-2 border-t border-border">
           <Button
             variant="outline"
-            className="flex-1"
+            className={paymentMethod === 'paypal' ? 'w-full' : 'flex-1'}
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
             {t('upgrade.cancel')}
           </Button>
-          <Button
-            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={handleCheckout}
-            disabled={loading || planLoading || !planInfo || (paymentMethod === 'license' && !licenseCode.trim())}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
-                {t('upgrade.processing')}
-              </>
-            ) : (
-              <>
-                {paymentMethod === 'license'
-                  ? (t('license.redeem') || '兑换')
-                  : t('upgrade.confirm')}
-                <ArrowRight className="w-4 h-4 ml-1.5" />
-              </>
-            )}
-          </Button>
+          {paymentMethod !== 'paypal' && (
+            <Button
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={handleCheckout}
+              disabled={loading || planLoading || !planInfo || (paymentMethod === 'license' && !licenseCode.trim())}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                  {t('upgrade.processing')}
+                </>
+              ) : (
+                <>
+                  {paymentMethod === 'license'
+                    ? (t('license.redeem') || '兑换')
+                    : t('upgrade.confirm')}
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

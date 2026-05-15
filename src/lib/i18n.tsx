@@ -742,6 +742,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'upgrade.paymentMethod': '支付方式',
     'upgrade.payCreem': '信用卡 / 借记卡',
     'upgrade.payLicense': '激活码',
+    'upgrade.payPal': 'PayPal',
+    'upgrade.paySecurely': '通过 PayPal 安全支付',
     // === License ===
     'license.redeemTitle': '激活码兑换',
     'license.redeemDesc': '请输入您的激活码以兑换订阅',
@@ -5504,6 +5506,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'upgrade.paymentMethod': 'Payment Method',
     'upgrade.payCreem': 'Credit / Debit Card',
     'upgrade.payLicense': 'License Key',
+    'upgrade.payPal': 'PayPal',
+    'upgrade.paySecurely': 'Pay securely via PayPal',
     // === License ===
     'license.redeemTitle': 'Redeem License Key',
     'license.redeemDesc': 'Enter your license key to redeem subscription',

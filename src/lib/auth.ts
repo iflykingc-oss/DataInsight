@@ -45,6 +45,8 @@ export interface User {
     status: 'active' | 'canceled' | 'expired';
     currentPeriodEnd: string;
     paymentProvider?: string;
+    billingCycle?: 'monthly' | 'yearly';
+    startDate?: string;
   };
 }
 
