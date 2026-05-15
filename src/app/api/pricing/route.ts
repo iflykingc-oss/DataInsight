@@ -2,11 +2,80 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { verifyAuth } from '@/lib/auth-middleware';
 
+// Default pricing plans when database is unavailable
+const DEFAULT_PRICING_PLANS = [
+  {
+    id: 1,
+    plan_key: 'free',
+    name: '免费版',
+    name_en: 'Free',
+    description: '适合个人体验',
+    description_en: 'For personal exploration',
+    price_monthly: 0,
+    price_yearly: 0,
+    currency: 'USD',
+    features: ['ai_call:20', 'export:10', 'dashboard:1', 'table:3'],
+    highlight_features: ['basic_analysis', 'basic_export'],
+    is_popular: false,
+    sort_order: 1,
+    status: 'active',
+  },
+  {
+    id: 2,
+    plan_key: 'pro',
+    name: '专业版',
+    name_en: 'Pro',
+    description: '适合数据分析师',
+    description_en: 'For data analysts',
+    price_monthly: 990,
+    price_yearly: 9490,
+    currency: 'USD',
+    features: [
+      'ai_call:500', 'export:100', 'dashboard:10', 'table:50',
+      'ai_field:200', 'ai_formula:100', 'data_story:10',
+      'nl2dashboard:10', 'custom_metric:20', 'data_cleaning:50', 'sql_lab:1',
+    ],
+    highlight_features: [
+      'unlimited_tables', 'sql_lab', 'ai_field', 'ai_formula',
+      'echarts_10', 'ai_formula', 'nl2dashboard',
+    ],
+    is_popular: true,
+    sort_order: 2,
+    status: 'active',
+  },
+  {
+    id: 3,
+    plan_key: 'business',
+    name: '商业版',
+    name_en: 'Business',
+    description: '适合企业团队',
+    description_en: 'For enterprise teams',
+    price_monthly: 2990,
+    price_yearly: 29900,
+    currency: 'USD',
+    features: [
+      'ai_call:-1', 'export:-1', 'dashboard:-1', 'table:-1',
+      'ai_field:-1', 'ai_formula:-1', 'data_story:-1',
+      'nl2dashboard:-1', 'custom_metric:-1', 'data_cleaning:-1', 'sql_lab:-1',
+    ],
+    highlight_features: [
+      'unlimited_ai', 'deep_analysis', 'priority_support',
+      'metric_semantic', 'data_story', 'industry_all',
+    ],
+    is_popular: false,
+    sort_order: 3,
+    status: 'active',
+  },
+];
+
 // GET /api/pricing - Get all pricing plans (public)
 export async function GET() {
   try {
     const supabase = getSupabaseClient();
-    if (!supabase) return NextResponse.json({ success: true, plans: [] });
+    if (!supabase) {
+      // Fallback: return default pricing plans when database is not configured
+      return NextResponse.json({ success: true, plans: DEFAULT_PRICING_PLANS });
+    }
     const { data: plans, error } = await supabase
       .from('pricing_plans')
       .select('*')
@@ -16,6 +85,11 @@ export async function GET() {
     if (error) {
       console.error('Pricing plans query error:', error);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
+    }
+
+    // If database returns empty (table not seeded), fallback to defaults
+    if (!plans || plans.length === 0) {
+      return NextResponse.json({ success: true, plans: DEFAULT_PRICING_PLANS });
     }
 
     // Process promotions: check if promotion is currently active
