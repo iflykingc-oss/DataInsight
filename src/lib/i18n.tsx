@@ -11884,7 +11884,7 @@ interface I18nContextValue {
 }
 
 const I18nContext = createContext<I18nContextValue>({
-  locale: 'zh-CN',
+  locale: 'en-US',
   setLocale: () => {},
   t: (key) => key,
 });

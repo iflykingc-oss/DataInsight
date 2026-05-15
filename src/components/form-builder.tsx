@@ -69,7 +69,7 @@ import {
   CircleDot,
 } from "lucide-react";
 import QRCode from "qrcode";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 /* ─── Types ─── */
 
@@ -387,23 +387,38 @@ export function FormBuilder({
     toast.success("二维码已下载");
   }, [qrDataUrl, qrFormId]);
 
-  const exportSubmissions = useCallback((formConfig: FormConfig) => {
+  const exportSubmissions = useCallback(async (formConfig: FormConfig) => {
     const subs = loadSubmissions(formConfig.id);
     if (subs.length === 0) {
       toast.error("暂无收集数据可导出");
       return;
     }
-    const wsData = subs.map((s) => {
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('收集数据');
+
+    // Build header list: 提交时间 + all field labels
+    const headers = ['提交时间', ...formConfig.fields.map(f => f.label)];
+    worksheet.columns = headers.map(h => ({ header: h, key: h, width: 20 }));
+
+    // Add data rows
+    subs.forEach((s) => {
       const row: Record<string, string> = { 提交时间: new Date(s.submittedAt).toLocaleString() };
       formConfig.fields.forEach((f) => {
         row[f.label] = s.data[f.id] || "";
       });
-      return row;
+      worksheet.addRow(headers.map(h => row[h] ?? ''));
     });
-    const ws = XLSX.utils.json_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "收集数据");
-    XLSX.writeFile(wb, `${formConfig.title}_收集数据.xlsx`);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${formConfig.title}_收集数据.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+
     toast.success(`已导出 ${subs.length} 条数据`);
   }, []);
 

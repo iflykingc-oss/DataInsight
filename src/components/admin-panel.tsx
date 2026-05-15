@@ -76,11 +76,11 @@ interface AdminPanelProps {
 }
 
 const ROLE_OPTIONS: { value: Role; label: string; desc: string; restricted?: boolean }[] = [
-  { value: 'admin', label: '管理员', desc: '全部权限（系统保留，不可创建）', restricted: true },
-  { value: 'editor', label: '编辑者', desc: '可上传、分析、建表、仪表盘' },
-  { value: 'analyst', label: '分析师', desc: '可分析、图表、SQL查询' },
-  { value: 'viewer', label: '查看者', desc: '仅查看仪表盘和报表' },
-  { value: 'custom', label: '自定义', desc: '手动配置权限' },
+  { value: 'admin', label: 'Admin', desc: 'All permissions (system reserved, cannot be created)', restricted: true },
+  { value: 'editor', label: 'Editor', desc: 'Can upload, analyze, build tables, dashboards' },
+  { value: 'analyst', label: 'Analyst', desc: 'Can analyze, chart, SQL query' },
+  { value: 'viewer', label: 'Viewer', desc: 'View-only: dashboards and reports' },
+  { value: 'custom', label: 'Custom', desc: 'Manually configure permissions' },
 ];
 
 export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
@@ -90,7 +90,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // 用户管理
+  // User management
   const [users, setUsers] = useState<UserData[]>([]);
   const [userFormOpen, setUserFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
@@ -108,10 +108,10 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     permissions: { ...ROLE_TEMPLATES.editor },
   });
 
-  // 登录记录
+  // Login logs
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
 
-  // AI配置
+  // AI config
   const [aiConfig, setAiConfig] = useState<AIConfig>({
     apiKey: '',
     baseUrl: '',
@@ -143,7 +143,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       const data = await res.json();
       if (res.ok) setUsers(data.data);
     } catch {
-      showMessage('获取用户列表失败', 'error');
+      showMessage('Failed to load users', 'error');
     }
   }, [token]);
 
@@ -155,7 +155,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       const data = await res.json();
       if (res.ok) setLoginLogs(data.data);
     } catch {
-      showMessage('获取登录记录失败', 'error');
+      showMessage('Failed to load login logs', 'error');
     }
   }, [token]);
 
@@ -167,7 +167,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       const data = await res.json();
       if (res.ok) setAiConfig(data.data);
     } catch {
-      showMessage('获取AI配置失败', 'error');
+      showMessage('Failed to load AI config', 'error');
     }
   }, [token]);
 
@@ -181,7 +181,6 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
 
   const applyRoleTemplate = (role: Role) => {
     if (role === 'custom') {
-      // 自定义角色：保留当前权限设置，仅切换角色标识
       setFormData((prev) => ({ ...prev, role: 'custom' }));
       return;
     }
@@ -192,7 +191,6 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     }));
   };
 
-  // 添加/编辑用户
   const handleSaveUser = async () => {
     setLoading(true);
     try {
@@ -227,22 +225,22 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
 
       const data = await res.json();
       if (res.ok) {
-        showMessage(editingUser ? '用户已更新' : '用户已创建');
+        showMessage(editingUser ? 'User updated' : 'User created');
         setUserFormOpen(false);
         setEditingUser(null);
         fetchUsers();
       } else {
-        showMessage(data.error || '操作失败', 'error');
+        showMessage(data.error || 'Operation failed', 'error');
       }
     } catch {
-      showMessage('网络错误', 'error');
+      showMessage('Network error', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteUser = async (id: number) => {
-    if (!confirm('确定要删除该用户吗？')) return;
+    if (!confirm('Are you sure you want to delete this user?')) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/users?id=${id}`, {
@@ -251,13 +249,13 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        showMessage('用户已删除');
+        showMessage('User deleted');
         fetchUsers();
       } else {
-        showMessage(data.error || '删除失败', 'error');
+        showMessage(data.error || 'Delete failed', 'error');
       }
     } catch {
-      showMessage('网络错误', 'error');
+      showMessage('Network error', 'error');
     } finally {
       setLoading(false);
     }
@@ -300,12 +298,12 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        showMessage('AI配置已保存');
+        showMessage('AI config saved');
       } else {
-        showMessage(data.error || '保存失败', 'error');
+        showMessage(data.error || 'Save failed', 'error');
       }
     } catch {
-      showMessage('网络错误', 'error');
+      showMessage('Network error', 'error');
     } finally {
       setAiConfigLoading(false);
     }
@@ -313,7 +311,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
 
   const handleTestAIConnection = async () => {
     if (!aiConfig.apiKey || !aiConfig.baseUrl) {
-      showMessage('请先填写 API Key 和 Base URL', 'error');
+      showMessage('Please enter API Key and Base URL first', 'error');
       return;
     }
     setAiConfigLoading(true);
@@ -325,12 +323,12 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        showMessage(`连接成功！模型: ${data.model || aiConfig.modelName}`, 'success');
+        showMessage(`Connected! Model: ${data.model || aiConfig.modelName}`, 'success');
       } else {
-        showMessage(data.error || '连接失败，请检查配置', 'error');
+        showMessage(data.error || 'Connection failed, please check your config', 'error');
       }
     } catch {
-      showMessage('网络错误，无法测试连接', 'error');
+      showMessage('Network error, cannot test connection', 'error');
     } finally {
       setAiConfigLoading(false);
     }
@@ -346,25 +344,25 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
     }));
   };
 
-  // 权限按类别分组
+  // Permission categories
   const permissionCategories = [
     {
-      key: '数据与AI',
+      key: 'Data & AI',
       icon: <Brain className="w-4 h-4" />,
       keys: ['upload', 'export', 'ai_analyze', 'ai_table_builder', 'ai_formula', 'ai_field'],
     },
     {
-      key: '可视化与报表',
+      key: 'Visualization & Reports',
       icon: <LayoutGrid className="w-4 h-4" />,
       keys: ['dashboard', 'report', 'share', 'metric_custom', 'form'],
     },
     {
-      key: '高级功能',
+      key: 'Advanced',
       icon: <Settings2 className="w-4 h-4" />,
       keys: ['sql_query', 'workflow', 'custom_ai_model'],
     },
     {
-      key: '系统管理',
+      key: 'System',
       icon: <Shield className="w-4 h-4" />,
       keys: ['admin_user', 'admin_ai_config'],
     },
@@ -372,11 +370,11 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
 
   const getRoleBadge = (role: string) => {
     const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
-      admin: { label: '管理员', variant: 'default' },
-      editor: { label: '编辑者', variant: 'secondary' },
-      analyst: { label: '分析师', variant: 'outline' },
-      viewer: { label: '查看者', variant: 'outline' },
-      custom: { label: '自定义', variant: 'destructive' },
+      admin: { label: 'Admin', variant: 'default' },
+      editor: { label: 'Editor', variant: 'secondary' },
+      analyst: { label: 'Analyst', variant: 'outline' },
+      viewer: { label: 'Viewer', variant: 'outline' },
+      custom: { label: 'Custom', variant: 'destructive' },
     };
     const cfg = map[role] || { label: role, variant: 'outline' as const };
     return <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>;
@@ -391,10 +389,10 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
           <div className="space-y-1.5">
             <DialogTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
-              管理员控制台
+              Admin Console
             </DialogTitle>
             <DialogDescription>
-              管理用户账号、权限配置和系统设置
+              Manage user accounts, permissions, and system settings
             </DialogDescription>
           </div>
           <button
@@ -402,7 +400,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
             className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none mt-1"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            <span className="sr-only">关闭</span>
+            <span className="sr-only">Close</span>
           </button>
         </DialogHeader>
 
@@ -423,28 +421,28 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="users" className="gap-1.5">
               <Users className="w-4 h-4" />
-              用户管理
+              Users
             </TabsTrigger>
             <TabsTrigger value="logs" className="gap-1.5">
               <LogIn className="w-4 h-4" />
-              登录记录
+              Login Logs
             </TabsTrigger>
             <TabsTrigger value="ai" className="gap-1.5">
               <Brain className="w-4 h-4" />
-              AI模型配置
+              AI Model Config
             </TabsTrigger>
           </TabsList>
 
-          {/* 用户管理 */}
+          {/* User Management */}
           <TabsContent value="users" className="space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-medium">用户列表</h3>
-                <p className="text-xs text-muted-foreground">共 {users.length} 个用户</p>
+                <h3 className="text-sm font-medium">User List</h3>
+                <p className="text-xs text-muted-foreground">{users.length} users</p>
               </div>
               <Button size="sm" onClick={openAddForm}>
                 <Plus className="w-4 h-4 mr-1" />
-                添加用户
+                Add User
               </Button>
             </div>
 
@@ -452,14 +450,14 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>姓名</TableHead>
-                    <TableHead>账户</TableHead>
-                    <TableHead>角色</TableHead>
-                    <TableHead>数据</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Data</TableHead>
                     <TableHead>AI</TableHead>
-                    <TableHead>仪表盘</TableHead>
-                    <TableHead>系统</TableHead>
-                    <TableHead className="w-[100px]">操作</TableHead>
+                    <TableHead>Dashboard</TableHead>
+                    <TableHead>System</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -470,28 +468,28 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                       <TableCell>{getRoleBadge(u.role)}</TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {u.permissions.upload && <Badge variant="outline" className="text-xs h-5">上传</Badge>}
-                          {u.permissions.export && <Badge variant="outline" className="text-xs h-5">导出</Badge>}
+                          {u.permissions.upload && <Badge variant="outline" className="text-xs h-5">Upload</Badge>}
+                          {u.permissions.export && <Badge variant="outline" className="text-xs h-5">Export</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {u.permissions.ai_analyze && <Badge variant="outline" className="text-xs h-5">分析</Badge>}
-                          {u.permissions.ai_table_builder && <Badge variant="outline" className="text-xs h-5">建表</Badge>}
-                          {u.permissions.ai_formula && <Badge variant="outline" className="text-xs h-5">公式</Badge>}
+                          {u.permissions.ai_analyze && <Badge variant="outline" className="text-xs h-5">Analyze</Badge>}
+                          {u.permissions.ai_table_builder && <Badge variant="outline" className="text-xs h-5">Build Table</Badge>}
+                          {u.permissions.ai_formula && <Badge variant="outline" className="text-xs h-5">Formula</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {u.permissions.dashboard && <Badge variant="outline" className="text-xs h-5">仪表盘</Badge>}
-                          {u.permissions.share && <Badge variant="outline" className="text-xs h-5">分享</Badge>}
-                          {u.permissions.report && <Badge variant="outline" className="text-xs h-5">报表</Badge>}
+                          {u.permissions.dashboard && <Badge variant="outline" className="text-xs h-5">Dashboard</Badge>}
+                          {u.permissions.share && <Badge variant="outline" className="text-xs h-5">Share</Badge>}
+                          {u.permissions.report && <Badge variant="outline" className="text-xs h-5">Report</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 flex-wrap">
-                          {u.permissions.admin_user && <Badge variant="outline" className="text-xs h-5">用户管理</Badge>}
-                          {u.permissions.admin_ai_config && <Badge variant="outline" className="text-xs h-5">AI配置</Badge>}
+                          {u.permissions.admin_user && <Badge variant="outline" className="text-xs h-5">User Mgmt</Badge>}
+                          {u.permissions.admin_ai_config && <Badge variant="outline" className="text-xs h-5">AI Config</Badge>}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -522,42 +520,42 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
               </Table>
             </div>
 
-            {/* 添加/编辑用户弹窗 */}
+            {/* Add/Edit User Dialog */}
             <Dialog open={userFormOpen} onOpenChange={setUserFormOpen}>
               <DialogContent showCloseButton={false} className="max-w-lg max-h-[85vh] overflow-y-auto">
                 <DialogHeader className="flex flex-row items-start justify-between">
-                  <DialogTitle>{editingUser ? '编辑用户' : '添加用户'}</DialogTitle>
+                  <DialogTitle>{editingUser ? 'Edit User' : 'Add User'}</DialogTitle>
                   <button
                     onClick={() => setUserFormOpen(false)}
                     className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    <span className="sr-only">关闭</span>
+                    <span className="sr-only">Close</span>
                   </button>
                 </DialogHeader>
                 <div className="space-y-5">
                   {!editingUser && (
                     <div className="space-y-2">
-                      <Label>账户 *</Label>
+                      <Label>Username *</Label>
                       <Input
                         value={formData.username}
                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                        placeholder="输入账户名"
+                        placeholder="Enter username"
                       />
                     </div>
                   )}
                   <div className="space-y-2">
-                    <Label>姓名 *</Label>
+                    <Label>Name *</Label>
                     <Input
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="用户姓名"
+                      placeholder="Display name"
                     />
                   </div>
 
-                  {/* 角色选择 */}
+                  {/* Role selection */}
                   <div className="space-y-2">
-                    <Label>角色模板</Label>
+                    <Label>Role Template</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {ROLE_OPTIONS.map((opt) => (
                         <button
@@ -587,19 +585,19 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>{editingUser ? '新密码（留空不修改）' : '密码（留空自动生成）'}</Label>
+                    <Label>{editingUser ? 'New Password (leave blank to keep)' : 'Password (leave blank to auto-generate)'}</Label>
                     <Input
                       type="password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder={editingUser ? '不修改' : '自动生成'}
+                      placeholder={editingUser ? 'No change' : 'Auto-generate'}
                     />
                   </div>
 
-                  {/* 权限配置 */}
+                  {/* Custom permissions */}
                   {formData.role === 'custom' && (
                     <div className="space-y-4 pt-2 border-t">
-                      <Label className="font-medium">自定义权限</Label>
+                      <Label className="font-medium">Custom Permissions</Label>
                       {permissionCategories.map((cat) => (
                         <div key={cat.key} className="space-y-2">
                           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
@@ -629,23 +627,23 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
 
                   <Button onClick={handleSaveUser} disabled={loading} className="w-full">
                     {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {editingUser ? '保存修改' : '创建用户'}
+                    {editingUser ? 'Save Changes' : 'Create User'}
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
           </TabsContent>
 
-          {/* 登录记录 */}
+          {/* Login Logs */}
           <TabsContent value="logs" className="space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-medium">登录记录</h3>
-                <p className="text-xs text-muted-foreground">最近 100 条</p>
+                <h3 className="text-sm font-medium">Login Logs</h3>
+                <p className="text-xs text-muted-foreground">Last 100 entries</p>
               </div>
               <Button size="sm" variant="outline" onClick={fetchLoginLogs}>
                 <Activity className="w-4 h-4 mr-1" />
-                刷新
+                Refresh
               </Button>
             </div>
 
@@ -653,9 +651,9 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>账户</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead>时间</TableHead>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Time</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -666,24 +664,24 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                         {log.status === 'success' ? (
                           <Badge variant="outline" className="text-green-600 border-green-200 text-xs">
                             <CheckCircle2 className="w-3 h-3 mr-1" />
-                            成功
+                            Success
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="text-red-600 border-red-200 text-xs">
                             <XCircle className="w-3 h-3 mr-1" />
-                            失败
+                            Failed
                           </Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {new Date(log.createdAt).toLocaleString('zh-CN')}
+                        {new Date(log.createdAt).toLocaleString('en-US')}
                       </TableCell>
                     </TableRow>
                   ))}
                   {loginLogs.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                        暂无登录记录
+                        No login records
                       </TableCell>
                     </TableRow>
                   )}
@@ -692,13 +690,13 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
             </div>
           </TabsContent>
 
-          {/* AI模型配置 */}
+          {/* AI Model Config */}
           <TabsContent value="ai" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <KeyRound className="w-4 h-4" />
-                  AI模型配置
+                  AI Model Config
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -711,7 +709,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                     placeholder="sk-xxxxxxxxxxxxxxxx"
                   />
                   <p className="text-xs text-muted-foreground">
-                    所有用户将默认使用此API Key进行AI分析
+                    All users will use this API Key for AI analysis by default
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -722,24 +720,24 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                     placeholder="https://api.openai.com/v1"
                   />
                   <p className="text-xs text-muted-foreground">
-                    支持 OpenAI 兼容接口格式，如：DeepSeek、通义千问、Moonshot、GLM 等
+                    Supports OpenAI-compatible endpoints, e.g. DeepSeek, Qwen, Moonshot, GLM
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>模型名称</Label>
+                  <Label>Model Name</Label>
                   <Input
                     value={aiConfig.modelName}
                     onChange={(e) => setAiConfig({ ...aiConfig, modelName: e.target.value })}
                     placeholder="gpt-4o / deepseek-chat / qwen-plus ..."
                   />
                   <p className="text-xs text-muted-foreground">
-                    常见模型：gpt-4o、gpt-4o-mini、deepseek-chat、qwen-plus、moonshot-v1-8k、glm-4-flash
+                    Common models: gpt-4o, gpt-4o-mini, deepseek-chat, qwen-plus, moonshot-v1-8k, glm-4-flash
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={handleSaveAIConfig} disabled={aiConfigLoading} className="flex-1">
                     {aiConfigLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    保存配置
+                    Save Config
                   </Button>
                   <Button
                     variant="outline"
@@ -748,7 +746,7 @@ export default function AdminPanel({ open, onOpenChange }: AdminPanelProps) {
                     className="gap-1.5"
                   >
                     <Zap className="w-4 h-4" />
-                    测试连接
+                    Test Connection
                   </Button>
                 </div>
               </CardContent>

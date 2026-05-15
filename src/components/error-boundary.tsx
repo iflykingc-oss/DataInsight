@@ -106,11 +106,11 @@ export function GlobalErrorBoundary({ children }: { children: React.ReactNode })
               </div>
               <div className="flex gap-3 justify-center pt-2">
                 <Button variant="outline" onClick={handleReset}>
-                  {t('errorBoundary.retry')}
+                  Try again
                 </Button>
                 <Button onClick={() => window.location.reload()}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  {t('errorBoundary.retry')}
+                  Reload page
                 </Button>
               </div>
             </div>
@@ -193,16 +193,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               <AlertTriangle className="h-10 w-10 mx-auto text-destructive/60" />
               <div>
                 <h3 className="font-semibold text-lg">
-                  {this.props.moduleName ? `${this.props.moduleName}加载异常` : '组件加载异常'}
+                  {this.props.moduleName ? `${this.props.moduleName} failed to load` : 'Component failed to load'}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {this.state.error?.message || '发生未知错误'}
+                  {this.state.error?.message || 'An unexpected error occurred'}
                 </p>
               </div>
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="text-left">
                   <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                    错误详情
+                    Error details
                   </summary>
                   <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto max-h-32">
                     {this.state.error.stack}
@@ -211,7 +211,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               )}
               <Button variant="outline" onClick={this.handleRetry} className="gap-1.5">
                 <RefreshCw className="h-4 w-4" />
-                重新加载
+                Reload
               </Button>
             </div>
           </CardContent>
@@ -250,10 +250,10 @@ export class InlineErrorBoundary extends React.Component<ErrorBoundaryProps, Err
         <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/5 border border-destructive/20 text-sm">
           <AlertTriangle className="h-4 w-4 text-destructive/60 flex-shrink-0" />
           <span className="text-muted-foreground flex-1">
-            {this.props.moduleName ? `${this.props.moduleName}: ` : ''}{this.state.error?.message || '加载异常'}
+            {this.props.moduleName ? `${this.props.moduleName}: ` : ''}{this.state.error?.message || 'Failed to load'}
           </span>
           <Button variant="ghost" size="sm" onClick={this.handleRetry} className="h-7 text-xs">
-            重试
+            Retry
           </Button>
         </div>
       );

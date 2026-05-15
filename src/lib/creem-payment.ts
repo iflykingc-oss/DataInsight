@@ -2,6 +2,7 @@
 // Docs: https://docs.creem.io/getting-started/quickstart
 // SDK: @creem_io/nextjs or creem_io
 
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
 const CREEM_API_KEY = process.env.CREEM_API_KEY || '';
@@ -80,14 +81,18 @@ export async function createCheckout(params: CheckoutParams) {
  */
 export function verifyWebhookSignature(body: string, signature: string | null): boolean {
   if (!signature || !CREEM_WEBHOOK_SECRET) return false;
-
-  const crypto = require('crypto');
   const expectedSignature = crypto
     .createHmac('sha256', CREEM_WEBHOOK_SECRET)
     .update(body)
     .digest('hex');
-
-  return signature === expectedSignature;
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature)
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**

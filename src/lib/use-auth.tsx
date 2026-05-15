@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(data.user);
         setCurrentUserId(data.user?.id ?? null);
         setInitialized(true);
-        showSuccess('登录成功', `欢迎回来，${data.user.name}`);
+        showSuccess('Login successful', `Welcome back, ${data.user.name}`);
         return { success: true };
       }
 
@@ -204,14 +204,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.needInit) {
         setInitialized(false);
         setLoginDialogOpen(true);
-        return { success: false, error: '系统未初始化，请先创建管理员账号' };
+        return { success: false, error: 'System not initialized. Please create an admin account first.' };
       }
 
-      showError(data.error || '登录失败');
-      return { success: false, error: data.error || '登录失败' };
+      showError(data.error || 'Login failed');
+      return { success: false, error: data.error || 'Login failed' };
     } catch {
-      showError('网络错误，请重试');
-      return { success: false, error: '网络错误，请重试' };
+      showError('Network error, please try again');
+      return { success: false, error: 'Network error, please try again' };
     }
   }, []);
 
@@ -221,7 +221,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('datainsight_refresh_token');
     setUser(null);
     setCurrentUserId(null);
-    showSuccess('已退出登录');
+    showSuccess('Logged out');
     window.location.reload();
   }, []);
 
@@ -232,7 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('datainsight_refresh_token');
       setUser(null);
       setLoginDialogOpen(true);
-      showError('登录已过期，请重新登录');
+      showError('Session expired, please log in again');
     };
     window.addEventListener('auth:expired', handleExpired);
     return () => window.removeEventListener('auth:expired', handleExpired);

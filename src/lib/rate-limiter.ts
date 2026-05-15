@@ -11,6 +11,9 @@ interface RateLimitEntry {
 // 内存存储，key => 限流记录
 const store = new Map<string, RateLimitEntry>();
 
+// NOTE: This store is process-local. In serverless/multi-instance deployments
+// rate limits reset on cold start. For production, replace with a Redis/Upstash store.
+
 // 定期清理过期记录（每5分钟）
 if (typeof setInterval !== 'undefined') {
   setInterval(() => {

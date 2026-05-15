@@ -50,6 +50,8 @@ import { cn } from '@/lib/utils';
 import { useAuth, type PermissionKey } from '@/lib/use-auth';
 import { LoginDialog } from '@/components/login-dialog';
 import { UserMenu } from '@/components/user-menu';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Menu } from 'lucide-react';
 const AdminContent = dynamic(() => import('@/components/admin-content').then(m => ({ default: m.default })), { ssr: false });
 const AdminSidebar = dynamic(() => import('@/components/admin-sidebar').then(m => ({ default: m.default })), { ssr: false });
 import type { AdminTab } from '@/components/admin-sidebar';
@@ -213,6 +215,7 @@ export default function HomePage() {
     feedback: t('admin.feedback'),
   };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [tableView, setTableView] = useState<'table' | 'kanban' | 'calendar' | 'gantt'>('table');
   const [kanbanField, setKanbanField] = useState<string>('');
   const [dateField, setDateField] = useState<string>('');
@@ -1392,10 +1395,30 @@ export default function HomePage() {
 
       {/* ===== 右侧主区域 ===== */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* 顶部栏 - 规范: 高度40px, 边框#E5E6EB, 左右24px边距 */}
-        <header className="h-10 bg-card/80 backdrop-blur-sm border-b border-border flex items-center justify-between px-6 flex-shrink-0">
+        {/* 顶部栏 */}
+        <header className="h-10 bg-card/80 backdrop-blur-sm border-b border-border flex items-center justify-between px-3 md:px-6 flex-shrink-0">
           <div className="flex items-center gap-2">
-            {/* 面包屑 - 规范: 12px辅助文字, 14px当前项 */}
+            {/* Mobile hamburger */}
+            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+              <SheetTrigger asChild>
+                <button className="md:hidden p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" aria-label="Open navigation">
+                  <Menu className="w-5 h-5" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-[216px]">
+                <Sidebar
+                  collapsed={false}
+                  onToggleCollapse={() => setMobileNavOpen(false)}
+                  activeView={viewMode}
+                  onViewChange={(v) => { setViewMode(v as ViewMode); setMobileNavOpen(false); }}
+                  isLoggedIn={isLoggedIn}
+                  userRole={user?.role}
+                  onOpenSettings={() => { setShowSettings(true); setMobileNavOpen(false); }}
+                  onLoginClick={() => { setLoginDialogOpen(true); setMobileNavOpen(false); }}
+                  userName={user?.name}
+                />
+              </SheetContent>
+            </Sheet>
             <button
               onClick={() => setViewMode('home')}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"

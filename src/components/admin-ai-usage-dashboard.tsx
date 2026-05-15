@@ -9,15 +9,15 @@ import { useI18n } from '@/lib/i18n';
 const CHART_COLORS = ['var(--color-primary)', 'var(--color-chart-2)', 'var(--color-chart-3)', 'var(--color-chart-4)', 'var(--color-chart-5)', 'var(--color-destructive)'];
 
 const FUNCTION_LABELS: Record<string, string> = {
-  'llm-insight': 'AI 智能洞察',
-  'ai-field': 'AI 字段',
-  'ai-formula': 'AI 公式',
-  'ai-table-builder': 'AI 建表',
-  'metric-ai': 'AI 指标',
-  'nl2-dashboard': 'NL2仪表盘',
-  'data-story': '数据故事',
-  'analysis-planner': '分析规划',
-  'industry-detect': '行业识别',
+  'llm-insight': 'AI Insights',
+  'ai-field': 'AI Field',
+  'ai-formula': 'AI Formula',
+  'ai-table-builder': 'AI Table Builder',
+  'metric-ai': 'AI Metrics',
+  'nl2-dashboard': 'NL2 Dashboard',
+  'data-story': 'Data Story',
+  'analysis-planner': 'Analysis Planner',
+  'industry-detect': 'Industry Detection',
 };
 
 interface AiUsageSummary {
@@ -104,8 +104,8 @@ export default function AdminAiUsageDashboard() {
     }));
 
   const formatCost = (cents: number) => {
-    if (cents < 100) return `¥${cents}`;
-    return `¥${(cents / 100).toFixed(2)}`;
+    if (cents < 100) return `$${cents}¢`;
+    return `$${(cents / 100).toFixed(2)}`;
   };
 
   const hasData = summary && summary.totalCalls > 0;
@@ -117,14 +117,14 @@ export default function AdminAiUsageDashboard() {
         <div>
           <h3 className="text-base font-medium flex items-center gap-1.5">
             <Cpu className="w-4 h-4 text-primary" />
-            AI 使用量看板
+            AI Usage Dashboard
           </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">监控 AI 功能调用量、Token 消耗与成本估算</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Monitor AI feature calls, token usage, and cost estimates</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
             <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} />
-            刷新
+            Refresh
           </Button>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function AdminAiUsageDashboard() {
       <div className="flex flex-wrap gap-2 items-center">
         <div className="flex items-center gap-1.5">
           <Filter className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">时间范围:</span>
+          <span className="text-xs text-muted-foreground">Time range:</span>
         </div>
         {(['1d', '7d', '30d', '90d'] as const).map(r => (
           <button
@@ -152,7 +152,7 @@ export default function AdminAiUsageDashboard() {
           value={functionFilter}
           onChange={(e) => setFunctionFilter(e.target.value)}
         >
-          <option value="">全部功能</option>
+          <option value="">All features</option>
           {availableFunctions.map(f => (
             <option key={f} value={f}>{FUNCTION_LABELS[f] || f}</option>
           ))}
@@ -162,14 +162,14 @@ export default function AdminAiUsageDashboard() {
           value={modelFilter}
           onChange={(e) => setModelFilter(e.target.value)}
         >
-          <option value="">全部模型</option>
+          <option value="">All models</option>
           {availableModels.map(m => (
             <option key={m} value={m}>{m}</option>
           ))}
         </select>
         {(functionFilter || modelFilter) && (
           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setFunctionFilter(''); setModelFilter(''); }}>
-            清除筛选
+            Clear filters
           </Button>
         )}
       </div>
@@ -177,7 +177,7 @@ export default function AdminAiUsageDashboard() {
       {loading ? (
         <div className="flex items-center justify-center h-64 text-muted-foreground">
           <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-          加载中...
+          Loading...
         </div>
       ) : hasData ? (
         <div className="space-y-4">
@@ -186,34 +186,34 @@ export default function AdminAiUsageDashboard() {
             <div className="bg-card border rounded-md p-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                 <Zap className="w-3.5 h-3.5" />
-                总调用量
+                Total Calls
               </div>
               <div className="text-xl font-semibold">{summary.totalCalls.toLocaleString()}</div>
-              <div className="text-xs text-success mt-0.5">{summary.successCalls} 成功</div>
+              <div className="text-xs text-success mt-0.5">{summary.successCalls} succeeded</div>
             </div>
             <div className="bg-card border rounded-md p-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                 <AlertTriangle className="w-3.5 h-3.5" />
-                错误率
+                Error Rate
               </div>
               <div className="text-xl font-semibold">{summary.errorRate}%</div>
-              <div className="text-xs text-destructive mt-0.5">{summary.errorCalls + summary.timeoutCalls} 失败</div>
+              <div className="text-xs text-destructive mt-0.5">{summary.errorCalls + summary.timeoutCalls} failed</div>
             </div>
             <div className="bg-card border rounded-md p-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                 <BarChart3 className="w-3.5 h-3.5" />
-                Token 消耗
+                Token Usage
               </div>
               <div className="text-xl font-semibold">{(summary.totalTokens / 1000).toFixed(1)}K</div>
-              <div className="text-xs text-muted-foreground mt-0.5">平均延迟 {summary.avgLatency}ms</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Avg latency {summary.avgLatency}ms</div>
             </div>
             <div className="bg-card border rounded-md p-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                 <DollarSign className="w-3.5 h-3.5" />
-                估算成本
+                Est. Cost
               </div>
               <div className="text-xl font-semibold">{formatCost(summary.estimatedCostCents)}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">近 {summary.days} 天</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Last {summary.days} days</div>
             </div>
           </div>
 
@@ -222,7 +222,7 @@ export default function AdminAiUsageDashboard() {
             <div className="bg-card border rounded-md p-4">
               <h3 className="text-sm font-medium mb-3 flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                每日趋势
+                Daily Trend
               </h3>
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={trendData}>
@@ -231,8 +231,8 @@ export default function AdminAiUsageDashboard() {
                   <YAxis tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }} />
                   <Tooltip contentStyle={{ backgroundColor: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: 12 }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="calls" stroke="var(--color-primary)" strokeWidth={2} dot={false} name="调用量" />
-                  <Line type="monotone" dataKey="errors" stroke="var(--color-destructive)" strokeWidth={2} dot={false} name="失败" />
+                  <Line type="monotone" dataKey="calls" stroke="var(--color-primary)" strokeWidth={2} dot={false} name="Calls" />
+                  <Line type="monotone" dataKey="errors" stroke="var(--color-destructive)" strokeWidth={2} dot={false} name="Errors" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -244,7 +244,7 @@ export default function AdminAiUsageDashboard() {
               <div className="bg-card border rounded-md p-4">
                 <h3 className="text-sm font-medium mb-3 flex items-center gap-1.5">
                   <Cpu className="w-3.5 h-3.5 text-primary" />
-                  功能调用分布
+                  Calls by Feature
                 </h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={functionData} layout="vertical">
@@ -252,7 +252,7 @@ export default function AdminAiUsageDashboard() {
                     <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }} />
                     <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 11, fill: 'var(--color-muted-foreground)' }} />
                     <Tooltip contentStyle={{ backgroundColor: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 6, fontSize: 12 }} />
-                    <Bar dataKey="calls" fill="var(--color-primary)" radius={[0, 4, 4, 0]} name="调用量" />
+                    <Bar dataKey="calls" fill="var(--color-primary)" radius={[0, 4, 4, 0]} name="Calls" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -263,7 +263,7 @@ export default function AdminAiUsageDashboard() {
               <div className="bg-card border rounded-md p-4">
                 <h3 className="text-sm font-medium mb-3 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-primary" />
-                  模型使用分布
+                  Usage by Model
                 </h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
@@ -284,14 +284,14 @@ export default function AdminAiUsageDashboard() {
             <div className="bg-card border rounded-md p-4">
               <h3 className="text-sm font-medium mb-3 flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-primary" />
-                用户调用排行
+                Top Users
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-2 text-xs text-muted-foreground font-medium">用户 ID</th>
-                      <th className="text-right py-2 text-xs text-muted-foreground font-medium">调用次数</th>
+                      <th className="text-left py-2 text-xs text-muted-foreground font-medium">User ID</th>
+                      <th className="text-right py-2 text-xs text-muted-foreground font-medium">Calls</th>
                       <th className="text-right py-2 text-xs text-muted-foreground font-medium">Token</th>
                     </tr>
                   </thead>
@@ -312,8 +312,8 @@ export default function AdminAiUsageDashboard() {
       ) : (
         <div className="bg-card border rounded-md p-12 text-center">
           <Cpu className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
-          <p className="text-sm font-medium text-muted-foreground">暂无 AI 使用数据</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">当用户开始使用 AI 功能后，这里将显示调用量统计</p>
+          <p className="text-sm font-medium text-muted-foreground">No AI usage data yet</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Usage statistics will appear here once users start using AI features</p>
         </div>
       )}
     </div>

@@ -7,7 +7,8 @@ import {
   Brain, FileSpreadsheet, Sparkles, MessageSquare,
   FileText, Code2, Download, ChevronDown, ChevronRight,
   Home, Shield, Target, LineChart, BookOpen, Building2,
-  ShieldCheck, Layers, Cpu, CreditCard, LucideIcon
+  ShieldCheck, Layers, Cpu, CreditCard, LucideIcon,
+  Menu, X
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
@@ -30,7 +31,7 @@ interface NavGroup {
 }
 
 // ---- Navigation Definition ----
-// 规范：2组导航，核心功能5项 + 更多工具9项
+// 2 nav groups: 5 core features + 9 more tools
 const NAV_GROUPS: NavGroup[] = [
   {
     key: 'core',
@@ -79,14 +80,14 @@ interface SidebarProps {
 }
 
 /*
- * Sidebar — 规范改造要点：
- * - 间距：仅4/8/16px三档（侧边栏内无24px场景）
- * - 字号：分组标题12px、导航项14px、辅助文字12px
- * - 主色：选中态/图标统一用sidebar-primary (#1677FF系)
- * - 选中态：左侧3px主色条 + 背景微亮 + 图标主色
- * - 圆角：6px（导航项）
- * - 层级：分组标题缩进8px，子项缩进8px（图标+4px间距+文字）
- * - 低噪：去阴影、去多余装饰
+ * Sidebar design spec:
+ * - Spacing: 4/8/16px only
+ * - Font: group headers 12px, nav items 14px, helper text 12px
+ * - Primary color: active state/icons use sidebar-primary
+ * - Active state: 3px left accent bar + subtle bg + primary icon
+ * - Border radius: 6px (nav items)
+ * - Hierarchy: group headers 8px indent, items 8px (icon + 4px gap + label)
+ * - Low noise: no shadows, no decorative elements
  */
 function Sidebar({
   activeView,
@@ -124,7 +125,7 @@ function Sidebar({
         collapsed ? 'w-[52px]' : 'w-[216px]'
       }`}
     >
-      {/* ---- Logo / Brand ---- 规范：h-11, 间距8px */}
+      {/* ---- Logo / Brand ---- */}
       <div className="flex items-center h-11 px-2 border-b border-sidebar-border shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-7 h-7 rounded-md bg-sidebar-primary flex items-center justify-center shrink-0">
@@ -138,9 +139,9 @@ function Sidebar({
         </div>
       </div>
 
-      {/* ---- Navigation ---- 规范：py-8px px-4px */}
+      {/* ---- Navigation ---- */}
       <nav className="flex-1 overflow-y-auto py-2 px-1 sidebar-scrollbar">
-        {/* 工作台 - Top level */}
+        {/* Workspace - Top level */}
         <button
           onClick={() => onViewChange('home')}
           title={collapsed ? t('sidebar.workspace') : undefined}
@@ -161,7 +162,7 @@ function Sidebar({
           {!collapsed && <span className="truncate flex-1 text-left">{t('sidebar.workspace')}</span>}
         </button>
 
-        {/* Divider — 规范间距8px */}
+        {/* Divider */}
         <div className="my-2 mx-2 border-t border-sidebar-border/40" />
 
         {/* Grouped navigation */}
@@ -169,7 +170,7 @@ function Sidebar({
           const isExpanded = expandedGroups.has(group.key);
           return (
             <div key={group.key} className="mb-0.5">
-              {/* Group Header — 规范：12px浅灰大写 */}
+              {/* Group Header */}
               {!collapsed && (
                 <button
                   onClick={() => toggleGroup(group.key)}
@@ -191,7 +192,7 @@ function Sidebar({
                 </div>
               )}
 
-              {/* Group Items — 规范：14px字号, 8px图标间距, 6px圆角 */}
+              {/* Group Items */}
               {(isExpanded || collapsed) && (
                 <div className={collapsed ? 'flex flex-col items-center gap-0.5' : 'space-y-0.5'}>
                   {group.items.map(item => {
@@ -211,7 +212,7 @@ function Sidebar({
                           }
                         `}
                       >
-                        {/* Active indicator — 规范3px主色条 */}
+                        {/* Active indicator */}
                         {isActive && (
                           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-sidebar-primary" />
                         )}
@@ -229,7 +230,7 @@ function Sidebar({
         })}
       </nav>
 
-      {/* ---- Bottom Section ---- 规范：px-4px, gap-4px */}
+      {/* ---- Bottom Section ---- */}
       <div className="border-t border-sidebar-border p-1 space-y-0.5 shrink-0">
         {/* Admin Entry */}
         {isLoggedIn && isAdmin && (
@@ -334,7 +335,7 @@ function Sidebar({
         </button>
       </div>
 
-      {/* Footer Links — 法律条款独立页面，满足合规 URL 路径要求 */}
+      {/* Footer Links */}
       {!collapsed && (
         <div className="px-3 pb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-sidebar-foreground/20">
           <Link href="/terms" className="hover:text-sidebar-foreground/40 transition-colors">{t('legal.termsTitle')}</Link>

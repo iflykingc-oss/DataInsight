@@ -544,7 +544,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
         body: JSON.stringify(aiConfig),
       });
       const data = await res.json();
-      if (res.ok && data.success) showMessage(`连接成功！模型: ${data.model || aiConfig.modelName}`);
+      if (res.ok && data.success) showMessage(`Connected! Model: ${data.model || aiConfig.modelName}`);
       else showMessage(data.error || t('admin.connectionFailed'), 'error');
     } catch {
       showMessage(t('admin.networkTestError'), 'error');
@@ -579,7 +579,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
     return <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>;
   };
 
-  // 统计汇总
+  // Summary stats
   const totalUsers = users.length;
   const activeUsers = users.filter(u => u.status === 'active').length;
   const totalLogins = logsTotal;
@@ -600,7 +600,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
         </Alert>
       )}
 
-      {/* 用户管理 */}
+      {/* User Management */}
       {activeTab === 'users' && (
         <>
           <div className="flex justify-between items-center mb-4">
@@ -610,7 +610,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
             </div>
             <Button size="sm" onClick={openAddForm}>
               <Plus className="w-4 h-4 mr-1" />
-              添加用户
+              Add User
             </Button>
           </div>
           <div className="border border-border rounded-md overflow-hidden">
@@ -630,7 +630,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       <RefreshCw className="w-4 h-4 animate-spin inline mr-2" />
-                      加载中...
+                      Loading...
                     </TableCell>
                   </TableRow>
                 ) : users.map((u) => (
@@ -640,7 +640,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     <TableCell className="text-xs text-muted-foreground">{typeof u.email === 'string' ? u.email : '-'}</TableCell>
                     <TableCell>{getRoleBadge(u.role)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString('zh-CN') : '-'}
+                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US') : '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
@@ -659,7 +659,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                 {!loading && users.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      暂无用户
+                      No users found
                     </TableCell>
                   </TableRow>
                 )}
@@ -669,20 +669,20 @@ function AdminContent({ activeTab }: AdminContentProps) {
         </>
       )}
 
-      {/* 登录记录 */}
+      {/* Login Logs */}
       {activeTab === 'logs' && (
         <>
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="text-sm font-medium flex items-center gap-1.5">
                 <LogIn className="w-4 h-4 text-primary" />
-                登录记录
+                Login Logs
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">{t('admin.totalRecords', { count: logsTotal })}</p>
             </div>
             <Button variant="outline" size="sm" onClick={() => fetchLoginLogs(logsPage)}>
               <RefreshCw className="w-3.5 h-3.5 mr-1" />
-              刷新
+              Refresh
             </Button>
           </div>
           {/* Filters */}
@@ -708,7 +708,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
               value={logsFilter.startDate}
               onChange={(e) => setLogsFilter(f => ({ ...f, startDate: e.target.value }))}
             />
-            <span className="text-xs text-muted-foreground">至</span>
+            <span className="text-xs text-muted-foreground">to</span>
             <Input
               type="date"
               className="h-8 w-32 text-xs"
@@ -717,13 +717,13 @@ function AdminContent({ activeTab }: AdminContentProps) {
             />
             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => fetchLoginLogs(1)}>
               <Search className="w-3 h-3 mr-1" />
-              查询
+              Search
             </Button>
             <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => {
               setLogsFilter({ username: '', status: '', startDate: '', endDate: '' });
               setTimeout(() => fetchLoginLogs(1), 0);
             }}>
-              重置
+              Reset
             </Button>
           </div>
           <div className="border rounded-md overflow-hidden">
@@ -734,7 +734,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <TableHead>{t('admin.account')}</TableHead>
                   <TableHead className="w-[80px]">{t('admin.status')}</TableHead>
                   <TableHead className="w-[120px]">IP</TableHead>
-                  <TableHead>错误信息</TableHead>
+                  <TableHead>Error</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -742,18 +742,18 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       <RefreshCw className="w-4 h-4 animate-spin inline mr-2" />
-                      加载中...
+                      Loading...
                     </TableCell>
                   </TableRow>
                 ) : loginLogs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap truncate">
-                      {new Date(log.created_at).toLocaleString('zh-CN')}
+                      {new Date(log.created_at).toLocaleString('en-US')}
                     </TableCell>
                     <TableCell className="text-sm font-mono">{typeof log.username === 'string' ? log.username : (log.username && typeof log.username === 'object' ? JSON.stringify(log.username) : String(log.username ?? ''))}</TableCell>
                     <TableCell>
                       <Badge variant={log.status === 'success' ? 'default' : 'destructive'} className="text-xs">
-                        {log.status === 'success' ? '成功' : '失败'}
+                        {log.status === 'success' ? 'Success' : 'Failed'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground font-mono">{log.ip_address || '-'}</TableCell>
@@ -765,7 +765,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                 {!logsLoading && loginLogs.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                      暂无记录
+                      No records
                     </TableCell>
                   </TableRow>
                 )}
@@ -775,28 +775,28 @@ function AdminContent({ activeTab }: AdminContentProps) {
           {logsTotal > 20 && (
             <div className="flex justify-center gap-2 mt-3">
               <Button variant="outline" size="sm" disabled={logsPage <= 1} onClick={() => { setLogsPage(p => p - 1); fetchLoginLogs(logsPage - 1); }}>
-                上一页
+                Previous
               </Button>
               <span className="text-xs text-muted-foreground self-center">
-                第 {logsPage} 页，共 {Math.ceil(logsTotal / 20)} 页
+                Page {logsPage} of {Math.ceil(logsTotal / 20)}
               </span>
               <Button variant="outline" size="sm" disabled={logsPage * 20 >= logsTotal} onClick={() => { setLogsPage(p => p + 1); fetchLoginLogs(logsPage + 1); }}>
-                下一页
+                Next
               </Button>
             </div>
           )}
         </>
       )}
 
-      {/* AI配置 */}
+      {/* AI Config */}
       {activeTab === 'ai-config' && (
         <div className="max-w-2xl mx-auto">
           <div className="mb-5">
             <h3 className="text-base font-medium flex items-center gap-1.5">
               <Brain className="w-4 h-4 text-primary" />
-              AI 模型配置
+              AI Model Config
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">配置全局 AI 模型，所有用户将共用此配置</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Configure the global AI model shared by all users</p>
           </div>
           <div className="bg-card border rounded-md divide-y">
             <div className="p-4">
@@ -805,14 +805,14 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <Globe className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex-1 space-y-1.5">
-                  <Label className="text-sm font-medium">接口地址（Base URL）</Label>
+                  <Label className="text-sm font-medium">Base URL</Label>
                   <Input
                     value={aiConfig.baseUrl}
                     onChange={(e) => setAiConfig({ ...aiConfig, baseUrl: e.target.value })}
                     placeholder="https://api.deepseek.com"
                     className="h-9"
                   />
-                  <p className="text-xs text-muted-foreground">OpenAI 兼容格式的 API 接口地址</p>
+                  <p className="text-xs text-muted-foreground">OpenAI-compatible API endpoint</p>
                 </div>
               </div>
             </div>
@@ -822,7 +822,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <Lock className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex-1 space-y-1.5">
-                  <Label className="text-sm font-medium">密钥（API Key）</Label>
+                  <Label className="text-sm font-medium">API Key</Label>
                   <Input
                     type="password"
                     value={aiConfig.apiKey}
@@ -830,7 +830,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     placeholder="sk-..."
                     className="h-9"
                   />
-                  <p className="text-xs text-muted-foreground">从模型服务商获取的 API Key</p>
+                  <p className="text-xs text-muted-foreground">API key from your model provider</p>
                 </div>
               </div>
             </div>
@@ -840,14 +840,14 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <Cpu className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex-1 space-y-1.5">
-                  <Label className="text-sm font-medium">模型名称（Model Name）</Label>
+                  <Label className="text-sm font-medium">Model Name</Label>
                   <Input
                     value={aiConfig.modelName}
                     onChange={(e) => setAiConfig({ ...aiConfig, modelName: e.target.value })}
                     placeholder="deepseek-chat"
                     className="h-9"
                   />
-                  <p className="text-xs text-muted-foreground">例如：gpt-3.5-turbo、deepseek-chat、claude-3-sonnet</p>
+                  <p className="text-xs text-muted-foreground">e.g. gpt-4o, deepseek-chat, claude-sonnet-4-6</p>
                 </div>
               </div>
             </div>
@@ -855,38 +855,38 @@ function AdminContent({ activeTab }: AdminContentProps) {
           <div className="flex gap-3 mt-5">
             <Button onClick={handleSaveAIConfig} disabled={aiConfigLoading} className="min-w-[100px]">
               <CheckCircle2 className="w-4 h-4 mr-1.5" />
-              保存配置
+              Save Config
             </Button>
             <Button variant="outline" onClick={handleTestAIConnection} disabled={aiConfigLoading}>
               <Brain className="w-4 h-4 mr-1.5" />
-              测试连接
+              Test Connection
             </Button>
           </div>
         </div>
       )}
 
-      {/* 使用统计 */}
-      {/* 公告管理 */}
+      {/* Usage Stats */}
+      {/* Announcements */}
       {activeTab === 'announcements' && (
         <>
           <div className="flex justify-between items-center mb-5">
             <div>
               <h3 className="text-base font-medium flex items-center gap-1.5">
                 <Megaphone className="w-4 h-4 text-primary" />
-                公告管理
+                Announcements
               </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">发布、定时推送公告，管理公告生命周期</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Publish and schedule announcements</p>
             </div>
             <Button size="sm" onClick={() => { setEditingAnnouncement(null); setAnnouncementFormOpen(true); }}>
               <Plus className="w-3.5 h-3.5 mr-1" />
-              新建公告
+              New Announcement
             </Button>
           </div>
 
           {announcements.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
               <Megaphone className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">暂无公告</p>
+              <p className="text-sm">No announcements</p>
               <p className="text-xs mt-1">{"Click \"New Announcement\" to publish the first announcement"}</p>
             </div>
           ) : (
@@ -897,10 +897,10 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     <TableHead className="w-[240px]">{t('admin.title')}</TableHead>
                     <TableHead className="w-[80px]">{t('admin.type')}</TableHead>
                     <TableHead className="w-[80px]">{t('admin.priority')}</TableHead>
-                    <TableHead className="w-[100px]">提醒策略</TableHead>
+                    <TableHead className="w-[100px]">Reminder</TableHead>
                     <TableHead className="w-[100px]">{t('admin.status')}</TableHead>
-                    <TableHead className="w-[150px]">计划发布</TableHead>
-                    <TableHead className="w-[150px]">过期时间</TableHead>
+                    <TableHead className="w-[150px]">Scheduled</TableHead>
+                    <TableHead className="w-[150px]">Expires</TableHead>
                     <TableHead className="w-[100px] text-right">{t('admin.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -917,7 +917,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                         <Badge variant="outline">{announcementPriorityLabel[a.priority] ?? a.priority}</Badge>
                       </TableCell>
                       <TableCell className="text-xs">
-                        {a.remind_strategy === 'once' ? '仅提醒一次' : '每次登录提醒'}
+                        {a.remind_strategy === 'once' ? 'Once' : 'Every login'}
                       </TableCell>
                       <TableCell>
                         <Badge className={announcementStatusColor[a.status] ?? ''}>
@@ -925,16 +925,16 @@ function AdminContent({ activeTab }: AdminContentProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {a.scheduled_at ? new Date(a.scheduled_at).toLocaleString('zh-CN') : '—'}
+                        {a.scheduled_at ? new Date(a.scheduled_at).toLocaleString('en-US') : '—'}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {a.expires_at ? new Date(a.expires_at).toLocaleString('zh-CN') : '—'}
+                        {a.expires_at ? new Date(a.expires_at).toLocaleString('en-US') : '—'}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           {a.status === 'draft' && (
                             <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handlePublishAnnouncement(a.id)}>
-                              发布
+                              Publish
                             </Button>
                           )}
                           <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => { setEditingAnnouncement(a); setAnnouncementFormOpen(true); }}>
@@ -952,20 +952,20 @@ function AdminContent({ activeTab }: AdminContentProps) {
             </div>
           )}
 
-          {/* 公告编辑弹窗 */}
+          {/* Announcement Edit Dialog */}
           <Dialog open={announcementFormOpen} onOpenChange={setAnnouncementFormOpen}>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>{editingAnnouncement ? '编辑公告' : '新建公告'}</DialogTitle>
+                <DialogTitle>{editingAnnouncement ? 'Edit Announcement' : 'New Announcement'}</DialogTitle>
                 <DialogDescription>
-                  公告内容对所有用户可见。定时发布可设定未来时间，系统届时自动发布。
+                  Announcements are visible to all users. Set a future time for scheduled publishing.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">{t('admin.title')}</Label>
                   <Input
-                    placeholder="公告标题"
+                    placeholder="Announcement title"
                     value={announcementForm.title}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnouncementForm(prev => ({ ...prev, title: e.target.value }))}
                   />
@@ -974,7 +974,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <Label className="text-xs font-medium">{t('admin.content')}</Label>
                   <textarea
                     className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="公告正文..."
+                    placeholder="Announcement body..."
                     value={announcementForm.content}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAnnouncementForm(prev => ({ ...prev, content: e.target.value }))}
                   />
@@ -987,10 +987,10 @@ function AdminContent({ activeTab }: AdminContentProps) {
                       value={announcementForm.type}
                       onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAnnouncementForm(prev => ({ ...prev, type: e.target.value as 'info' | 'warning' | 'urgent' | 'maintenance' }))}
                     >
-                      <option value="info">通知</option>
-                      <option value="warning">警告</option>
-                      <option value="urgent">紧急</option>
-                      <option value="maintenance">维护</option>
+                      <option value="info">Info</option>
+                      <option value="warning">Warning</option>
+                      <option value="urgent">Urgent</option>
+                      <option value="maintenance">Maintenance</option>
                     </select>
                   </div>
                   <div className="space-y-1.5">
@@ -1000,48 +1000,48 @@ function AdminContent({ activeTab }: AdminContentProps) {
                       value={announcementForm.priority}
                       onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAnnouncementForm(prev => ({ ...prev, priority: e.target.value as 'low' | 'normal' | 'high' }))}
                     >
-                      <option value="low">低</option>
-                      <option value="normal">普通</option>
-                      <option value="high">高</option>
+                      <option value="low">Low</option>
+                      <option value="normal">Normal</option>
+                      <option value="high">High</option>
                     </select>
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">提醒策略</Label>
+                  <Label className="text-xs font-medium">Reminder strategy</Label>
                   <select
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     value={announcementForm.remind_strategy}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setAnnouncementForm(prev => ({ ...prev, remind_strategy: e.target.value as 'once' | 'always' }))}
                   >
-                    <option value="once">仅提醒一次（用户关闭后不再显示）</option>
-                    <option value="always">每次登录提醒</option>
+                    <option value="once">Once (dismissed until next login)</option>
+                    <option value="always">Every login</option>
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">计划发布时间（可选）</Label>
+                    <Label className="text-xs font-medium">Scheduled publish time (optional)</Label>
                     <Input
                       type="datetime-local"
                       value={announcementForm.scheduled_at}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnouncementForm(prev => ({ ...prev, scheduled_at: e.target.value }))}
                     />
-                    <p className="text-xs text-muted-foreground">留空则立即发布</p>
+                    <p className="text-xs text-muted-foreground">Leave blank to publish immediately</p>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">过期时间（可选）</Label>
+                    <Label className="text-xs font-medium">Expiry time (optional)</Label>
                     <Input
                       type="datetime-local"
                       value={announcementForm.expires_at}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnnouncementForm(prev => ({ ...prev, expires_at: e.target.value }))}
                     />
-                    <p className="text-xs text-muted-foreground">过期后自动下线</p>
+                    <p className="text-xs text-muted-foreground">Auto-unpublished after expiry</p>
                   </div>
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setAnnouncementFormOpen(false)}>{t('common.cancel')}</Button>
                 <Button onClick={handleSaveAnnouncement}>
-                  {editingAnnouncement ? '保存修改' : (announcementForm.scheduled_at ? '计划发布' : '立即发布')}
+                  {editingAnnouncement ? 'Save Changes' : (announcementForm.scheduled_at ? 'Schedule' : 'Publish Now')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -1057,21 +1057,21 @@ function AdminContent({ activeTab }: AdminContentProps) {
         <>
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-sm font-medium">API调用统计</h3>
-              <p className="text-xs text-muted-foreground">各接口调用次数</p>
+              <h3 className="text-sm font-medium">API Call Statistics</h3>
+              <p className="text-xs text-muted-foreground">Call counts per endpoint</p>
             </div>
             <Button variant="outline" size="sm" onClick={fetchUsageStats} disabled={statsLoading}>
               <RefreshCw className={`w-3.5 h-3.5 mr-1 ${statsLoading ? 'animate-spin' : ''}`} />
-              刷新
+              Refresh
             </Button>
           </div>
           <div className="border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>接口</TableHead>
-                  <TableHead>调用次数</TableHead>
-                  <TableHead>最近调用</TableHead>
+                  <TableHead>Endpoint</TableHead>
+                  <TableHead>Calls</TableHead>
+                  <TableHead>Last Called</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1079,7 +1079,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                       <RefreshCw className="w-4 h-4 animate-spin inline mr-2" />
-                      加载中...
+                      Loading...
                     </TableCell>
                   </TableRow>
                 ) : usageStats.length > 0 ? usageStats.map((s) => (
@@ -1087,13 +1087,13 @@ function AdminContent({ activeTab }: AdminContentProps) {
                     <TableCell className="font-mono text-xs">{s.endpoint || '-'}</TableCell>
                     <TableCell><Badge variant="secondary">{s.count?.toLocaleString()}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {s.last_used ? new Date(s.last_used).toLocaleString('zh-CN') : '-'}
+                      {s.last_used ? new Date(s.last_used).toLocaleString('en-US') : '-'}
                     </TableCell>
                   </TableRow>
                 )) : (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                      暂无统计数据
+                      No data
                     </TableCell>
                   </TableRow>
                 )}
@@ -1103,7 +1103,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
         </>
       )}
 
-      {/* 套餐管理 */}
+      {/* Plans */}
       {activeTab === 'plans' && (
         <>
           <div className="flex justify-between items-center mb-5">
@@ -1242,7 +1242,7 @@ function AdminContent({ activeTab }: AdminContentProps) {
             </div>
           )}
 
-          {/* 套餐编辑弹窗 */}
+          {/* Plan Edit Dialog */}
           <Dialog open={planFormOpen} onOpenChange={setPlanFormOpen}>
             <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
@@ -1454,16 +1454,16 @@ function AdminContent({ activeTab }: AdminContentProps) {
             <div>
               <h3 className="text-base font-medium flex items-center gap-1.5">
                 <Activity className="w-4 h-4 text-primary" />
-                用户行为日志
+                User Activity Logs
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                产品优化数据 · GDPR/CCPA 合规 · 设备ID已哈希 · 无PII存储 · 90天自动过期
+Product analytics · GDPR/CCPA compliant · Device ID hashed · No PII stored · 90-day auto-expiry
               </p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => fetchActivityLogs(1)}>
                 <RefreshCw className={`w-3.5 h-3.5 mr-1 ${activityLoading ? 'animate-spin' : ''}`} />
-                刷新
+                Refresh
               </Button>
             </div>
           </div>
@@ -1472,19 +1472,19 @@ function AdminContent({ activeTab }: AdminContentProps) {
           {activityStats?.last24h && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
               <div className="rounded-md border bg-card p-3">
-                <div className="text-xs text-muted-foreground mb-1">24h 认证事件</div>
+                <div className="text-xs text-muted-foreground mb-1">24h Auth events</div>
                 <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.auth || 0}</div>
               </div>
               <div className="rounded-md border bg-card p-3">
-                <div className="text-xs text-muted-foreground mb-1">24h 账户操作</div>
+                <div className="text-xs text-muted-foreground mb-1">24h Account ops</div>
                 <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.account || 0}</div>
               </div>
               <div className="rounded-md border bg-card p-3">
-                <div className="text-xs text-muted-foreground mb-1">24h 功能使用</div>
+                <div className="text-xs text-muted-foreground mb-1">24h Feature usage</div>
                 <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.action || 0}</div>
               </div>
               <div className="rounded-md border bg-card p-3">
-                <div className="text-xs text-muted-foreground mb-1">24h 页面访问</div>
+                <div className="text-xs text-muted-foreground mb-1">24h Page views</div>
                 <div className="text-lg font-semibold">{activityStats.last24h.categoryCounts?.page_view || 0}</div>
               </div>
             </div>
@@ -1497,20 +1497,20 @@ function AdminContent({ activeTab }: AdminContentProps) {
               value={activityFilter.category}
               onChange={(e) => setActivityFilter(f => ({ ...f, category: e.target.value }))}
             >
-              <option value="">全部类别</option>
-              <option value="auth">认证(auth)</option>
-              <option value="account">账户(account)</option>
-              <option value="action">操作(action)</option>
-              <option value="page_view">页面访问(page_view)</option>
+              <option value="">All categories</option>
+              <option value="auth">Auth</option>
+              <option value="account">Account</option>
+              <option value="action">Action</option>
+              <option value="page_view">Page view</option>
             </select>
             <Input
-              placeholder="事件类型 (如 login)"
+              placeholder="Event type (e.g. login)"
               className="h-8 w-36 text-xs"
               value={activityFilter.eventType}
               onChange={(e) => setActivityFilter(f => ({ ...f, eventType: e.target.value }))}
             />
             <Input
-              placeholder="用户ID"
+              placeholder="User ID"
               className="h-8 w-24 text-xs"
               value={activityFilter.userId}
               onChange={(e) => setActivityFilter(f => ({ ...f, userId: e.target.value }))}
@@ -1529,13 +1529,13 @@ function AdminContent({ activeTab }: AdminContentProps) {
             />
             <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => fetchActivityLogs(1)}>
               <Search className="w-3 h-3 mr-1" />
-              查询
+              Search
             </Button>
             <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => {
               setActivityFilter({ category: '', eventType: '', userId: '', startDate: '', endDate: '', search: '' });
               setTimeout(() => fetchActivityLogs(1), 0);
             }}>
-              重置
+              Reset
             </Button>
           </div>
 
@@ -1543,8 +1543,8 @@ function AdminContent({ activeTab }: AdminContentProps) {
           <Alert className="mb-4 border-primary/20 bg-primary/5">
             <ShieldCheck className="w-4 h-4 text-primary" />
             <AlertDescription className="text-xs">
-              <strong>合规说明：</strong>设备ID仅存储SHA-256哈希值；手机号/邮箱仅记录绑定动作，不存储完整号码；
-              IP地址已脱敏显示；元数据不含任何PII；日志90天自动过期；用户可在设置中关闭行为追踪（GDPR Art.7/CCPA §1798.120）。
+              <strong>Compliance:</strong> Device IDs stored as SHA-256 hashes only; phone/email recorded as bind events, not stored in full;
+              IP addresses are masked; metadata contains no PII; logs auto-expire after 90 days; users can opt out in settings (GDPR Art.7 / CCPA §1798.120).
             </AlertDescription>
           </Alert>
 
@@ -1554,12 +1554,12 @@ function AdminContent({ activeTab }: AdminContentProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs w-[140px]">{t('admin.time')}</TableHead>
-                  <TableHead className="text-xs">用户</TableHead>
-                  <TableHead className="text-xs">类别</TableHead>
-                  <TableHead className="text-xs">事件</TableHead>
-                  <TableHead className="text-xs">设备ID哈希</TableHead>
-                  <TableHead className="text-xs">IP(脱敏)</TableHead>
-                  <TableHead className="text-xs">元数据</TableHead>
+                  <TableHead className="text-xs">User</TableHead>
+                  <TableHead className="text-xs">Category</TableHead>
+                  <TableHead className="text-xs">Event</TableHead>
+                  <TableHead className="text-xs">Device ID Hash</TableHead>
+                  <TableHead className="text-xs">IP (masked)</TableHead>
+                  <TableHead className="text-xs">Metadata</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1567,13 +1567,13 @@ function AdminContent({ activeTab }: AdminContentProps) {
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       <RefreshCw className="w-4 h-4 animate-spin inline mr-2" />
-                      加载中...
+                      Loading...
                     </TableCell>
                   </TableRow>
                 ) : activityLogs.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      暂无用户行为日志
+                      No activity logs
                     </TableCell>
                   </TableRow>
                 ) : activityLogs.map((log: Record<string, unknown>) => (
@@ -1613,14 +1613,14 @@ function AdminContent({ activeTab }: AdminContentProps) {
           {activityTotal > 20 && (
             <div className="flex items-center justify-between mt-3">
               <span className="text-xs text-muted-foreground">
-                共 {activityTotal} 条 · 第 {activityPage} 页
+                {activityTotal} records · Page {activityPage}
               </span>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" className="h-7 text-xs" disabled={activityPage <= 1}
-                  onClick={() => fetchActivityLogs(activityPage - 1)}>上一页</Button>
+                  onClick={() => fetchActivityLogs(activityPage - 1)}>Previous</Button>
                 <Button variant="outline" size="sm" className="h-7 text-xs"
                   disabled={activityPage * 20 >= activityTotal}
-                  onClick={() => fetchActivityLogs(activityPage + 1)}>下一页</Button>
+                  onClick={() => fetchActivityLogs(activityPage + 1)}>Next</Button>
               </div>
             </div>
           )}
@@ -1632,27 +1632,27 @@ function AdminContent({ activeTab }: AdminContentProps) {
         <AdminAiUsageDashboard />
       )}
 
-      {/* 添加/编辑用户弹窗 */}
+      {/* Add/Edit User Dialog */}
       <Dialog open={userFormOpen} onOpenChange={setUserFormOpen}>
         <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingUser ? '编辑用户' : '添加用户'}</DialogTitle>
+            <DialogTitle>{editingUser ? 'Edit User' : 'Add User'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {!editingUser && (
               <div className="space-y-2">
-                <Label>账户 *</Label>
-                <Input value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} placeholder="输入账户名" />
+                <Label>Username *</Label>
+                <Input value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} placeholder="Enter username" />
               </div>
             )}
             <div className="space-y-2">
-              <Label>姓名 *</Label>
-              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="用户姓名" />
+              <Label>Name *</Label>
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Display name" />
             </div>
 
-            {/* 角色模板 */}
+            {/* Role Template */}
             <div className="space-y-2">
-              <Label>角色模板</Label>
+              <Label>Role Template</Label>
               <div className="grid grid-cols-2 gap-2">
                 {ROLE_OPTIONS.map((opt) => (
                   <button
@@ -1676,13 +1676,13 @@ function AdminContent({ activeTab }: AdminContentProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>{editingUser ? '新密码（留空不修改）' : '密码（留空自动生成）'}</Label>
-              <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder={editingUser ? '不修改' : '自动生成'} />
+              <Label>{editingUser ? 'New password (leave blank to keep)' : 'Password (leave blank to auto-generate)'}</Label>
+              <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder={editingUser ? 'No change' : 'Auto-generate'} />
             </div>
 
-            {/* 权限配置 */}
+            {/* Permissions */}
             <div className="space-y-3">
-              <Label>权限配置</Label>
+              <Label>Permissions</Label>
               {permissionCategories.map((cat) => (
                 <div key={cat.key} className="space-y-1.5">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -1712,10 +1712,10 @@ function AdminContent({ activeTab }: AdminContentProps) {
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSaveUser} disabled={loading} className="flex-1">
                 {loading ? <RefreshCw className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
-                {editingUser ? '保存修改' : '创建用户'}
+                {editingUser ? 'Save Changes' : 'Create User'}
               </Button>
               <Button variant="outline" onClick={() => setUserFormOpen(false)}>
-                取消
+                Cancel
               </Button>
             </div>
           </div>

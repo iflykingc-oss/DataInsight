@@ -154,14 +154,43 @@ export async function capturePayPalOrder(orderId: string) {
 /** 验证 PayPal Webhook */
 export async function verifyPayPalWebhook(
   headers: Headers,
-  body: string
+  body: string,
+  webhookId: string
 ): Promise<boolean> {
-  // PayPal webhook 验证需要获取证书链验证签名，简化处理：
-  // 生产环境建议验证 PAYPAL-TRANSMISSION-ID, PAYPAL-CERT-ID 等
-  // 这里通过检查必要头部来做基础验证
   const transmissionId = headers.get('paypal-transmission-id');
-  const certId = headers.get('paypal-cert-id');
-  return !!(transmissionId && certId);
+  const transmissionTime = headers.get('paypal-transmission-time');
+  const certUrl = headers.get('paypal-cert-url');
+  const transmissionSig = headers.get('paypal-transmission-sig');
+
+  if (!transmissionId || !transmissionTime || !certUrl || !transmissionSig || !webhookId) {
+    return false;
+  }
+
+  try {
+    const accessToken = await getAccessToken();
+    const response = await fetch(`${PAYPAL_API_BASE}/v1/notifications/verify-webhook-signature`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        transmission_id: transmissionId,
+        transmission_time: transmissionTime,
+        cert_url: certUrl,
+        auth_algo: headers.get('paypal-auth-algo') || 'SHA256withRSA',
+        transmission_sig: transmissionSig,
+        webhook_id: webhookId,
+        webhook_event: JSON.parse(body),
+      }),
+    });
+
+    if (!response.ok) return false;
+    const data = await response.json();
+    return data.verification_status === 'SUCCESS';
+  } catch {
+    return false;
+  }
 }
 
 /** 处理 PayPal Webhook 事件 */

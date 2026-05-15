@@ -34,11 +34,13 @@ const USER_SUBSCRIPTIONS_STORAGE_KEY = 'datainsight_user_subscriptions';
 
 /** 生成单个激活码 */
 export function generateLicenseCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 去掉易混淆字符
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
   let code = '';
   for (let i = 0; i < 16; i++) {
     if (i > 0 && i % 4 === 0) code += '-';
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars[bytes[i] % chars.length];
   }
   return code;
 }

@@ -16,15 +16,15 @@ interface AdminNavItem {
 }
 
 const ADMIN_NAV: AdminNavItem[] = [
-  { id: 'users', label: '用户管理', icon: Users },
-  { id: 'logs', label: '登录日志', icon: LogIn },
-  { id: 'activity-logs', label: '用户日志', icon: Activity },
-  { id: 'ai-config', label: 'AI模型配置', icon: Brain },
-  { id: 'ai-usage', label: 'AI用量看板', icon: Cpu },
-  { id: 'stats', label: '使用统计', icon: BarChart3 },
-  { id: 'plans', label: '套餐配置', icon: CreditCard },
-  { id: 'announcements', label: '公告管理', icon: Megaphone },
-  { id: 'feedback', label: '反馈管理', icon: MessageSquare },
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'logs', label: 'Login Logs', icon: LogIn },
+  { id: 'activity-logs', label: 'Activity Logs', icon: Activity },
+  { id: 'ai-config', label: 'AI Config', icon: Brain },
+  { id: 'ai-usage', label: 'AI Usage', icon: Cpu },
+  { id: 'stats', label: 'Statistics', icon: BarChart3 },
+  { id: 'plans', label: 'Plans', icon: CreditCard },
+  { id: 'announcements', label: 'Announcements', icon: Megaphone },
+  { id: 'feedback', label: 'Feedback', icon: MessageSquare },
 ];
 
 interface AdminSidebarProps {
@@ -58,7 +58,7 @@ export default function AdminSidebar({
           </div>
           {!collapsed && (
             <span className="text-sm font-semibold text-foreground tracking-tight truncate">
-              管理后台
+              Admin
             </span>
           )}
         </div>
@@ -109,7 +109,7 @@ export default function AdminSidebar({
           `}
         >
           <Settings2 className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>系统设置</span>}
+          {!collapsed && <span>Settings</span>}
         </button>
 
         {/* Return to User Side */}
@@ -122,7 +122,7 @@ export default function AdminSidebar({
           `}
         >
           <ArrowLeft className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>返回用户端</span>}
+          {!collapsed && <span>Back to App</span>}
         </button>
 
         {/* Collapse Toggle */}
@@ -147,7 +147,7 @@ export default function AdminSidebar({
               <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
             )}
           </svg>
-          {!collapsed && <span>收起</span>}
+          {!collapsed && <span>Collapse</span>}
         </button>
       </div>
     </aside>

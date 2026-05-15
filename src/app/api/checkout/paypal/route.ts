@@ -11,9 +11,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { planKey, billingCycle, userId, userEmail } = body;
+    const { planKey, billingCycle, userEmail } = body;
+    const userId = auth.user.id;
 
-    if (!planKey || !billingCycle || !userId || !userEmail) {
+    if (!planKey || !billingCycle || !userEmail) {
       return Response.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('PayPal checkout error:', error);
     return Response.json(
-      { error: error.message || 'Payment initiation failed' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

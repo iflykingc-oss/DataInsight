@@ -9,7 +9,7 @@ export default function PrivacyPage() {
         </Link>
 
         <h1 className="text-2xl font-bold text-foreground mb-2">Privacy Policy</h1>
-        <p className="text-sm text-muted-foreground mb-8">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <p className="text-sm text-muted-foreground mb-8">Last updated: May 15, 2025</p>
 
         <div className="prose prose-sm max-w-none text-foreground/90 space-y-6">
           <section>

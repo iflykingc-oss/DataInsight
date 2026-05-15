@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { jsPDF } from 'jspdf';
 import type { ParsedData } from '@/lib/data-processor';
 
@@ -267,22 +267,22 @@ export function ChartExporter({
   }, [chartName, config]);
 
   // 导出为真正的 Excel (.xlsx)
-  const exportToExcel = useCallback((): Blob => {
+  const exportToExcel = useCallback(async (): Promise<Blob> => {
     if (data?.headers && data?.rows) {
-      // 使用 xlsx 库生成真正的 Excel 文件
-      const wsData = [data.headers, ...data.rows.map(row => data.headers.map(h => row[h] ?? ''))];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      
-      // 设置列宽
-      ws['!cols'] = data.headers.map(() => ({ wch: 15 }));
-      
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, '数据表');
-      
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      return new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      // 使用 exceljs 生成真正的 Excel 文件
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('数据表');
+
+      // Set column definitions (header + width)
+      worksheet.columns = data.headers.map(h => ({ header: h, key: h, width: 15 }));
+
+      // Add data rows
+      data.rows.forEach(row => worksheet.addRow(data.headers.map(h => row[h] ?? '')));
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     }
-    
+
     // 回退：使用 CSV 格式
     const csv = [
       ['数据项', '数值'],
@@ -290,7 +290,7 @@ export function ChartExporter({
       ['项目 B', '2000'],
       ['项目 C', '1500']
     ].map(row => row.join(',')).join('\n');
-    
+
     return new Blob([csv], { type: 'text/csv;charset=utf-8' });
   }, [data]);
 
@@ -404,7 +404,7 @@ export function ChartExporter({
         case 'excel':
           task.progress = 50;
           setExportHistory(prev => prev.map(t => t.id === task.id ? task : t));
-          blob = exportToExcel();
+          blob = await exportToExcel();
           break;
           
         case 'csv':

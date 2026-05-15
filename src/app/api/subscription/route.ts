@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { verifyAuth } from '@/lib/auth-middleware';
 
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const auth = await verifyAuth(request);
+    if (auth.error || !auth.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: auth.status ?? 401 });
     }
-
-    // Decode user ID from JWT token (simplified - use your auth middleware)
-    const token = authHeader.replace('Bearer ', '');
-    const jwtPayload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-    const userId = jwtPayload.userId || jwtPayload.id;
-
-    if (!userId) {
-      return NextResponse.json({ success: false, error: 'Invalid token' }, { status: 401 });
-    }
+    const userId = auth.user.id;
 
     const supabase = getSupabaseClient();
     if (!supabase) {
@@ -74,7 +67,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('Subscription API error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to get subscription' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

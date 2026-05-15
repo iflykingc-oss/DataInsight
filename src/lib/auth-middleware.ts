@@ -10,12 +10,15 @@ function getJwtSecret(): Uint8Array {
   if (globalForJwt.__jwtSecret) return globalForJwt.__jwtSecret;
 
   const envSecret = process.env.JWT_SECRET;
-  if (envSecret && envSecret.length >= 32) {
-    globalForJwt.__jwtSecret = new TextEncoder().encode(envSecret);
+  if (!envSecret || envSecret.length < 32) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET must be set to at least 32 characters in production');
+    }
+    // dev-only fallback — never reached in production
+    globalForJwt.__jwtSecret = new TextEncoder().encode('datainsight-dev-only-secret-not-for-prod!!');
     return globalForJwt.__jwtSecret;
   }
-  console.warn('[Security] JWT_SECRET not configured. Using default dev secret. Set JWT_SECRET env var for production.');
-  globalForJwt.__jwtSecret = new TextEncoder().encode('datainsight-jwt-secret-stable-dev-key-2024');
+  globalForJwt.__jwtSecret = new TextEncoder().encode(envSecret);
   return globalForJwt.__jwtSecret;
 }
 

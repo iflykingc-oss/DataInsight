@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as xlsx from 'xlsx';
+import ExcelJS from 'exceljs';
 import type { ParsedData } from '@/lib/data-processor';
 import { verifyAuth } from '@/lib/auth-middleware';
 
@@ -49,16 +49,29 @@ export async function POST(request: NextRequest) {
       }
       try {
         const buffer = await file.arrayBuffer();
-        const workbook = xlsx.read(new Uint8Array(buffer), { type: 'array', cellDates: true });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const data = xlsx.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: null });
-        const headers = data.length > 0 ? Object.keys(data[0]) : [];
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(Buffer.from(buffer));
+        const worksheet = workbook.worksheets[0];
+
+        // Get headers from first row (exceljs row values are 1-indexed)
+        const headerRow = worksheet.getRow(1).values as (string | undefined)[];
+        const headers = headerRow.slice(1).map(h => String(h ?? ''));
+
+        // Get data rows
+        const rows: Record<string, unknown>[] = [];
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return;
+          const values = row.values as unknown[];
+          const obj: Record<string, unknown> = {};
+          headers.forEach((h, i) => { obj[h] = values[i + 1] ?? null; }); // +1 for 1-indexed
+          rows.push(obj);
+        });
+
         const parsedData: ParsedData = {
           headers,
-          rows: data as ParsedData['rows'],
+          rows: rows as ParsedData['rows'],
           fileName: file.name,
-          rowCount: data.length,
+          rowCount: rows.length,
           columnCount: headers.length
         };
         results.push(parsedData);

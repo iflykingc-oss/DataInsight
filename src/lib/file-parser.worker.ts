@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
 
 export interface ParseWorkerMessage {
@@ -127,35 +127,41 @@ async function parseExcelWithProgress(
       }
     };
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const buffer = e.target?.result as ArrayBuffer;
-        const workbook = XLSX.read(buffer, {
-          type: 'array',
-          cellDates: true,
-          cellNF: true,
-        });
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(buffer);
 
         onProgress(60);
 
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-          defval: '',
-          raw: false
-        });
+        const sheetNames = workbook.worksheets.map(ws => ws.name);
+        const worksheet = workbook.worksheets[0];
+
+        // Get headers from first row
+        const headers: string[] = [];
+        const headerRow = worksheet.getRow(1);
+        headerRow.eachCell((cell) => { headers.push(String(cell.value ?? '')); });
 
         onProgress(80);
 
-        const headers = jsonData.length > 0 ? Object.keys(jsonData[0] as object) : [];
-        const rows = jsonData as Record<string, unknown>[];
+        // Get data rows
+        const rows: Record<string, unknown>[] = [];
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) return;
+          const obj: Record<string, unknown> = {};
+          row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            obj[headers[colNumber - 1]] = cell.value ?? null;
+          });
+          rows.push(obj);
+        });
 
         onProgress(100);
 
         resolve({
           headers,
           rows,
-          sheetNames: workbook.SheetNames
+          sheetNames
         });
       } catch (err) {
         reject(new Error('Excel解析失败'));

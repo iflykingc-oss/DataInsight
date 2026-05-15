@@ -10,10 +10,10 @@ import { checkRateLimit, resetRateLimit } from '@/lib/rate-limiter';
 /** POST /api/auth/register - 邮箱注册（安全问题验证） */
 export async function POST(request: NextRequest) {
   try {
-    // 检查注册是否被管理员关闭
-    if (process.env.DISABLE_REGISTRATION === 'true') {
+    // 检查注册是否被管理员开启
+    if (process.env.ENABLE_REGISTRATION !== 'true') {
       return NextResponse.json(
-        { error: '管理员已关闭公开注册，请联系管理员创建账号' },
+        { error: 'Registration is not open. Please contact an administrator to create an account.' },
         { status: 403 }
       );
     }
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       user: sanitizeUser(user),
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : '注册失败';
-    return NextResponse.json({ error: message }, { status: 400 });
+    console.error('Registration error:', err);
+    return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 400 });
   }
 }

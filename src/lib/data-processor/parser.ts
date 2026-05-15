@@ -1,7 +1,7 @@
 /**
  * 数据分析引擎 - 文件解析
  */
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import Papa from 'papaparse';
 import type { ParsedData, CellValue } from './types';
 
@@ -43,26 +43,36 @@ async function parseCSV(file: File): Promise<ParsedData> {
 
 async function parseExcel(file: File): Promise<ParsedData> {
   const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: 'array' });
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
 
-  const sheetNames = workbook.SheetNames;
-  const firstSheetName = sheetNames[0];
-  const worksheet = workbook.Sheets[firstSheetName];
+  const sheetNames = workbook.worksheets.map(ws => ws.name);
+  const worksheet = workbook.worksheets[0];
 
-  const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-  if (jsonData.length === 0) {
+  if (!worksheet) {
     throw new Error('Excel文件为空');
   }
 
-  const headers = (jsonData[0] as CellValue[]).map(h => String(h || ''));
-  const rows = jsonData.slice(1).map(row => {
-    const rowArray = row as CellValue[];
+  // Get headers from first row
+  const headers: string[] = [];
+  const headerRow = worksheet.getRow(1);
+  headerRow.eachCell((cell) => {
+    headers.push(String(cell.value ?? ''));
+  });
+
+  if (headers.length === 0) {
+    throw new Error('Excel文件为空');
+  }
+
+  // Get data rows
+  const rows: Record<string, CellValue>[] = [];
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return; // skip header
     const obj: Record<string, CellValue> = {};
-    rowArray.forEach((value: CellValue, index: number) => {
-      obj[headers[index]] = value;
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      obj[headers[colNumber - 1]] = (cell.value ?? null) as CellValue;
     });
-    return obj;
+    rows.push(obj);
   });
 
   return {
