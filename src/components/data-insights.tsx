@@ -31,6 +31,7 @@ export function DataInsights({ data, analysis }: DataInsightsProps) {
   const handleNarrative = useCallback(async () => {
     if (narrative || narrativeLoading) return;
     setNarrativeLoading(true);
+    setNarrativeError(null);
     try {
       const findings = deep?.keyFindings?.slice(0, 5).map(f =>
         `[${f.severity}] ${f.title}: ${f.detail}`
@@ -38,6 +39,8 @@ export function DataInsights({ data, analysis }: DataInsightsProps) {
       const prompt = `你是资深数据分析师。请根据以下数据关键发现，用中文生成1段不超过200字的执行摘要，要求：直接给出业务结论，不要解释方法，语言简洁专业，适合直接用于管理层汇报。\n\n关键发现：\n${findings}`;
       const text = await callLLM(prompt, { temperature: 0.4, maxTokens: 400 });
       setNarrative(text);
+    } catch (err) {
+      setNarrativeError(err instanceof Error ? err.message : '生成失败');
     } finally {
       setNarrativeLoading(false);
     }
@@ -259,6 +262,12 @@ export function DataInsights({ data, analysis }: DataInsightsProps) {
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 生成中...
+              </div>
+            )}
+            {narrativeError && (
+              <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5 text-xs text-destructive flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>{narrativeError}</span>
               </div>
             )}
             {narrative && (
