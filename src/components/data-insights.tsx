@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
-import { callLLM } from '@/lib/llm-client';
+import { callLLM } from '@/lib/llm';
 import type { ParsedData, DataAnalysis } from '@/lib/data-processor/types';
 
 interface DataInsightsProps {
@@ -25,6 +25,7 @@ export function DataInsights({ data, analysis }: DataInsightsProps) {
   const { t } = useI18n();
   const [narrative, setNarrative] = useState<string | null>(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
+  const [narrativeError, setNarrativeError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'analysis' | 'report'>('analysis');
   const deep = analysis.deepAnalysis;
 
@@ -277,7 +278,7 @@ export function DataInsights({ data, analysis }: DataInsightsProps) {
                   <span className="text-xs font-medium">{t('insights.executiveSummary') || '执行摘要'}</span>
                 </div>
                 <div className="text-xs leading-relaxed text-foreground/80 whitespace-pre-wrap">{narrative}</div>
-                <Button variant="ghost" size="sm" className="mt-3 h-7 text-xs" onClick={() => setNarrative(null)}>
+                <Button variant="ghost" size="sm" className="mt-3 h-7 text-xs" onClick={() => { setNarrative(null); setNarrativeError(null); }}>
                   <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                   {t('insights.regenerate') || '重新生成'}
                 </Button>

@@ -113,8 +113,8 @@ export default function DataTableView({
 
   const anomalyCount = analysis.anomalies?.length ?? 0;
   const qualityScore = Math.round(
-    Object.values(analysis.fieldStats).reduce((s, f) => s + (1 - f.nullRatio), 0) /
-    Math.max(1, Object.values(analysis.fieldStats).length) * 100
+    analysis.fieldStats.reduce((s, f) => s + (1 - f.nullCount / Math.max(1, f.count)), 0) /
+    Math.max(1, analysis.fieldStats.length) * 100
   );
 
   return (
