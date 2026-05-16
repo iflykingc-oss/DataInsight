@@ -739,113 +739,18 @@ export default function HomePage() {
     // ========================================
     // 数据预览（整合：表格 + 智能处理 + 智能公式）
     // ========================================
-    if (viewMode === 'data-table' && parsedData) {
+    if (viewMode === "data-table" && parsedData) {
+      const tableAnalysis = analysis ?? { fieldStats: [], summary: { rowCount: parsedData.rows.length, columnCount: parsedData.headers.length, nullCount: 0, duplicateCount: 0, sampleRows: [] }, insights: [], anomalies: [] };
       return (
-        <div className="relative">
-          <Tabs defaultValue="table" key="table" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="table">{t('tab.dataView')}</TabsTrigger>
-            <TabsTrigger value="linked">{t('tab.linkedTable')}</TabsTrigger>
-            <TabsTrigger value="workflow">{t('tab.automation')}</TabsTrigger>
-            <TabsTrigger value="comments">{t('tab.comments')}</TabsTrigger>
-            <TabsTrigger value="ai-field">{t('tab.aiField')}</TabsTrigger>
-            <TabsTrigger value="ai-formula">{t('tab.aiFormula')}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="table">
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                {/* 视图切换 */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">{t('tab.viewLabel')}</span>
-                    <div className="flex bg-muted rounded-md p-0.5">
-                      {([
-                        { key: 'table', label: t('tab.table'), icon: TableIcon },
-                        { key: 'kanban', label: t('tab.kanban'), icon: LayoutIcon },
-                        { key: 'calendar', label: t('tab.calendar'), icon: CalendarIcon },
-                        { key: 'gantt', label: t('tab.gantt'), icon: GanttIcon },
-                      ] as const).map(v => {
-                        const Icon = v.icon;
-                        return (
-                          <button
-                            key={v.key}
-                            onClick={() => setTableView(v.key)}
-                            className={cn(
-                              'flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors',
-                              tableView === v.key ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
-                            )}
-                          >
-                            <Icon className="h-3.5 w-3.5" />
-                            {v.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  {tableView === 'kanban' && (
-                    <select
-                      className="text-sm border rounded px-2 py-1 bg-background"
-                      value={kanbanField}
-                      onChange={e => setKanbanField(e.target.value)}
-                    >
-                      <option value="">{t('tab.selectGroupField')}</option>
-                      {parsedData.headers.map(h => (
-                        <option key={h} value={h}>{h}</option>
-                      ))}
-                    </select>
-                  )}
-                  {tableView === 'calendar' && (
-                    <select
-                      className="text-sm border rounded px-2 py-1 bg-background"
-                      value={dateField}
-                      onChange={e => setDateField(e.target.value)}
-                    >
-                      <option value="">{t('tab.selectDateField')}</option>
-                      {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => (
-                        <option key={f.field} value={f.field}>{f.field}</option>
-                      ))}
-                    </select>
-                  )}
-                  {tableView === 'gantt' && (
-                    <div className="flex gap-2">
-                      <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.nameField} onChange={e => setGanttConfig(p => ({ ...p, nameField: e.target.value }))}>
-                        <option value="">{t('tab.taskName')}</option>
-                        {parsedData.headers.map(h => <option key={h} value={h}>{h}</option>)}
-                      </select>
-                      <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.startField} onChange={e => setGanttConfig(p => ({ ...p, startField: e.target.value }))}>
-                        <option value="">{t('tab.startDate')}</option>
-                        {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => <option key={f.field} value={f.field}>{f.field}</option>)}
-                      </select>
-                      <select className="text-sm border rounded px-2 py-1 bg-background" value={ganttConfig.endField} onChange={e => setGanttConfig(p => ({ ...p, endField: e.target.value }))}>
-                        <option value="">{t('tab.endDate')}</option>
-                        {analysis?.fieldStats?.filter(f => f.type === 'date').map(f => <option key={f.field} value={f.field}>{f.field}</option>)}
-                      </select>
-                    </div>
-                  )}
-                </div>
-
-                {tableView === 'table' && <DataTable data={parsedData} fieldStats={analysis?.fieldStats} />}
-                {tableView === 'kanban' && (
-                  <KanbanView data={parsedData} />
-                )}
-                {tableView === 'calendar' && (
-                  <CalendarView rows={parsedData.rows} headers={parsedData.headers} />
-                )}
-                {tableView === 'gantt' && (
-                  <GanttView rows={parsedData.rows} headers={parsedData.headers} />
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="linked">
-            <LinkedTablesManager
-              tables={multiTableData}
-              activeTable={parsedData}
-              onTablesChange={setMultiTableData}
-              onActiveTableChange={t => { setParsedData(t); setAnalysis(null); handleAnalyzeWith(t); }}
-            />
-          </TabsContent>
-          <TabsContent value="workflow">
+        <div className="flex flex-col h-[calc(100vh-120px)]">
+          <DataTableView
+            data={parsedData}
+            analysis={tableAnalysis}
+            onDataChange={(newData) => { setParsedData(newData); setAnalysis(null); }}
+          />
+        </div>
+      );
+    }
             <WorkflowAutomation headers={parsedData.headers} />
           </TabsContent>
           <TabsContent value="comments">
