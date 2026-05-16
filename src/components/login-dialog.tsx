@@ -121,6 +121,7 @@ export function LoginDialog() {
       return;
     }
 
+    const finalQuestion = getFinalQuestion();
     setLoading(true);
     try {
       const res = await fetch('/api/auth/register', {
@@ -130,8 +131,8 @@ export function LoginDialog() {
           email,
           password,
           name,
-          securityQuestion: finalQuestion,
-          securityAnswer: securityAnswer.trim(),
+          securityQuestion: finalQuestion || undefined,
+          securityAnswer: securityAnswer.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -419,16 +420,14 @@ export function LoginDialog() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="reg-answer">{t('login.securityAnswer')}</Label>
+              <Label htmlFor="reg-answer" className="text-muted-foreground">{t('login.securityAnswer')} <span className="text-xs opacity-60">(可选)</span></Label>
               <Input
                 id="reg-answer"
                 type="text"
                 placeholder={t("login.enterAnswerHint")}
                 value={securityAnswer}
                 onChange={(e) => setSecurityAnswer(e.target.value)}
-                required
                 autoComplete="off"
-                minLength={2}
               />
               <p className="text-xs text-muted-foreground">{t('login.answerHint')}</p>
             </div>
