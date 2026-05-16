@@ -795,29 +795,14 @@ export default function HomePage() {
               )}
             </TabsContent>
             <TabsContent value="quality">
-              {parsedData && analysis ? (
-                <DataQualityChecker data={parsedData} fieldStats={analysis.fieldStats} />
-              ) : (
-                <div className="flex items-center justify-center py-12 text-muted-foreground/50">{t('page.pleaseUpload')}</div>
-              )}
-            </TabsContent>
-          </Tabs>
-          <SceneAgentPanel sceneId="data-clean" sceneName="数据清洗" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-        </div>
-      );
-    }
-
-    // ========================================
-    // 自动分析（整合：深度分析 + 分析报告）
-    // ========================================
-    if (viewMode === 'insights') {
+    if (viewMode === "insights") {
       if (!parsedData) {
         return (
           <Card className="text-center py-16">
             <CardContent>
               <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-4">{t('page.pleaseUpload')}，{t('page.uploadDataStart').toLowerCase()}</p>
-              <Button onClick={() => setViewMode('home')}>{t('page.goUpload')}</Button>
+              <p className="text-muted-foreground mb-4">{t("page.pleaseUpload")}</p>
+              <Button onClick={() => setViewMode("home")}>{t("page.goUpload")}</Button>
             </CardContent>
           </Card>
         );
@@ -827,8 +812,7 @@ export default function HomePage() {
           <Card className="text-center py-16">
             <CardContent className="space-y-4">
               <Brain className="w-12 h-12 text-primary mx-auto mb-2 animate-pulse" />
-              <p className="text-lg font-medium">{t('page.analyzing')}</p>
-              <p className="text-sm text-muted-foreground">{t('page.aiScanning')}</p>
+              <p className="text-lg font-medium">{t("page.analyzing")}</p>
               {isAnalyzing && <Progress value={45} className="w-64 mx-auto" />}
             </CardContent>
           </Card>
@@ -836,119 +820,44 @@ export default function HomePage() {
       }
       return (
         <div className="relative">
-          <Tabs defaultValue="insights" key="insights" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="insights">{t('tab.deepAnalysis')}</TabsTrigger>
-              <TabsTrigger value="report">
-                <FileText className="w-3.5 h-3.5 mr-1" />
-                {t('tab.analysisReport')}
-              </TabsTrigger>
-              <TabsTrigger value="data-story">{t('tab.dataStory')}</TabsTrigger>
-              <TabsTrigger value="industry">{t('tab.industryScene')}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="insights">
-              <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
-            </TabsContent>
-            <TabsContent value="report">
-              <InsightReportGenerator analysis={analysis} fileName={parsedData?.fileName} />
-            </TabsContent>
-            <TabsContent value="data-story">
-              <DataStorytelling
-                data={parsedData}
-                fieldStats={analysis?.fieldStats || []}
-                modelConfig={activeModelConfig || undefined}
-                insights={analysis?.insights}
-              />
-            </TabsContent>
-            <TabsContent value="industry">
-              <IndustryScenario
-                data={parsedData}
-                fieldStats={analysis?.fieldStats || []}
-                modelConfig={activeModelConfig || undefined}
-                onNavigate={(view: string) => setViewMode(view as ViewMode)}
-              />
-            </TabsContent>
-          </Tabs>
+          <DataInsights data={parsedData} analysis={analysis} onAnalyze={handleAnalyze} modelConfig={activeModelConfig} />
           <SceneAgentPanel sceneId="data-analyze" sceneName="数据分析" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
         </div>
       );
     }
-
-    // ========================================
-    // 仪表盘（整合：快速看板 + AI建看板 + 看板设计）
-    // ========================================
     if (viewMode === 'visualization' && parsedData && analysis) {
+      return (
+        <div className="relative">
+    if (viewMode === "visualization" && parsedData && analysis) {
       return (
         <div className="relative">
           <ErrorBoundary moduleName="仪表盘">
             <Tabs defaultValue="dashboard" key="dashboard" className="space-y-4">
               <TabsList>
-                <TabsTrigger value="dashboard">{t('tab.quickDashboard')}</TabsTrigger>
-                <TabsTrigger value="nl2dash">{t('tab.aiBuildDash')}</TabsTrigger>
-                <TabsTrigger value="designer">{t('tab.dashboardDesign')}</TabsTrigger>
-                <TabsTrigger value="charts">
-                  <BarChart3 className="w-3.5 h-3.5 mr-1" />
-                  {t('tab.chartCenter')}
-                </TabsTrigger>
-                <TabsTrigger value="metrics">
-                  <TrendingUp className="w-3.5 h-3.5 mr-1" />
-                  {t('tab.metricSystem')}
-                </TabsTrigger>
+                <TabsTrigger value="dashboard">{t("tab.quickDashboard")}</TabsTrigger>
+                <TabsTrigger value="nl2dash">{t("tab.aiBuildDash")}</TabsTrigger>
+                <TabsTrigger value="designer">{t("tab.dashboardDesign")}</TabsTrigger>
+                <TabsTrigger value="charts">{t("tab.chartCenter")}</TabsTrigger>
               </TabsList>
               <TabsContent value="dashboard">
                 <Dashboard data={parsedData} analysis={analysis} />
               </TabsContent>
               <TabsContent value="nl2dash">
-                {hasPermission('dashboard') ? (
+                {hasPermission("dashboard") ? (
                   <NL2Dashboard data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig} />
                 ) : (
-                  <Card className="p-8 text-center text-muted-foreground">
-                    <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                    <p>{t('page.noDashboardPermission')}</p>
-                  </Card>
+                  <Card className="p-8 text-center text-muted-foreground"><AlertCircle className="mx-auto h-8 w-8 mb-2" /><p>{t("page.noDashboardPermission")}</p></Card>
                 )}
               </TabsContent>
               <TabsContent value="designer">
-                {hasPermission('dashboard') ? (
+                {hasPermission("dashboard") ? (
                   <DashboardDesigner data={parsedData} fieldStats={analysis.fieldStats} />
                 ) : (
-                  <Card className="p-8 text-center text-muted-foreground">
-                    <AlertCircle className="mx-auto h-8 w-8 mb-2" />
-                    <p>{t('page.noDesignerPermission')}</p>
-                  </Card>
+                  <Card className="p-8 text-center text-muted-foreground"><AlertCircle className="mx-auto h-8 w-8 mb-2" /><p>{t("page.noDesignerPermission")}</p></Card>
                 )}
               </TabsContent>
               <TabsContent value="charts">
-                <Tabs defaultValue="ai-chart" className="mt-4">
-                  <TabsList>
-                    <TabsTrigger value="ai-chart">{t('tab.aiSelectChart')}</TabsTrigger>
-                    <TabsTrigger value="advanced">{t('tab.advancedChart')}</TabsTrigger>
-                    <TabsTrigger value="echarts">{t('tab.proChart')}</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="ai-chart">
-                    <SmartChartRecommender data={parsedData} analysis={analysis} />
-                  </TabsContent>
-                  <TabsContent value="advanced">
-                    <AdvancedCharts data={parsedData} fieldStats={analysis.fieldStats} />
-                  </TabsContent>
-                  <TabsContent value="echarts">
-                    <ExtendedChartGallery data={parsedData} />
-                  </TabsContent>
-                </Tabs>
-              </TabsContent>
-              <TabsContent value="metrics">
-                <Tabs defaultValue="ai-metric" className="mt-4">
-                  <TabsList>
-                    <TabsTrigger value="ai-metric">{t('tab.aiBuildMetric')}</TabsTrigger>
-                    <TabsTrigger value="metric-lib">{t('tab.metricList')}</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="ai-metric">
-                    <MetricSemanticLayer data={parsedData} fieldStats={analysis.fieldStats} modelConfig={activeModelConfig || undefined} />
-                  </TabsContent>
-                  <TabsContent value="metric-lib">
-                    <MetricManager data={parsedData} />
-                  </TabsContent>
-                </Tabs>
+                <SmartChartRecommender data={parsedData} analysis={analysis} />
               </TabsContent>
             </Tabs>
           </ErrorBoundary>
@@ -956,12 +865,6 @@ export default function HomePage() {
         </div>
       );
     }
-
-    // ========================================
-    // 问答数据 (AI问数)
-    // ========================================
-    if (viewMode === 'chat' || viewMode === 'ai-assistant') {
-      if (!parsedData) {
         return (
           <Card className="text-center py-16">
             <CardContent>

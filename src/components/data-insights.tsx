@@ -211,18 +211,18 @@ export function DataInsights({ data, analysis }: DataInsightsProps) {
 
               <div className="space-y-2">
                 <div className="text-xs font-medium text-muted-foreground">{t('insights.fieldStats') || '字段统计'}</div>
-                {Object.entries(fieldStats).map(([field, stat]) => (
-                  <div key={field} className="p-2.5 rounded-lg border bg-card/50">
+                {fieldStats.map((stat) => (
+                  <div key={stat.field} className="p-2.5 rounded-lg border bg-card/50">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium truncate">{field}</span>
+                      <span className="text-xs font-medium truncate">{stat.field}</span>
                       <Badge variant="outline" className="text-[10px] h-4 px-1">{stat.type}</Badge>
                     </div>
-                    {stat.type === 'numeric' ? (
+                    {stat.type === 'number' ? (
                       <div className="grid grid-cols-4 gap-1 text-[11px] text-muted-foreground">
-                        <span>min: {stat.min?.toLocaleString()}</span>
-                        <span>max: {stat.max?.toLocaleString()}</span>
-                        <span>avg: {stat.avg?.toFixed(1)}</span>
-                        <span>null: {(stat.nullRatio * 100).toFixed(0)}%</span>
+                        <span>min: {stat.numericStats?.min?.toLocaleString()}</span>
+                        <span>max: {stat.numericStats?.max?.toLocaleString()}</span>
+                        <span>avg: {stat.numericStats?.mean?.toFixed(1)}</span>
+                        <span>null: {((stat.nullCount / Math.max(1, stat.count)) * 100).toFixed(0)}%</span>
                       </div>
                     ) : (
                       <div className="flex flex-wrap gap-1 mt-1">
