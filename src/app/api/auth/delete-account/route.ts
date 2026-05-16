@@ -49,7 +49,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '注销失败，请稍后重试' }, { status: 500 });
     }
 
-    console.log(`[DeleteAccount] 用户 ${auth.user.username} (ID:${auth.userId}) 已注销账号`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[DeleteAccount] User ID ${auth.userId} deleted`);
+    }
     return NextResponse.json({ success: true, message: '账号已注销' });
   } catch (error) {
     console.error('[DeleteAccount] 错误:', error);
