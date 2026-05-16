@@ -751,22 +751,6 @@ export default function HomePage() {
         </div>
       );
     }
-            <WorkflowAutomation headers={parsedData.headers} />
-          </TabsContent>
-          <TabsContent value="comments">
-            <RowComments rows={parsedData.rows} rowKeyField={parsedData.headers[0]} />
-          </TabsContent>
-          <TabsContent value="ai-field">
-            <AIFieldPanel data={parsedData} dataId={parsedData.fileName || 'default'} modelConfig={activeModelConfig} onApplyField={handleApplyAIField} />
-          </TabsContent>
-          <TabsContent value="ai-formula">
-            <AIFormulaGenerator data={parsedData} modelConfig={activeModelConfig} onApplyFormula={handleApplyFormula} />
-          </TabsContent>
-        </Tabs>
-        <SceneAgentPanel sceneId="data-clean" sceneName="数据清洗" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-      </div>
-    );
-  }
 
     // ========================================
     // 数据处理（清洗 + 质量）

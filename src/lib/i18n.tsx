@@ -11970,7 +11970,6 @@ export function useI18n() {
 }
 
 export { I18nContext };
-    'common.filter': 'Filter',
     'common.done': 'Done',
     'common.apply': 'Apply',
     'ai.noData': 'No data. Please upload a file first.',
