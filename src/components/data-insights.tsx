@@ -73,6 +73,34 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
   const [expandedAiStep, setExpandedAiStep] = useState<string | null>(null);
   const [analysisPlan, setAnalysisPlan] = useState<{ plan: AnalysisPlan; reasoning: string } | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
+  const [narrative, setNarrative] = useState<string | null>(null);
+  const [narrativeLoading, setNarrativeLoading] = useState(false);
+
+  const handleNarrative = useCallback(async () => {
+    if (!modelConfig || !analysis?.deepAnalysis) return;
+    setNarrativeLoading(true);
+    try {
+      const { callLLM } = await import('@/lib/llm');
+      const findings = analysis.deepAnalysis.keyFindings
+        .filter(f => f.isBusinessInsight || f.severity === 'warning' || f.severity === 'critical')
+        .slice(0, 8)
+        .map(f => `- [${f.category}] ${f.title}: ${f.detail} (${f.impact})`);
+      const profileSummary = analysis.deepAnalysis.dataProfile.summary;
+      const result = await callLLM(
+        modelConfig,
+        [
+          { role: 'system', content: '你是一位数据分析师，请用简洁专业的中文，将以下数据洞察整理成一段200字以内的执行摘要，要求：1.直接给出最重要的业务结论 2.包含具体数字 3.末尾给出1-2条优先行动建议 4.语气像汇报给管理层' },
+          { role: 'user', content: `数据概况：${profileSummary}\n\n关键发现：\n${findings.join('\n')}` },
+        ],
+        { temperature: 0.4, max_tokens: 400 }
+      );
+      setNarrative(result.trim());
+    } catch (err) {
+      console.error('Narrative generation failed:', err);
+    } finally {
+      setNarrativeLoading(false);
+    }
+  }, [modelConfig, analysis]);
 
   // 导出分析结果
   const handleExportInsights = useCallback((format: 'csv' | 'json') => {
