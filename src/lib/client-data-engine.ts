@@ -4,7 +4,7 @@
  * 服务端不接收文件、不落地业务数据
  */
 
-import type { ParsedData, CellValue, FieldStat, Summary, Anomaly, DataAnalysis } from './data-processor/types';
+import type { ParsedData, CellValue, FieldStat, Summary, Anomaly, DataAnalysis, DeepAnalysis } from './data-processor/types';
 
 // ============================================================
 // 1. 前端文件解析（替代服务端 /api/upload）
