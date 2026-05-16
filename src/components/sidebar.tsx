@@ -42,7 +42,6 @@ const NAV_GROUPS: NavGroup[] = [
       { id: 'insights', labelKey: 'sidebar.insights', icon: Brain, descriptionKey: 'ai.insight' },
       { id: 'visualization', labelKey: 'sidebar.visualization', icon: LayoutDashboard, descriptionKey: 'viz.dashboard' },
       { id: 'ai-assistant', labelKey: 'sidebar.aiChat', icon: MessageSquare, descriptionKey: 'ai.askPlaceholder' },
-      { id: 'chart-center', labelKey: 'sidebar.chartCenter', icon: LineChart, descriptionKey: 'viz.chartCenter' },
     ],
   },
   {
@@ -52,9 +51,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'ai-table-builder', labelKey: 'sidebar.aiTableBuilder', icon: Sparkles, descriptionKey: 'ai.generate' },
       { id: 'data-prep', labelKey: 'sidebar.dataPrep', icon: FileSpreadsheet, descriptionKey: 'dataPrep.title' },
-      { id: 'metric-system', labelKey: 'sidebar.metricSystem', icon: Target, descriptionKey: 'metric.semantic' },
       { id: 'data-story', labelKey: 'sidebar.dataStory', icon: BookOpen, descriptionKey: 'story.title' },
-      { id: 'industry-scenario', labelKey: 'sidebar.industryScene', icon: Building2, descriptionKey: 'industry.title' },
       { id: 'multimodal', labelKey: 'sidebar.aiMultimodal', icon: Cpu, descriptionKey: 'multimodal.generateImage' },
       { id: 'form-collection', labelKey: 'sidebar.formCollection', icon: Layers, descriptionKey: 'form.builder' },
       { id: 'sql-lab', labelKey: 'sidebar.sqlLab', icon: Code2, descriptionKey: 'sql.title' },
