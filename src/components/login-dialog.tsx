@@ -385,7 +385,7 @@ export function LoginDialog() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="reg-question">{t('login.securityQuestion')}</Label>
+              <Label htmlFor="reg-question" className="text-muted-foreground">{t('login.securityQuestion')} <span className="text-xs opacity-60">(可选)</span></Label>
               <div className="relative">
                 <HelpCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <select
@@ -393,7 +393,6 @@ export function LoginDialog() {
                   value={securityQuestion}
                   onChange={(e) => setSecurityQuestion(e.target.value)}
                   className="w-full h-9 rounded-md border border-input bg-transparent px-3 pl-9 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  required
                 >
                   <option value="" disabled>{t('login.selectQuestion')}</option>
                   {SECURITY_QUESTIONS.map((q, i) => (
