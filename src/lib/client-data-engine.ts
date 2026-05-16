@@ -524,11 +524,14 @@ export function analyzeDataClient(data: ParsedData): DataAnalysis {
   const anomalies = detectAnomaliesClient(data, fieldStats);
   const insights = generateInsightsClient(data, fieldStats, summary);
 
+  const deepAnalysis = buildDeepAnalysis(data, fieldStats, summary);
+
   return {
     fieldStats,
     summary,
     insights,
     anomalies,
+    deepAnalysis,
   };
 }
 
@@ -594,5 +597,305 @@ export function smartSampleClient(data: ParsedData, maxRows: number = 5000): Par
     ...data,
     rows: sampledRows,
     rowCount: sampledRows.length,
+  };
+}
+
+function buildDeepAnalysis(data: ParsedData, fieldStats: FieldStat[], summary: Summary): DeepAnalysis {
+  const keyFindings: DeepAnalysis['keyFindings'] = [];
+  const correlations: DeepAnalysis['correlations'] = [];
+  const trends: DeepAnalysis['trends'] = [];
+  const recommendedCharts: DeepAnalysis['recommendedCharts'] = [];
+  const actionItems: DeepAnalysis['actionItems'] = [];
+
+  const numericFields = fieldStats.filter(f => f.type === 'number' && f.numericStats);
+  const categoryFields = fieldStats.filter(f => f.type === 'string' && f.uniqueCount >= 2 && f.uniqueCount <= 30 && !f.isIdField);
+  const dateFields = fieldStats.filter(f => f.type === 'date');
+
+  const missingRate = summary.nullValues / Math.max(summary.totalRows * summary.totalColumns, 1);
+  const duplicateRate = summary.duplicateRows / Math.max(summary.totalRows, 1);
+  const completeness = Math.round(Math.max(0, (1 - missingRate) * 100));
+  const consistency = Math.round(Math.max(0, (1 - duplicateRate) * 100));
+  const quality = Math.min(100, Math.round(60 + (numericFields.length / Math.max(summary.totalColumns, 1)) * 40));
+  const usability = Math.min(100, Math.round(
+    (summary.totalRows > 50 ? 60 : 30)
+    + (dateFields.length > 0 ? 20 : 0)
+    + (categoryFields.length > 0 ? 20 : 0)
+  ));
+  const overall = Math.round(completeness * 0.3 + consistency * 0.2 + quality * 0.2 + usability * 0.3);
+  const healthScore = { overall, completeness, consistency, quality, usability };
+
+  keyFindings.push({
+    severity: 'info',
+    category: 'insight',
+    title: `${summary.totalRows.toLocaleString()} rows x ${summary.totalColumns} columns | Quality ${overall}/100`,
+    detail: `${numericFields.length} numeric, ${categoryFields.length} category${dateFields.length > 0 ? `, ${dateFields.length} date` : ''} fields. ${summary.duplicateRows > 0 ? `${summary.duplicateRows} duplicate rows detected.` : 'No duplicates.'}`,
+    impact: summary.totalRows < 100 ? 'Small dataset - statistical conclusions have lower confidence.' : 'Adequate data for multi-dimensional analysis.',
+    suggestion: summary.totalRows < 100 ? 'Consider collecting more data (target 200+ rows).' : 'Ready for trend, comparison, and correlation analysis.',
+    relatedFields: [],
+    confidence: 99,
+    isBusinessInsight: false,
+  });
+
+  const highMissingFields = fieldStats.filter(f => f.nullCount > summary.totalRows * 0.1);
+  if (highMissingFields.length > 0) {
+    const maxRate = Math.max(...highMissingFields.map(f => f.nullCount / summary.totalRows));
+    keyFindings.push({
+      severity: maxRate > 0.3 ? 'critical' : 'warning',
+      category: 'quality',
+      title: `${highMissingFields.length} fields with >10% missing values`,
+      detail: highMissingFields.map(f => `"${f.field}": ${((f.nullCount / summary.totalRows) * 100).toFixed(1)}% missing`).join('; '),
+      impact: 'High missing rates cause statistical bias and may distort key metric calculations.',
+      suggestion: 'Fill or exclude missing values in core business fields before drawing conclusions.',
+      relatedFields: highMissingFields.map(f => f.field),
+      confidence: 99,
+      isBusinessInsight: false,
+    });
+  }
+
+  const primaryMetricField = numericFields.find(f => {
+    const n = f.field.toLowerCase();
+    return ['sales', 'revenue', 'amount', 'profit', 'income'].some(k => n.includes(k))
+      || ['销售', '金额', '收入', '利润'].some(k => f.field.includes(k));
+  }) || numericFields[0];
+
+  for (const catField of categoryFields.slice(0, 3)) {
+    if (!catField.topValues || catField.topValues.length === 0) continue;
+    if (primaryMetricField) {
+      const catSums = new Map<string, number>();
+      let total = 0;
+      data.rows.forEach(row => {
+        const cat = String(row[catField.field] ?? '');
+        const val = Number(row[primaryMetricField.field]);
+        if (cat && cat !== 'null' && !isNaN(val) && val >= 0) {
+          catSums.set(cat, (catSums.get(cat) || 0) + val);
+          total += val;
+        }
+      });
+      const sorted = Array.from(catSums.entries()).sort((a, b) => b[1] - a[1]).filter(([c]) => c && c !== 'null');
+      if (sorted.length >= 2 && total > 0) {
+        const top = sorted[0];
+        const topPct = (top[1] / total * 100).toFixed(1);
+        const bottomPct = (sorted[sorted.length - 1][1] / total * 100).toFixed(1);
+        keyFindings.push({
+          severity: Number(topPct) > 60 ? 'warning' : 'info',
+          category: 'business',
+          title: `${primaryMetricField.field}: "${top[0]}" leads at ${topPct}% share`,
+          detail: sorted.slice(0, 5).map(([cat, sum]) => `${cat}: ${sum.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}`).join(' | '),
+          impact: Number(topPct) > 60
+            ? `High concentration risk: "${top[0]}" dominates, bottom "${sorted[sorted.length-1][0]}" only ${bottomPct}%.`
+            : `Distribution across ${catField.field} is relatively balanced.`,
+          suggestion: Number(topPct) > 60
+            ? `Diversify across ${catField.field} to reduce single-category dependency risk.`
+            : `Reinforce top performers while raising floor for lower segments.`,
+          relatedFields: [catField.field, primaryMetricField.field],
+          confidence: 88,
+          isBusinessInsight: true,
+        });
+        recommendedCharts.push({
+          chartType: 'bar',
+          title: `${catField.field} x ${primaryMetricField.field}`,
+          xField: catField.field,
+          yField: primaryMetricField.field,
+          reason: `Compare ${primaryMetricField.field} across ${catField.field}`,
+          priority: 'high',
+        });
+      }
+    }
+  }
+
+  if (dateFields.length > 0 && numericFields.length > 0) {
+    const dateField = dateFields[0];
+    const metricField = primaryMetricField || numericFields[0];
+    const monthlyData = new Map<string, number>();
+    data.rows.forEach(row => {
+      const dv = String(row[dateField.field] ?? '');
+      const nv = Number(row[metricField.field]);
+      if (dv.length >= 7 && !isNaN(nv)) {
+        const ym = dv.substring(0, 7);
+        monthlyData.set(ym, (monthlyData.get(ym) || 0) + nv);
+      }
+    });
+    const sortedMonths = Array.from(monthlyData.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    if (sortedMonths.length >= 3) {
+      const first = sortedMonths[0][1];
+      const last = sortedMonths[sortedMonths.length - 1][1];
+      const totalChange = first > 0 ? ((last - first) / first * 100) : 0;
+      const peak = sortedMonths.reduce((a, b) => a[1] > b[1] ? a : b);
+      const valley = sortedMonths.reduce((a, b) => a[1] < b[1] ? a : b);
+      const recent3 = sortedMonths.slice(-3);
+      const recentChange = recent3.length >= 2 && recent3[0][1] > 0
+        ? ((recent3[recent3.length - 1][1] - recent3[0][1]) / recent3[0][1] * 100) : 0;
+      trends.push({
+        field: metricField.field,
+        direction: totalChange > 5 ? 'up' : totalChange < -5 ? 'down' : 'stable',
+        changeRate: totalChange,
+        description: `${sortedMonths[0][0]} to ${sortedMonths[sortedMonths.length - 1][0]}: ${metricField.field} ${totalChange >= 0 ? 'grew' : 'declined'} ${Math.abs(totalChange).toFixed(1)}% overall`,
+      });
+      keyFindings.push({
+        severity: totalChange > 10 ? 'positive' : totalChange < -10 ? 'warning' : 'info',
+        category: 'trend',
+        title: `${metricField.field}: ${totalChange >= 0 ? '+' : ''}${totalChange.toFixed(1)}% over ${sortedMonths.length} months`,
+        detail: `Peak: ${peak[0]} (${peak[1].toLocaleString('zh-CN', { maximumFractionDigits: 0 })}); Trough: ${valley[0]} (${valley[1].toLocaleString('zh-CN', { maximumFractionDigits: 0 })}). Recent 3-month trend: ${recentChange >= 0 ? '+' : ''}${recentChange.toFixed(1)}%.`,
+        impact: totalChange > 10 ? 'Sustained growth - scale resources proactively to meet demand.'
+          : totalChange < -10 ? 'Sustained decline - diagnose root cause and evaluate recovery measures.'
+          : 'Stable trend - identify new growth drivers.',
+        suggestion: peak[0].substring(5) === '11' || peak[0].substring(5) === '12'
+          ? `${peak[0]} is the seasonal peak - stock up and increase marketing 6-8 weeks prior.`
+          : `${peak[0]} was the highest month - analyze what drove it and replicate those conditions.`,
+        relatedFields: [dateField.field, metricField.field],
+        confidence: 85,
+        isBusinessInsight: true,
+      });
+      recommendedCharts.push({
+        chartType: 'line',
+        title: `${metricField.field} Monthly Trend`,
+        xField: dateField.field,
+        yField: metricField.field,
+        reason: 'Show time-series trend',
+        priority: 'high',
+      });
+    }
+  }
+
+  if (numericFields.length >= 2) {
+    const limit = Math.min(numericFields.length, 5);
+    for (let i = 0; i < limit; i++) {
+      for (let j = i + 1; j < limit; j++) {
+        const fa = numericFields[i], fb = numericFields[j];
+        const pairs: [number, number][] = [];
+        data.rows.forEach(row => {
+          const a = Number(row[fa.field]), b = Number(row[fb.field]);
+          if (!isNaN(a) && !isNaN(b)) pairs.push([a, b]);
+        });
+        if (pairs.length < 5) continue;
+        const ma = pairs.reduce((s, p) => s + p[0], 0) / pairs.length;
+        const mb = pairs.reduce((s, p) => s + p[1], 0) / pairs.length;
+        const num = pairs.reduce((s, p) => s + (p[0] - ma) * (p[1] - mb), 0);
+        const da = Math.sqrt(pairs.reduce((s, p) => s + (p[0] - ma) ** 2, 0));
+        const db = Math.sqrt(pairs.reduce((s, p) => s + (p[1] - mb) ** 2, 0));
+        const r = da > 0 && db > 0 ? num / (da * db) : 0;
+        const absR = Math.abs(r);
+        if (absR >= 0.6) {
+          const strength = absR >= 0.8 ? 'strong' : 'moderate';
+          const direction = r > 0 ? 'positive' : 'negative';
+          correlations.push({ field1: fa.field, field2: fb.field, coefficient: r, strength, direction });
+          if (absR >= 0.7) {
+            keyFindings.push({
+              severity: r < -0.7 ? 'warning' : 'info',
+              category: 'correlation',
+              title: `"${fa.field}" vs "${fb.field}": ${r < 0 ? 'strong negative' : 'strong positive'} correlation (r=${r.toFixed(2)})`,
+              detail: `Pearson r=${r.toFixed(3)}, ${strength} ${direction} correlation from ${pairs.length} data points.`,
+              impact: r < -0.7
+                ? `Inverse relationship: as ${fa.field} rises, ${fb.field} tends to fall - check if discounts are eroding margins.`
+                : `Co-movement detected: both metrics likely driven by a common business factor.`,
+              suggestion: r < -0.7
+                ? 'Review discount/pricing policy impact on profitability - find the balance point.'
+                : 'Monitor these together as a composite KPI for business performance.',
+              relatedFields: [fa.field, fb.field],
+              confidence: Math.round(absR * 100),
+              isBusinessInsight: true,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  for (const f of numericFields.slice(0, 5)) {
+    if (!f.numericStats) continue;
+    const { mean, min, max } = f.numericStats;
+    if (min <= 0 || mean <= 0) continue;
+    if ((max - min) / mean > 1.5 && max > min * 5) {
+      keyFindings.push({
+        severity: 'warning',
+        category: 'anomaly',
+        title: `"${f.field}" shows high volatility (range is ${((max - min) / mean * 100).toFixed(0)}% of mean)`,
+        detail: `Min: ${min.toLocaleString()}, Mean: ${mean.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}, Max: ${max.toLocaleString()}.`,
+        impact: 'High variance may indicate promotions, seasonal spikes, or data entry errors.',
+        suggestion: 'Segment analysis by dimension (region, category) to isolate peak vs trough drivers.',
+        relatedFields: [f.field],
+        confidence: 78,
+        isBusinessInsight: false,
+      });
+    }
+  }
+
+  if (numericFields.length > 0) {
+    actionItems.push({
+      priority: 'high',
+      action: `Set up monitoring alerts for ${numericFields.slice(0, 2).map(f => f.field).join(', ')}`,
+      detail: 'Define threshold rules and period-over-period alerts for key metrics.',
+      expectedBenefit: 'Reduce mean time to detect anomalies and limit business impact.',
+    });
+  }
+  if (categoryFields.length > 0) {
+    actionItems.push({
+      priority: 'high',
+      action: `Deep-dive ${categoryFields[0].field} performance gaps`,
+      detail: `Benchmark top vs bottom ${categoryFields[0].field} performers and identify replicable success patterns.`,
+      expectedBenefit: 'Raise floor performance across all segments.',
+    });
+  }
+  if (correlations.some(c => c.direction === 'negative' && c.strength === 'strong')) {
+    actionItems.push({
+      priority: 'high',
+      action: 'Audit discount/promotion strategy for margin erosion',
+      detail: 'Strong negative correlation between metrics suggests pricing pressure may be compressing profitability.',
+      expectedBenefit: 'Maintain revenue scale while improving net margin.',
+    });
+  }
+  if (trends.some(t => t.direction === 'down')) {
+    actionItems.push({
+      priority: 'high',
+      action: 'Investigate and reverse declining trend',
+      detail: 'Key metric shows sustained decline. Prioritize root-cause attribution across market, product, and ops dimensions.',
+      expectedBenefit: 'Stop the bleed and restore growth trajectory.',
+    });
+  }
+
+  const isBusinessData = numericFields.some(f => {
+    const n = f.field.toLowerCase();
+    return ['sales', 'revenue', 'profit', 'amount', 'income'].some(k => n.includes(k))
+      || ['销售', '利润', '金额', '收入'].some(k => f.field.includes(k));
+  });
+  const hasDateAndNumeric = dateFields.length > 0 && numericFields.length > 0;
+  const hasCategoryAndNumeric = categoryFields.length > 0 && numericFields.length > 0;
+  const dataType = hasDateAndNumeric ? 'Time-series business data' : hasCategoryAndNumeric ? 'Multi-dimensional business data' : 'Structured data';
+  const suggestedIndustry = isBusinessData ? 'Retail / Sales' : hasCategoryAndNumeric ? 'Operations / Business' : 'General';
+
+  const distributions: DeepAnalysis['distributions'] = numericFields.slice(0, 5).map(f => {
+    if (!f.numericStats) return null;
+    const { mean, median, min, max } = f.numericStats;
+    const skewness = max > min ? (mean - median) / (max - min) * 3 : 0;
+    const type = Math.abs(skewness) < 0.2 ? 'normal' : skewness > 0 ? 'skewed_right' : 'skewed_left';
+    return {
+      field: f.field,
+      type: type as 'normal' | 'skewed_left' | 'skewed_right' | 'bimodal' | 'uniform',
+      skewness,
+      kurtosis: 0,
+      description: type === 'normal' ? `Near-normal distribution, mean ${mean.toLocaleString('zh-CN', { maximumFractionDigits: 0 })}`
+        : type === 'skewed_right' ? `Right-skewed: high-end outliers inflate the mean; use median as reference`
+        : `Left-skewed: low-end outliers drag the mean down; use median as reference`,
+    };
+  }).filter((d): d is NonNullable<typeof d> => d !== null);
+
+  const issueCount = keyFindings.filter(f => f.severity === 'warning' || f.severity === 'critical').length;
+  return {
+    healthScore,
+    keyFindings,
+    correlations,
+    distributions,
+    trends,
+    recommendedCharts,
+    actionItems,
+    dataProfile: {
+      dataType,
+      suggestedIndustry,
+      dataMaturity: summary.nullValues === 0 ? 'cleaned' : 'structured',
+      analysisPotential: (hasDateAndNumeric && hasCategoryAndNumeric) ? 'high' : hasCategoryAndNumeric ? 'medium' : 'low',
+      periodFeature: dateFields.length > 0 ? 'Time-series data - trend analysis available' : undefined,
+      scaleFeature: summary.totalRows > 1000 ? 'Large dataset' : summary.totalRows > 100 ? 'Medium dataset' : 'Small dataset',
+      summary: `${dataType}, ${summary.totalRows.toLocaleString()} records, ${numericFields.length} numeric metrics, ${categoryFields.length} categorical dimensions. ${keyFindings.length} insights found, ${issueCount} risk point(s) require attention.`,
+    },
   };
 }
