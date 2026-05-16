@@ -116,15 +116,6 @@ export function LoginDialog() {
     e.preventDefault();
     setError('');
 
-    const finalQuestion = getFinalQuestion();
-    if (!finalQuestion) {
-      setError(t('login.selectSecurityQuestion'));
-      return;
-    }
-    if (!securityAnswer.trim()) {
-      setError(t('login.setSecurityAnswer'));
-      return;
-    }
     if (!agreedToTerms) {
       setError(t('login.agreePolicy'));
       return;
