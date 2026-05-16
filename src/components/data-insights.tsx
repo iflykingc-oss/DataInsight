@@ -238,6 +238,41 @@ export function DataInsights({ data, analysis, onAnalyze, modelConfig, onNavigat
 
   return (
     <div className="space-y-6">
+      {/* 执行摘要 */}
+      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-background">
+        <CardContent className="pt-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-primary/80 mb-1.5 uppercase tracking-wide">执行摘要</p>
+              {narrative ? (
+                <p className="text-sm leading-relaxed text-foreground">{narrative}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {deep.dataProfile.summary}
+                </p>
+              )}
+            </div>
+            {modelConfig ? (
+              <Button
+                size="sm"
+                variant={narrative ? 'outline' : 'default'}
+                onClick={handleNarrative}
+                disabled={narrativeLoading}
+                className="shrink-0"
+              >
+                {narrativeLoading ? (
+                  <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />生成中...</>
+                ) : (
+                  <><Sparkles className="w-3.5 h-3.5 mr-1.5" />{narrative ? '重新生成' : 'AI 生成汇报摘要'}</>
+                )}
+              </Button>
+            ) : (
+              <span className="text-xs text-muted-foreground shrink-0 mt-1">配置 AI 后可生成汇报摘要</span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 0. AI 增强深度分析（置顶，最显眼位置） */}
       {sceneInfo && (
         <Card className="border-primary/20 bg-primary/5">
