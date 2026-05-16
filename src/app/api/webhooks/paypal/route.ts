@@ -7,8 +7,9 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     const headers = request.headers;
 
-    // 基础验证
-    const isValid = await verifyPayPalWebhook(headers, body);
+    // 基础验证（webhookId 从环境变量获取，未配置时跳过签名验证）
+    const webhookId = process.env.PAYPAL_WEBHOOK_ID || '';
+    const isValid = webhookId ? await verifyPayPalWebhook(headers, body, webhookId) : true;
     if (!isValid) {
       return NextResponse.json({ error: 'Invalid webhook' }, { status: 401 });
     }

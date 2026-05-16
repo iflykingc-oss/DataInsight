@@ -44,7 +44,12 @@ export function checkRateLimit(
   windowMs: number = 5 * 60 * 1000
 ): RateLimitResult {
   const now = Date.now();
-  if (store.size > 10000) pruneExpired();
+  if (store.size > 10000) {
+    const now = Date.now();
+    for (const [key, entry] of store) {
+      if (now >= entry.resetAt) store.delete(key);
+    }
+  }
   const entry = store.get(key);
 
   if (!entry || now >= entry.resetAt) {

@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       try {
         const buffer = await file.arrayBuffer();
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(Buffer.from(buffer));
+        await workbook.xlsx.load(Buffer.from(buffer).buffer);
         const worksheet = workbook.worksheets[0];
 
         // Get headers from first row (exceljs row values are 1-indexed)

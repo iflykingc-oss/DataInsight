@@ -81,7 +81,8 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
         const workbook = XLSX.read(e.target?.result, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1 });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const jsonData = (XLSX.utils as any).sheet_to_json(worksheet, { header: 1 }) as unknown[][];
 
         if (jsonData.length < 2) {
           alert('文件数据不足，至少需要一行表头和一行数据');
@@ -89,7 +90,7 @@ export function SpreadsheetAgentPage({ className }: SpreadsheetAgentPageProps) {
         }
 
         const headers = jsonData[0].map(String);
-        const rows = jsonData.slice(1).map((row) => {
+        const rows = jsonData.slice(1).map((row: unknown[]) => {
           const rowObj: Record<string, unknown> = {};
           headers.forEach((header: string, i: number) => {
             const cellValue = row[i];

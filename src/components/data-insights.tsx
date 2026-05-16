@@ -34,7 +34,7 @@ import {
   Compass,
   Download
 } from 'lucide-react';
-import type { ParsedData, DataAnalysis, InsightCard } from '@/lib/data-processor';
+import type { ParsedData, DataAnalysis } from '@/lib/data-processor';
 import type { AnalysisPlan } from '@/lib/data-processor/types';
 import { quickDetectScene, enhanceAnalysisWithAI, SCENE_DISPLAY, AnalysisScene } from '@/lib/analysis';
 import type { AIEnhancedResult, StepResult } from '@/lib/analysis';

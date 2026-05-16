@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inspector } from 'react-dev-inspector';
 import './globals.css';
 import { GlobalErrorBoundary } from '@/components/error-boundary';
 import { AuthProvider } from '@/lib/use-auth';
@@ -55,12 +54,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const isDev = process.env.NODE_ENV === 'development';
-
   return (
     <html lang="en">
       <body className={`antialiased`}>
-        {isDev && <Inspector />}
         <GlobalErrorBoundary>
           <I18nProvider>
             <AuthProvider>
