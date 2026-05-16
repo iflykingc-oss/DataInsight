@@ -258,7 +258,7 @@ export default function DataTableView({
                   <TableRow key={i} className="text-xs hover:bg-muted/30">
                     {visibleFields.map(f => {
                       const v = row[f];
-                      const stat = analysis.fieldStats[f];
+                      const stat = analysis.fieldStats.find(s => s.field === f);
                       const isAnomaly = analysis.anomalies?.some(a => a.field === f && a.rowIndex === i + (page - 1) * PAGE_SIZE);
                       return (
                         <TableCell
