@@ -259,7 +259,7 @@ export default function DataTableView({
                     {visibleFields.map(f => {
                       const v = row[f];
                       const stat = analysis.fieldStats.find(s => s.field === f);
-                      const isAnomaly = analysis.anomalies?.some(a => a.field === f && a.rowIndex === i + (page - 1) * PAGE_SIZE);
+                      const isAnomaly = analysis.anomalies?.some(a => a.field === f && a.row === i + (page - 1) * PAGE_SIZE);
                       return (
                         <TableCell
                           key={f}

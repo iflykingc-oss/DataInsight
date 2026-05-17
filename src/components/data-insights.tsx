@@ -38,7 +38,7 @@ export function DataInsights({ data, analysis }: DataInsightsProps) {
         `[${f.severity}] ${f.title}: ${f.detail}`
       ).join('\n') ?? '';
       const prompt = `你是资深数据分析师。请根据以下数据关键发现，用中文生成1段不超过200字的执行摘要，要求：直接给出业务结论，不要解释方法，语言简洁专业，适合直接用于管理层汇报。\n\n关键发现：\n${findings}`;
-      const text = await callLLM(prompt, { temperature: 0.4, maxTokens: 400 });
+      const text = await callLLM(prompt, { temperature: 0.4, max_tokens: 400 });
       setNarrative(text);
     } catch (err) {
       setNarrativeError(err instanceof Error ? err.message : '生成失败');
