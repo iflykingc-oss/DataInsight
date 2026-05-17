@@ -751,22 +751,6 @@ export default function HomePage() {
         </div>
       );
     }
-            <WorkflowAutomation headers={parsedData.headers} />
-          </TabsContent>
-          <TabsContent value="comments">
-            <RowComments rows={parsedData.rows} rowKeyField={parsedData.headers[0]} />
-          </TabsContent>
-          <TabsContent value="ai-field">
-            <AIFieldPanel data={parsedData} dataId={parsedData.fileName || 'default'} modelConfig={activeModelConfig} onApplyField={handleApplyAIField} />
-          </TabsContent>
-          <TabsContent value="ai-formula">
-            <AIFormulaGenerator data={parsedData} modelConfig={activeModelConfig} onApplyFormula={handleApplyFormula} />
-          </TabsContent>
-        </Tabs>
-        <SceneAgentPanel sceneId="data-clean" sceneName="数据清洗" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
-      </div>
-    );
-  }
 
     // ========================================
     // 数据处理（清洗 + 质量）
@@ -795,6 +779,21 @@ export default function HomePage() {
               )}
             </TabsContent>
             <TabsContent value="quality">
+              {parsedData && analysis ? (
+                <DataQualityChecker data={parsedData} fieldStats={analysis.fieldStats} />
+              ) : (
+                <div className="flex items-center justify-center py-12 text-muted-foreground/50">{t('page.pleaseUpload')}</div>
+              )}
+            </TabsContent>
+          </Tabs>
+          <SceneAgentPanel sceneId="data-prep" sceneName="数据处理" data={parsedData} analysis={analysis} fieldStats={analysis?.fieldStats} modelConfig={activeModelConfig || undefined} />
+        </div>
+      );
+    }
+
+    // ========================================
+    // 数据洞察
+    // ========================================
     if (viewMode === "insights") {
       if (!parsedData) {
         return (
@@ -825,9 +824,6 @@ export default function HomePage() {
         </div>
       );
     }
-    if (viewMode === 'visualization' && parsedData && analysis) {
-      return (
-        <div className="relative">
     if (viewMode === "visualization" && parsedData && analysis) {
       return (
         <div className="relative">
@@ -1021,4 +1017,4 @@ export default function HomePage() {
             <TabsContent value="share">
               {hasPermission('share') ? (
                 <ShareManager dashboardName={parsedData.fileName} />
-              ) : (
+              ) : (
